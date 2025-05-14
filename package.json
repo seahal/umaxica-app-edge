@@ -1,24 +1,25 @@
 {
-	"name": "umaxica-app-edge-server",
+	"name": "umaxica-edge",
+	"type": "module",
 	"scripts": {
-		"dev": "wrangler dev",
-		"deploy": "wrangler deploy --minify",
-		"format": "npx @biomejs/biome format . --write ",
-		"lint": "npx @biomejs/biome lint .",
-		"test": "vitest",
-		"coverage": "vitest run --coverage"
+		"dev": "vite",
+		"build": "vite build && vite build --ssr",
+		"preview": "$npm_execpath run build && wrangler dev dist-server/index.js",
+		"deploy": "$npm_execpath run build && wrangler deploy dist-server/index.js",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"format": "bun x @biomejs/biome format . --write ",
+		"lint": "bun x @biomejs/biome lint ."
 	},
 	"dependencies": {
-		"hono": "^4.7.7"
+		"hono": "^4.7.9"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"@cloudflare/workers-types": "^4.20250426.0",
-		"@hono/vite-dev-server": "^0.14.0",
-		"dotenv": "^16.5.0",
-		"typescript": "^5.8.3",
-		"vite": "^6.3.3",
-		"vitest": "^3.1.2",
-		"wrangler": "^4.13.2"
+		"@cloudflare/vite-plugin": "^0.1.15",
+		"@cloudflare/workers-types": "^4.20250514.0",
+		"@hono/vite-build": "^1.5.0",
+		"vite": "^6.1.1",
+		"vite-plugin-ssr-hot-reload": "^0.4.1",
+		"wrangler": "^4.4.0"
 	}
 }
