@@ -24,7 +24,7 @@ app.use(trimTrailingSlash());
 app.use(renderer);
 
 app.get("/", (c) => {
-	return c.render(<h1>Hello, World! from Vite + Cloudflare Workers!</h1>);
+	return c.render(<h1>Hello, World! from Vite + Cloudflare Workers!!!</h1>);
 });
 
 export default app;
