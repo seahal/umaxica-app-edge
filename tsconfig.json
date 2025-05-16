@@ -11,13 +11,14 @@
       "vite/client",
           "bun-types"
     ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
     // Best practices
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    // official says this
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
   }
 }

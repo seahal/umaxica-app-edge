@@ -8,6 +8,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import { renderer } from "./renderer";
+// custom import
 import app from "./route/app";
 import com from "./route/com";
 import org from "./route/org";
@@ -42,10 +43,19 @@ main.route("/jp.umaxica.app/", app);
 main.route("/jp.umaxica.com/", com);
 main.route("/jp.umaxica.org/", org);
 // custom 404 page
-main.notFound((c) => c.html("404 Not Found(app)", 404));
+main.notFound((c) =>
+	c.html(
+		<>
+			<h1>404 Page Not Found</h1>
+			<hr />
+			<p>...</p>
+		</>,
+		404,
+	),
+);
 // custom 500 page
 main.onError((err, c): any => {
-	c.html("500 Internal Server Error", 500);
+	c.html("<h1>500 Internal Server Error</h1>", 500);
 	console.error(err);
 });
 
