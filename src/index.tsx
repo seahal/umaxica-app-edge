@@ -1,30 +1,66 @@
-import { Hono } from "hono";
-import { renderer } from "./renderer";
-// import { languageDetector } from "hono/language";
 import { Hono } from "hono/quick";
 import { cors } from "hono/cors";
-// import { compress } from "hono/compress";
 import { csrf } from "hono/csrf";
-import { timeout } from "hono/timeout";
+import { languageDetector } from "hono/language";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
-import { trimTrailingSlash } from "hono/trailing-slash";
 import { secureHeaders } from "hono/secure-headers";
+import { timeout } from "hono/timeout";
+import { trimTrailingSlash } from "hono/trailing-slash";
+import { renderer } from "./renderer";
+// custom import
+import app from "./route/app";
+import com from "./route/com";
+import org from "./route/org";
 
-const app = new Hono();
-
-app.use(secureHeaders());
-app.use(cors());
-// app.use(compress());
-app.use(csrf());
-app.use(timeout(2000));
-app.use(logger());
-app.use(prettyJSON());
-app.use(trimTrailingSlash());
-app.use(renderer);
-
-app.get("/", (c) => {
-	return c.render(<h1>Hello, World! from Vite + Cloudflare Workers!</h1>);
+const main = new Hono({
+	getPath: (req) => req.url.replace(/^https?:\/([^?]+).*$/, "$1"),
 });
 
-export default app;
+// languageDetector
+main.use(
+	languageDetector({
+		supportedLanguages: ["en", "ja"], // Must include fallback
+		fallbackLanguage: "ja", // Required
+	}),
+);
+main.use(csrf()); // to avoid CSRF attacks
+main.use(cors()); // attaches CORS headers to the response
+main.use(logger()); // log
+main.use(prettyJSON());
+main.use(trimTrailingSlash()); // url regularization
+main.use(secureHeaders()); // security headers
+main.use(renderer);
+main.use(timeout(2000)); //
+
+// Routing
+// for app
+["/app.localdomain:4444/", "/jp.umaxica.app/"].forEach((it) =>
+	main.route(it, app),
+);
+// for com
+["/com.localdomain:4444/", "/jp.umaxica.com/"].forEach((it) =>
+	main.route(it, com),
+);
+// for org
+["/org.localdomain:4444/", "/jp.umaxica.org/"].forEach((it) =>
+	main.route(it, org),
+);
+// custom 404 page
+main.notFound((c) =>
+	c.html(
+		<>
+			<h1>404 Page Not Found</h1>
+			<hr />
+			<p>...</p>
+		</>,
+		404,
+	),
+);
+// custom 500 page
+main.onError((err, c): any => {
+	c.html("<h1>500 Internal Server Error</h1>", 500);
+	console.error(err);
+});
+
+export default main;
