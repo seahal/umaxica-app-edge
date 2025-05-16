@@ -34,14 +34,18 @@ main.use(renderer);
 main.use(timeout(2000)); //
 
 // Routing
-// for env
-main.route("/app.localdomain:4444/", app);
-main.route("/com.localdomain:4444/", com);
-main.route("/org.localdomain:4444/", org);
-// for production
-main.route("/jp.umaxica.app/", app);
-main.route("/jp.umaxica.com/", com);
-main.route("/jp.umaxica.org/", org);
+// for app
+["/app.localdomain:4444/", "/jp.umaxica.app/"].forEach((it) =>
+	main.route(it, app),
+);
+// for com
+["/com.localdomain:4444/", "/jp.umaxica.com/"].forEach((it) =>
+	main.route(it, com),
+);
+// for org
+["/org.localdomain:4444/", "/jp.umaxica.org/"].forEach((it) =>
+	main.route(it, org),
+);
 // custom 404 page
 main.notFound((c) =>
 	c.html(
