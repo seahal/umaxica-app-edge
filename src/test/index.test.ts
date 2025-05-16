@@ -1,22 +1,19 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
+import { testClient } from "hono/testing";
+import main from "../index";
 
-describe("Sample Test Suite", () => {
+describe("Shoud see app homepage", () => {
+	const client: any = testClient(main);
+
 	it("should add numbers correctly", () => {
 		const sum = 1 + 2;
 		expect(sum).toBe(3);
 	});
 
-	it("should check truthy value", () => {
-		expect(true).toBeTruthy();
-	});
-
-	it("should check falsy value", () => {
-		expect(false).toBeFalsy();
-		expect(null).toBe(null);
-	});
-
-	it("should check string equality", () => {
-		const str = "Hello, Bun!";
-		expect(str).toBe("Hello, Bun!");
+	test("GET /app.localdomain:4444/", async () => {
+		const res = await client.search.$get({
+			query: { q: "" },
+		});
+		expect(res.status).toBe(404);
 	});
 });

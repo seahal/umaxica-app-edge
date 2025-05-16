@@ -1,41 +1,52 @@
 import { Hono } from "hono/quick";
-import { renderer } from "./renderer";
-import { languageDetector } from "hono/language";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
-import { timeout } from "hono/timeout";
+import { languageDetector } from "hono/language";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
-import { trimTrailingSlash } from "hono/trailing-slash";
 import { secureHeaders } from "hono/secure-headers";
+import { timeout } from "hono/timeout";
+import { trimTrailingSlash } from "hono/trailing-slash";
+import { renderer } from "./renderer";
+import app from "./route/app";
+import com from "./route/com";
+import org from "./route/org";
 
-const app = new Hono({
+const main = new Hono({
 	getPath: (req) => req.url.replace(/^https?:\/([^?]+).*$/, "$1"),
 });
 
 // languageDetector
-app.use(
+main.use(
 	languageDetector({
 		supportedLanguages: ["en", "ja"], // Must include fallback
 		fallbackLanguage: "ja", // Required
 	}),
 );
-app.use(csrf());
-app.use(cors());
-app.use(logger());
-app.use(prettyJSON());
-app.use(trimTrailingSlash());
-app.use(secureHeaders());
-app.use(renderer);
-app.use(timeout(2000));
+main.use(csrf()); // to avoid CSRF attacks
+main.use(cors()); // attaches CORS headers to the response
+main.use(logger()); // log
+main.use(prettyJSON());
+main.use(trimTrailingSlash()); // url regularization
+main.use(secureHeaders()); // security headers
+main.use(renderer);
+main.use(timeout(2000)); //
 
+// Routing
+// for env
+main.route("/app.localdomain:4444/", app);
+main.route("/com.localdomain:4444/", com);
+main.route("/org.localdomain:4444/", org);
+// for production
+main.route("/jp.umaxica.app/", app);
+main.route("/jp.umaxica.com/", com);
+main.route("/jp.umaxica.org/", org);
+// custom 404 page
+main.notFound((c) => c.html("404 Not Found(app)", 404));
+// custom 500 page
+main.onError((err, c): any => {
+	c.html("500 Internal Server Error", 500);
+	console.error(err);
+});
 
-// FIXME: use .env file
-app.get("/app.localdomain:4444/", (c) => c.text("app"));
-app.get("/jp.umaxica.app/", (c) => c.text("app"));
-app.get("/com.localdomain:4444/", (c) => c.text("com"));
-app.get("/jp.umaxica.com/", (c) => c.text("com"));
-app.get("/org.localdomain:4444/", (c) => c.text("org"));
-app.get("/jp.umaxica.org/", (c) => c.text("org"));
-
-export default app;
+export default main;

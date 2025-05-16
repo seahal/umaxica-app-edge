@@ -1,13 +1,23 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"strict": true,
-		"skipLibCheck": true,
-		"lib": ["ESNext"],
-		"types": ["vite/client"],
-		"jsx": "react-jsx",
-		"jsxImportSource": "hono/jsx"
-	}
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "vite/client",
+          "bun-types"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true
+  }
 }
