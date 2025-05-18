@@ -8,7 +8,7 @@ const Layout: FC = (props, title = undefined) => {
 			</head>
 			<body>
 				<header>
-					<h1>Umaxica(org)</h1>
+					<h1>Umaxica(org, edge)</h1>
 				</header>
 				<hr />
 				{props.children}

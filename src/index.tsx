@@ -12,6 +12,7 @@ import { renderer } from "./renderer";
 import app from "./route/app";
 import com from "./route/com";
 import org from "./route/org";
+import world from "./route/world";
 
 const main = new Hono({
 	getPath: (req) => req.url.replace(/^https?:\/([^?]+).*$/, "$1"),
@@ -46,6 +47,11 @@ main.use(timeout(2000)); //
 ["/org.localdomain:4444/", "/jp.umaxica.org/"].forEach((it) =>
 	main.route(it, org),
 );
+// Region selector 
+main.route("/umaxica.org/", world);
+main.route("/umaxica.com/", world);
+main.route("/umaxica.app/", world);
+
 // custom 404 page
 main.notFound((c) =>
 	c.html(
