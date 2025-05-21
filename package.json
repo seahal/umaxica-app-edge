@@ -12,11 +12,12 @@
     "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
+    "@rails/request.js": "^0.0.12",
     "hono": "^4.7.10"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.21",
-    "@cloudflare/workers-types": "^4.20250517.0",
+    "@cloudflare/workers-types": "^4.20250521.0",
     "@hono/vite-build": "^1.6.1",
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.2.13",
@@ -24,7 +25,7 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-ssr-hot-reload": "^0.4.2",
-    "wrangler": "^4.15.2"
+    "wrangler": "^4.16.0"
   },
   "module": "src/index.tsx",
   "private": true
