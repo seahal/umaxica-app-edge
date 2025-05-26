@@ -47,7 +47,7 @@ main.use(timeout(2000)); //
 ["/org.localdomain:4444/", "/jp.umaxica.org/"].forEach((it) =>
 	main.route(it, org),
 );
-// Region selector 
+// Region selector
 main.route("/umaxica.org/", world);
 main.route("/umaxica.com/", world);
 main.route("/umaxica.app/", world);
