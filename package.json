@@ -13,11 +13,12 @@
   },
   "dependencies": {
     "@rails/request.js": "^0.0.12",
-    "hono": "^4.7.11"
+    "hono": "^4.7.11",
+    "hono-react-router-adapter": "^0.6.5"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.21",
-    "@cloudflare/workers-types": "^4.20250601.0",
+    "@cloudflare/workers-types": "^4.20250603.0",
     "@hono/vite-build": "^1.6.2",
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.2.15",
@@ -25,7 +26,7 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-ssr-hot-reload": "^0.4.2",
-    "wrangler": "^4.18.0"
+    "wrangler": "^4.19.1"
   },
   "module": "src/index.tsx",
   "private": true
