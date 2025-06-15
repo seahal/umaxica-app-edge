@@ -18,15 +18,15 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.21",
-    "@cloudflare/workers-types": "^4.20250610.0",
+    "@cloudflare/workers-types": "^4.20250614.0",
     "@hono/vite-build": "^1.6.2",
     "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.2.15",
+    "@types/bun": "^1.2.16",
     "dotenv": "^16.5.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-ssr-hot-reload": "^0.4.2",
-    "wrangler": "^4.19.1"
+    "wrangler": "^4.20.0"
   },
   "module": "src/index.tsx",
   "private": true
