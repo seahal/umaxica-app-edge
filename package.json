@@ -2,19 +2,20 @@
   "name": "umaxica-edge",
   "type": "module",
   "scripts": {
-    "server": "vite",
-    "build": "vite build && vite build --ssr",
-    "preview": "$npm_execpath run build && wrangler dev dist-server/index.js",
-    "deploy": "$npm_execpath run build && wrangler deploy dist-server/index.js",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "format": "bun x @biomejs/biome format src/ --write ",
-    "lint": "bun x @biomejs/biome lint src/ --fix",
-    "typecheck": "bunx tsc --noEmit"
+    "server": "bunx vite",
+    "build": "bunx vite build && bunx vite build --ssr",
+    "preview": "bun run build && bunx wrangler dev dist-server/index.js",
+    "deploy": "bun run build && bunx wrangler deploy dist-server/index.js",
+    "cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
+    "format": "bunx @biomejs/biome format src/ --write",
+    "lint": "bunx @biomejs/biome lint src/ --fix",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
     "@rails/request.js": "^0.0.12",
     "hono": "^4.7.11",
-    "hono-react-router-adapter": "^0.6.5"
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -26,7 +27,8 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-ssr-hot-reload": "^0.4.2",
-    "wrangler": "^4.20.0"
+    "wrangler": "^4.20.0",
+    "hono-react-router-adapter": "^0.6.5"
   },
   "module": "src/index.tsx",
   "private": true
