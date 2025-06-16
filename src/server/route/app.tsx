@@ -1,6 +1,6 @@
 import { Hono } from "hono/quick";
 import type { FC } from "hono/jsx";
-import Layout from "../component/app/layout";
+import Layout from "../../component/app/layout";
 
 const app = new Hono();
 

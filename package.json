@@ -9,12 +9,16 @@
     "cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
     "format": "bunx @biomejs/biome format src/ --write",
     "lint": "bunx @biomejs/biome lint src/ --fix",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "bunx tsc --noEmit -p tsconfig.server.json && bunx tsc --noEmit -p tsconfig.client.json",
+    "typecheck:server": "bunx tsc --noEmit -p tsconfig.server.json",
+    "typecheck:client": "bunx tsc --noEmit -p tsconfig.client.json",
     "test": "bun test"
   },
   "dependencies": {
     "@rails/request.js": "^0.0.12",
     "hono": "^4.7.11",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
@@ -23,13 +27,15 @@
     "@cloudflare/workers-types": "^4.20250614.0",
     "@hono/vite-build": "^1.6.2",
     "@types/bun": "^1.2.16",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "dotenv": "^16.5.0",
+    "hono-react-router-adapter": "^0.6.5",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-ssr-hot-reload": "^0.4.2",
-    "wrangler": "^4.20.0",
-    "hono-react-router-adapter": "^0.6.5"
+    "wrangler": "^4.20.0"
   },
-  "module": "src/index.tsx",
+  "module": "src/server/index.tsx",
   "private": true
 }

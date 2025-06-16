@@ -1,19 +1,15 @@
 import { describe, expect, it, test } from "bun:test";
-import { testClient } from "hono/testing";
-import main from "../index";
+import main from "../server/index";
 
-describe("Shoud see app homepage", () => {
-	const client: any = testClient(main);
-
+describe("Should see app homepage", () => {
 	it("should add numbers correctly", () => {
 		const sum = 1 + 2;
 		expect(sum).toBe(3);
 	});
 
 	test("GET /app.localdomain:4444/", async () => {
-		const res = await client.search.$get({
-			query: { q: "" },
-		});
-		expect(res.status).toBe(404);
+		const req = new Request("http://app.localdomain:4444/");
+		const res = await main.fetch(req);
+		expect(res.status).toBe(200);
 	});
 });

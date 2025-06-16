@@ -30,9 +30,11 @@ bun run deploy
 bun run test  # Uses Bun test runner
 
 # Code quality
-bun run format    # Format with Biome
-bun run lint      # Lint with Biome (auto-fix)
-bun run typecheck # TypeScript type checking
+bun run format         # Format with Biome
+bun run lint           # Lint with Biome (auto-fix)
+bun run typecheck      # TypeScript type checking (both server and client)
+bun run typecheck:server # TypeScript checking for server code only
+bun run typecheck:client # TypeScript checking for client code only
 
 # Generate Cloudflare types
 bun run cf-typegen
@@ -47,22 +49,28 @@ The application routes based on domain patterns:
 - `jp.umaxica.org` / `org.localdomain:4444` → org routes
 - `umaxica.{com,org,app}` → world routes (redirects to jp.* variants)
 
-Routes are defined in `src/index.tsx` using Hono's routing system.
+Routes are defined in `src/server/index.tsx` using Hono's routing system.
 
 ### Project Structure
-- `src/index.tsx` - Main application entry point with middleware and routing
-- `src/renderer.tsx` - JSX renderer configuration for HTML templates
-- `src/route/` - Route handlers for each domain (app.tsx, com.tsx, org.tsx, world.tsx)
-- `src/component/` - Layout components organized by domain
+- `src/server/` - Server-side code (Hono.js application)
+  - `src/server/index.tsx` - Main server entry point with middleware and routing
+  - `src/server/renderer.tsx` - JSX renderer configuration for HTML templates
+  - `src/server/route/` - Route handlers for each domain (app.tsx, com.tsx, org.tsx, world.tsx)
+- `src/client/` - Client-side code (React application)
+  - `src/client/index.tsx` - Client-side entry point
+  - `src/client/App.tsx` - Main React application with routing
+  - `src/client/style.css` - Client-side styles
+- `src/component/` - Shared layout components organized by domain
 - `dist-server/` - Built server-side files for Cloudflare Workers deployment
 
 ### Technology Stack
 - **Runtime**: Cloudflare Workers
-- **Framework**: Hono.js with JSX support
+- **Server Framework**: Hono.js with JSX support
+- **Client Framework**: React with React Router
 - **Build**: Vite with Cloudflare plugin
 - **Testing**: Bun test runner
 - **Code Quality**: Biome (formatting + linting)
-- **TypeScript**: Strict mode enabled
+- **TypeScript**: Strict mode enabled with separate client/server configs
 
 ### Middleware Stack (in order)
 1. Language detector (en/ja, defaults to ja)

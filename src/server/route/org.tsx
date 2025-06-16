@@ -1,5 +1,5 @@
 import { Hono } from "hono/quick";
-import Layout from "../component/org/layout";
+import Layout from "../../component/org/layout";
 
 const app = new Hono();
 

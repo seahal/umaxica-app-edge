@@ -64,9 +64,9 @@ main.notFound((c) =>
 	),
 );
 // custom 500 page
-main.onError((err, c): any => {
-	c.html("<h1>500 Internal Server Error</h1>", 500);
+main.onError((err, c) => {
 	console.error(err);
+	return c.html("<h1>500 Internal Server Error</h1>", 500);
 });
 
 export default main;

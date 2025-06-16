@@ -11,7 +11,7 @@ export default defineConfig(({ command, isSsrBuild }) => {
 		return {
 			build: {
 				rollupOptions: {
-					input: ["./src/style.css"],
+					input: ["./src/client/index.tsx", "./src/client/style.css"],
 					output: {
 						assetFileNames: "assets/[name].[ext]",
 					},
@@ -20,7 +20,7 @@ export default defineConfig(({ command, isSsrBuild }) => {
 		};
 	}
 	return {
-		plugins: [build({ outputDir: "dist-server" })],
+		plugins: [build({ entry: "./src/server/index.tsx", outputDir: "dist-server" })],
 	};
 });
 export const server = {
