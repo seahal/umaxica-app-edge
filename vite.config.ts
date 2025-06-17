@@ -11,9 +11,14 @@ export default defineConfig(({ command, isSsrBuild }) => {
 		return {
 			build: {
 				rollupOptions: {
-					input: ["./src/client/index.tsx", "./src/client/style.css"],
+					input: [
+						"./src/client/app/index.tsx", "./src/client/app/style.css",
+						"./src/client/com/index.tsx", "./src/client/com/style.css",
+						"./src/client/org/index.tsx", "./src/client/org/style.css"
+					],
 					output: {
 						assetFileNames: "assets/[name].[ext]",
+						entryFileNames: "assets/[name].js",
 					},
 				},
 			},
