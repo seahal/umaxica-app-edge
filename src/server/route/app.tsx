@@ -7,7 +7,8 @@ const app = new Hono();
 // Navigation component
 const Nav: FC = () => (
 	<nav>
-		<a href="/">Home</a> | <a href="/about">About</a> | <a href="/contact">Contact</a>
+		<a href="/">Home</a> | <a href="/about">About</a> |{" "}
+		<a href="/contact">Contact</a>
 	</nav>
 );
 
@@ -17,28 +18,28 @@ app.get("/", (c) =>
 			<Nav />
 			<h2>Welcome to umaxica</h2>
 			<p>This is the home page.</p>
-		</Layout>
+		</Layout>,
 	),
 );
 
-app.get("/about", (c) => 
+app.get("/about", (c) =>
 	c.html(
 		<Layout title="About">
 			<Nav />
 			<h2>About</h2>
 			<p>About page of umaxica</p>
-		</Layout>
-	)
+		</Layout>,
+	),
 );
 
-app.get("/contact", (c) => 
+app.get("/contact", (c) =>
 	c.html(
 		<Layout title="Contact">
 			<Nav />
 			<h2>Contact</h2>
 			<p>Contact us at contact@umaxica.app</p>
-		</Layout>
-	)
+		</Layout>,
+	),
 );
 
 export default app;
