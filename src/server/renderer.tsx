@@ -22,9 +22,9 @@ export const renderer = jsxRenderer(({ children }, c) => {
 			</head>
 			<body>
 				{children}
-				<div id="root"></div>
+				<div id="root" />
 				{import.meta.env.PROD && (
-					<script src={`/assets/${tenant}/index.js`}></script>
+					<script src={`/assets/${tenant}/index.js`} />
 				)}
 			</body>
 		</html>

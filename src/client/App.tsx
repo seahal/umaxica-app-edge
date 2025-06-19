@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 const App: FC = () => {
