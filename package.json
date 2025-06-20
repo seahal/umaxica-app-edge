@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@rails/request.js": "^0.0.12",
-    "hono": "^4.8.0",
+    "hono": "^4.8.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2"
@@ -24,7 +24,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
     "@cloudflare/vite-plugin": "^0.1.21",
-    "@cloudflare/workers-types": "^4.20250618.0",
+    "@cloudflare/workers-types": "^4.20250619.0",
     "@hono/vite-build": "^1.6.2",
     "@types/bun": "^1.2.16",
     "@types/react": "^19.1.8",

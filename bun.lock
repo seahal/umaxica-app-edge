@@ -5,7 +5,7 @@
       "name": "umaxica-edge",
       "dependencies": {
         "@rails/request.js": "^0.0.12",
-        "hono": "^4.7.11",
+        "hono": "^4.8.0",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "react-router-dom": "^7.6.2",
@@ -13,7 +13,7 @@
       "devDependencies": {
         "@biomejs/biome": "^2.0.0",
         "@cloudflare/vite-plugin": "^0.1.21",
-        "@cloudflare/workers-types": "^4.20250614.0",
+        "@cloudflare/workers-types": "^4.20250618.0",
         "@hono/vite-build": "^1.6.2",
         "@types/bun": "^1.2.16",
         "@types/react": "^19.1.8",
@@ -23,7 +23,7 @@
         "typescript": "^5.8.3",
         "vite": "^6.3.5",
         "vite-plugin-ssr-hot-reload": "^0.4.2",
-        "wrangler": "^4.20.0",
+        "wrangler": "^4.20.3",
       },
     },
   },
@@ -62,7 +62,7 @@
 
     "@cloudflare/workerd-windows-64": ["@cloudflare/workerd-windows-64@1.20250617.0", "", { "os": "win32", "cpu": "x64" }, "sha512-XWM/6sagDrO0CYDKhXhPjM23qusvIN1ju9ZEml6gOQs8tNOFnq6Cn6X9FAmnyapRFCGUSEC3HZYJAm7zwVKaMA=="],
 
-    "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20250618.0", "", {}, "sha512-5c26+nZEXDRrlzsIaVt3npuElwLi6bhLZHyDfMX5JmcM9sogeBMyyXrU3gJG0DII3QenE7DuyMC8uFzJHTcnDA=="],
+    "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20250619.0", "", {}, "sha512-OYmVTA45rEEsOmchtltDnrG6BBaOPB7LUGKoyE8AwkfanUOc3/wwuMZ50i1jq6NKrV1TZLsKUKzrwe1NtVGOzQ=="],
 
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
@@ -302,7 +302,7 @@
 
     "glob-to-regexp": ["glob-to-regexp@0.4.1", "", {}, "sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw=="],
 
-    "hono": ["hono@4.8.0", "", {}, "sha512-NoiHrqJxoe1MYXqW+/0/Q4NCizKj2Ivm4KmX8mOSBtw9UJ7KYaOGKkO7csIwO5UlZpfvVRdcgiMb0GGyjEjtcw=="],
+    "hono": ["hono@4.8.1", "", {}, "sha512-ErA2ifywnSmcnB5XDuFqGDfXJ9xuAJR2C/8cZAk6vDaOCzofB8eNlha/wZWIiamREzWk94S9Z7wHsnKQHn7Niw=="],
 
     "hono-react-router-adapter": ["hono-react-router-adapter@0.6.5", "", { "dependencies": { "@hono/vite-dev-server": "^0.18.1", "react-router": "^7.0.1" }, "optionalDependencies": { "@hono/node-server": "*", "@react-router/node": "*" }, "peerDependencies": { "hono": "*" } }, "sha512-ql45m3PPNzw/QPruhWsphpAShboqcmY4yqBFQXyX8lvIxcjQrQKdenM5qA05fm/bxwWOXCRK7ONp7PBZDziiOw=="],
 
