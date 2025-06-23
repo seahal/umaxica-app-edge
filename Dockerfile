@@ -1,14 +1,21 @@
-FROM oven/bun:1.1-debian AS base
+FROM oven/bun:debian AS base
 
-WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    wget \
+    vim \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /main
 
 COPY package.json bun.lockb* ./
 
 RUN bun install --frozen-lockfile
 
 COPY . .
-
-RUN bun run build
 
 EXPOSE 4444
 
