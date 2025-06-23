@@ -36,15 +36,15 @@ main.use(timeout(2000)); //
 
 // Routing
 // for app
-["/app.localdomain:4444/", "/jp.umaxica.app/"].forEach((it) =>
+["/app.localdomain:4000/", "/jp.umaxica.app/"].forEach((it) =>
 	main.route(it, app),
 );
 // for com
-["/com.localdomain:4444/", "/jp.umaxica.com/"].forEach((it) =>
+["/com.localdomain:4000/", "/jp.umaxica.com/"].forEach((it) =>
 	main.route(it, com),
 );
 // for org
-["/org.localdomain:4444/", "/jp.umaxica.org/"].forEach((it) =>
+["/org.localdomain:4000/", "/jp.umaxica.org/"].forEach((it) =>
 	main.route(it, org),
 );
 // Region selector

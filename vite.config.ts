@@ -5,7 +5,7 @@ import ssrHotReload from "vite-plugin-ssr-hot-reload";
 
 export default defineConfig(({ command, isSsrBuild }) => {
 	if (command === "serve") {
-		return { plugins: [ssrHotReload(), cloudflare()], server: {host: true, port: 4444, allowedHosts: true} };
+		return { plugins: [ssrHotReload(), cloudflare()], server: {host: true, port: 4000, allowedHosts: true} };
 	}
 	if (!isSsrBuild) {
 		return {
@@ -29,6 +29,6 @@ export default defineConfig(({ command, isSsrBuild }) => {
 	};
 });
 export const server = {
-	port: 4444,
+	port: 4000,
 	host: "0.0.0.0",
 };

@@ -1,0 +1,11 @@
+services:
+  umaxica-app:
+    build: .
+    ports:
+      - "4444:4000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: bun run server

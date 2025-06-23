@@ -6,7 +6,7 @@ describe("Hono Routes Tests", () => {
 	// 基本的なルートテスト
 	describe("Basic Route Tests", () => {
 		it("should respond to GET /", async () => {
-			const req = new Request("http://app.localdomain:4444/");
+			const req = new Request("http://app.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(200);
@@ -14,7 +14,7 @@ describe("Hono Routes Tests", () => {
 		});
 
 		it("should return 404 for non-existent route", async () => {
-			const req = new Request("http://app.localdomain:4444/non-existent");
+			const req = new Request("http://app.localdomain:4000/non-existent");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(404);
@@ -24,7 +24,7 @@ describe("Hono Routes Tests", () => {
 	// ドメイン別ルートテスト
 	describe("Domain-specific Routes", () => {
 		it("should handle app domain", async () => {
-			const req = new Request("http://app.localdomain:4444/");
+			const req = new Request("http://app.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(200);
@@ -33,7 +33,7 @@ describe("Hono Routes Tests", () => {
 		});
 
 		it("should handle com domain", async () => {
-			const req = new Request("http://com.localdomain:4444/");
+			const req = new Request("http://com.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(200);
@@ -42,7 +42,7 @@ describe("Hono Routes Tests", () => {
 		});
 
 		it("should handle org domain", async () => {
-			const req = new Request("http://org.localdomain:4444/");
+			const req = new Request("http://org.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(200);
@@ -54,7 +54,7 @@ describe("Hono Routes Tests", () => {
 	// HTTPメソッドテスト
 	describe("HTTP Methods", () => {
 		it("should handle GET requests", async () => {
-			const req = new Request("http://app.localdomain:4444/", {
+			const req = new Request("http://app.localdomain:4000/", {
 				method: "GET",
 			});
 			const res = await main.fetch(req);
@@ -63,7 +63,7 @@ describe("Hono Routes Tests", () => {
 		});
 
 		it("should handle POST requests if implemented", async () => {
-			const req = new Request("http://app.localdomain:4444/api/test", {
+			const req = new Request("http://app.localdomain:4000/api/test", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -80,14 +80,14 @@ describe("Hono Routes Tests", () => {
 	// ヘッダーテスト
 	describe("Response Headers", () => {
 		it("should set correct content-type for HTML", async () => {
-			const req = new Request("http://app.localdomain:4444/");
+			const req = new Request("http://app.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			expect(res.headers.get("content-type")).toBe("text/html; charset=UTF-8");
 		});
 
 		it("should include security headers", async () => {
-			const req = new Request("http://app.localdomain:4444/");
+			const req = new Request("http://app.localdomain:4000/");
 			const res = await main.fetch(req);
 
 			// セキュリティヘッダーの確認（実装に応じて調整）
@@ -96,7 +96,7 @@ describe("Hono Routes Tests", () => {
 		});
 
 		it("should handle CORS headers", async () => {
-			const req = new Request("http://app.localdomain:4444/", {
+			const req = new Request("http://app.localdomain:4000/", {
 				method: "GET",
 				headers: {
 					Origin: "http://localhost:3000",
@@ -113,14 +113,14 @@ describe("Hono Routes Tests", () => {
 	// パラメータテスト
 	describe("URL Parameters", () => {
 		it("should handle query parameters", async () => {
-			const req = new Request("http://app.localdomain:4444/?param=value");
+			const req = new Request("http://app.localdomain:4000/?param=value");
 			const res = await main.fetch(req);
 
 			expect(res.status).toBe(200);
 		});
 
 		it("should handle path parameters if implemented", async () => {
-			const req = new Request("http://app.localdomain:4444/user/123");
+			const req = new Request("http://app.localdomain:4000/user/123");
 			const res = await main.fetch(req);
 
 			// パスパラメータが実装されていない場合は404
@@ -131,7 +131,7 @@ describe("Hono Routes Tests", () => {
 	// エラーハンドリングテスト
 	describe("Error Handling", () => {
 		it("should handle invalid JSON in request body", async () => {
-			const req = new Request("http://app.localdomain:4444/api/test", {
+			const req = new Request("http://app.localdomain:4000/api/test", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
