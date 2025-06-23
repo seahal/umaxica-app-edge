@@ -22,7 +22,7 @@
     "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.4",
+    "@biomejs/biome": "^2.0.5",
     "@cloudflare/vite-plugin": "^0.1.21",
     "@cloudflare/workers-types": "^4.20250620.0",
     "@hono/vite-build": "^1.6.2",

@@ -42,4 +42,7 @@ app.get("/contact", (c) =>
 	),
 );
 
+app.get("/health.html", (c) => c.html(<p>OK</p>));
+app.get("/health.json", (c) => c.json({ status: "OK" }));
+
 export default app;
