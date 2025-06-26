@@ -17,13 +17,11 @@ pre-commit:
       skip:
         - merge
         - rebase
+    cf-typegen:
+      run: bun run cf-typegen
 
 pre-push:
   parallel: true
   commands:
     test:
       run: bun test
-    build:
-      run: bun run build
-    cf-typegen:
-      run: bun run cf-typegen
