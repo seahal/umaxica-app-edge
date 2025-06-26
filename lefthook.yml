@@ -1,11 +1,15 @@
 pre-commit:
+  parallel: true
   commands:
     format:
       run: bun run format
     lint:
       run: bun run lint
+    audit:
+      run: bun audit
 
 pre-push:
+  parallel: true
   commands:
     test:
       run: bun test
