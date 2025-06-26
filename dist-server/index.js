@@ -1,1 +1,1781 @@
-var un=Object.defineProperty;var Ut=e=>{throw TypeError(e)};var fn=(e,t,r)=>t in e?un(e,t,{enumerable:!0,configurable:!0,writable:!0,value:r}):e[t]=r;var y=(e,t,r)=>fn(e,typeof t!="symbol"?t+"":t,r),ft=(e,t,r)=>t.has(e)||Ut("Cannot "+r);var u=(e,t,r)=>(ft(e,t,"read from private field"),r?r.call(e):t.get(e)),P=(e,t,r)=>t.has(e)?Ut("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,r),E=(e,t,r,n)=>(ft(e,t,"write to private field"),n?n.call(e,r):t.set(e,r),r),S=(e,t,r)=>(ft(e,t,"access private method"),r);var Wt=(e,t,r,n)=>({set _(s){E(e,t,s,r)},get _(){return u(e,t,n)}});var br={Stringify:1},D=(e,t)=>{const r=new String(e);return r.isEscaped=!0,r.callbacks=t,r},hn=/[&<>'"]/,Pr=async(e,t)=>{let r="";t||(t=[]);const n=await Promise.all(e);for(let s=n.length-1;r+=n[s],s--,!(s<0);s--){let i=n[s];typeof i=="object"&&t.push(...i.callbacks||[]);const o=i.isEscaped;if(i=await(typeof i=="object"?i.toString():i),typeof i=="object"&&t.push(...i.callbacks||[]),i.isEscaped??o)r+=i;else{const a=[r];re(i,a),r=a[0]}}return D(r,t)},re=(e,t)=>{const r=e.search(hn);if(r===-1){t[0]+=e;return}let n,s,i=0;for(s=r;s<e.length;s++){switch(e.charCodeAt(s)){case 34:n="&quot;";break;case 39:n="&#39;";break;case 38:n="&amp;";break;case 60:n="&lt;";break;case 62:n="&gt;";break;default:continue}t[0]+=e.substring(i,s)+n,i=s+1}t[0]+=e.substring(i,s)},Cr=e=>{const t=e.callbacks;if(!(t!=null&&t.length))return e;const r=[e],n={};return t.forEach(s=>s({phase:br.Stringify,buffer:r,context:n})),r[0]},Or=async(e,t,r,n,s)=>{typeof e=="object"&&!(e instanceof String)&&(e instanceof Promise||(e=e.toString()),e instanceof Promise&&(e=await e));const i=e.callbacks;return i!=null&&i.length?(s?s[0]+=e:s=[e],Promise.all(i.map(a=>a({phase:t,buffer:s,context:n}))).then(a=>Promise.all(a.filter(Boolean).map(c=>Or(c,t,!1,n,s))).then(()=>s[0]))):Promise.resolve(e)},dn=(e,...t)=>{const r=[""];for(let n=0,s=e.length-1;n<s;n++){r[0]+=e[n];const i=Array.isArray(t[n])?t[n].flat(1/0):[t[n]];for(let o=0,a=i.length;o<a;o++){const c=i[o];if(typeof c=="string")re(c,r);else if(typeof c=="number")r[0]+=c;else{if(typeof c=="boolean"||c===null||c===void 0)continue;if(typeof c=="object"&&c.isEscaped)if(c.callbacks)r.unshift("",c);else{const l=c.toString();l instanceof Promise?r.unshift("",l):r[0]+=l}else c instanceof Promise?r.unshift("",c):re(c.toString(),r)}}}return r[0]+=e.at(-1),r.length===1?"callbacks"in r?D(Cr(D(r[0],r.callbacks))):D(r[0]):Pr(r,r.callbacks)},$t=Symbol("RENDERER"),Pt=Symbol("ERROR_HANDLER"),R=Symbol("STASH"),Sr=Symbol("INTERNAL"),gn=Symbol("MEMO"),rt=Symbol("PERMALINK"),Kt=e=>(e[Sr]=!0,e),Ar=e=>({value:t,children:r})=>{if(!r)return;const n={children:[{tag:Kt(()=>{e.push(t)}),props:{}}]};Array.isArray(r)?n.children.push(...r.flat()):n.children.push(r),n.children.push({tag:Kt(()=>{e.pop()}),props:{}});const s={tag:"",props:n,type:""};return s[Pt]=i=>{throw e.pop(),i},s},Rr=e=>{const t=[e],r=Ar(t);return r.values=t,r.Provider=r,be.push(r),r},be=[],jt=e=>{const t=[e],r=n=>{t.push(n.value);let s;try{s=n.children?(Array.isArray(n.children)?new Tr("",{},n.children):n.children).toString():""}finally{t.pop()}return s instanceof Promise?s.then(i=>D(i,i.callbacks)):D(s)};return r.values=t,r.Provider=r,r[$t]=Ar(t),be.push(r),r},Oe=e=>e.values.at(-1),Xe={title:[],script:["src"],style:["data-href"],link:["href"],meta:["name","httpEquiv","charset","itemProp"]},Ct={},Ge="data-precedence",Fe=e=>Array.isArray(e)?e:[e],Vt=new WeakMap,zt=(e,t,r,n)=>({buffer:s,context:i})=>{if(!s)return;const o=Vt.get(i)||{};Vt.set(i,o);const a=o[e]||(o[e]=[]);let c=!1;const l=Xe[e];if(l.length>0){e:for(const[,f]of a)for(const h of l)if(((f==null?void 0:f[h])??null)===(r==null?void 0:r[h])){c=!0;break e}}if(c?s[0]=s[0].replaceAll(t,""):l.length>0?a.push([t,r,n]):a.unshift([t,r,n]),s[0].indexOf("</head>")!==-1){let f;if(n===void 0)f=a.map(([h])=>h);else{const h=[];f=a.map(([d,,p])=>{let g=h.indexOf(p);return g===-1&&(h.push(p),g=h.length-1),[d,g]}).sort((d,p)=>d[1]-p[1]).map(([d])=>d)}f.forEach(h=>{s[0]=s[0].replaceAll(h,"")}),s[0]=s[0].replace(/(?=<\/head>)/,f.join(""))}},Be=(e,t,r)=>D(new q(e,r,Fe(t??[])).toString()),Ue=(e,t,r,n)=>{if("itemProp"in r)return Be(e,t,r);let{precedence:s,blocking:i,...o}=r;s=n?s??"":void 0,n&&(o[Ge]=s);const a=new q(e,o,Fe(t||[])).toString();return a instanceof Promise?a.then(c=>D(a,[...c.callbacks||[],zt(e,c,o,s)])):D(a,[zt(e,a,o,s)])},pn=({children:e,...t})=>{const r=Tt();if(r){const n=Oe(r);if(n==="svg"||n==="head")return new q("title",t,Fe(e??[]))}return Ue("title",e,t,!1)},mn=({children:e,...t})=>{const r=Tt();return["src","async"].some(n=>!t[n])||r&&Oe(r)==="head"?Be("script",e,t):Ue("script",e,t,!1)},vn=({children:e,...t})=>["href","precedence"].every(r=>r in t)?(t["data-href"]=t.href,delete t.href,Ue("style",e,t,!0)):Be("style",e,t),yn=({children:e,...t})=>["onLoad","onError"].some(r=>r in t)||t.rel==="stylesheet"&&(!("precedence"in t)||"disabled"in t)?Be("link",e,t):Ue("link",e,t,"precedence"in t),wn=({children:e,...t})=>{const r=Tt();return r&&Oe(r)==="head"?Be("meta",e,t):Ue("meta",e,t,!1)},kr=(e,{children:t,...r})=>new q(e,r,Fe(t??[])),xn=e=>(typeof e.action=="function"&&(e.action=rt in e.action?e.action[rt]:void 0),kr("form",e)),$r=(e,t)=>(typeof t.formAction=="function"&&(t.formAction=rt in t.formAction?t.formAction[rt]:void 0),kr(e,t)),En=e=>$r("input",e),bn=e=>$r("button",e);const ht=Object.freeze(Object.defineProperty({__proto__:null,button:bn,form:xn,input:En,link:yn,meta:wn,script:mn,style:vn,title:pn},Symbol.toStringTag,{value:"Module"}));var Pn=new Map([["className","class"],["htmlFor","for"],["crossOrigin","crossorigin"],["httpEquiv","http-equiv"],["itemProp","itemprop"],["fetchPriority","fetchpriority"],["noModule","nomodule"],["formAction","formaction"]]),nt=e=>Pn.get(e)||e,jr=(e,t)=>{for(const[r,n]of Object.entries(e)){const s=r[0]==="-"||!/[A-Z]/.test(r)?r:r.replace(/[A-Z]/g,i=>`-${i.toLowerCase()}`);t(s,n==null?null:typeof n=="number"?s.match(/^(?:a|border-im|column(?:-c|s)|flex(?:$|-[^b])|grid-(?:ar|[^a])|font-w|li|or|sca|st|ta|wido|z)|ty$/)?`${n}`:`${n}px`:n)}},Te=void 0,Tt=()=>Te,Cn=e=>/[A-Z]/.test(e)&&e.match(/^(?:al|basel|clip(?:Path|Rule)$|co|do|fill|fl|fo|gl|let|lig|i|marker[EMS]|o|pai|pointe|sh|st[or]|text[^L]|tr|u|ve|w)/)?e.replace(/([A-Z])/g,"-$1").toLowerCase():e,On=["area","base","br","col","embed","hr","img","input","keygen","link","meta","param","source","track","wbr"],Sn=["allowfullscreen","async","autofocus","autoplay","checked","controls","default","defer","disabled","download","formnovalidate","hidden","inert","ismap","itemscope","loop","multiple","muted","nomodule","novalidate","open","playsinline","readonly","required","reversed","selected"],Lt=(e,t)=>{for(let r=0,n=e.length;r<n;r++){const s=e[r];if(typeof s=="string")re(s,t);else{if(typeof s=="boolean"||s===null||s===void 0)continue;s instanceof q?s.toStringToBuffer(t):typeof s=="number"||s.isEscaped?t[0]+=s:s instanceof Promise?t.unshift("",s):Lt(s,t)}}},q=class{constructor(e,t,r){y(this,"tag");y(this,"props");y(this,"key");y(this,"children");y(this,"isEscaped",!0);y(this,"localContexts");this.tag=e,this.props=t,this.children=r}get type(){return this.tag}get ref(){return this.props.ref||null}toString(){var t,r;const e=[""];(t=this.localContexts)==null||t.forEach(([n,s])=>{n.values.push(s)});try{this.toStringToBuffer(e)}finally{(r=this.localContexts)==null||r.forEach(([n])=>{n.values.pop()})}return e.length===1?"callbacks"in e?Cr(D(e[0],e.callbacks)).toString():e[0]:Pr(e,e.callbacks)}toStringToBuffer(e){const t=this.tag,r=this.props;let{children:n}=this;e[0]+=`<${t}`;const s=Te&&Oe(Te)==="svg"?i=>Cn(nt(i)):i=>nt(i);for(let[i,o]of Object.entries(r))if(i=s(i),i!=="children"){if(i==="style"&&typeof o=="object"){let a="";jr(o,(c,l)=>{l!=null&&(a+=`${a?";":""}${c}:${l}`)}),e[0]+=' style="',re(a,e),e[0]+='"'}else if(typeof o=="string")e[0]+=` ${i}="`,re(o,e),e[0]+='"';else if(o!=null)if(typeof o=="number"||o.isEscaped)e[0]+=` ${i}="${o}"`;else if(typeof o=="boolean"&&Sn.includes(i))o&&(e[0]+=` ${i}=""`);else if(i==="dangerouslySetInnerHTML"){if(n.length>0)throw"Can only set one of `children` or `props.dangerouslySetInnerHTML`.";n=[D(o.__html)]}else if(o instanceof Promise)e[0]+=` ${i}="`,e.unshift('"',o);else if(typeof o=="function"){if(!i.startsWith("on"))throw`Invalid prop '${i}' of type 'function' supplied to '${t}'.`}else e[0]+=` ${i}="`,re(o.toString(),e),e[0]+='"'}if(On.includes(t)&&n.length===0){e[0]+="/>";return}e[0]+=">",Lt(n,e),e[0]+=`</${t}>`}},dt=class extends q{toStringToBuffer(e){const{children:t}=this,r=this.tag.call(null,{...this.props,children:t.length<=1?t[0]:t});if(!(typeof r=="boolean"||r==null))if(r instanceof Promise)if(be.length===0)e.unshift("",r);else{const n=be.map(s=>[s,s.values.at(-1)]);e.unshift("",r.then(s=>(s instanceof q&&(s.localContexts=n),s)))}else r instanceof q?r.toStringToBuffer(e):typeof r=="number"||r.isEscaped?(e[0]+=r,r.callbacks&&(e.callbacks||(e.callbacks=[]),e.callbacks.push(...r.callbacks))):re(r,e)}},Tr=class extends q{toStringToBuffer(e){Lt(this.children,e)}},Xt=(e,t,...r)=>{t??(t={}),r.length&&(t.children=r.length===1?r[0]:r);const n=t.key;delete t.key;const s=Ze(e,t,r);return s.key=n,s},Gt=!1,Ze=(e,t,r)=>{if(!Gt){for(const n in Ct)ht[n][$t]=Ct[n];Gt=!0}return typeof e=="function"?new dt(e,t,r):ht[e]?new dt(ht[e],t,r):e==="svg"||e==="head"?(Te||(Te=jt("")),new q(e,t,[new dt(Te,{value:e},r)])):new q(e,t,r)},Lr=({children:e})=>new Tr("",{children:e},Array.isArray(e)?e:e?[e]:[]);function v(e,t,r){let n;if(!t||!("children"in t))n=Ze(e,t,[]);else{const s=t.children;n=Array.isArray(s)?Ze(e,t,s):Ze(e,t,[s])}return n.key=r,n}var Zt=(e,t,r)=>(n,s)=>{let i=-1;return o(0);async function o(a){if(a<=i)throw new Error("next() called multiple times");i=a;let c,l=!1,f;if(e[a]?(f=e[a][0][0],n.req.routeIndex=a):f=a===e.length&&s||void 0,f)try{c=await f(n,()=>o(a+1))}catch(h){if(h instanceof Error&&t)n.error=h,c=await t(h,n),l=!0;else throw h}else n.finalized===!1&&r&&(c=await r(n));return c&&(n.finalized===!1||l)&&(n.res=c),n}},An=Symbol(),Rn=async(e,t=Object.create(null))=>{const{all:r=!1,dot:n=!1}=t,i=(e instanceof _r?e.raw.headers:e.headers).get("Content-Type");return i!=null&&i.startsWith("multipart/form-data")||i!=null&&i.startsWith("application/x-www-form-urlencoded")?kn(e,{all:r,dot:n}):{}};async function kn(e,t){const r=await e.formData();return r?$n(r,t):{}}function $n(e,t){const r=Object.create(null);return e.forEach((n,s)=>{t.all||s.endsWith("[]")?jn(r,s,n):r[s]=n}),t.dot&&Object.entries(r).forEach(([n,s])=>{n.includes(".")&&(Tn(r,n,s),delete r[n])}),r}var jn=(e,t,r)=>{e[t]!==void 0?Array.isArray(e[t])?e[t].push(r):e[t]=[e[t],r]:t.endsWith("[]")?e[t]=[r]:e[t]=r},Tn=(e,t,r)=>{let n=e;const s=t.split(".");s.forEach((i,o)=>{o===s.length-1?n[i]=r:((!n[i]||typeof n[i]!="object"||Array.isArray(n[i])||n[i]instanceof File)&&(n[i]=Object.create(null)),n=n[i])})},Nr=e=>{const t=e.split("/");return t[0]===""&&t.shift(),t},Ln=e=>{const{groups:t,path:r}=Nn(e),n=Nr(r);return Hn(n,t)},Nn=e=>{const t=[];return e=e.replace(/\{[^}]+\}/g,(r,n)=>{const s=`@${n}`;return t.push([s,r]),s}),{groups:t,path:e}},Hn=(e,t)=>{for(let r=t.length-1;r>=0;r--){const[n]=t[r];for(let s=e.length-1;s>=0;s--)if(e[s].includes(n)){e[s]=e[s].replace(n,t[r][1]);break}}return e},Ve={},Dn=(e,t)=>{if(e==="*")return"*";const r=e.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);if(r){const n=`${e}#${t}`;return Ve[n]||(r[2]?Ve[n]=t&&t[0]!==":"&&t[0]!=="*"?[n,r[1],new RegExp(`^${r[2]}(?=/${t})`)]:[e,r[1],new RegExp(`^${r[2]}$`)]:Ve[n]=[e,r[1],!0]),Ve[n]}return null},Nt=(e,t)=>{try{return t(e)}catch{return e.replace(/(?:%[0-9A-Fa-f]{2})+/g,r=>{try{return t(r)}catch{return r}})}},_n=e=>Nt(e,decodeURI),Hr=e=>{const t=e.url,r=t.indexOf("/",t.charCodeAt(9)===58?13:8);let n=r;for(;n<t.length;n++){const s=t.charCodeAt(n);if(s===37){const i=t.indexOf("?",n),o=t.slice(r,i===-1?void 0:i);return _n(o.includes("%25")?o.replace(/%25/g,"%2525"):o)}else if(s===63)break}return t.slice(r,n)},Mn=e=>{const t=Hr(e);return t.length>1&&t.at(-1)==="/"?t.slice(0,-1):t},ge=(e,t,...r)=>(r.length&&(t=ge(t,...r)),`${(e==null?void 0:e[0])==="/"?"":"/"}${e}${t==="/"?"":`${(e==null?void 0:e.at(-1))==="/"?"":"/"}${(t==null?void 0:t[0])==="/"?t.slice(1):t}`}`),Ht=e=>{if(e.charCodeAt(e.length-1)!==63||!e.includes(":"))return null;const t=e.split("/"),r=[];let n="";return t.forEach(s=>{if(s!==""&&!/\:/.test(s))n+="/"+s;else if(/\:/.test(s))if(/\?/.test(s)){r.length===0&&n===""?r.push("/"):r.push(n);const i=s.replace("?","");n+="/"+i,r.push(n)}else n+="/"+s}),r.filter((s,i,o)=>o.indexOf(s)===i)},gt=e=>/[%+]/.test(e)?(e.indexOf("+")!==-1&&(e=e.replace(/\+/g," ")),e.indexOf("%")!==-1?Nt(e,Dt):e):e,Dr=(e,t,r)=>{let n;if(!r&&t&&!/[%+]/.test(t)){let o=e.indexOf(`?${t}`,8);for(o===-1&&(o=e.indexOf(`&${t}`,8));o!==-1;){const a=e.charCodeAt(o+t.length+1);if(a===61){const c=o+t.length+2,l=e.indexOf("&",c);return gt(e.slice(c,l===-1?void 0:l))}else if(a==38||isNaN(a))return"";o=e.indexOf(`&${t}`,o+1)}if(n=/[%+]/.test(e),!n)return}const s={};n??(n=/[%+]/.test(e));let i=e.indexOf("?",8);for(;i!==-1;){const o=e.indexOf("&",i+1);let a=e.indexOf("=",i);a>o&&o!==-1&&(a=-1);let c=e.slice(i+1,a===-1?o===-1?void 0:o:a);if(n&&(c=gt(c)),i=o,c==="")continue;let l;a===-1?l="":(l=e.slice(a+1,o===-1?void 0:o),n&&(l=gt(l))),r?(s[c]&&Array.isArray(s[c])||(s[c]=[]),s[c].push(l)):s[c]??(s[c]=l)}return t?s[t]:s},In=Dr,qn=(e,t)=>Dr(e,t,!0),Dt=decodeURIComponent,Jt=e=>Nt(e,Dt),me,H,X,Mr,Ir,Ot,Z,hr,_r=(hr=class{constructor(e,t="/",r=[[]]){P(this,X);y(this,"raw");P(this,me);P(this,H);y(this,"routeIndex",0);y(this,"path");y(this,"bodyCache",{});P(this,Z,e=>{const{bodyCache:t,raw:r}=this,n=t[e];if(n)return n;const s=Object.keys(t)[0];return s?t[s].then(i=>(s==="json"&&(i=JSON.stringify(i)),new Response(i)[e]())):t[e]=r[e]()});this.raw=e,this.path=t,E(this,H,r),E(this,me,{})}param(e){return e?S(this,X,Mr).call(this,e):S(this,X,Ir).call(this)}query(e){return In(this.url,e)}queries(e){return qn(this.url,e)}header(e){if(e)return this.raw.headers.get(e)??void 0;const t={};return this.raw.headers.forEach((r,n)=>{t[n]=r}),t}async parseBody(e){var t;return(t=this.bodyCache).parsedBody??(t.parsedBody=await Rn(this,e))}json(){return u(this,Z).call(this,"json")}text(){return u(this,Z).call(this,"text")}arrayBuffer(){return u(this,Z).call(this,"arrayBuffer")}blob(){return u(this,Z).call(this,"blob")}formData(){return u(this,Z).call(this,"formData")}addValidatedData(e,t){u(this,me)[e]=t}valid(e){return u(this,me)[e]}get url(){return this.raw.url}get method(){return this.raw.method}get[An](){return u(this,H)}get matchedRoutes(){return u(this,H)[0].map(([[,e]])=>e)}get routePath(){return u(this,H)[0].map(([[,e]])=>e)[this.routeIndex].path}},me=new WeakMap,H=new WeakMap,X=new WeakSet,Mr=function(e){const t=u(this,H)[0][this.routeIndex][1][e],r=S(this,X,Ot).call(this,t);return r?/\%/.test(r)?Jt(r):r:void 0},Ir=function(){const e={},t=Object.keys(u(this,H)[0][this.routeIndex][1]);for(const r of t){const n=S(this,X,Ot).call(this,u(this,H)[0][this.routeIndex][1][r]);n&&typeof n=="string"&&(e[r]=/\%/.test(n)?Jt(n):n)}return e},Ot=function(e){return u(this,H)[1]?u(this,H)[1][e]:e},Z=new WeakMap,hr),Fn="text/plain; charset=UTF-8",pt=(e,t)=>({"Content-Type":e,...t}),He,De,W,ve,K,N,_e,ye,we,ae,Me,Ie,J,pe,dr,Bn=(dr=class{constructor(e,t){P(this,J);P(this,He);P(this,De);y(this,"env",{});P(this,W);y(this,"finalized",!1);y(this,"error");P(this,ve);P(this,K);P(this,N);P(this,_e);P(this,ye);P(this,we);P(this,ae);P(this,Me);P(this,Ie);y(this,"render",(...e)=>(u(this,ye)??E(this,ye,t=>this.html(t)),u(this,ye).call(this,...e)));y(this,"setLayout",e=>E(this,_e,e));y(this,"getLayout",()=>u(this,_e));y(this,"setRenderer",e=>{E(this,ye,e)});y(this,"header",(e,t,r)=>{this.finalized&&E(this,N,new Response(u(this,N).body,u(this,N)));const n=u(this,N)?u(this,N).headers:u(this,ae)??E(this,ae,new Headers);t===void 0?n.delete(e):r!=null&&r.append?n.append(e,t):n.set(e,t)});y(this,"status",e=>{E(this,ve,e)});y(this,"set",(e,t)=>{u(this,W)??E(this,W,new Map),u(this,W).set(e,t)});y(this,"get",e=>u(this,W)?u(this,W).get(e):void 0);y(this,"newResponse",(...e)=>S(this,J,pe).call(this,...e));y(this,"body",(e,t,r)=>S(this,J,pe).call(this,e,t,r));y(this,"text",(e,t,r)=>!u(this,ae)&&!u(this,ve)&&!t&&!r&&!this.finalized?new Response(e):S(this,J,pe).call(this,e,t,pt(Fn,r)));y(this,"json",(e,t,r)=>S(this,J,pe).call(this,JSON.stringify(e),t,pt("application/json",r)));y(this,"html",(e,t,r)=>{const n=s=>S(this,J,pe).call(this,s,t,pt("text/html; charset=UTF-8",r));return typeof e=="object"?Or(e,br.Stringify,!1,{}).then(n):n(e)});y(this,"redirect",(e,t)=>(this.header("Location",String(e)),this.newResponse(null,t??302)));y(this,"notFound",()=>(u(this,we)??E(this,we,()=>new Response),u(this,we).call(this,this)));E(this,He,e),t&&(E(this,K,t.executionCtx),this.env=t.env,E(this,we,t.notFoundHandler),E(this,Ie,t.path),E(this,Me,t.matchResult))}get req(){return u(this,De)??E(this,De,new _r(u(this,He),u(this,Ie),u(this,Me))),u(this,De)}get event(){if(u(this,K)&&"respondWith"in u(this,K))return u(this,K);throw Error("This context has no FetchEvent")}get executionCtx(){if(u(this,K))return u(this,K);throw Error("This context has no ExecutionContext")}get res(){return u(this,N)||E(this,N,new Response(null,{headers:u(this,ae)??E(this,ae,new Headers)}))}set res(e){if(u(this,N)&&e){e=new Response(e.body,e);for(const[t,r]of u(this,N).headers.entries())if(t!=="content-type")if(t==="set-cookie"){const n=u(this,N).headers.getSetCookie();e.headers.delete("set-cookie");for(const s of n)e.headers.append("set-cookie",s)}else e.headers.set(t,r)}E(this,N,e),this.finalized=!0}get var(){return u(this,W)?Object.fromEntries(u(this,W)):{}}},He=new WeakMap,De=new WeakMap,W=new WeakMap,ve=new WeakMap,K=new WeakMap,N=new WeakMap,_e=new WeakMap,ye=new WeakMap,we=new WeakMap,ae=new WeakMap,Me=new WeakMap,Ie=new WeakMap,J=new WeakSet,pe=function(e,t,r){const n=u(this,N)?new Headers(u(this,N).headers):u(this,ae)??new Headers;if(typeof t=="object"&&"headers"in t){const i=t.headers instanceof Headers?t.headers:new Headers(t.headers);for(const[o,a]of i)o.toLowerCase()==="set-cookie"?n.append(o,a):n.set(o,a)}if(r)for(const[i,o]of Object.entries(r))if(typeof o=="string")n.set(i,o);else{n.delete(i);for(const a of o)n.append(i,a)}const s=typeof t=="number"?t:(t==null?void 0:t.status)??u(this,ve);return new Response(e,{status:s,headers:n})},dr),k="ALL",Un="all",Wn=["get","post","put","delete","options","patch"],qr="Can not add a route since the matcher is already built.",_t=class extends Error{},Kn="__COMPOSED_HANDLER",Vn=e=>e.text("404 Not Found",404),Qt=(e,t)=>{if("getResponse"in e){const r=e.getResponse();return t.newResponse(r.body,r)}return console.error(e),t.text("Internal Server Error",500)},_,$,Fr,M,ie,Je,Qe,gr,Mt=(gr=class{constructor(t={}){P(this,$);y(this,"get");y(this,"post");y(this,"put");y(this,"delete");y(this,"options");y(this,"patch");y(this,"all");y(this,"on");y(this,"use");y(this,"router");y(this,"getPath");y(this,"_basePath","/");P(this,_,"/");y(this,"routes",[]);P(this,M,Vn);y(this,"errorHandler",Qt);y(this,"onError",t=>(this.errorHandler=t,this));y(this,"notFound",t=>(E(this,M,t),this));y(this,"fetch",(t,...r)=>S(this,$,Qe).call(this,t,r[1],r[0],t.method));y(this,"request",(t,r,n,s)=>t instanceof Request?this.fetch(r?new Request(t,r):t,n,s):(t=t.toString(),this.fetch(new Request(/^https?:\/\//.test(t)?t:`http://localhost${ge("/",t)}`,r),n,s)));y(this,"fire",()=>{addEventListener("fetch",t=>{t.respondWith(S(this,$,Qe).call(this,t.request,t,void 0,t.request.method))})});[...Wn,Un].forEach(i=>{this[i]=(o,...a)=>(typeof o=="string"?E(this,_,o):S(this,$,ie).call(this,i,u(this,_),o),a.forEach(c=>{S(this,$,ie).call(this,i,u(this,_),c)}),this)}),this.on=(i,o,...a)=>{for(const c of[o].flat()){E(this,_,c);for(const l of[i].flat())a.map(f=>{S(this,$,ie).call(this,l.toUpperCase(),u(this,_),f)})}return this},this.use=(i,...o)=>(typeof i=="string"?E(this,_,i):(E(this,_,"*"),o.unshift(i)),o.forEach(a=>{S(this,$,ie).call(this,k,u(this,_),a)}),this);const{strict:n,...s}=t;Object.assign(this,s),this.getPath=n??!0?t.getPath??Hr:Mn}route(t,r){const n=this.basePath(t);return r.routes.map(s=>{var o;let i;r.errorHandler===Qt?i=s.handler:(i=async(a,c)=>(await Zt([],r.errorHandler)(a,()=>s.handler(a,c))).res,i[Kn]=s.handler),S(o=n,$,ie).call(o,s.method,s.path,i)}),this}basePath(t){const r=S(this,$,Fr).call(this);return r._basePath=ge(this._basePath,t),r}mount(t,r,n){let s,i;n&&(typeof n=="function"?i=n:(i=n.optionHandler,n.replaceRequest===!1?s=c=>c:s=n.replaceRequest));const o=i?c=>{const l=i(c);return Array.isArray(l)?l:[l]}:c=>{let l;try{l=c.executionCtx}catch{}return[c.env,l]};s||(s=(()=>{const c=ge(this._basePath,t),l=c==="/"?0:c.length;return f=>{const h=new URL(f.url);return h.pathname=h.pathname.slice(l)||"/",new Request(h,f)}})());const a=async(c,l)=>{const f=await r(s(c.req.raw),...o(c));if(f)return f;await l()};return S(this,$,ie).call(this,k,ge(t,"*"),a),this}},_=new WeakMap,$=new WeakSet,Fr=function(){const t=new Mt({router:this.router,getPath:this.getPath});return t.errorHandler=this.errorHandler,E(t,M,u(this,M)),t.routes=this.routes,t},M=new WeakMap,ie=function(t,r,n){t=t.toUpperCase(),r=ge(this._basePath,r);const s={basePath:this._basePath,path:r,method:t,handler:n};this.router.add(t,r,[n,s]),this.routes.push(s)},Je=function(t,r){if(t instanceof Error)return this.errorHandler(t,r);throw t},Qe=function(t,r,n,s){if(s==="HEAD")return(async()=>new Response(null,await S(this,$,Qe).call(this,t,r,n,"GET")))();const i=this.getPath(t,{env:n}),o=this.router.match(s,i),a=new Bn(t,{path:i,matchResult:o,env:n,executionCtx:r,notFoundHandler:u(this,M)});if(o[0].length===1){let l;try{l=o[0][0][0][0](a,async()=>{a.res=await u(this,M).call(this,a)})}catch(f){return S(this,$,Je).call(this,f,a)}return l instanceof Promise?l.then(f=>f||(a.finalized?a.res:u(this,M).call(this,a))).catch(f=>S(this,$,Je).call(this,f,a)):l??u(this,M).call(this,a)}const c=Zt(o[0],this.errorHandler,u(this,M));return(async()=>{try{const l=await c(a);if(!l.finalized)throw new Error("Context is not finalized. Did you forget to return a Response object or `await next()`?");return l.res}catch(l){return S(this,$,Je).call(this,l,a)}})()},gr),mt=Object.create(null),zn=/\/(:\w+(?:{(?:(?:{[\d,]+})|[^}])+})?)|\/[^\/\?]+|(\?)/g,Xn=/\*/,xe,pr,Gn=(pr=class{constructor(){y(this,"name","LinearRouter");P(this,xe,[])}add(e,t,r){for(let n=0,s=Ht(t)||[t],i=s.length;n<i;n++)u(this,xe).push([e,s[n],r])}match(e,t){const r=[];e:for(let n=0,s=u(this,xe).length;n<s;n++){const[i,o,a]=u(this,xe)[n];if(i===e||i===k){if(o==="*"||o==="/*"){r.push([a,mt]);continue}const c=o.indexOf("*")!==-1,l=o.indexOf(":")!==-1;if(!c&&!l)(o===t||o+"/"===t)&&r.push([a,mt]);else if(c&&!l){const f=o.charCodeAt(o.length-1)===42,h=(f?o.slice(0,-2):o).split(Xn),d=h.length-1;for(let p=0,g=0,x=h.length;p<x;p++){const m=h[p];if(t.indexOf(m,g)!==g)continue e;if(g+=m.length,p===d){if(!f&&g!==t.length&&!(g===t.length-1&&t.charCodeAt(g)===47))continue e}else{const b=t.indexOf("/",g);if(b===-1)continue e;g=b}}r.push([a,mt])}else if(l&&!c){const f=Object.create(null),h=o.match(zn),d=h.length-1;for(let p=0,g=0,x=h.length;p<x;p++){if(g===-1||g>=t.length)continue e;const m=h[p];if(m.charCodeAt(1)===58){let w=m.slice(2),b;if(w.charCodeAt(w.length-1)===125){const C=w.indexOf("{"),O=h[p+1],A=O&&O[1]!==":"&&O[1]!=="*"?`(?=${O})`:"",ne=w.slice(C+1,-1)+A,se=t.slice(g+1),F=new RegExp(ne,"d").exec(se);if(!F||F.indices[0][0]!==0||F.indices[0][1]===0)continue e;w=w.slice(0,C),b=se.slice(...F.indices[0]),g+=F.indices[0][1]+1}else{let C=t.indexOf("/",g+1);if(C===-1){if(g+1===t.length)continue e;C=t.length}b=t.slice(g+1,C),g=C}f[w]||(f[w]=b)}else{if(t.indexOf(m,g)!==g)continue e;g+=m.length}if(p===d&&g!==t.length&&!(g===t.length-1&&t.charCodeAt(g)===47))continue e}r.push([a,f])}else if(l&&c)throw new _t}}return[r]}},xe=new WeakMap,pr),Q,V,mr,Br=(mr=class{constructor(e){y(this,"name","SmartRouter");P(this,Q,[]);P(this,V,[]);E(this,Q,e.routers)}add(e,t,r){if(!u(this,V))throw new Error(qr);u(this,V).push([e,t,r])}match(e,t){if(!u(this,V))throw new Error("Fatal error");const r=u(this,Q),n=u(this,V),s=r.length;let i=0,o;for(;i<s;i++){const a=r[i];try{for(let c=0,l=n.length;c<l;c++)a.add(...n[c]);o=a.match(e,t)}catch(c){if(c instanceof _t)continue;throw c}this.match=a.match.bind(a),E(this,Q,[a]),E(this,V,void 0);break}if(i===s)throw new Error("Fatal error");return this.name=`SmartRouter + ${this.activeRouter.name}`,o}get activeRouter(){if(u(this,V)||u(this,Q).length!==1)throw new Error("No active router has been determined yet.");return u(this,Q)[0]}},Q=new WeakMap,V=new WeakMap,mr),Ae=Object.create(null),Y,L,ce,Ee,T,z,oe,vr,Ur=(vr=class{constructor(t,r,n){P(this,z);P(this,Y);P(this,L);P(this,ce);P(this,Ee,0);P(this,T,Ae);if(E(this,L,n||Object.create(null)),E(this,Y,[]),t&&r){const s=Object.create(null);s[t]={handler:r,possibleKeys:[],score:0},E(this,Y,[s])}E(this,ce,[])}insert(t,r,n){E(this,Ee,++Wt(this,Ee)._);let s=this;const i=Ln(r),o=[];for(let a=0,c=i.length;a<c;a++){const l=i[a],f=i[a+1],h=Dn(l,f),d=Array.isArray(h)?h[0]:l;if(d in u(s,L)){s=u(s,L)[d],h&&o.push(h[1]);continue}u(s,L)[d]=new Ur,h&&(u(s,ce).push(h),o.push(h[1])),s=u(s,L)[d]}return u(s,Y).push({[t]:{handler:n,possibleKeys:o.filter((a,c,l)=>l.indexOf(a)===c),score:u(this,Ee)}}),s}search(t,r){var c;const n=[];E(this,T,Ae);let i=[this];const o=Nr(r),a=[];for(let l=0,f=o.length;l<f;l++){const h=o[l],d=l===f-1,p=[];for(let g=0,x=i.length;g<x;g++){const m=i[g],w=u(m,L)[h];w&&(E(w,T,u(m,T)),d?(u(w,L)["*"]&&n.push(...S(this,z,oe).call(this,u(w,L)["*"],t,u(m,T))),n.push(...S(this,z,oe).call(this,w,t,u(m,T)))):p.push(w));for(let b=0,C=u(m,ce).length;b<C;b++){const O=u(m,ce)[b],A=u(m,T)===Ae?{}:{...u(m,T)};if(O==="*"){const G=u(m,L)["*"];G&&(n.push(...S(this,z,oe).call(this,G,t,u(m,T))),E(G,T,A),p.push(G));continue}if(!h)continue;const[ne,se,F]=O,B=u(m,L)[ne],ln=o.slice(l).join("/");if(F instanceof RegExp){const G=F.exec(ln);if(G){if(A[se]=G[0],n.push(...S(this,z,oe).call(this,B,t,u(m,T),A)),Object.keys(u(B,L)).length){E(B,T,A);const ut=((c=G[0].match(/\//))==null?void 0:c.length)??0;(a[ut]||(a[ut]=[])).push(B)}continue}}(F===!0||F.test(h))&&(A[se]=h,d?(n.push(...S(this,z,oe).call(this,B,t,A,u(m,T))),u(B,L)["*"]&&n.push(...S(this,z,oe).call(this,u(B,L)["*"],t,A,u(m,T)))):(E(B,T,A),p.push(B)))}}i=p.concat(a.shift()??[])}return n.length>1&&n.sort((l,f)=>l.score-f.score),[n.map(({handler:l,params:f})=>[l,f])]}},Y=new WeakMap,L=new WeakMap,ce=new WeakMap,Ee=new WeakMap,T=new WeakMap,z=new WeakSet,oe=function(t,r,n,s){const i=[];for(let o=0,a=u(t,Y).length;o<a;o++){const c=u(t,Y)[o],l=c[r]||c[k],f={};if(l!==void 0&&(l.params=Object.create(null),i.push(l),n!==Ae||s&&s!==Ae))for(let h=0,d=l.possibleKeys.length;h<d;h++){const p=l.possibleKeys[h],g=f[l.score];l.params[p]=s!=null&&s[p]&&!g?s[p]:n[p]??(s==null?void 0:s[p]),f[l.score]=!0}}return i},vr),le,yr,Wr=(yr=class{constructor(){y(this,"name","TrieRouter");P(this,le);E(this,le,new Ur)}add(e,t,r){const n=Ht(t);if(n){for(let s=0,i=n.length;s<i;s++)u(this,le).insert(e,n[s],r);return}u(this,le).insert(e,t,r)}match(e,t){return u(this,le).search(e,t)}},le=new WeakMap,yr),We=class extends Mt{constructor(t={}){super(t),this.router=new Br({routers:[new Gn,new Wr]})}},Zn=e=>{const r={...{origin:"*",allowMethods:["GET","HEAD","PUT","POST","DELETE","PATCH"],allowHeaders:[],exposeHeaders:[]},...e},n=(i=>typeof i=="string"?i==="*"?()=>i:o=>i===o?o:null:typeof i=="function"?i:o=>i.includes(o)?o:null)(r.origin),s=(i=>typeof i=="function"?i:Array.isArray(i)?()=>i:()=>[])(r.allowMethods);return async function(o,a){var f;function c(h,d){o.res.headers.set(h,d)}const l=n(o.req.header("origin")||"",o);if(l&&c("Access-Control-Allow-Origin",l),r.origin!=="*"){const h=o.req.header("Vary");h?c("Vary",h):c("Vary","Origin")}if(r.credentials&&c("Access-Control-Allow-Credentials","true"),(f=r.exposeHeaders)!=null&&f.length&&c("Access-Control-Expose-Headers",r.exposeHeaders.join(",")),o.req.method==="OPTIONS"){r.maxAge!=null&&c("Access-Control-Max-Age",r.maxAge.toString());const h=s(o.req.header("origin")||"",o);h.length&&c("Access-Control-Allow-Methods",h.join(","));let d=r.allowHeaders;if(!(d!=null&&d.length)){const p=o.req.header("Access-Control-Request-Headers");p&&(d=p.split(/\s*,\s*/))}return d!=null&&d.length&&(c("Access-Control-Allow-Headers",d.join(",")),o.res.headers.append("Vary","Access-Control-Request-Headers")),o.res.headers.delete("Content-Length"),o.res.headers.delete("Content-Type"),new Response(null,{headers:o.res.headers,status:204,statusText:"No Content"})}await a()}},Kr=class extends Error{constructor(t=500,r){super(r==null?void 0:r.message,{cause:r==null?void 0:r.cause});y(this,"res");y(this,"status");this.res=r==null?void 0:r.res,this.status=t}getResponse(){return this.res?new Response(this.res.body,{status:this.status,headers:this.res.headers}):new Response(this.message,{status:this.status})}},Jn=/^(GET|HEAD)$/,Qn=/^\b(application\/x-www-form-urlencoded|multipart\/form-data|text\/plain)\b/i,Yn=e=>{const t=(n=>(s,i)=>s===new URL(i.req.url).origin)(),r=(n,s)=>n===void 0?!1:t(n,s);return async function(s,i){if(!Jn.test(s.req.method)&&Qn.test(s.req.header("content-type")||"text/plain")&&!r(s.req.header("origin"),s)){const o=new Response("Forbidden",{status:403});throw new Kr(403,{res:o})}await i()}},es=/^[\w!#$%&'*.^`|~+-]+$/,ts=/^[ !#-:<-[\]-~]*$/,Yt=(e,t)=>{if(t&&e.indexOf(t)===-1)return{};const r=e.trim().split(";"),n={};for(let s of r){s=s.trim();const i=s.indexOf("=");if(i===-1)continue;const o=s.substring(0,i).trim();if(t&&t!==o||!es.test(o))continue;let a=s.substring(i+1).trim();if(a.startsWith('"')&&a.endsWith('"')&&(a=a.slice(1,-1)),ts.test(a)&&(n[o]=Dt(a),t))break}return n},rs=(e,t,r={})=>{let n=`${e}=${t}`;if(e.startsWith("__Secure-")&&!r.secure)throw new Error("__Secure- Cookie must have Secure attributes");if(e.startsWith("__Host-")){if(!r.secure)throw new Error("__Host- Cookie must have Secure attributes");if(r.path!=="/")throw new Error('__Host- Cookie must have Path attributes with "/"');if(r.domain)throw new Error("__Host- Cookie must not have Domain attributes")}if(r&&typeof r.maxAge=="number"&&r.maxAge>=0){if(r.maxAge>3456e4)throw new Error("Cookies Max-Age SHOULD NOT be greater than 400 days (34560000 seconds) in duration.");n+=`; Max-Age=${r.maxAge|0}`}if(r.domain&&r.prefix!=="host"&&(n+=`; Domain=${r.domain}`),r.path&&(n+=`; Path=${r.path}`),r.expires){if(r.expires.getTime()-Date.now()>3456e7)throw new Error("Cookies Expires SHOULD NOT be greater than 400 days (34560000 seconds) in the future.");n+=`; Expires=${r.expires.toUTCString()}`}if(r.httpOnly&&(n+="; HttpOnly"),r.secure&&(n+="; Secure"),r.sameSite&&(n+=`; SameSite=${r.sameSite.charAt(0).toUpperCase()+r.sameSite.slice(1)}`),r.priority&&(n+=`; Priority=${r.priority}`),r.partitioned){if(!r.secure)throw new Error("Partitioned Cookie must have Secure attributes");n+="; Partitioned"}return n},vt=(e,t,r)=>(t=encodeURIComponent(t),rs(e,t,r)),ns=(e,t,r)=>{const n=e.req.raw.headers.get("Cookie");if(typeof t=="string"){if(!n)return;let i=t;return Yt(n,i)[i]}return n?Yt(n):{}},ss=(e,t,r,n)=>{let s;(n==null?void 0:n.prefix)==="secure"?s=vt("__Secure-"+t,r,{path:"/",...n,secure:!0}):(n==null?void 0:n.prefix)==="host"?s=vt("__Host-"+t,r,{...n,path:"/",secure:!0,domain:void 0}):s=vt(t,r,{path:"/",...n}),e.header("Set-Cookie",s,{append:!0})},is=e=>e?e.split(",").map((r,n)=>({value:r,index:n})).map(as).filter(r=>!!r).sort(us).map(({type:r,params:n,q:s})=>({type:r,params:n,q:s})):[],os=/;(?=(?:(?:[^"]*"){2})*[^"]*$)/,as=({value:e,index:t})=>{const r=e.trim().split(os).map(o=>o.trim()),n=r[0];if(!n)return null;const s=cs(r.slice(1)),i=ls(s.q);return{type:n,params:s,q:i,index:t}},cs=e=>e.reduce((t,r)=>{const[n,s]=r.split("=").map(i=>i.trim());return n&&s&&(t[n]=s),t},{}),ls=e=>{if(e===void 0||e==="")return 1;if(e==="NaN")return 0;const t=Number(e);return t===1/0?1:t===-1/0?0:Number.isNaN(t)||t<0||t>1?1:t},us=(e,t)=>{const r=t.q-e.q;return r!==0?r:e.index-t.index},er={order:["querystring","cookie","header"],lookupQueryString:"lang",lookupCookie:"language",lookupFromHeaderKey:"accept-language",lookupFromPathIndex:0,caches:["cookie"],ignoreCase:!0,fallbackLanguage:"en",supportedLanguages:["en"],cookieOptions:{sameSite:"Strict",secure:!0,maxAge:365*24*60*60,httpOnly:!0},debug:!1};function fs(e){return is(e).map(({type:t,q:r})=>({lang:t,q:r}))}var ot=(e,t)=>{if(e)try{let r=e.trim();t.convertDetectedLanguage&&(r=t.convertDetectedLanguage(r));const n=t.ignoreCase?r.toLowerCase():r,s=t.supportedLanguages.map(o=>t.ignoreCase?o.toLowerCase():o),i=s.find(o=>o===n);return i?t.supportedLanguages[s.indexOf(i)]:void 0}catch{return}},hs=(e,t)=>{try{const r=e.req.query(t.lookupQueryString);return ot(r,t)}catch{return}},ds=(e,t)=>{try{const r=ns(e,t.lookupCookie);return ot(r,t)}catch{return}};function gs(e,t){try{const r=e.req.header(t.lookupFromHeaderKey);if(!r)return;const n=fs(r);for(const{lang:s}of n){const i=ot(s,t);if(i)return i}return}catch{return}}function ps(e,t){try{const n=e.req.path.split("/").filter(Boolean)[t.lookupFromPathIndex];return ot(n,t)}catch{return}}var Vr={querystring:hs,cookie:ds,header:gs,path:ps};function ms(e){if(!e.supportedLanguages.includes(e.fallbackLanguage))throw new Error("Fallback language must be included in supported languages");if(e.lookupFromPathIndex<0)throw new Error("Path index must be non-negative");if(!e.order.every(t=>Object.keys(Vr).includes(t)))throw new Error("Invalid detector type in order array")}function vs(e,t,r){if(!(!Array.isArray(r.caches)||!r.caches.includes("cookie")))try{ss(e,r.lookupCookie,t,r.cookieOptions)}catch(n){r.debug&&console.error("Failed to cache language:",n)}}var ys=(e,t)=>{let r;for(const s of t.order){const i=Vr[s];if(i)try{if(r=i(e,t),r){t.debug&&console.log(`Language detected from ${s}: ${r}`);break}}catch(o){t.debug&&console.error(`Error in ${s} detector:`,o);continue}}const n=r||t.fallbackLanguage;return r&&t.caches&&vs(e,n,t),n},ws=e=>{const t={...er,...e,cookieOptions:{...er.cookieOptions,...e.cookieOptions}};return ms(t),async function(n,s){try{const i=ys(n,t);n.set("language",i)}catch(i){t.debug&&console.error("Language detection failed:",i),n.set("language",t.fallbackLanguage)}await s()}};function xs(){const{process:e,Deno:t}=globalThis;return!(typeof(t==null?void 0:t.noColor)=="boolean"?t.noColor:e!==void 0?"NO_COLOR"in(e==null?void 0:e.env):!1)}async function Es(){const{navigator:e}=globalThis,t="cloudflare:workers";return!(e!==void 0&&e.userAgent==="Cloudflare-Workers"?await(async()=>{try{return"NO_COLOR"in((await import(t)).env??{})}catch{return!1}})():!xs())}var bs=e=>{const[t,r]=[",","."];return e.map(s=>s.replace(/(\d)(?=(\d\d\d)+(?!\d))/g,"$1"+t)).join(r)},Ps=e=>{const t=Date.now()-e;return bs([t<1e3?t+"ms":Math.round(t/1e3)+"s"])},Cs=async e=>{if(await Es())switch(e/100|0){case 5:return`\x1B[31m${e}\x1B[0m`;case 4:return`\x1B[33m${e}\x1B[0m`;case 3:return`\x1B[36m${e}\x1B[0m`;case 2:return`\x1B[32m${e}\x1B[0m`}return`${e}`};async function tr(e,t,r,n,s=0,i){const o=t==="<--"?`${t} ${r} ${n}`:`${t} ${r} ${n} ${await Cs(s)} ${i}`;e(o)}var Os=(e=console.log)=>async function(r,n){const{method:s,url:i}=r.req,o=i.slice(i.indexOf("/",8));await tr(e,"<--",s,o);const a=Date.now();await n(),await tr(e,"-->",s,o,r.res.status,Ps(a))},Ss=e=>{const t="pretty";return async function(n,s){var o;const i=n.req.query(t)||n.req.query(t)==="";if(await s(),i&&((o=n.res.headers.get("Content-Type"))!=null&&o.startsWith("application/json"))){const a=await n.res.json();n.res=new Response(JSON.stringify(a,null,2),n.res)}}},As={crossOriginEmbedderPolicy:["Cross-Origin-Embedder-Policy","require-corp"],crossOriginResourcePolicy:["Cross-Origin-Resource-Policy","same-origin"],crossOriginOpenerPolicy:["Cross-Origin-Opener-Policy","same-origin"],originAgentCluster:["Origin-Agent-Cluster","?1"],referrerPolicy:["Referrer-Policy","no-referrer"],strictTransportSecurity:["Strict-Transport-Security","max-age=15552000; includeSubDomains"],xContentTypeOptions:["X-Content-Type-Options","nosniff"],xDnsPrefetchControl:["X-DNS-Prefetch-Control","off"],xDownloadOptions:["X-Download-Options","noopen"],xFrameOptions:["X-Frame-Options","SAMEORIGIN"],xPermittedCrossDomainPolicies:["X-Permitted-Cross-Domain-Policies","none"],xXssProtection:["X-XSS-Protection","0"]},Rs={crossOriginEmbedderPolicy:!1,crossOriginResourcePolicy:!0,crossOriginOpenerPolicy:!0,originAgentCluster:!0,referrerPolicy:!0,strictTransportSecurity:!0,xContentTypeOptions:!0,xDnsPrefetchControl:!0,xDownloadOptions:!0,xFrameOptions:!0,xPermittedCrossDomainPolicies:!0,xXssProtection:!0,removePoweredBy:!0,permissionsPolicy:{}},ks=e=>{const t={...Rs,...e},r=$s(t),n=[];if(t.contentSecurityPolicy){const[s,i]=rr(t.contentSecurityPolicy);s&&n.push(s),r.push(["Content-Security-Policy",i])}if(t.contentSecurityPolicyReportOnly){const[s,i]=rr(t.contentSecurityPolicyReportOnly);s&&n.push(s),r.push(["Content-Security-Policy-Report-Only",i])}return t.permissionsPolicy&&Object.keys(t.permissionsPolicy).length>0&&r.push(["Permissions-Policy",js(t.permissionsPolicy)]),t.reportingEndpoints&&r.push(["Reporting-Endpoints",Ls(t.reportingEndpoints)]),t.reportTo&&r.push(["Report-To",Ns(t.reportTo)]),async function(i,o){const a=n.length===0?r:n.reduce((c,l)=>l(i,c),r);await o(),Hs(i,a),t!=null&&t.removePoweredBy&&i.res.headers.delete("X-Powered-By")}};function $s(e){return Object.entries(As).filter(([t])=>e[t]).map(([t,r])=>{const n=e[t];return typeof n=="string"?[r[0],n]:r})}function rr(e){const t=[],r=[];for(const[n,s]of Object.entries(e)){const i=Array.isArray(s)?s:[s];i.forEach((o,a)=>{if(typeof o=="function"){const c=a*2+2+r.length;t.push((l,f)=>{f[c]=o(l,n)})}}),r.push(n.replace(/[A-Z]+(?![a-z])|[A-Z]/g,(o,a)=>a?"-"+o.toLowerCase():o.toLowerCase()),...i.flatMap(o=>[" ",o]),"; ")}return r.pop(),t.length===0?[void 0,r.join("")]:[(n,s)=>s.map(i=>{if(i[0]==="Content-Security-Policy"||i[0]==="Content-Security-Policy-Report-Only"){const o=i[1].slice();return t.forEach(a=>{a(n,o)}),[i[0],o.join("")]}else return i}),r]}function js(e){return Object.entries(e).map(([t,r])=>{const n=Ts(t);if(typeof r=="boolean")return`${n}=${r?"*":"none"}`;if(Array.isArray(r)){if(r.length===0)return`${n}=()`;if(r.length===1&&(r[0]==="*"||r[0]==="none"))return`${n}=${r[0]}`;const s=r.map(i=>["self","src"].includes(i)?i:`"${i}"`);return`${n}=(${s.join(" ")})`}return""}).filter(Boolean).join(", ")}function Ts(e){return e.replace(/([a-z\d])([A-Z])/g,"$1-$2").toLowerCase()}function Ls(e=[]){return e.map(t=>`${t.name}="${t.url}"`).join(", ")}function Ns(e=[]){return e.map(t=>JSON.stringify(t)).join(", ")}function Hs(e,t){t.forEach(([r,n])=>{e.res.headers.set(r,n)})}var Ds=new Kr(504,{message:"Gateway Timeout"}),_s=(e,t=Ds)=>async function(n,s){let i;const o=new Promise((a,c)=>{i=setTimeout(()=>{c(typeof t=="function"?t(n):t)},e)});try{await Promise.race([s(),o])}finally{i!==void 0&&clearTimeout(i)}},Ms=()=>async function(t,r){if(await r(),t.res.status===404&&(t.req.method==="GET"||t.req.method==="HEAD")&&t.req.path!=="/"&&t.req.path.at(-1)==="/"){const n=new URL(t.req.url);n.pathname=n.pathname.substring(0,n.pathname.length-1),t.res=t.redirect(n.toString(),301)}},Le="_hp",Is={Change:"Input",DoubleClick:"DblClick"},qs={svg:"2000/svg",math:"1998/Math/MathML"},Ne=[],St=new WeakMap,Pe=void 0,Fs=()=>Pe,U=e=>"t"in e,yt={onClick:["click",!1]},nr=e=>{if(!e.startsWith("on"))return;if(yt[e])return yt[e];const t=e.match(/^on([A-Z][a-zA-Z]+?(?:PointerCapture)?)(Capture)?$/);if(t){const[,r,n]=t;return yt[e]=[(Is[r]||r).toLowerCase(),!!n]}},sr=(e,t)=>Pe&&e instanceof SVGElement&&/[A-Z]/.test(t)&&(t in e.style||t.match(/^(?:o|pai|str|u|ve)/))?t.replace(/([A-Z])/g,"-$1").toLowerCase():t,Bs=(e,t,r)=>{var n;t||(t={});for(let s in t){const i=t[s];if(s!=="children"&&(!r||r[s]!==i)){s=nt(s);const o=nr(s);if(o){if((r==null?void 0:r[s])!==i&&(r&&e.removeEventListener(o[0],r[s],o[1]),i!=null)){if(typeof i!="function")throw new Error(`Event handler for "${s}" is not a function`);e.addEventListener(o[0],i,o[1])}}else if(s==="dangerouslySetInnerHTML"&&i)e.innerHTML=i.__html;else if(s==="ref"){let a;typeof i=="function"?a=i(e)||(()=>i(null)):i&&"current"in i&&(i.current=e,a=()=>i.current=null),St.set(e,a)}else if(s==="style"){const a=e.style;typeof i=="string"?a.cssText=i:(a.cssText="",i!=null&&jr(i,a.setProperty.bind(a)))}else{if(s==="value"){const c=e.nodeName;if(c==="INPUT"||c==="TEXTAREA"||c==="SELECT"){if(e.value=i==null||i===!1?null:i,c==="TEXTAREA"){e.textContent=i;continue}else if(c==="SELECT"){e.selectedIndex===-1&&(e.selectedIndex=0);continue}}}else(s==="checked"&&e.nodeName==="INPUT"||s==="selected"&&e.nodeName==="OPTION")&&(e[s]=i);const a=sr(e,s);i==null||i===!1?e.removeAttribute(a):i===!0?e.setAttribute(a,""):typeof i=="string"||typeof i=="number"?e.setAttribute(a,i):e.setAttribute(a,i.toString())}}}if(r)for(let s in r){const i=r[s];if(s!=="children"&&!(s in t)){s=nt(s);const o=nr(s);o?e.removeEventListener(o[0],i,o[1]):s==="ref"?(n=St.get(e))==null||n():e.removeAttribute(sr(e,s))}}},Us=(e,t)=>{t[R][0]=0,Ne.push([e,t]);const r=t.tag[$t]||t.tag,n=r.defaultProps?{...r.defaultProps,...t.props}:t.props;try{return[r.call(null,n)]}finally{Ne.pop()}},zr=(e,t,r,n,s)=>{var i,o;(i=e.vR)!=null&&i.length&&(n.push(...e.vR),delete e.vR),typeof e.tag=="function"&&((o=e[R][1][Jr])==null||o.forEach(a=>s.push(a))),e.vC.forEach(a=>{var c;if(U(a))r.push(a);else if(typeof a.tag=="function"||a.tag===""){a.c=t;const l=r.length;if(zr(a,t,r,n,s),a.s){for(let f=l;f<r.length;f++)r[f].s=!0;a.s=!1}}else r.push(a),(c=a.vR)!=null&&c.length&&(n.push(...a.vR),delete a.vR)})},Ws=e=>{for(;;e=e.tag===Le||!e.vC||!e.pP?e.nN:e.vC[0]){if(!e)return null;if(e.tag!==Le&&e.e)return e.e}},Xr=e=>{var t,r,n,s,i,o;U(e)||((r=(t=e[R])==null?void 0:t[1][Jr])==null||r.forEach(a=>{var c;return(c=a[2])==null?void 0:c.call(a)}),(n=St.get(e.e))==null||n(),e.p===2&&((s=e.vC)==null||s.forEach(a=>a.p=2)),(i=e.vC)==null||i.forEach(Xr)),e.p||((o=e.e)==null||o.remove(),delete e.e),typeof e.tag=="function"&&(Re.delete(e),Ye.delete(e),delete e[R][3],e.a=!0)},Gr=(e,t,r)=>{e.c=t,Zr(e,t,r)},ir=(e,t)=>{if(t){for(let r=0,n=e.length;r<n;r++)if(e[r]===t)return r}},or=Symbol(),Zr=(e,t,r)=>{var l;const n=[],s=[],i=[];zr(e,t,n,s,i),s.forEach(Xr);const o=r?void 0:t.childNodes;let a,c=null;if(r)a=-1;else if(!o.length)a=0;else{const f=ir(o,Ws(e.nN));f!==void 0?(c=o[f],a=f):a=ir(o,(l=n.find(h=>h.tag!==Le&&h.e))==null?void 0:l.e)??-1,a===-1&&(r=!0)}for(let f=0,h=n.length;f<h;f++,a++){const d=n[f];let p;if(d.s&&d.e)p=d.e,d.s=!1;else{const g=r||!d.e;U(d)?(d.e&&d.d&&(d.e.textContent=d.t),d.d=!1,p=d.e||(d.e=document.createTextNode(d.t))):(p=d.e||(d.e=d.n?document.createElementNS(d.n,d.tag):document.createElement(d.tag)),Bs(p,d.props,d.pP),Zr(d,p,g))}d.tag===Le?a--:r?p.parentNode||t.appendChild(p):o[a]!==p&&o[a-1]!==p&&(o[a+1]===p?t.appendChild(o[a]):t.insertBefore(p,c||o[a]||null))}if(e.pP&&delete e.pP,i.length){const f=[],h=[];i.forEach(([,d,,p,g])=>{d&&f.push(d),p&&h.push(p),g==null||g()}),f.forEach(d=>d()),h.length&&requestAnimationFrame(()=>{h.forEach(d=>d())})}},Ks=(e,t)=>!!(e&&e.length===t.length&&e.every((r,n)=>r[1]===t[n][1])),Ye=new WeakMap,At=(e,t,r)=>{var i,o,a,c,l,f;const n=!r&&t.pC;r&&(t.pC||(t.pC=t.vC));let s;try{r||(r=typeof t.tag=="function"?Us(e,t):Fe(t.props.children)),((i=r[0])==null?void 0:i.tag)===""&&r[0][Pt]&&(s=r[0][Pt],e[5].push([e,s,t]));const h=n?[...t.pC]:t.vC?[...t.vC]:void 0,d=[];let p;for(let g=0;g<r.length;g++){Array.isArray(r[g])&&r.splice(g,1,...r[g].flat());let x=Vs(r[g]);if(x){typeof x.tag=="function"&&!x.tag[Sr]&&(be.length>0&&(x[R][2]=be.map(w=>[w,w.values.at(-1)])),(o=e[5])!=null&&o.length&&(x[R][3]=e[5].at(-1)));let m;if(h&&h.length){const w=h.findIndex(U(x)?b=>U(b):x.key!==void 0?b=>b.key===x.key&&b.tag===x.tag:b=>b.tag===x.tag);w!==-1&&(m=h[w],h.splice(w,1))}if(m)if(U(x))m.t!==x.t&&(m.t=x.t,m.d=!0),x=m;else{const w=m.pP=m.props;if(m.props=x.props,m.f||(m.f=x.f||t.f),typeof x.tag=="function"){const b=m[R][2];m[R][2]=x[R][2]||[],m[R][3]=x[R][3],!m.f&&((m.o||m)===x.o||(c=(a=m.tag)[gn])!=null&&c.call(a,w,m.props))&&Ks(b,m[R][2])&&(m.s=!0)}x=m}else if(!U(x)&&Pe){const w=Oe(Pe);w&&(x.n=w)}if(!U(x)&&!x.s&&(At(e,x),delete x.f),d.push(x),p&&!p.s&&!x.s)for(let w=p;w&&!U(w);w=(l=w.vC)==null?void 0:l.at(-1))w.nN=x;p=x}}t.vR=n?[...t.vC,...h||[]]:h||[],t.vC=d,n&&delete t.pC}catch(h){if(t.f=!0,h===or){if(s)return;throw h}const[d,p,g]=((f=t[R])==null?void 0:f[3])||[];if(p){const x=()=>et([0,!1,e[2]],g),m=Ye.get(g)||[];m.push(x),Ye.set(g,m);const w=p(h,()=>{const b=Ye.get(g);if(b){const C=b.indexOf(x);if(C!==-1)return b.splice(C,1),x()}});if(w){if(e[0]===1)e[1]=!0;else if(At(e,g,[w]),(p.length===1||e!==d)&&g.c){Gr(g,g.c,!1);return}throw or}}throw h}finally{s&&e[5].pop()}},Vs=e=>{if(!(e==null||typeof e=="boolean")){if(typeof e=="string"||typeof e=="number")return{t:e.toString(),d:!0};if("vR"in e&&(e={tag:e.tag,props:e.props,key:e.key,f:e.f,type:e.tag,ref:e.props.ref,o:e.o||e}),typeof e.tag=="function")e[R]=[0,[]];else{const t=qs[e.tag];t&&(Pe||(Pe=Rr("")),e.props.children=[{tag:Pe,props:{value:e.n=`http://www.w3.org/${t}`,children:e.props.children}}])}return e}},ar=(e,t)=>{var r,n;(r=t[R][2])==null||r.forEach(([s,i])=>{s.values.push(i)});try{At(e,t,void 0)}catch{return}if(t.a){delete t.a;return}(n=t[R][2])==null||n.forEach(([s])=>{s.values.pop()}),(e[0]!==1||!e[1])&&Gr(t,t.c,!1)},Re=new WeakMap,cr=[],et=async(e,t)=>{e[5]||(e[5]=[]);const r=Re.get(t);r&&r[0](void 0);let n;const s=new Promise(i=>n=i);if(Re.set(t,[n,()=>{e[2]?e[2](e,t,i=>{ar(i,t)}).then(()=>n(t)):(ar(e,t),n(t))}]),cr.length)cr.at(-1).add(t);else{await Promise.resolve();const i=Re.get(t);i&&(Re.delete(t),i[1]())}return s},zs=(e,t,r)=>({tag:Le,props:{children:e},key:r,e:t,p:1}),wt=0,Jr=1,xt=2,Et=3,bt=new WeakMap,Qr=(e,t)=>!e||!t||e.length!==t.length||t.some((r,n)=>r!==e[n]),Xs=void 0,lr=[],Gs=e=>{var o;const t=()=>typeof e=="function"?e():e,r=Ne.at(-1);if(!r)return[t(),()=>{}];const[,n]=r,s=(o=n[R][1])[wt]||(o[wt]=[]),i=n[R][0]++;return s[i]||(s[i]=[t(),a=>{const c=Xs,l=s[i];if(typeof a=="function"&&(a=a(l[0])),!Object.is(a,l[0]))if(l[0]=a,lr.length){const[f,h]=lr.at(-1);Promise.all([f===3?n:et([f,!1,c],n),h]).then(([d])=>{if(!d||!(f===2||f===3))return;const p=d.vC;requestAnimationFrame(()=>{setTimeout(()=>{p===d.vC&&et([f===3?1:0,!1,c],d)})})})}else et([0,!1,c],n)}])},It=(e,t)=>{var a;const r=Ne.at(-1);if(!r)return e;const[,n]=r,s=(a=n[R][1])[xt]||(a[xt]=[]),i=n[R][0]++,o=s[i];return Qr(o==null?void 0:o[1],t)?s[i]=[e,t]:e=s[i][0],e},Zs=e=>{const t=bt.get(e);if(t){if(t.length===2)throw t[1];return t[0]}throw e.then(r=>bt.set(e,[r]),r=>bt.set(e,[void 0,r])),e},Js=(e,t)=>{var a;const r=Ne.at(-1);if(!r)return e();const[,n]=r,s=(a=n[R][1])[Et]||(a[Et]=[]),i=n[R][0]++,o=s[i];return Qr(o==null?void 0:o[1],t)&&(s[i]=[e(),t]),s[i][0]},Qs=Rr({pending:!1,data:null,method:null,action:null}),ur=new Set,Ys=e=>{ur.add(e),e.finally(()=>ur.delete(e))},qt=(e,t)=>Js(()=>r=>{let n;e&&(typeof e=="function"?n=e(r)||(()=>{e(null)}):e&&"current"in e&&(e.current=r,n=()=>{e.current=null}));const s=t(r);return()=>{s==null||s(),n==null||n()}},[e]),he=Object.create(null),ze=Object.create(null),Ke=(e,t,r,n,s)=>{if(t!=null&&t.itemProp)return{tag:e,props:t,type:e,ref:t.ref};const i=document.head;let{onLoad:o,onError:a,precedence:c,blocking:l,...f}=t,h=null,d=!1;const p=Xe[e];let g;if(p.length>0){const b=i.querySelectorAll(e);e:for(const C of b)for(const O of Xe[e])if(C.getAttribute(O)===t[O]){h=C;break e}if(!h){const C=p.reduce((O,A)=>t[A]===void 0?O:`${O}-${A}-${t[A]}`,e);d=!ze[C],h=ze[C]||(ze[C]=(()=>{const O=document.createElement(e);for(const A of p)t[A]!==void 0&&O.setAttribute(A,t[A]),t.rel&&O.setAttribute("rel",t.rel);return O})())}}else g=i.querySelectorAll(e);c=n?c??"":void 0,n&&(f[Ge]=c);const x=It(b=>{if(p.length>0){let C=!1;for(const O of i.querySelectorAll(e)){if(C&&O.getAttribute(Ge)!==c){i.insertBefore(b,O);return}O.getAttribute(Ge)===c&&(C=!0)}i.appendChild(b)}else if(g){let C=!1;for(const O of g)if(O===b){C=!0;break}C||i.insertBefore(b,i.contains(g[0])?g[0]:i.querySelector(e)),g=void 0}},[c]),m=qt(t.ref,b=>{var A;const C=p[0];if(r===2&&(b.innerHTML=""),(d||g)&&x(b),!a&&!o)return;let O=he[A=b.getAttribute(C)]||(he[A]=new Promise((ne,se)=>{b.addEventListener("load",ne),b.addEventListener("error",se)}));o&&(O=O.then(o)),a&&(O=O.catch(a)),O.catch(()=>{})});if(s&&l==="render"){const b=Xe[e][0];if(t[b]){const C=t[b],O=he[C]||(he[C]=new Promise((A,ne)=>{x(h),h.addEventListener("load",A),h.addEventListener("error",ne)}));Zs(O)}}const w={tag:e,type:e,props:{...f,ref:m},ref:m};return w.p=r,h&&(w.e=h),zs(w,i)},ei=e=>{const t=Fs(),r=t&&Oe(t);return r!=null&&r.endsWith("svg")?{tag:"title",props:e,type:"title",ref:e.ref}:Ke("title",e,void 0,!1,!1)},ti=e=>!e||["src","async"].some(t=>!e[t])?{tag:"script",props:e,type:"script",ref:e.ref}:Ke("script",e,1,!1,!0),ri=e=>!e||!["href","precedence"].every(t=>t in e)?{tag:"style",props:e,type:"style",ref:e.ref}:(e["data-href"]=e.href,delete e.href,Ke("style",e,2,!0,!0)),ni=e=>!e||["onLoad","onError"].some(t=>t in e)||e.rel==="stylesheet"&&(!("precedence"in e)||"disabled"in e)?{tag:"link",props:e,type:"link",ref:e.ref}:Ke("link",e,1,"precedence"in e,!0),si=e=>Ke("meta",e,void 0,!1,!1),Yr=Symbol(),ii=e=>{const{action:t,...r}=e;typeof t!="function"&&(r.action=t);const[n,s]=Gs([null,!1]),i=It(async l=>{const f=l.isTrusted?t:l.detail[Yr];if(typeof f!="function")return;l.preventDefault();const h=new FormData(l.target);s([h,!0]);const d=f(h);d instanceof Promise&&(Ys(d),await d),s([null,!0])},[]),o=qt(e.ref,l=>(l.addEventListener("submit",i),()=>{l.removeEventListener("submit",i)})),[a,c]=n;return n[1]=!1,{tag:Qs,props:{value:{pending:a!==null,data:a,method:a?"post":null,action:a?t:null},children:{tag:"form",props:{...r,ref:o},type:"form",ref:o}},f:c}},en=(e,{formAction:t,...r})=>{if(typeof t=="function"){const n=It(s=>{s.preventDefault(),s.currentTarget.form.dispatchEvent(new CustomEvent("submit",{detail:{[Yr]:t}}))},[]);r.ref=qt(r.ref,s=>(s.addEventListener("click",n),()=>{s.removeEventListener("click",n)}))}return{tag:e,props:r,type:e,ref:r.ref}},oi=e=>en("input",e),ai=e=>en("button",e);Object.assign(Ct,{title:ei,script:ti,style:ri,link:ni,meta:si,form:ii,input:oi,button:ai});jt(null);new TextEncoder;var ci=jt(null),li=(e,t,r,n)=>(s,i)=>{const o="<!DOCTYPE html>",a=r?Xt(l=>r(l,e),{Layout:t,...i},s):s,c=dn`${D(o)}${Xt(ci.Provider,{value:e},a)}`;return e.html(c)},ui=(e,t)=>function(n,s){const i=n.getLayout()??Lr;return e&&n.setLayout(o=>e({...o,Layout:i},n)),n.setRenderer(li(n,i,e)),s()};const fi=ui(({children:e},t)=>{const r=t.req.header("host")||"",n=r.includes("app.")?"app":r.includes("com.")?"com":"org";return v("html",{children:[v("head",{children:v("link",{href:`/assets/${n}/style.css`,rel:"stylesheet"})}),v("body",{children:[e,v("div",{id:"root"}),v("script",{src:`/assets/${n}/index.js`})]})]})}),Ft=(e,t=void 0)=>v("html",{children:[v("head",{children:v("title",{children:["Umaxica | ",t]})}),v("body",{children:[v("header",{children:v("h1",{children:"Umaxica(app, edge)"})}),v("hr",{}),e.children,v("hr",{}),v("footer",{children:v("p",{children:"© umaxica"})})]})]}),Se=new We,Bt=()=>v("nav",{children:[v("a",{href:"/",children:"Home"})," | ",v("a",{href:"/about",children:"About"})," |"," ",v("a",{href:"/contact",children:"Contact"})]});Se.get("/",e=>e.html(v(Ft,{title:"Home",children:[v(Bt,{}),v("h2",{children:"Welcome to umaxica"}),v("p",{children:"This is the home page."})]})));Se.get("/about",e=>e.html(v(Ft,{title:"About",children:[v(Bt,{}),v("h2",{children:"About"}),v("p",{children:"About page of umaxica"})]})));Se.get("/contact",e=>e.html(v(Ft,{title:"Contact",children:[v(Bt,{}),v("h2",{children:"Contact"}),v("p",{children:"Contact us at contact@umaxica.app"})]})));Se.get("/health.html",e=>e.html(v("p",{children:"OK"})));Se.get("/health.json",e=>e.json({status:"OK"}));const hi=(e,t=void 0)=>v("html",{children:[v("head",{children:v("title",{children:["Umaxica | ",t]})}),v("body",{children:[v("header",{children:v("h1",{children:"Umaxica(com, edge)"})}),v("hr",{}),e.children,v("hr",{}),v("footer",{children:v("p",{children:"© umaxica"})})]})]}),at=new We;at.get("/",e=>e.html(v(hi,{title:"umaxica",children:"Welcome to umaxica"})));at.get("/",e=>e.html("home page of umaxica"));at.get("/about",e=>e.html("About page of umaxica"));const di=(e,t=void 0)=>v("html",{children:[v("head",{children:v("title",{children:["Umaxica | ",t]})}),v("body",{children:[v("header",{children:v("h1",{children:"Umaxica(org, edge)"})}),v("hr",{}),e.children,v("hr",{}),v("footer",{children:v("p",{children:"© umaxica"})})]})]}),ct=new We;ct.get("/",e=>e.html(v(di,{title:"umaxica",children:"Welcome to umaxica"})));ct.get("/",e=>e.html("home page of umaxica"));ct.get("/about",e=>e.html("About page of umaxica"));const lt=new We;lt.get("*",e=>(console.log(e.req.url),e.req.url.match(/umaxica.com/)?e.redirect("https://jp.umaxica.com",301):e.req.url.match(/umaxica.org/)?e.redirect("https://jp.umaxica.org",301):e.redirect("https://jp.umaxica.app",301)));const j=new We({getPath:e=>e.url.replace(/^https?:\/([^?]+).*$/,"$1")});j.use(ws({supportedLanguages:["en","ja"],fallbackLanguage:"ja"}));j.use(Yn());j.use(Zn());j.use(Os());j.use(Ss());j.use(Ms());j.use(ks());j.use(fi);j.use(_s(2e3));["/app.localdomain:4000/","/jp.umaxica.app/"].forEach(e=>j.route(e,Se));["/com.localdomain:4000/","/jp.umaxica.com/"].forEach(e=>j.route(e,at));["/org.localdomain:4000/","/jp.umaxica.org/"].forEach(e=>j.route(e,ct));j.route("/umaxica.org/",lt);j.route("/umaxica.com/",lt);j.route("/umaxica.app/",lt);j.notFound(e=>e.html(v(Lr,{children:[v("h1",{children:"404 Page Not Found"}),v("hr",{}),v("p",{children:"..."})]}),404));j.onError((e,t)=>(console.error(e),t.html("<h1>500 Internal Server Error</h1>",500)));var st="[^/]+",$e=".*",je="(?:|/.*)",ke=Symbol(),gi=new Set(".\\+*[^]$()");function pi(e,t){return e.length===1?t.length===1?e<t?-1:1:-1:t.length===1||e===$e||e===je?1:t===$e||t===je?-1:e===st?1:t===st?-1:e.length===t.length?e<t?-1:1:t.length-e.length}var ue,fe,I,wr,Rt=(wr=class{constructor(){P(this,ue);P(this,fe);P(this,I,Object.create(null))}insert(e,t,r,n,s){if(e.length===0){if(u(this,ue)!==void 0)throw ke;if(s)return;E(this,ue,t);return}const[i,...o]=e,a=i==="*"?o.length===0?["","",$e]:["","",st]:i==="/*"?["","",je]:i.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);let c;if(a){const l=a[1];let f=a[2]||st;if(l&&a[2]&&(f=f.replace(/^\((?!\?:)(?=[^)]+\)$)/,"(?:"),/\((?!\?:)/.test(f)))throw ke;if(c=u(this,I)[f],!c){if(Object.keys(u(this,I)).some(h=>h!==$e&&h!==je))throw ke;if(s)return;c=u(this,I)[f]=new Rt,l!==""&&E(c,fe,n.varIndex++)}!s&&l!==""&&r.push([l,u(c,fe)])}else if(c=u(this,I)[i],!c){if(Object.keys(u(this,I)).some(l=>l.length>1&&l!==$e&&l!==je))throw ke;if(s)return;c=u(this,I)[i]=new Rt}c.insert(o,t,r,n,s)}buildRegExpStr(){const t=Object.keys(u(this,I)).sort(pi).map(r=>{const n=u(this,I)[r];return(typeof u(n,fe)=="number"?`(${r})@${u(n,fe)}`:gi.has(r)?`\\${r}`:r)+n.buildRegExpStr()});return typeof u(this,ue)=="number"&&t.unshift(`#${u(this,ue)}`),t.length===0?"":t.length===1?t[0]:"(?:"+t.join("|")+")"}},ue=new WeakMap,fe=new WeakMap,I=new WeakMap,wr),it,qe,xr,mi=(xr=class{constructor(){P(this,it,{varIndex:0});P(this,qe,new Rt)}insert(e,t,r){const n=[],s=[];for(let o=0;;){let a=!1;if(e=e.replace(/\{[^}]+\}/g,c=>{const l=`@\\${o}`;return s[o]=[l,c],o++,a=!0,l}),!a)break}const i=e.match(/(?::[^\/]+)|(?:\/\*$)|./g)||[];for(let o=s.length-1;o>=0;o--){const[a]=s[o];for(let c=i.length-1;c>=0;c--)if(i[c].indexOf(a)!==-1){i[c]=i[c].replace(a,s[o][1]);break}}return u(this,qe).insert(i,t,n,u(this,it),r),n}buildRegExp(){let e=u(this,qe).buildRegExpStr();if(e==="")return[/^$/,[],[]];let t=0;const r=[],n=[];return e=e.replace(/#(\d+)|@(\d+)|\.\*\$/g,(s,i,o)=>i!==void 0?(r[++t]=Number(i),"$()"):(o!==void 0&&(n[Number(o)]=++t),"")),[new RegExp(`^${e}`),r,n]}},it=new WeakMap,qe=new WeakMap,xr),tn=[],vi=[/^$/,[],Object.create(null)],tt=Object.create(null);function rn(e){return tt[e]??(tt[e]=new RegExp(e==="*"?"":`^${e.replace(/\/\*$|([.\\+*[^\]$()])/g,(t,r)=>r?`\\${r}`:"(?:|/.*)")}$`))}function yi(){tt=Object.create(null)}function wi(e){var l;const t=new mi,r=[];if(e.length===0)return vi;const n=e.map(f=>[!/\*|\/:/.test(f[0]),...f]).sort(([f,h],[d,p])=>f?1:d?-1:h.length-p.length),s=Object.create(null);for(let f=0,h=-1,d=n.length;f<d;f++){const[p,g,x]=n[f];p?s[g]=[x.map(([w])=>[w,Object.create(null)]),tn]:h++;let m;try{m=t.insert(g,h,p)}catch(w){throw w===ke?new _t(g):w}p||(r[h]=x.map(([w,b])=>{const C=Object.create(null);for(b-=1;b>=0;b--){const[O,A]=m[b];C[O]=A}return[w,C]}))}const[i,o,a]=t.buildRegExp();for(let f=0,h=r.length;f<h;f++)for(let d=0,p=r[f].length;d<p;d++){const g=(l=r[f][d])==null?void 0:l[1];if(!g)continue;const x=Object.keys(g);for(let m=0,w=x.length;m<w;m++)g[x[m]]=a[g[x[m]]]}const c=[];for(const f in o)c[f]=r[o[f]];return[i,c,s]}function de(e,t){if(e){for(const r of Object.keys(e).sort((n,s)=>s.length-n.length))if(rn(r).test(t))return[...e[r]]}}var ee,te,Ce,nn,sn,Er,xi=(Er=class{constructor(){P(this,Ce);y(this,"name","RegExpRouter");P(this,ee);P(this,te);E(this,ee,{[k]:Object.create(null)}),E(this,te,{[k]:Object.create(null)})}add(e,t,r){var a;const n=u(this,ee),s=u(this,te);if(!n||!s)throw new Error(qr);n[e]||[n,s].forEach(c=>{c[e]=Object.create(null),Object.keys(c[k]).forEach(l=>{c[e][l]=[...c[k][l]]})}),t==="/*"&&(t="*");const i=(t.match(/\/:/g)||[]).length;if(/\*$/.test(t)){const c=rn(t);e===k?Object.keys(n).forEach(l=>{var f;(f=n[l])[t]||(f[t]=de(n[l],t)||de(n[k],t)||[])}):(a=n[e])[t]||(a[t]=de(n[e],t)||de(n[k],t)||[]),Object.keys(n).forEach(l=>{(e===k||e===l)&&Object.keys(n[l]).forEach(f=>{c.test(f)&&n[l][f].push([r,i])})}),Object.keys(s).forEach(l=>{(e===k||e===l)&&Object.keys(s[l]).forEach(f=>c.test(f)&&s[l][f].push([r,i]))});return}const o=Ht(t)||[t];for(let c=0,l=o.length;c<l;c++){const f=o[c];Object.keys(s).forEach(h=>{var d;(e===k||e===h)&&((d=s[h])[f]||(d[f]=[...de(n[h],f)||de(n[k],f)||[]]),s[h][f].push([r,i-l+c+1]))})}}match(e,t){yi();const r=S(this,Ce,nn).call(this);return this.match=(n,s)=>{const i=r[n]||r[k],o=i[2][s];if(o)return o;const a=s.match(i[0]);if(!a)return[[],tn];const c=a.indexOf("",1);return[i[1][c],a]},this.match(e,t)}},ee=new WeakMap,te=new WeakMap,Ce=new WeakSet,nn=function(){const e=Object.create(null);return Object.keys(u(this,te)).concat(Object.keys(u(this,ee))).forEach(t=>{e[t]||(e[t]=S(this,Ce,sn).call(this,t))}),E(this,ee,E(this,te,void 0)),e},sn=function(e){const t=[];let r=e===k;return[u(this,ee),u(this,te)].forEach(n=>{const s=n[e]?Object.keys(n[e]).map(i=>[i,n[e][i]]):[];s.length!==0?(r||(r=!0),t.push(...s)):e!==k&&t.push(...Object.keys(n[k]).map(i=>[i,n[k][i]]))}),r?wi(t):null},Er),Ei=class extends Mt{constructor(e={}){super(e),this.router=e.router??new Br({routers:[new xi,new Wr]})}};const kt=new Ei,on=Object.assign({"/src/server/index.tsx":j});let an=!1;for(const[,e]of Object.entries(on))e&&(kt.all("*",t=>{let r;try{r=t.executionCtx}catch{}return e.fetch(t.req.raw,t.env,r)}),kt.notFound(t=>{let r;try{r=t.executionCtx}catch{}return e.fetch(t.req.raw,t.env,r)}),an=!0);if(!an)throw new Error("Can't import modules from ['/src/server/index.tsx']");const cn={},fr=new Set;for(const[e,t]of Object.entries(on))for(const[r,n]of Object.entries(t))if(r!=="fetch"){if(fr.has(r))throw new Error(`Handler "${r}" is defined in multiple entry files. Please ensure each handler (except fetch) is defined only once.`);fr.add(r),cn[r]=n}const Ai={...cn,fetch:kt.fetch};export{Ai as default};
+// node_modules/hono/dist/compose.js
+var compose = (middleware, onError, onNotFound) => {
+  return (context, next) => {
+    let index = -1;
+    return dispatch(0);
+    async function dispatch(i) {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
+      }
+      index = i;
+      let res;
+      let isError = false;
+      let handler;
+      if (middleware[i]) {
+        handler = middleware[i][0][0];
+        context.req.routeIndex = i;
+      } else {
+        handler = i === middleware.length && next || undefined;
+      }
+      if (handler) {
+        try {
+          res = await handler(context, () => dispatch(i + 1));
+        } catch (err) {
+          if (err instanceof Error && onError) {
+            context.error = err;
+            res = await onError(err, context);
+            isError = true;
+          } else {
+            throw err;
+          }
+        }
+      } else {
+        if (context.finalized === false && onNotFound) {
+          res = await onNotFound(context);
+        }
+      }
+      if (res && (context.finalized === false || isError)) {
+        context.res = res;
+      }
+      return context;
+    }
+  };
+};
+
+// node_modules/hono/dist/request/constants.js
+var GET_MATCH_RESULT = Symbol();
+
+// node_modules/hono/dist/utils/body.js
+var parseBody = async (request, options = /* @__PURE__ */ Object.create(null)) => {
+  const { all = false, dot = false } = options;
+  const headers = request instanceof HonoRequest ? request.raw.headers : request.headers;
+  const contentType = headers.get("Content-Type");
+  if (contentType?.startsWith("multipart/form-data") || contentType?.startsWith("application/x-www-form-urlencoded")) {
+    return parseFormData(request, { all, dot });
+  }
+  return {};
+};
+async function parseFormData(request, options) {
+  const formData = await request.formData();
+  if (formData) {
+    return convertFormDataToBodyData(formData, options);
+  }
+  return {};
+}
+function convertFormDataToBodyData(formData, options) {
+  const form = /* @__PURE__ */ Object.create(null);
+  formData.forEach((value, key) => {
+    const shouldParseAllValues = options.all || key.endsWith("[]");
+    if (!shouldParseAllValues) {
+      form[key] = value;
+    } else {
+      handleParsingAllValues(form, key, value);
+    }
+  });
+  if (options.dot) {
+    Object.entries(form).forEach(([key, value]) => {
+      const shouldParseDotValues = key.includes(".");
+      if (shouldParseDotValues) {
+        handleParsingNestedValues(form, key, value);
+        delete form[key];
+      }
+    });
+  }
+  return form;
+}
+var handleParsingAllValues = (form, key, value) => {
+  if (form[key] !== undefined) {
+    if (Array.isArray(form[key])) {
+      form[key].push(value);
+    } else {
+      form[key] = [form[key], value];
+    }
+  } else {
+    if (!key.endsWith("[]")) {
+      form[key] = value;
+    } else {
+      form[key] = [value];
+    }
+  }
+};
+var handleParsingNestedValues = (form, key, value) => {
+  let nestedForm = form;
+  const keys = key.split(".");
+  keys.forEach((key2, index) => {
+    if (index === keys.length - 1) {
+      nestedForm[key2] = value;
+    } else {
+      if (!nestedForm[key2] || typeof nestedForm[key2] !== "object" || Array.isArray(nestedForm[key2]) || nestedForm[key2] instanceof File) {
+        nestedForm[key2] = /* @__PURE__ */ Object.create(null);
+      }
+      nestedForm = nestedForm[key2];
+    }
+  });
+};
+
+// node_modules/hono/dist/utils/url.js
+var splitPath = (path) => {
+  const paths = path.split("/");
+  if (paths[0] === "") {
+    paths.shift();
+  }
+  return paths;
+};
+var splitRoutingPath = (routePath) => {
+  const { groups, path } = extractGroupsFromPath(routePath);
+  const paths = splitPath(path);
+  return replaceGroupMarks(paths, groups);
+};
+var extractGroupsFromPath = (path) => {
+  const groups = [];
+  path = path.replace(/\{[^}]+\}/g, (match, index) => {
+    const mark = `@${index}`;
+    groups.push([mark, match]);
+    return mark;
+  });
+  return { groups, path };
+};
+var replaceGroupMarks = (paths, groups) => {
+  for (let i = groups.length - 1;i >= 0; i--) {
+    const [mark] = groups[i];
+    for (let j = paths.length - 1;j >= 0; j--) {
+      if (paths[j].includes(mark)) {
+        paths[j] = paths[j].replace(mark, groups[i][1]);
+        break;
+      }
+    }
+  }
+  return paths;
+};
+var patternCache = {};
+var getPattern = (label, next) => {
+  if (label === "*") {
+    return "*";
+  }
+  const match = label.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
+  if (match) {
+    const cacheKey = `${label}#${next}`;
+    if (!patternCache[cacheKey]) {
+      if (match[2]) {
+        patternCache[cacheKey] = next && next[0] !== ":" && next[0] !== "*" ? [cacheKey, match[1], new RegExp(`^${match[2]}(?=/${next})`)] : [label, match[1], new RegExp(`^${match[2]}$`)];
+      } else {
+        patternCache[cacheKey] = [label, match[1], true];
+      }
+    }
+    return patternCache[cacheKey];
+  }
+  return null;
+};
+var tryDecode = (str, decoder) => {
+  try {
+    return decoder(str);
+  } catch {
+    return str.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match) => {
+      try {
+        return decoder(match);
+      } catch {
+        return match;
+      }
+    });
+  }
+};
+var tryDecodeURI = (str) => tryDecode(str, decodeURI);
+var getPath = (request) => {
+  const url = request.url;
+  const start = url.indexOf("/", url.charCodeAt(9) === 58 ? 13 : 8);
+  let i = start;
+  for (;i < url.length; i++) {
+    const charCode = url.charCodeAt(i);
+    if (charCode === 37) {
+      const queryIndex = url.indexOf("?", i);
+      const path = url.slice(start, queryIndex === -1 ? undefined : queryIndex);
+      return tryDecodeURI(path.includes("%25") ? path.replace(/%25/g, "%2525") : path);
+    } else if (charCode === 63) {
+      break;
+    }
+  }
+  return url.slice(start, i);
+};
+var getPathNoStrict = (request) => {
+  const result = getPath(request);
+  return result.length > 1 && result.at(-1) === "/" ? result.slice(0, -1) : result;
+};
+var mergePath = (base, sub, ...rest) => {
+  if (rest.length) {
+    sub = mergePath(sub, ...rest);
+  }
+  return `${base?.[0] === "/" ? "" : "/"}${base}${sub === "/" ? "" : `${base?.at(-1) === "/" ? "" : "/"}${sub?.[0] === "/" ? sub.slice(1) : sub}`}`;
+};
+var checkOptionalParameter = (path) => {
+  if (path.charCodeAt(path.length - 1) !== 63 || !path.includes(":")) {
+    return null;
+  }
+  const segments = path.split("/");
+  const results = [];
+  let basePath = "";
+  segments.forEach((segment) => {
+    if (segment !== "" && !/\:/.test(segment)) {
+      basePath += "/" + segment;
+    } else if (/\:/.test(segment)) {
+      if (/\?/.test(segment)) {
+        if (results.length === 0 && basePath === "") {
+          results.push("/");
+        } else {
+          results.push(basePath);
+        }
+        const optionalSegment = segment.replace("?", "");
+        basePath += "/" + optionalSegment;
+        results.push(basePath);
+      } else {
+        basePath += "/" + segment;
+      }
+    }
+  });
+  return results.filter((v, i, a) => a.indexOf(v) === i);
+};
+var _decodeURI = (value) => {
+  if (!/[%+]/.test(value)) {
+    return value;
+  }
+  if (value.indexOf("+") !== -1) {
+    value = value.replace(/\+/g, " ");
+  }
+  return value.indexOf("%") !== -1 ? tryDecode(value, decodeURIComponent_) : value;
+};
+var _getQueryParam = (url, key, multiple) => {
+  let encoded;
+  if (!multiple && key && !/[%+]/.test(key)) {
+    let keyIndex2 = url.indexOf(`?${key}`, 8);
+    if (keyIndex2 === -1) {
+      keyIndex2 = url.indexOf(`&${key}`, 8);
+    }
+    while (keyIndex2 !== -1) {
+      const trailingKeyCode = url.charCodeAt(keyIndex2 + key.length + 1);
+      if (trailingKeyCode === 61) {
+        const valueIndex = keyIndex2 + key.length + 2;
+        const endIndex = url.indexOf("&", valueIndex);
+        return _decodeURI(url.slice(valueIndex, endIndex === -1 ? undefined : endIndex));
+      } else if (trailingKeyCode == 38 || isNaN(trailingKeyCode)) {
+        return "";
+      }
+      keyIndex2 = url.indexOf(`&${key}`, keyIndex2 + 1);
+    }
+    encoded = /[%+]/.test(url);
+    if (!encoded) {
+      return;
+    }
+  }
+  const results = {};
+  encoded ??= /[%+]/.test(url);
+  let keyIndex = url.indexOf("?", 8);
+  while (keyIndex !== -1) {
+    const nextKeyIndex = url.indexOf("&", keyIndex + 1);
+    let valueIndex = url.indexOf("=", keyIndex);
+    if (valueIndex > nextKeyIndex && nextKeyIndex !== -1) {
+      valueIndex = -1;
+    }
+    let name = url.slice(keyIndex + 1, valueIndex === -1 ? nextKeyIndex === -1 ? undefined : nextKeyIndex : valueIndex);
+    if (encoded) {
+      name = _decodeURI(name);
+    }
+    keyIndex = nextKeyIndex;
+    if (name === "") {
+      continue;
+    }
+    let value;
+    if (valueIndex === -1) {
+      value = "";
+    } else {
+      value = url.slice(valueIndex + 1, nextKeyIndex === -1 ? undefined : nextKeyIndex);
+      if (encoded) {
+        value = _decodeURI(value);
+      }
+    }
+    if (multiple) {
+      if (!(results[name] && Array.isArray(results[name]))) {
+        results[name] = [];
+      }
+      results[name].push(value);
+    } else {
+      results[name] ??= value;
+    }
+  }
+  return key ? results[key] : results;
+};
+var getQueryParam = _getQueryParam;
+var getQueryParams = (url, key) => {
+  return _getQueryParam(url, key, true);
+};
+var decodeURIComponent_ = decodeURIComponent;
+
+// node_modules/hono/dist/request.js
+var tryDecodeURIComponent = (str) => tryDecode(str, decodeURIComponent_);
+var HonoRequest = class {
+  raw;
+  #validatedData;
+  #matchResult;
+  routeIndex = 0;
+  path;
+  bodyCache = {};
+  constructor(request, path = "/", matchResult = [[]]) {
+    this.raw = request;
+    this.path = path;
+    this.#matchResult = matchResult;
+    this.#validatedData = {};
+  }
+  param(key) {
+    return key ? this.#getDecodedParam(key) : this.#getAllDecodedParams();
+  }
+  #getDecodedParam(key) {
+    const paramKey = this.#matchResult[0][this.routeIndex][1][key];
+    const param = this.#getParamValue(paramKey);
+    return param ? /\%/.test(param) ? tryDecodeURIComponent(param) : param : undefined;
+  }
+  #getAllDecodedParams() {
+    const decoded = {};
+    const keys = Object.keys(this.#matchResult[0][this.routeIndex][1]);
+    for (const key of keys) {
+      const value = this.#getParamValue(this.#matchResult[0][this.routeIndex][1][key]);
+      if (value && typeof value === "string") {
+        decoded[key] = /\%/.test(value) ? tryDecodeURIComponent(value) : value;
+      }
+    }
+    return decoded;
+  }
+  #getParamValue(paramKey) {
+    return this.#matchResult[1] ? this.#matchResult[1][paramKey] : paramKey;
+  }
+  query(key) {
+    return getQueryParam(this.url, key);
+  }
+  queries(key) {
+    return getQueryParams(this.url, key);
+  }
+  header(name) {
+    if (name) {
+      return this.raw.headers.get(name) ?? undefined;
+    }
+    const headerData = {};
+    this.raw.headers.forEach((value, key) => {
+      headerData[key] = value;
+    });
+    return headerData;
+  }
+  async parseBody(options) {
+    return this.bodyCache.parsedBody ??= await parseBody(this, options);
+  }
+  #cachedBody = (key) => {
+    const { bodyCache, raw } = this;
+    const cachedBody = bodyCache[key];
+    if (cachedBody) {
+      return cachedBody;
+    }
+    const anyCachedKey = Object.keys(bodyCache)[0];
+    if (anyCachedKey) {
+      return bodyCache[anyCachedKey].then((body) => {
+        if (anyCachedKey === "json") {
+          body = JSON.stringify(body);
+        }
+        return new Response(body)[key]();
+      });
+    }
+    return bodyCache[key] = raw[key]();
+  };
+  json() {
+    return this.#cachedBody("json");
+  }
+  text() {
+    return this.#cachedBody("text");
+  }
+  arrayBuffer() {
+    return this.#cachedBody("arrayBuffer");
+  }
+  blob() {
+    return this.#cachedBody("blob");
+  }
+  formData() {
+    return this.#cachedBody("formData");
+  }
+  addValidatedData(target, data) {
+    this.#validatedData[target] = data;
+  }
+  valid(target) {
+    return this.#validatedData[target];
+  }
+  get url() {
+    return this.raw.url;
+  }
+  get method() {
+    return this.raw.method;
+  }
+  get [GET_MATCH_RESULT]() {
+    return this.#matchResult;
+  }
+  get matchedRoutes() {
+    return this.#matchResult[0].map(([[, route]]) => route);
+  }
+  get routePath() {
+    return this.#matchResult[0].map(([[, route]]) => route)[this.routeIndex].path;
+  }
+};
+
+// node_modules/hono/dist/utils/html.js
+var HtmlEscapedCallbackPhase = {
+  Stringify: 1,
+  BeforeStream: 2,
+  Stream: 3
+};
+var raw = (value, callbacks) => {
+  const escapedString = new String(value);
+  escapedString.isEscaped = true;
+  escapedString.callbacks = callbacks;
+  return escapedString;
+};
+var resolveCallback = async (str, phase, preserveCallbacks, context, buffer) => {
+  if (typeof str === "object" && !(str instanceof String)) {
+    if (!(str instanceof Promise)) {
+      str = str.toString();
+    }
+    if (str instanceof Promise) {
+      str = await str;
+    }
+  }
+  const callbacks = str.callbacks;
+  if (!callbacks?.length) {
+    return Promise.resolve(str);
+  }
+  if (buffer) {
+    buffer[0] += str;
+  } else {
+    buffer = [str];
+  }
+  const resStr = Promise.all(callbacks.map((c) => c({ phase, buffer, context }))).then((res) => Promise.all(res.filter(Boolean).map((str2) => resolveCallback(str2, phase, false, context, buffer))).then(() => buffer[0]));
+  if (preserveCallbacks) {
+    return raw(await resStr, callbacks);
+  } else {
+    return resStr;
+  }
+};
+
+// node_modules/hono/dist/context.js
+var TEXT_PLAIN = "text/plain; charset=UTF-8";
+var setDefaultContentType = (contentType, headers) => {
+  return {
+    "Content-Type": contentType,
+    ...headers
+  };
+};
+var Context = class {
+  #rawRequest;
+  #req;
+  env = {};
+  #var;
+  finalized = false;
+  error;
+  #status;
+  #executionCtx;
+  #res;
+  #layout;
+  #renderer;
+  #notFoundHandler;
+  #preparedHeaders;
+  #matchResult;
+  #path;
+  constructor(req, options) {
+    this.#rawRequest = req;
+    if (options) {
+      this.#executionCtx = options.executionCtx;
+      this.env = options.env;
+      this.#notFoundHandler = options.notFoundHandler;
+      this.#path = options.path;
+      this.#matchResult = options.matchResult;
+    }
+  }
+  get req() {
+    this.#req ??= new HonoRequest(this.#rawRequest, this.#path, this.#matchResult);
+    return this.#req;
+  }
+  get event() {
+    if (this.#executionCtx && "respondWith" in this.#executionCtx) {
+      return this.#executionCtx;
+    } else {
+      throw Error("This context has no FetchEvent");
+    }
+  }
+  get executionCtx() {
+    if (this.#executionCtx) {
+      return this.#executionCtx;
+    } else {
+      throw Error("This context has no ExecutionContext");
+    }
+  }
+  get res() {
+    return this.#res ||= new Response(null, {
+      headers: this.#preparedHeaders ??= new Headers
+    });
+  }
+  set res(_res) {
+    if (this.#res && _res) {
+      _res = new Response(_res.body, _res);
+      for (const [k, v] of this.#res.headers.entries()) {
+        if (k === "content-type") {
+          continue;
+        }
+        if (k === "set-cookie") {
+          const cookies = this.#res.headers.getSetCookie();
+          _res.headers.delete("set-cookie");
+          for (const cookie of cookies) {
+            _res.headers.append("set-cookie", cookie);
+          }
+        } else {
+          _res.headers.set(k, v);
+        }
+      }
+    }
+    this.#res = _res;
+    this.finalized = true;
+  }
+  render = (...args) => {
+    this.#renderer ??= (content) => this.html(content);
+    return this.#renderer(...args);
+  };
+  setLayout = (layout) => this.#layout = layout;
+  getLayout = () => this.#layout;
+  setRenderer = (renderer) => {
+    this.#renderer = renderer;
+  };
+  header = (name, value, options) => {
+    if (this.finalized) {
+      this.#res = new Response(this.#res.body, this.#res);
+    }
+    const headers = this.#res ? this.#res.headers : this.#preparedHeaders ??= new Headers;
+    if (value === undefined) {
+      headers.delete(name);
+    } else if (options?.append) {
+      headers.append(name, value);
+    } else {
+      headers.set(name, value);
+    }
+  };
+  status = (status) => {
+    this.#status = status;
+  };
+  set = (key, value) => {
+    this.#var ??= /* @__PURE__ */ new Map;
+    this.#var.set(key, value);
+  };
+  get = (key) => {
+    return this.#var ? this.#var.get(key) : undefined;
+  };
+  get var() {
+    if (!this.#var) {
+      return {};
+    }
+    return Object.fromEntries(this.#var);
+  }
+  #newResponse(data, arg, headers) {
+    const responseHeaders = this.#res ? new Headers(this.#res.headers) : this.#preparedHeaders ?? new Headers;
+    if (typeof arg === "object" && "headers" in arg) {
+      const argHeaders = arg.headers instanceof Headers ? arg.headers : new Headers(arg.headers);
+      for (const [key, value] of argHeaders) {
+        if (key.toLowerCase() === "set-cookie") {
+          responseHeaders.append(key, value);
+        } else {
+          responseHeaders.set(key, value);
+        }
+      }
+    }
+    if (headers) {
+      for (const [k, v] of Object.entries(headers)) {
+        if (typeof v === "string") {
+          responseHeaders.set(k, v);
+        } else {
+          responseHeaders.delete(k);
+          for (const v2 of v) {
+            responseHeaders.append(k, v2);
+          }
+        }
+      }
+    }
+    const status = typeof arg === "number" ? arg : arg?.status ?? this.#status;
+    return new Response(data, { status, headers: responseHeaders });
+  }
+  newResponse = (...args) => this.#newResponse(...args);
+  body = (data, arg, headers) => this.#newResponse(data, arg, headers);
+  text = (text, arg, headers) => {
+    return !this.#preparedHeaders && !this.#status && !arg && !headers && !this.finalized ? new Response(text) : this.#newResponse(text, arg, setDefaultContentType(TEXT_PLAIN, headers));
+  };
+  json = (object, arg, headers) => {
+    return this.#newResponse(JSON.stringify(object), arg, setDefaultContentType("application/json", headers));
+  };
+  html = (html, arg, headers) => {
+    const res = (html2) => this.#newResponse(html2, arg, setDefaultContentType("text/html; charset=UTF-8", headers));
+    return typeof html === "object" ? resolveCallback(html, HtmlEscapedCallbackPhase.Stringify, false, {}).then(res) : res(html);
+  };
+  redirect = (location, status) => {
+    this.header("Location", String(location));
+    return this.newResponse(null, status ?? 302);
+  };
+  notFound = () => {
+    this.#notFoundHandler ??= () => new Response;
+    return this.#notFoundHandler(this);
+  };
+};
+
+// node_modules/hono/dist/router.js
+var METHOD_NAME_ALL = "ALL";
+var METHOD_NAME_ALL_LOWERCASE = "all";
+var METHODS = ["get", "post", "put", "delete", "options", "patch"];
+var MESSAGE_MATCHER_IS_ALREADY_BUILT = "Can not add a route since the matcher is already built.";
+var UnsupportedPathError = class extends Error {
+};
+
+// node_modules/hono/dist/utils/constants.js
+var COMPOSED_HANDLER = "__COMPOSED_HANDLER";
+
+// node_modules/hono/dist/hono-base.js
+var notFoundHandler = (c) => {
+  return c.text("404 Not Found", 404);
+};
+var errorHandler = (err, c) => {
+  if ("getResponse" in err) {
+    const res = err.getResponse();
+    return c.newResponse(res.body, res);
+  }
+  console.error(err);
+  return c.text("Internal Server Error", 500);
+};
+var Hono = class {
+  get;
+  post;
+  put;
+  delete;
+  options;
+  patch;
+  all;
+  on;
+  use;
+  router;
+  getPath;
+  _basePath = "/";
+  #path = "/";
+  routes = [];
+  constructor(options = {}) {
+    const allMethods = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
+    allMethods.forEach((method) => {
+      this[method] = (args1, ...args) => {
+        if (typeof args1 === "string") {
+          this.#path = args1;
+        } else {
+          this.#addRoute(method, this.#path, args1);
+        }
+        args.forEach((handler) => {
+          this.#addRoute(method, this.#path, handler);
+        });
+        return this;
+      };
+    });
+    this.on = (method, path, ...handlers) => {
+      for (const p of [path].flat()) {
+        this.#path = p;
+        for (const m of [method].flat()) {
+          handlers.map((handler) => {
+            this.#addRoute(m.toUpperCase(), this.#path, handler);
+          });
+        }
+      }
+      return this;
+    };
+    this.use = (arg1, ...handlers) => {
+      if (typeof arg1 === "string") {
+        this.#path = arg1;
+      } else {
+        this.#path = "*";
+        handlers.unshift(arg1);
+      }
+      handlers.forEach((handler) => {
+        this.#addRoute(METHOD_NAME_ALL, this.#path, handler);
+      });
+      return this;
+    };
+    const { strict, ...optionsWithoutStrict } = options;
+    Object.assign(this, optionsWithoutStrict);
+    this.getPath = strict ?? true ? options.getPath ?? getPath : getPathNoStrict;
+  }
+  #clone() {
+    const clone = new Hono({
+      router: this.router,
+      getPath: this.getPath
+    });
+    clone.errorHandler = this.errorHandler;
+    clone.#notFoundHandler = this.#notFoundHandler;
+    clone.routes = this.routes;
+    return clone;
+  }
+  #notFoundHandler = notFoundHandler;
+  errorHandler = errorHandler;
+  route(path, app) {
+    const subApp = this.basePath(path);
+    app.routes.map((r) => {
+      let handler;
+      if (app.errorHandler === errorHandler) {
+        handler = r.handler;
+      } else {
+        handler = async (c, next) => (await compose([], app.errorHandler)(c, () => r.handler(c, next))).res;
+        handler[COMPOSED_HANDLER] = r.handler;
+      }
+      subApp.#addRoute(r.method, r.path, handler);
+    });
+    return this;
+  }
+  basePath(path) {
+    const subApp = this.#clone();
+    subApp._basePath = mergePath(this._basePath, path);
+    return subApp;
+  }
+  onError = (handler) => {
+    this.errorHandler = handler;
+    return this;
+  };
+  notFound = (handler) => {
+    this.#notFoundHandler = handler;
+    return this;
+  };
+  mount(path, applicationHandler, options) {
+    let replaceRequest;
+    let optionHandler;
+    if (options) {
+      if (typeof options === "function") {
+        optionHandler = options;
+      } else {
+        optionHandler = options.optionHandler;
+        if (options.replaceRequest === false) {
+          replaceRequest = (request) => request;
+        } else {
+          replaceRequest = options.replaceRequest;
+        }
+      }
+    }
+    const getOptions = optionHandler ? (c) => {
+      const options2 = optionHandler(c);
+      return Array.isArray(options2) ? options2 : [options2];
+    } : (c) => {
+      let executionContext = undefined;
+      try {
+        executionContext = c.executionCtx;
+      } catch {}
+      return [c.env, executionContext];
+    };
+    replaceRequest ||= (() => {
+      const mergedPath = mergePath(this._basePath, path);
+      const pathPrefixLength = mergedPath === "/" ? 0 : mergedPath.length;
+      return (request) => {
+        const url = new URL(request.url);
+        url.pathname = url.pathname.slice(pathPrefixLength) || "/";
+        return new Request(url, request);
+      };
+    })();
+    const handler = async (c, next) => {
+      const res = await applicationHandler(replaceRequest(c.req.raw), ...getOptions(c));
+      if (res) {
+        return res;
+      }
+      await next();
+    };
+    this.#addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
+    return this;
+  }
+  #addRoute(method, path, handler) {
+    method = method.toUpperCase();
+    path = mergePath(this._basePath, path);
+    const r = { basePath: this._basePath, path, method, handler };
+    this.router.add(method, path, [handler, r]);
+    this.routes.push(r);
+  }
+  #handleError(err, c) {
+    if (err instanceof Error) {
+      return this.errorHandler(err, c);
+    }
+    throw err;
+  }
+  #dispatch(request, executionCtx, env, method) {
+    if (method === "HEAD") {
+      return (async () => new Response(null, await this.#dispatch(request, executionCtx, env, "GET")))();
+    }
+    const path = this.getPath(request, { env });
+    const matchResult = this.router.match(method, path);
+    const c = new Context(request, {
+      path,
+      matchResult,
+      env,
+      executionCtx,
+      notFoundHandler: this.#notFoundHandler
+    });
+    if (matchResult[0].length === 1) {
+      let res;
+      try {
+        res = matchResult[0][0][0][0](c, async () => {
+          c.res = await this.#notFoundHandler(c);
+        });
+      } catch (err) {
+        return this.#handleError(err, c);
+      }
+      return res instanceof Promise ? res.then((resolved) => resolved || (c.finalized ? c.res : this.#notFoundHandler(c))).catch((err) => this.#handleError(err, c)) : res ?? this.#notFoundHandler(c);
+    }
+    const composed = compose(matchResult[0], this.errorHandler, this.#notFoundHandler);
+    return (async () => {
+      try {
+        const context = await composed(c);
+        if (!context.finalized) {
+          throw new Error("Context is not finalized. Did you forget to return a Response object or `await next()`?");
+        }
+        return context.res;
+      } catch (err) {
+        return this.#handleError(err, c);
+      }
+    })();
+  }
+  fetch = (request, ...rest) => {
+    return this.#dispatch(request, rest[1], rest[0], request.method);
+  };
+  request = (input, requestInit, Env, executionCtx) => {
+    if (input instanceof Request) {
+      return this.fetch(requestInit ? new Request(input, requestInit) : input, Env, executionCtx);
+    }
+    input = input.toString();
+    return this.fetch(new Request(/^https?:\/\//.test(input) ? input : `http://localhost${mergePath("/", input)}`, requestInit), Env, executionCtx);
+  };
+  fire = () => {
+    addEventListener("fetch", (event) => {
+      event.respondWith(this.#dispatch(event.request, event, undefined, event.request.method));
+    });
+  };
+};
+
+// node_modules/hono/dist/router/reg-exp-router/node.js
+var LABEL_REG_EXP_STR = "[^/]+";
+var ONLY_WILDCARD_REG_EXP_STR = ".*";
+var TAIL_WILDCARD_REG_EXP_STR = "(?:|/.*)";
+var PATH_ERROR = Symbol();
+var regExpMetaChars = new Set(".\\+*[^]$()");
+function compareKey(a, b) {
+  if (a.length === 1) {
+    return b.length === 1 ? a < b ? -1 : 1 : -1;
+  }
+  if (b.length === 1) {
+    return 1;
+  }
+  if (a === ONLY_WILDCARD_REG_EXP_STR || a === TAIL_WILDCARD_REG_EXP_STR) {
+    return 1;
+  } else if (b === ONLY_WILDCARD_REG_EXP_STR || b === TAIL_WILDCARD_REG_EXP_STR) {
+    return -1;
+  }
+  if (a === LABEL_REG_EXP_STR) {
+    return 1;
+  } else if (b === LABEL_REG_EXP_STR) {
+    return -1;
+  }
+  return a.length === b.length ? a < b ? -1 : 1 : b.length - a.length;
+}
+var Node = class {
+  #index;
+  #varIndex;
+  #children = /* @__PURE__ */ Object.create(null);
+  insert(tokens, index, paramMap, context, pathErrorCheckOnly) {
+    if (tokens.length === 0) {
+      if (this.#index !== undefined) {
+        throw PATH_ERROR;
+      }
+      if (pathErrorCheckOnly) {
+        return;
+      }
+      this.#index = index;
+      return;
+    }
+    const [token, ...restTokens] = tokens;
+    const pattern = token === "*" ? restTokens.length === 0 ? ["", "", ONLY_WILDCARD_REG_EXP_STR] : ["", "", LABEL_REG_EXP_STR] : token === "/*" ? ["", "", TAIL_WILDCARD_REG_EXP_STR] : token.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
+    let node;
+    if (pattern) {
+      const name = pattern[1];
+      let regexpStr = pattern[2] || LABEL_REG_EXP_STR;
+      if (name && pattern[2]) {
+        regexpStr = regexpStr.replace(/^\((?!\?:)(?=[^)]+\)$)/, "(?:");
+        if (/\((?!\?:)/.test(regexpStr)) {
+          throw PATH_ERROR;
+        }
+      }
+      node = this.#children[regexpStr];
+      if (!node) {
+        if (Object.keys(this.#children).some((k) => k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR)) {
+          throw PATH_ERROR;
+        }
+        if (pathErrorCheckOnly) {
+          return;
+        }
+        node = this.#children[regexpStr] = new Node;
+        if (name !== "") {
+          node.#varIndex = context.varIndex++;
+        }
+      }
+      if (!pathErrorCheckOnly && name !== "") {
+        paramMap.push([name, node.#varIndex]);
+      }
+    } else {
+      node = this.#children[token];
+      if (!node) {
+        if (Object.keys(this.#children).some((k) => k.length > 1 && k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR)) {
+          throw PATH_ERROR;
+        }
+        if (pathErrorCheckOnly) {
+          return;
+        }
+        node = this.#children[token] = new Node;
+      }
+    }
+    node.insert(restTokens, index, paramMap, context, pathErrorCheckOnly);
+  }
+  buildRegExpStr() {
+    const childKeys = Object.keys(this.#children).sort(compareKey);
+    const strList = childKeys.map((k) => {
+      const c = this.#children[k];
+      return (typeof c.#varIndex === "number" ? `(${k})@${c.#varIndex}` : regExpMetaChars.has(k) ? `\\${k}` : k) + c.buildRegExpStr();
+    });
+    if (typeof this.#index === "number") {
+      strList.unshift(`#${this.#index}`);
+    }
+    if (strList.length === 0) {
+      return "";
+    }
+    if (strList.length === 1) {
+      return strList[0];
+    }
+    return "(?:" + strList.join("|") + ")";
+  }
+};
+
+// node_modules/hono/dist/router/reg-exp-router/trie.js
+var Trie = class {
+  #context = { varIndex: 0 };
+  #root = new Node;
+  insert(path, index, pathErrorCheckOnly) {
+    const paramAssoc = [];
+    const groups = [];
+    for (let i = 0;; ) {
+      let replaced = false;
+      path = path.replace(/\{[^}]+\}/g, (m) => {
+        const mark = `@\\${i}`;
+        groups[i] = [mark, m];
+        i++;
+        replaced = true;
+        return mark;
+      });
+      if (!replaced) {
+        break;
+      }
+    }
+    const tokens = path.match(/(?::[^\/]+)|(?:\/\*$)|./g) || [];
+    for (let i = groups.length - 1;i >= 0; i--) {
+      const [mark] = groups[i];
+      for (let j = tokens.length - 1;j >= 0; j--) {
+        if (tokens[j].indexOf(mark) !== -1) {
+          tokens[j] = tokens[j].replace(mark, groups[i][1]);
+          break;
+        }
+      }
+    }
+    this.#root.insert(tokens, index, paramAssoc, this.#context, pathErrorCheckOnly);
+    return paramAssoc;
+  }
+  buildRegExp() {
+    let regexp = this.#root.buildRegExpStr();
+    if (regexp === "") {
+      return [/^$/, [], []];
+    }
+    let captureIndex = 0;
+    const indexReplacementMap = [];
+    const paramReplacementMap = [];
+    regexp = regexp.replace(/#(\d+)|@(\d+)|\.\*\$/g, (_, handlerIndex, paramIndex) => {
+      if (handlerIndex !== undefined) {
+        indexReplacementMap[++captureIndex] = Number(handlerIndex);
+        return "$()";
+      }
+      if (paramIndex !== undefined) {
+        paramReplacementMap[Number(paramIndex)] = ++captureIndex;
+        return "";
+      }
+      return "";
+    });
+    return [new RegExp(`^${regexp}`), indexReplacementMap, paramReplacementMap];
+  }
+};
+
+// node_modules/hono/dist/router/reg-exp-router/router.js
+var emptyParam = [];
+var nullMatcher = [/^$/, [], /* @__PURE__ */ Object.create(null)];
+var wildcardRegExpCache = /* @__PURE__ */ Object.create(null);
+function buildWildcardRegExp(path) {
+  return wildcardRegExpCache[path] ??= new RegExp(path === "*" ? "" : `^${path.replace(/\/\*$|([.\\+*[^\]$()])/g, (_, metaChar) => metaChar ? `\\${metaChar}` : "(?:|/.*)")}$`);
+}
+function clearWildcardRegExpCache() {
+  wildcardRegExpCache = /* @__PURE__ */ Object.create(null);
+}
+function buildMatcherFromPreprocessedRoutes(routes) {
+  const trie = new Trie;
+  const handlerData = [];
+  if (routes.length === 0) {
+    return nullMatcher;
+  }
+  const routesWithStaticPathFlag = routes.map((route) => [!/\*|\/:/.test(route[0]), ...route]).sort(([isStaticA, pathA], [isStaticB, pathB]) => isStaticA ? 1 : isStaticB ? -1 : pathA.length - pathB.length);
+  const staticMap = /* @__PURE__ */ Object.create(null);
+  for (let i = 0, j = -1, len = routesWithStaticPathFlag.length;i < len; i++) {
+    const [pathErrorCheckOnly, path, handlers] = routesWithStaticPathFlag[i];
+    if (pathErrorCheckOnly) {
+      staticMap[path] = [handlers.map(([h]) => [h, /* @__PURE__ */ Object.create(null)]), emptyParam];
+    } else {
+      j++;
+    }
+    let paramAssoc;
+    try {
+      paramAssoc = trie.insert(path, j, pathErrorCheckOnly);
+    } catch (e) {
+      throw e === PATH_ERROR ? new UnsupportedPathError(path) : e;
+    }
+    if (pathErrorCheckOnly) {
+      continue;
+    }
+    handlerData[j] = handlers.map(([h, paramCount]) => {
+      const paramIndexMap = /* @__PURE__ */ Object.create(null);
+      paramCount -= 1;
+      for (;paramCount >= 0; paramCount--) {
+        const [key, value] = paramAssoc[paramCount];
+        paramIndexMap[key] = value;
+      }
+      return [h, paramIndexMap];
+    });
+  }
+  const [regexp, indexReplacementMap, paramReplacementMap] = trie.buildRegExp();
+  for (let i = 0, len = handlerData.length;i < len; i++) {
+    for (let j = 0, len2 = handlerData[i].length;j < len2; j++) {
+      const map = handlerData[i][j]?.[1];
+      if (!map) {
+        continue;
+      }
+      const keys = Object.keys(map);
+      for (let k = 0, len3 = keys.length;k < len3; k++) {
+        map[keys[k]] = paramReplacementMap[map[keys[k]]];
+      }
+    }
+  }
+  const handlerMap = [];
+  for (const i in indexReplacementMap) {
+    handlerMap[i] = handlerData[indexReplacementMap[i]];
+  }
+  return [regexp, handlerMap, staticMap];
+}
+function findMiddleware(middleware, path) {
+  if (!middleware) {
+    return;
+  }
+  for (const k of Object.keys(middleware).sort((a, b) => b.length - a.length)) {
+    if (buildWildcardRegExp(k).test(path)) {
+      return [...middleware[k]];
+    }
+  }
+  return;
+}
+var RegExpRouter = class {
+  name = "RegExpRouter";
+  #middleware;
+  #routes;
+  constructor() {
+    this.#middleware = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+    this.#routes = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+  }
+  add(method, path, handler) {
+    const middleware = this.#middleware;
+    const routes = this.#routes;
+    if (!middleware || !routes) {
+      throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
+    }
+    if (!middleware[method]) {
+      [middleware, routes].forEach((handlerMap) => {
+        handlerMap[method] = /* @__PURE__ */ Object.create(null);
+        Object.keys(handlerMap[METHOD_NAME_ALL]).forEach((p) => {
+          handlerMap[method][p] = [...handlerMap[METHOD_NAME_ALL][p]];
+        });
+      });
+    }
+    if (path === "/*") {
+      path = "*";
+    }
+    const paramCount = (path.match(/\/:/g) || []).length;
+    if (/\*$/.test(path)) {
+      const re = buildWildcardRegExp(path);
+      if (method === METHOD_NAME_ALL) {
+        Object.keys(middleware).forEach((m) => {
+          middleware[m][path] ||= findMiddleware(middleware[m], path) || findMiddleware(middleware[METHOD_NAME_ALL], path) || [];
+        });
+      } else {
+        middleware[method][path] ||= findMiddleware(middleware[method], path) || findMiddleware(middleware[METHOD_NAME_ALL], path) || [];
+      }
+      Object.keys(middleware).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          Object.keys(middleware[m]).forEach((p) => {
+            re.test(p) && middleware[m][p].push([handler, paramCount]);
+          });
+        }
+      });
+      Object.keys(routes).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          Object.keys(routes[m]).forEach((p) => re.test(p) && routes[m][p].push([handler, paramCount]));
+        }
+      });
+      return;
+    }
+    const paths = checkOptionalParameter(path) || [path];
+    for (let i = 0, len = paths.length;i < len; i++) {
+      const path2 = paths[i];
+      Object.keys(routes).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          routes[m][path2] ||= [
+            ...findMiddleware(middleware[m], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || []
+          ];
+          routes[m][path2].push([handler, paramCount - len + i + 1]);
+        }
+      });
+    }
+  }
+  match(method, path) {
+    clearWildcardRegExpCache();
+    const matchers = this.#buildAllMatchers();
+    this.match = (method2, path2) => {
+      const matcher = matchers[method2] || matchers[METHOD_NAME_ALL];
+      const staticMatch = matcher[2][path2];
+      if (staticMatch) {
+        return staticMatch;
+      }
+      const match = path2.match(matcher[0]);
+      if (!match) {
+        return [[], emptyParam];
+      }
+      const index = match.indexOf("", 1);
+      return [matcher[1][index], match];
+    };
+    return this.match(method, path);
+  }
+  #buildAllMatchers() {
+    const matchers = /* @__PURE__ */ Object.create(null);
+    Object.keys(this.#routes).concat(Object.keys(this.#middleware)).forEach((method) => {
+      matchers[method] ||= this.#buildMatcher(method);
+    });
+    this.#middleware = this.#routes = undefined;
+    return matchers;
+  }
+  #buildMatcher(method) {
+    const routes = [];
+    let hasOwnRoute = method === METHOD_NAME_ALL;
+    [this.#middleware, this.#routes].forEach((r) => {
+      const ownRoute = r[method] ? Object.keys(r[method]).map((path) => [path, r[method][path]]) : [];
+      if (ownRoute.length !== 0) {
+        hasOwnRoute ||= true;
+        routes.push(...ownRoute);
+      } else if (method !== METHOD_NAME_ALL) {
+        routes.push(...Object.keys(r[METHOD_NAME_ALL]).map((path) => [path, r[METHOD_NAME_ALL][path]]));
+      }
+    });
+    if (!hasOwnRoute) {
+      return null;
+    } else {
+      return buildMatcherFromPreprocessedRoutes(routes);
+    }
+  }
+};
+
+// node_modules/hono/dist/router/smart-router/router.js
+var SmartRouter = class {
+  name = "SmartRouter";
+  #routers = [];
+  #routes = [];
+  constructor(init) {
+    this.#routers = init.routers;
+  }
+  add(method, path, handler) {
+    if (!this.#routes) {
+      throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
+    }
+    this.#routes.push([method, path, handler]);
+  }
+  match(method, path) {
+    if (!this.#routes) {
+      throw new Error("Fatal error");
+    }
+    const routers = this.#routers;
+    const routes = this.#routes;
+    const len = routers.length;
+    let i = 0;
+    let res;
+    for (;i < len; i++) {
+      const router = routers[i];
+      try {
+        for (let i2 = 0, len2 = routes.length;i2 < len2; i2++) {
+          router.add(...routes[i2]);
+        }
+        res = router.match(method, path);
+      } catch (e) {
+        if (e instanceof UnsupportedPathError) {
+          continue;
+        }
+        throw e;
+      }
+      this.match = router.match.bind(router);
+      this.#routers = [router];
+      this.#routes = undefined;
+      break;
+    }
+    if (i === len) {
+      throw new Error("Fatal error");
+    }
+    this.name = `SmartRouter + ${this.activeRouter.name}`;
+    return res;
+  }
+  get activeRouter() {
+    if (this.#routes || this.#routers.length !== 1) {
+      throw new Error("No active router has been determined yet.");
+    }
+    return this.#routers[0];
+  }
+};
+
+// node_modules/hono/dist/router/trie-router/node.js
+var emptyParams = /* @__PURE__ */ Object.create(null);
+var Node2 = class {
+  #methods;
+  #children;
+  #patterns;
+  #order = 0;
+  #params = emptyParams;
+  constructor(method, handler, children) {
+    this.#children = children || /* @__PURE__ */ Object.create(null);
+    this.#methods = [];
+    if (method && handler) {
+      const m = /* @__PURE__ */ Object.create(null);
+      m[method] = { handler, possibleKeys: [], score: 0 };
+      this.#methods = [m];
+    }
+    this.#patterns = [];
+  }
+  insert(method, path, handler) {
+    this.#order = ++this.#order;
+    let curNode = this;
+    const parts = splitRoutingPath(path);
+    const possibleKeys = [];
+    for (let i = 0, len = parts.length;i < len; i++) {
+      const p = parts[i];
+      const nextP = parts[i + 1];
+      const pattern = getPattern(p, nextP);
+      const key = Array.isArray(pattern) ? pattern[0] : p;
+      if (key in curNode.#children) {
+        curNode = curNode.#children[key];
+        if (pattern) {
+          possibleKeys.push(pattern[1]);
+        }
+        continue;
+      }
+      curNode.#children[key] = new Node2;
+      if (pattern) {
+        curNode.#patterns.push(pattern);
+        possibleKeys.push(pattern[1]);
+      }
+      curNode = curNode.#children[key];
+    }
+    curNode.#methods.push({
+      [method]: {
+        handler,
+        possibleKeys: possibleKeys.filter((v, i, a) => a.indexOf(v) === i),
+        score: this.#order
+      }
+    });
+    return curNode;
+  }
+  #getHandlerSets(node, method, nodeParams, params) {
+    const handlerSets = [];
+    for (let i = 0, len = node.#methods.length;i < len; i++) {
+      const m = node.#methods[i];
+      const handlerSet = m[method] || m[METHOD_NAME_ALL];
+      const processedSet = {};
+      if (handlerSet !== undefined) {
+        handlerSet.params = /* @__PURE__ */ Object.create(null);
+        handlerSets.push(handlerSet);
+        if (nodeParams !== emptyParams || params && params !== emptyParams) {
+          for (let i2 = 0, len2 = handlerSet.possibleKeys.length;i2 < len2; i2++) {
+            const key = handlerSet.possibleKeys[i2];
+            const processed = processedSet[handlerSet.score];
+            handlerSet.params[key] = params?.[key] && !processed ? params[key] : nodeParams[key] ?? params?.[key];
+            processedSet[handlerSet.score] = true;
+          }
+        }
+      }
+    }
+    return handlerSets;
+  }
+  search(method, path) {
+    const handlerSets = [];
+    this.#params = emptyParams;
+    const curNode = this;
+    let curNodes = [curNode];
+    const parts = splitPath(path);
+    const curNodesQueue = [];
+    for (let i = 0, len = parts.length;i < len; i++) {
+      const part = parts[i];
+      const isLast = i === len - 1;
+      const tempNodes = [];
+      for (let j = 0, len2 = curNodes.length;j < len2; j++) {
+        const node = curNodes[j];
+        const nextNode = node.#children[part];
+        if (nextNode) {
+          nextNode.#params = node.#params;
+          if (isLast) {
+            if (nextNode.#children["*"]) {
+              handlerSets.push(...this.#getHandlerSets(nextNode.#children["*"], method, node.#params));
+            }
+            handlerSets.push(...this.#getHandlerSets(nextNode, method, node.#params));
+          } else {
+            tempNodes.push(nextNode);
+          }
+        }
+        for (let k = 0, len3 = node.#patterns.length;k < len3; k++) {
+          const pattern = node.#patterns[k];
+          const params = node.#params === emptyParams ? {} : { ...node.#params };
+          if (pattern === "*") {
+            const astNode = node.#children["*"];
+            if (astNode) {
+              handlerSets.push(...this.#getHandlerSets(astNode, method, node.#params));
+              astNode.#params = params;
+              tempNodes.push(astNode);
+            }
+            continue;
+          }
+          if (!part) {
+            continue;
+          }
+          const [key, name, matcher] = pattern;
+          const child = node.#children[key];
+          const restPathString = parts.slice(i).join("/");
+          if (matcher instanceof RegExp) {
+            const m = matcher.exec(restPathString);
+            if (m) {
+              params[name] = m[0];
+              handlerSets.push(...this.#getHandlerSets(child, method, node.#params, params));
+              if (Object.keys(child.#children).length) {
+                child.#params = params;
+                const componentCount = m[0].match(/\//)?.length ?? 0;
+                const targetCurNodes = curNodesQueue[componentCount] ||= [];
+                targetCurNodes.push(child);
+              }
+              continue;
+            }
+          }
+          if (matcher === true || matcher.test(part)) {
+            params[name] = part;
+            if (isLast) {
+              handlerSets.push(...this.#getHandlerSets(child, method, params, node.#params));
+              if (child.#children["*"]) {
+                handlerSets.push(...this.#getHandlerSets(child.#children["*"], method, params, node.#params));
+              }
+            } else {
+              child.#params = params;
+              tempNodes.push(child);
+            }
+          }
+        }
+      }
+      curNodes = tempNodes.concat(curNodesQueue.shift() ?? []);
+    }
+    if (handlerSets.length > 1) {
+      handlerSets.sort((a, b) => {
+        return a.score - b.score;
+      });
+    }
+    return [handlerSets.map(({ handler, params }) => [handler, params])];
+  }
+};
+
+// node_modules/hono/dist/router/trie-router/router.js
+var TrieRouter = class {
+  name = "TrieRouter";
+  #node;
+  constructor() {
+    this.#node = new Node2;
+  }
+  add(method, path, handler) {
+    const results = checkOptionalParameter(path);
+    if (results) {
+      for (let i = 0, len = results.length;i < len; i++) {
+        this.#node.insert(method, results[i], handler);
+      }
+      return;
+    }
+    this.#node.insert(method, path, handler);
+  }
+  match(method, path) {
+    return this.#node.search(method, path);
+  }
+};
+
+// node_modules/hono/dist/hono.js
+var Hono2 = class extends Hono {
+  constructor(options = {}) {
+    super(options);
+    this.router = options.router ?? new SmartRouter({
+      routers: [new RegExpRouter, new TrieRouter]
+    });
+  }
+};
+
+// node_modules/hono/dist/middleware/cors/index.js
+var cors = (options) => {
+  const defaults = {
+    origin: "*",
+    allowMethods: ["GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"],
+    allowHeaders: [],
+    exposeHeaders: []
+  };
+  const opts = {
+    ...defaults,
+    ...options
+  };
+  const findAllowOrigin = ((optsOrigin) => {
+    if (typeof optsOrigin === "string") {
+      if (optsOrigin === "*") {
+        return () => optsOrigin;
+      } else {
+        return (origin) => optsOrigin === origin ? origin : null;
+      }
+    } else if (typeof optsOrigin === "function") {
+      return optsOrigin;
+    } else {
+      return (origin) => optsOrigin.includes(origin) ? origin : null;
+    }
+  })(opts.origin);
+  const findAllowMethods = ((optsAllowMethods) => {
+    if (typeof optsAllowMethods === "function") {
+      return optsAllowMethods;
+    } else if (Array.isArray(optsAllowMethods)) {
+      return () => optsAllowMethods;
+    } else {
+      return () => [];
+    }
+  })(opts.allowMethods);
+  return async function cors2(c, next) {
+    function set(key, value) {
+      c.res.headers.set(key, value);
+    }
+    const allowOrigin = findAllowOrigin(c.req.header("origin") || "", c);
+    if (allowOrigin) {
+      set("Access-Control-Allow-Origin", allowOrigin);
+    }
+    if (opts.origin !== "*") {
+      const existingVary = c.req.header("Vary");
+      if (existingVary) {
+        set("Vary", existingVary);
+      } else {
+        set("Vary", "Origin");
+      }
+    }
+    if (opts.credentials) {
+      set("Access-Control-Allow-Credentials", "true");
+    }
+    if (opts.exposeHeaders?.length) {
+      set("Access-Control-Expose-Headers", opts.exposeHeaders.join(","));
+    }
+    if (c.req.method === "OPTIONS") {
+      if (opts.maxAge != null) {
+        set("Access-Control-Max-Age", opts.maxAge.toString());
+      }
+      const allowMethods = findAllowMethods(c.req.header("origin") || "", c);
+      if (allowMethods.length) {
+        set("Access-Control-Allow-Methods", allowMethods.join(","));
+      }
+      let headers = opts.allowHeaders;
+      if (!headers?.length) {
+        const requestHeaders = c.req.header("Access-Control-Request-Headers");
+        if (requestHeaders) {
+          headers = requestHeaders.split(/\s*,\s*/);
+        }
+      }
+      if (headers?.length) {
+        set("Access-Control-Allow-Headers", headers.join(","));
+        c.res.headers.append("Vary", "Access-Control-Request-Headers");
+      }
+      c.res.headers.delete("Content-Length");
+      c.res.headers.delete("Content-Type");
+      return new Response(null, {
+        headers: c.res.headers,
+        status: 204,
+        statusText: "No Content"
+      });
+    }
+    await next();
+  };
+};
+
+// node_modules/hono/dist/http-exception.js
+var HTTPException = class extends Error {
+  res;
+  status;
+  constructor(status = 500, options) {
+    super(options?.message, { cause: options?.cause });
+    this.res = options?.res;
+    this.status = status;
+  }
+  getResponse() {
+    if (this.res) {
+      const newResponse = new Response(this.res.body, {
+        status: this.status,
+        headers: this.res.headers
+      });
+      return newResponse;
+    }
+    return new Response(this.message, {
+      status: this.status
+    });
+  }
+};
+
+// node_modules/hono/dist/middleware/csrf/index.js
+var isSafeMethodRe = /^(GET|HEAD)$/;
+var isRequestedByFormElementRe = /^\b(application\/x-www-form-urlencoded|multipart\/form-data|text\/plain)\b/i;
+var csrf = (options) => {
+  const handler = ((optsOrigin) => {
+    if (!optsOrigin) {
+      return (origin, c) => origin === new URL(c.req.url).origin;
+    } else if (typeof optsOrigin === "string") {
+      return (origin) => origin === optsOrigin;
+    } else if (typeof optsOrigin === "function") {
+      return optsOrigin;
+    } else {
+      return (origin) => optsOrigin.includes(origin);
+    }
+  })(options?.origin);
+  const isAllowedOrigin = (origin, c) => {
+    if (origin === undefined) {
+      return false;
+    }
+    return handler(origin, c);
+  };
+  return async function csrf2(c, next) {
+    if (!isSafeMethodRe.test(c.req.method) && isRequestedByFormElementRe.test(c.req.header("content-type") || "text/plain") && !isAllowedOrigin(c.req.header("origin"), c)) {
+      const res = new Response("Forbidden", {
+        status: 403
+      });
+      throw new HTTPException(403, { res });
+    }
+    await next();
+  };
+};
+
+// node_modules/hono/dist/middleware/secure-headers/secure-headers.js
+var HEADERS_MAP = {
+  crossOriginEmbedderPolicy: ["Cross-Origin-Embedder-Policy", "require-corp"],
+  crossOriginResourcePolicy: ["Cross-Origin-Resource-Policy", "same-origin"],
+  crossOriginOpenerPolicy: ["Cross-Origin-Opener-Policy", "same-origin"],
+  originAgentCluster: ["Origin-Agent-Cluster", "?1"],
+  referrerPolicy: ["Referrer-Policy", "no-referrer"],
+  strictTransportSecurity: ["Strict-Transport-Security", "max-age=15552000; includeSubDomains"],
+  xContentTypeOptions: ["X-Content-Type-Options", "nosniff"],
+  xDnsPrefetchControl: ["X-DNS-Prefetch-Control", "off"],
+  xDownloadOptions: ["X-Download-Options", "noopen"],
+  xFrameOptions: ["X-Frame-Options", "SAMEORIGIN"],
+  xPermittedCrossDomainPolicies: ["X-Permitted-Cross-Domain-Policies", "none"],
+  xXssProtection: ["X-XSS-Protection", "0"]
+};
+var DEFAULT_OPTIONS = {
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: true,
+  crossOriginOpenerPolicy: true,
+  originAgentCluster: true,
+  referrerPolicy: true,
+  strictTransportSecurity: true,
+  xContentTypeOptions: true,
+  xDnsPrefetchControl: true,
+  xDownloadOptions: true,
+  xFrameOptions: true,
+  xPermittedCrossDomainPolicies: true,
+  xXssProtection: true,
+  removePoweredBy: true,
+  permissionsPolicy: {}
+};
+var secureHeaders = (customOptions) => {
+  const options = { ...DEFAULT_OPTIONS, ...customOptions };
+  const headersToSet = getFilteredHeaders(options);
+  const callbacks = [];
+  if (options.contentSecurityPolicy) {
+    const [callback, value] = getCSPDirectives(options.contentSecurityPolicy);
+    if (callback) {
+      callbacks.push(callback);
+    }
+    headersToSet.push(["Content-Security-Policy", value]);
+  }
+  if (options.contentSecurityPolicyReportOnly) {
+    const [callback, value] = getCSPDirectives(options.contentSecurityPolicyReportOnly);
+    if (callback) {
+      callbacks.push(callback);
+    }
+    headersToSet.push(["Content-Security-Policy-Report-Only", value]);
+  }
+  if (options.permissionsPolicy && Object.keys(options.permissionsPolicy).length > 0) {
+    headersToSet.push([
+      "Permissions-Policy",
+      getPermissionsPolicyDirectives(options.permissionsPolicy)
+    ]);
+  }
+  if (options.reportingEndpoints) {
+    headersToSet.push(["Reporting-Endpoints", getReportingEndpoints(options.reportingEndpoints)]);
+  }
+  if (options.reportTo) {
+    headersToSet.push(["Report-To", getReportToOptions(options.reportTo)]);
+  }
+  return async function secureHeaders2(ctx, next) {
+    const headersToSetForReq = callbacks.length === 0 ? headersToSet : callbacks.reduce((acc, cb) => cb(ctx, acc), headersToSet);
+    await next();
+    setHeaders(ctx, headersToSetForReq);
+    if (options?.removePoweredBy) {
+      ctx.res.headers.delete("X-Powered-By");
+    }
+  };
+};
+function getFilteredHeaders(options) {
+  return Object.entries(HEADERS_MAP).filter(([key]) => options[key]).map(([key, defaultValue]) => {
+    const overrideValue = options[key];
+    return typeof overrideValue === "string" ? [defaultValue[0], overrideValue] : defaultValue;
+  });
+}
+function getCSPDirectives(contentSecurityPolicy) {
+  const callbacks = [];
+  const resultValues = [];
+  for (const [directive, value] of Object.entries(contentSecurityPolicy)) {
+    const valueArray = Array.isArray(value) ? value : [value];
+    valueArray.forEach((value2, i) => {
+      if (typeof value2 === "function") {
+        const index = i * 2 + 2 + resultValues.length;
+        callbacks.push((ctx, values) => {
+          values[index] = value2(ctx, directive);
+        });
+      }
+    });
+    resultValues.push(directive.replace(/[A-Z]+(?![a-z])|[A-Z]/g, (match, offset) => offset ? "-" + match.toLowerCase() : match.toLowerCase()), ...valueArray.flatMap((value2) => [" ", value2]), "; ");
+  }
+  resultValues.pop();
+  return callbacks.length === 0 ? [undefined, resultValues.join("")] : [
+    (ctx, headersToSet) => headersToSet.map((values) => {
+      if (values[0] === "Content-Security-Policy" || values[0] === "Content-Security-Policy-Report-Only") {
+        const clone = values[1].slice();
+        callbacks.forEach((cb) => {
+          cb(ctx, clone);
+        });
+        return [values[0], clone.join("")];
+      } else {
+        return values;
+      }
+    }),
+    resultValues
+  ];
+}
+function getPermissionsPolicyDirectives(policy) {
+  return Object.entries(policy).map(([directive, value]) => {
+    const kebabDirective = camelToKebab(directive);
+    if (typeof value === "boolean") {
+      return `${kebabDirective}=${value ? "*" : "none"}`;
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return `${kebabDirective}=()`;
+      }
+      if (value.length === 1 && (value[0] === "*" || value[0] === "none")) {
+        return `${kebabDirective}=${value[0]}`;
+      }
+      const allowlist = value.map((item) => ["self", "src"].includes(item) ? item : `"${item}"`);
+      return `${kebabDirective}=(${allowlist.join(" ")})`;
+    }
+    return "";
+  }).filter(Boolean).join(", ");
+}
+function camelToKebab(str) {
+  return str.replace(/([a-z\d])([A-Z])/g, "$1-$2").toLowerCase();
+}
+function getReportingEndpoints(reportingEndpoints = []) {
+  return reportingEndpoints.map((endpoint) => `${endpoint.name}="${endpoint.url}"`).join(", ");
+}
+function getReportToOptions(reportTo = []) {
+  return reportTo.map((option) => JSON.stringify(option)).join(", ");
+}
+function setHeaders(ctx, headersToSet) {
+  headersToSet.forEach(([header, value]) => {
+    ctx.res.headers.set(header, value);
+  });
+}
+
+// src/server/index.tsx
+var app = new Hono2;
+app.use("*", csrf());
+app.use("*", cors());
+app.use("*", secureHeaders());
+app.get("/", (c) => {
+  const host = c.req.header("host") || "";
+  if (host.includes("app.localdomain")) {
+    return c.html(`
+      <div>
+        <header>
+          <h1>Umaxica(app, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `, 200, {
+      "Content-Type": "text/html; charset=UTF-8"
+    });
+  }
+  if (host.includes("com.localdomain")) {
+    return c.html(`
+      <div>
+        <header>
+          <h1>Umaxica(com, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `, 200, {
+      "Content-Type": "text/html; charset=UTF-8"
+    });
+  }
+  if (host.includes("org.localdomain")) {
+    return c.html(`
+      <div>
+        <header>
+          <h1>Umaxica(org, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `, 200, {
+      "Content-Type": "text/html; charset=UTF-8"
+    });
+  }
+  return c.text("Hello World");
+});
+var server_default = app;
+export {
+  server_default as default
+};
