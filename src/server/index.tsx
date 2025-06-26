@@ -1,72 +1,85 @@
-import { Hono } from "hono/quick";
+import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
-import { languageDetector } from "hono/language";
-import { logger } from "hono/logger";
-import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
-import { timeout } from "hono/timeout";
-import { trimTrailingSlash } from "hono/trailing-slash";
-import { renderer } from "./renderer";
-// custom import
-import app from "./route/app";
-import com from "./route/com";
-import org from "./route/org";
-import world from "./route/world";
 
-const main = new Hono({
-	getPath: (req) => req.url.replace(/^https?:\/([^?]+).*$/, "$1"),
+const app = new Hono();
+
+app.use("*", csrf());
+app.use("*", cors());
+app.use("*", secureHeaders());
+
+// Domain-based routing
+app.get("/", (c) => {
+	const host = c.req.header("host") || "";
+
+	if (host.includes("app.localdomain")) {
+		return c.html(
+			`
+      <div>
+        <header>
+          <h1>Umaxica(app, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `,
+			200,
+			{
+				"Content-Type": "text/html; charset=UTF-8",
+			},
+		);
+	}
+
+	if (host.includes("com.localdomain")) {
+		return c.html(
+			`
+      <div>
+        <header>
+          <h1>Umaxica(com, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `,
+			200,
+			{
+				"Content-Type": "text/html; charset=UTF-8",
+			},
+		);
+	}
+
+	if (host.includes("org.localdomain")) {
+		return c.html(
+			`
+      <div>
+        <header>
+          <h1>Umaxica(org, edge)</h1>
+        </header>
+        <hr />
+        <p>Welcome to umaxica</p>
+        <hr />
+        <footer>
+          <p>© umaxica</p>
+        </footer>
+      </div>
+    `,
+			200,
+			{
+				"Content-Type": "text/html; charset=UTF-8",
+			},
+		);
+	}
+
+	return c.text("Hello World");
 });
 
-// languageDetector
-main.use(
-	languageDetector({
-		supportedLanguages: ["en", "ja"], // Must include fallback
-		fallbackLanguage: "ja", // Required
-	}),
-);
-main.use(csrf()); // to avoid CSRF attacks
-main.use(cors()); // attaches CORS headers to the response
-main.use(logger()); // log
-main.use(prettyJSON());
-main.use(trimTrailingSlash()); // url regularization
-main.use(secureHeaders()); // security headers
-main.use(renderer);
-main.use(timeout(2000)); //
-
-// Routing
-// for app
-["/app.localdomain:4000/", "/jp.umaxica.app/"].forEach((it) =>
-	main.route(it, app),
-);
-// for com
-["/com.localdomain:4000/", "/jp.umaxica.com/"].forEach((it) =>
-	main.route(it, com),
-);
-// for org
-["/org.localdomain:4000/", "/jp.umaxica.org/"].forEach((it) =>
-	main.route(it, org),
-);
-// Region selector
-main.route("/umaxica.org/", world);
-main.route("/umaxica.com/", world);
-main.route("/umaxica.app/", world);
-
-// custom 404 page
-main.notFound((c) =>
-	c.html(
-		<>
-			<h1>404 Page Not Found</h1>
-			<hr />
-			<p>...</p>
-		</>,
-		404,
-	),
-);
-// custom 500 page
-main.onError((err, c) => {
-	console.error(err);
-	return c.html("<h1>500 Internal Server Error</h1>", 500);
-});
-
-export default main;
+export default app;

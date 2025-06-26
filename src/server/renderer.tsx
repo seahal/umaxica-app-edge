@@ -9,7 +9,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
 			: "org";
 
 	return (
-		<html>
+		<html lang="ja">
 			<head>
 				<link
 					href={
@@ -22,6 +22,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
 			</head>
 			<body>
 				{children}
+				{/* biome-ignore lint/nursery/useUniqueElementIds: This is the React app mount point */}
 				<div id="root" />
 				{import.meta.env.PROD && <script src={`/assets/${tenant}/index.js`} />}
 			</body>

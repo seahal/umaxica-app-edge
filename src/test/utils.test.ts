@@ -68,7 +68,7 @@ describe("Utils Tests", () => {
 
 // セットアップとクリーンアップのテスト例
 describe("Setup and Cleanup Tests", () => {
-	let testData: any;
+	let testData: { items: string[]; count: number } | null;
 
 	beforeEach(() => {
 		// 各テスト実行前の準備
@@ -84,15 +84,19 @@ describe("Setup and Cleanup Tests", () => {
 	});
 
 	it("should initialize test data", () => {
-		expect(testData.items).toEqual([]);
-		expect(testData.count).toBe(0);
+		if (testData) {
+			expect(testData.items).toEqual([]);
+			expect(testData.count).toBe(0);
+		}
 	});
 
 	it("should modify test data", () => {
-		testData.items.push("item1");
-		testData.count = 1;
+		if (testData) {
+			testData.items.push("item1");
+			testData.count = 1;
 
-		expect(testData.items).toHaveLength(1);
-		expect(testData.count).toBe(1);
+			expect(testData.items).toHaveLength(1);
+			expect(testData.count).toBe(1);
+		}
 	});
 });

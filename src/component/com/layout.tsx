@@ -2,7 +2,7 @@ import type { FC } from "hono/jsx";
 
 const Layout: FC = (props, title = undefined) => {
 	return (
-		<html>
+		<html lang="ja">
 			<head>
 				<title>Umaxica | {title}</title>
 			</head>

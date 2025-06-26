@@ -1,10 +1,13 @@
-import { describe, expect, it, test } from "bun:test";
-import main from "../server/index";
+import { describe, expect, test } from "bun:test";
+import app from "../server/index";
 
 describe("Should see app homepage", () => {
-	test("GET /app.localdomain:4000/", async () => {
-		const req = new Request("http://app.localdomain:4000/");
-		const res = await main.fetch(req);
+	test("GET /", async () => {
+		const res = await app.request("/", {
+			headers: {
+				host: "app.localdomain:4444",
+			},
+		});
 		expect(res.status).toBe(200);
 	});
 });

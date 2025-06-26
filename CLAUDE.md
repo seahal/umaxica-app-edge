@@ -17,6 +17,10 @@ bun install
 # Development server (runs on port 4444)
 bun run server
 
+# Docker Compose development
+docker compose up --build
+# Access via http://localhost:4444
+
 # Build for production (builds both client and SSR)
 bun run build
 
@@ -64,10 +68,10 @@ Routes are defined in `src/server/index.tsx` using Hono's routing system.
 - `dist-server/` - Built server-side files for Cloudflare Workers deployment
 
 ### Technology Stack
-- **Runtime**: Cloudflare Workers
+- **Runtime**: Cloudflare Workers (production) / Bun (development)
 - **Server Framework**: Hono.js with JSX support
 - **Client Framework**: React with React Router
-- **Build**: Vite with Cloudflare plugin
+- **Build**: Bun build system
 - **Testing**: Bun test runner
 - **Code Quality**: Biome (formatting + linting)
 - **TypeScript**: Strict mode enabled with separate client/server configs
@@ -90,3 +94,5 @@ Routes are defined in `src/server/index.tsx` using Hono's routing system.
 - JSX is configured to use Hono's JSX runtime (`jsxImportSource: "hono/jsx"`)
 - Each domain has its own layout component in `src/component/{domain}/layout.tsx`
 - World routes handle redirects from root domains to Japanese subdomains
+- Development server uses Bun's native HTTP server for faster hot reload
+- Production builds target Cloudflare Workers runtime
