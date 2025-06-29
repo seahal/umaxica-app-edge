@@ -1,18 +1,18 @@
-import { Style } from 'hono/css'
+import { Style } from "hono/css";
 
 export default function About() {
-  return (
-    <div>
-      <Style />
-      <header>
-        <h1>Umaxica(com, edge)</h1>
-      </header>
-      <hr />
-      <p>About page of umaxica</p>
-      <hr />
-      <footer>
-        <p>© umaxica</p>
-      </footer>
-    </div>
-  )
+	return (
+		<div>
+			<Style />
+			<header>
+				<h1>Umaxica(com, edge)</h1>
+			</header>
+			<hr />
+			<p>About page of umaxica</p>
+			<hr />
+			<footer>
+				<p>© umaxica</p>
+			</footer>
+		</div>
+	);
 }

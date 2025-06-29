@@ -1,20 +1,18 @@
-import { Style } from 'hono/css'
-import { jsxRenderer } from 'hono/jsx-renderer'
-import { Script } from 'honox/server'
+import { Style } from "hono/css";
+import { jsxRenderer } from "hono/jsx-renderer";
+import { Script } from "honox/server";
 
-export default jsxRenderer(({ children, title, frontmatter, ...rest }) => {
-  return (
-    <html lang="ja">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ?? 'Umaxica'}</title>
-        <Script src="/app/client.tsx" async />
-        <Style />
-      </head>
-      <body>
-        {children}
-      </body>
-    </html>
-  )
-})
+export default jsxRenderer(({ children }) => {
+	return (
+		<html lang="ja">
+			<head>
+				<meta charset="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+				<title>Umaxica</title>
+				<Script src="/app/client.tsx" async />
+				<Style />
+			</head>
+			<body>{children}</body>
+		</html>
+	);
+});

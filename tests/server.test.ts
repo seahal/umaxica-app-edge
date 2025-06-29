@@ -14,7 +14,7 @@ testApp.get("/json", (c) => {
 
 testApp.get("/status/:code", (c) => {
   const code = parseInt(c.req.param("code"));
-  return c.text(`Status ${code}`, code);
+  return c.text(`Status ${code}`, code as any);
 });
 
 describe("Server Routes", () => {
@@ -31,7 +31,8 @@ describe("Server Routes", () => {
     const res = await testApp.request(req);
     
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ message: "Hello JSON" });
+    const jsonResponse = await res.json() as { message: string };
+    expect(jsonResponse).toStrictEqual({ message: "Hello JSON" });
   });
 
   it("should handle dynamic status codes", async () => {

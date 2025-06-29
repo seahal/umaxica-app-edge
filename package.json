@@ -2,17 +2,14 @@
   "name": "umaxica-edge",
   "type": "module",
   "scripts": {
-    "server": "bun run src/server/dev.tsx",
-    "build": "bun build src/server/index.tsx --outdir dist-server --target node && bun build:client",
-    "build:client": "bun build src/client/app/index.tsx --outdir dist/assets --entry-naming [name].js && bun build src/client/com/index.tsx --outdir dist/assets --entry-naming [name].js && bun build src/client/org/index.tsx --outdir dist/assets --entry-naming [name].js",
-    "preview": "bun run build && bunx wrangler dev dist-server/index.js",
-    "deploy": "bun run build && bunx wrangler deploy dist-server/index.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "bun run build && bunx wrangler deploy",
     "cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
-    "format": "bunx @biomejs/biome format src/ --write",
-    "lint": "bunx @biomejs/biome lint src/ --fix",
-    "typecheck": "bunx tsc --noEmit -p tsconfig.server.json && bunx tsc --noEmit -p tsconfig.client.json",
-    "typecheck:server": "bunx tsc --noEmit -p tsconfig.server.json",
-    "typecheck:client": "bunx tsc --noEmit -p tsconfig.client.json",
+    "format": "bunx @biomejs/biome format app/ --write",
+    "lint": "bunx @biomejs/biome lint app/ --fix",
+    "typecheck": "bunx tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
@@ -37,6 +34,6 @@
     "vite": "^7.0.0",
     "wrangler": "^4.21.2"
   },
-  "module": "src/server/index.tsx",
+  "module": "app/server.ts",
   "private": true
 }

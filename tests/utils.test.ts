@@ -11,7 +11,7 @@ function formatUrl(host: string, path: string): string {
 
 function extractDomain(url: string): string {
   const match = url.match(/^https?:\/\/([^\/]+)/);
-  return match ? match[1] : "";
+  return match?.[1] ?? "";
 }
 
 describe("Utility Functions", () => {

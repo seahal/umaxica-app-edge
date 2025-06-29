@@ -1,3 +1,5 @@
-export default function HealthJson(c: any) {
-  return c.json({ status: "OK" })
+import type { Context } from "hono";
+
+export default function HealthJson(c: Context) {
+	return c.json({ status: "OK" });
 }

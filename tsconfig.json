@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": "./app",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
