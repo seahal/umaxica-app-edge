@@ -4,6 +4,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
 	plugins: [honox()],
 	server: {
-		port: 4444
+		port: 4000
 	}
 });
