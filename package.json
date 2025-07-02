@@ -9,7 +9,7 @@
     "cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
     "format": "bunx @biomejs/biome format app/ --write",
     "lint": "bunx @biomejs/biome lint app/ --fix",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "test": "bun test"
   },
   "dependencies": {
