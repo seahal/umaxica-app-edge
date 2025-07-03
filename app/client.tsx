@@ -1,3 +1,2 @@
-import { createClient } from "honox/client";
-
-createClient();
+// Client-side entry point
+console.log("Client initialized");

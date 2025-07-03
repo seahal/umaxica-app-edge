@@ -1,9 +1,17 @@
-import honox from "honox/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [honox()],
-	server: {
-		port: 4000
-	}
+	build: {
+		target: "esnext",
+		outDir: "dist-server",
+		ssr: true,
+		rollupOptions: {
+			input: "./app/server.tsx",
+			output: {
+				entryFileNames: "index.js",
+				format: "es",
+			},
+			external: ["hono", "@cloudflare/workers-types"],
+		},
+	},
 });

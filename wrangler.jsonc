@@ -1,18 +1,18 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "umaxica-app-edge-server",
-	"main": "src/server/index.tsx",
+	"main": "app/index.tsx",
 	"compatibility_date": "2025-03-12",
 	"assets": {
 		"directory": "./public",
 		"binding": "ASSETS"
 	},
+	"vars": {
+	  "MY_VAR": "my-variable"
+	},
 	// "compatibility_flags": [
 	//   "nodejs_compat"
 	// ],
-	// "vars": {
-	//   "MY_VAR": "my-variable"
-	// },
 	// "kv_namespaces": [
 	//   {
 	//     "binding": "MY_KV_NAMESPACE",

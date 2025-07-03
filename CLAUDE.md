@@ -92,3 +92,33 @@ Routes are defined using HonoX's file-based routing system in the `app/routes/` 
 - World routes handle redirects from root domains to Japanese subdomains
 - Development server uses Vite's dev server for fast hot reload
 - Production builds target Cloudflare Workers runtime
+
+## Environment Variables
+
+### Local Development
+Environment variables for local development are defined in `.dev.vars` file:
+```
+EDGE_CORPORATE_URL='com.localhost'
+EDGE_SERVICE_URL='app.localhost'
+EDGE_STAFF_URL='org.localhost'
+API_CORPORATE_URL='api.com.localhost:3300'
+API_SERVICE_URL='api.app.localhost:3300'
+API_STAFF_URL='api.org.localhost:3300'
+WWW_CORPORATE_URL='www.com.localhost:3300'
+WWW_SERVICE_URL='www.app.localhost:3300'
+WWW_STAFF_URL='www.org.localhost:3300'
+```
+
+### Accessing Environment Variables
+In Cloudflare Workers, environment variables must be accessed via the context object, not `process.env`:
+
+```typescript
+// Correct way to access environment variables
+app.get('/example', (c) => {
+  const corporateUrl = c.env.EDGE_CORPORATE_URL
+  return c.text(`Corporate URL: ${corporateUrl}`)
+})
+```
+
+### Production Deployment
+Before deploying to Cloudflare Workers, set environment variables in the dashboard or via `wrangler secret put` command. The `.dev.vars` file is only used for local development.
