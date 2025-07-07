@@ -1,16 +1,9 @@
 import { Hono } from "hono";
 import { showRoutes } from "hono/dev";
-import { jsxRenderer } from "hono/jsx-renderer";
+import { serveStatic } from "hono/cloudflare-workers";
 
 import middleware from "./_middleware";
-import AppIndex from "./routes/app/index";
-import AppAbout from "./routes/app/about";
-import AppContact from "./routes/app/contact";
 import AppHealthJson from "./routes/app/health.json";
-import AppHealthHtml from "./routes/app/health.html";
-import ComIndex from "./routes/com/index";
-import ComAbout from "./routes/com/about";
-import OrgIndex from "./routes/org/index";
 
 type Bindings = {
 	EDGE_CORPORATE_URL: string;
@@ -22,44 +15,47 @@ type Bindings = {
 	WWW_CORPORATE_URL: string;
 	WWW_SERVICE_URL: string;
 	WWW_STAFF_URL: string;
+	ASSETS: Fetcher;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.use("*", ...middleware);
 
-app.use(
-	"*",
-	jsxRenderer(({ children }) => {
-		return (
-			<html lang="ja">
-				<head>
-					<meta charset="utf-8" />
-					<meta
-						name="viewport"
-						content="width=device-width, initial-scale=1.0"
-					/>
-					<title>Umaxica</title>
-				</head>
-				<body>{children}</body>
-			</html>
-		);
-	}),
-);
+// API routes
+app.get("/api/health", AppHealthJson);
 
-app.get("/app", (c) => c.render(<AppIndex />));
-app.get("/app/", (c) => c.render(<AppIndex />));
-app.get("/app/about", (c) => c.render(<AppAbout />));
-app.get("/app/contact", (c) => c.render(<AppContact />));
-app.get("/app/health.json", AppHealthJson);
-app.get("/app/health.html", (c) => c.render(<AppHealthHtml />));
+// Environment variables endpoint
+app.get("/api/env", (c) => {
+	const envVars = {
+		EDGE_CORPORATE_URL: c.env.EDGE_CORPORATE_URL,
+		EDGE_SERVICE_URL: c.env.EDGE_SERVICE_URL,
+		EDGE_STAFF_URL: c.env.EDGE_STAFF_URL,
+		API_CORPORATE_URL: c.env.API_CORPORATE_URL,
+		API_SERVICE_URL: c.env.API_SERVICE_URL,
+		API_STAFF_URL: c.env.API_STAFF_URL,
+		WWW_CORPORATE_URL: c.env.WWW_CORPORATE_URL,
+		WWW_SERVICE_URL: c.env.WWW_SERVICE_URL,
+		WWW_STAFF_URL: c.env.WWW_STAFF_URL,
+	};
+	return c.json(envVars);
+});
 
-app.get("/com", (c) => c.render(<ComIndex />));
-app.get("/com/", (c) => c.render(<ComIndex />));
-app.get("/com/about", (c) => c.render(<ComAbout />));
+// Serve static assets
+app.use("/assets/*", serveStatic({ 
+	root: "./public",
+	manifest: {}
+}));
+app.use("/client.js", serveStatic({ 
+	path: "./dist/client/client.js",
+	manifest: {}
+}));
 
-app.get("/org", (c) => c.render(<OrgIndex />));
-app.get("/org/", (c) => c.render(<OrgIndex />));
+// SPA fallback - serve index.html for all other routes
+app.get("*", serveStatic({ 
+	path: "./public/index.html",
+	manifest: {}
+}));
 
 showRoutes(app);
 

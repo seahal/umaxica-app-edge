@@ -3,7 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --hot app/server.tsx",
-		"build": "bun build app/server.tsx --target=node --format=esm --outdir=dist-server",
+		"build": "vite build && cp -r public/* dist/",
 		"preview": "vite preview",
 		"deploy": "bun run build && bunx wrangler deploy",
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
@@ -13,21 +13,21 @@
 		"test": "bun test"
 	},
 	"dependencies": {
-		"hono": "^4.8.3",
+		"hono": "^4.8.4",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"react-router-dom": "^7.6.3"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",
-		"@cloudflare/workers-types": "^4.20250703.0",
+		"@cloudflare/workers-types": "^4.20250705.0",
 		"@types/bun": "^1.2.18",
 		"@types/react": "^19.1.8",
 		"@types/react-dom": "^19.1.6",
-		"@typescript/native-preview": "^7.0.0-dev.20250703.1",
+		"@typescript/native-preview": "^7.0.0-dev.20250707.2",
 		"bun": "^1.2.18",
 		"typescript": "^5.8.3",
-		"vite": "^7.0.1",
+		"vite": "^7.0.2",
 		"wrangler": "^4.23.0"
 	},
 	"module": "app/server.tsx",
