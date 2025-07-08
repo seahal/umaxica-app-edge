@@ -44,7 +44,7 @@ describe("check env file", () => {
     })
     
     const res = await testApp.request('/')
-    const data:any = await res.json()
+    const data: { envVars: Bindings } = await res.json()
     
     expect(data.envVars.EDGE_CORPORATE_URL).toBe("com.localhost")
     expect(data.envVars.EDGE_SERVICE_URL).toBe("app.localhost")

@@ -17,8 +17,6 @@ pre-commit:
       skip:
         - merge
         - rebase
-    cf-typegen:
-      run: bun run cf-typegen
 
 pre-push:
   parallel: true

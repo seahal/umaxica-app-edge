@@ -42,20 +42,29 @@ app.get("/api/env", (c) => {
 });
 
 // Serve static assets
-app.use("/assets/*", serveStatic({ 
-	root: "./public",
-	manifest: {}
-}));
-app.use("/client.js", serveStatic({ 
-	path: "./dist/client/client.js",
-	manifest: {}
-}));
+app.use(
+	"/assets/*",
+	serveStatic({
+		root: "./public",
+		manifest: {},
+	}),
+);
+app.use(
+	"/client.js",
+	serveStatic({
+		path: "./dist/client/client.js",
+		manifest: {},
+	}),
+);
 
 // SPA fallback - serve index.html for all other routes
-app.get("*", serveStatic({ 
-	path: "./public/index.html",
-	manifest: {}
-}));
+app.get(
+	"*",
+	serveStatic({
+		path: "./public/index.html",
+		manifest: {},
+	}),
+);
 
 showRoutes(app);
 

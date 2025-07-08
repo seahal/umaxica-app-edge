@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import type { FC } from "hono/jsx";
 
 type Bindings = {
 	EDGE_CORPORATE_URL: string;
