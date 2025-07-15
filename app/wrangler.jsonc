@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "umaxica-app-edge-server",
+	"name": "umaxica-app-edge-app",
 	"main": "dist/server/index.js",
 	"compatibility_date": "2025-03-12",
 	"assets": {
