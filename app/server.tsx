@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { showRoutes } from "hono/dev";
-import { serveStatic } from "hono/cloudflare-workers";
+import { serveStatic } from "hono/bun";
 
 import middleware from "./_middleware";
 import AppHealthJson from "./routes/app/health.json";
@@ -46,14 +46,20 @@ app.use(
 	"/assets/*",
 	serveStatic({
 		root: "./public",
-		manifest: {},
 	}),
 );
 app.use(
 	"/client.js",
 	serveStatic({
 		path: "./dist/client/client.js",
-		manifest: {},
+	}),
+);
+
+// Static HTML files
+app.get(
+	"/404.html",
+	serveStatic({
+		path: "./public/404.html",
 	}),
 );
 
@@ -62,7 +68,6 @@ app.get(
 	"*",
 	serveStatic({
 		path: "./public/index.html",
-		manifest: {},
 	}),
 );
 

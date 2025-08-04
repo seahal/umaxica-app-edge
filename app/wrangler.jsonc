@@ -8,8 +8,8 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-	  "MY_VAR": "my-variable"
-	},
+		"MY_VAR": "my-variable"
+	}
 	// "compatibility_flags": [
 	//   "nodejs_compat"
 	// ],

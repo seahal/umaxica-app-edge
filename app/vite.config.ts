@@ -8,13 +8,15 @@ export default defineConfig({
 			input: {
 				// Client build
 				client: resolve(__dirname, "app/client.tsx"),
-				// Server build  
+				// Server build
 				server: resolve(__dirname, "app/server.tsx"),
 			},
 			output: {
 				dir: "dist",
 				entryFileNames: (chunk) => {
-					return chunk.name === "server" ? "server/index.js" : "client/[name].js";
+					return chunk.name === "server"
+						? "server/index.js"
+						: "client/[name].js";
 				},
 				format: "es",
 			},

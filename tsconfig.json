@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"baseUrl": "./app",
 		"target": "ESNext",
+		"paths": {
+			"*": ["./app/*"]
+		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],

@@ -14,7 +14,7 @@ This project uses Bun as the package manager and runtime, with Vite for developm
 # Install dependencies
 bun install
 
-# Development server (runs on port 4444)
+# Development server (runs on port 4000)
 bun run dev
 
 # Build for production
@@ -42,9 +42,9 @@ bun run cf-typegen
 
 ### Domain-Based Routing
 The application routes based on domain patterns:
-- `jp.umaxica.app` / `app.localdomain:4444` → app routes
-- `jp.umaxica.com` / `com.localdomain:4444` → com routes  
-- `jp.umaxica.org` / `org.localdomain:4444` → org routes
+- `jp.umaxica.app` / `app.localdomain:4000` → app routes
+- `jp.umaxica.com` / `com.localdomain:4000` → com routes  
+- `jp.umaxica.org` / `org.localdomain:4000` → org routes
 - `umaxica.{com,org,app}` → world routes (redirects to jp.* variants)
 
 Routes are defined using HonoX's file-based routing system in the `app/routes/` directory.
@@ -85,8 +85,8 @@ Routes are defined using HonoX's file-based routing system in the `app/routes/` 
 
 ## Development Notes
 
-- The server runs on port 4444 in development via Vite
-- Uses domain-based routing with middleware for local development domains (*.localdomain:4444)
+- The server runs on port 4000 in development via Bun
+- Uses domain-based routing with middleware for local development domains (*.localdomain:4000)
 - JSX is configured to use Hono's JSX runtime (`jsxImportSource: "hono/jsx"`)
 - File-based routing automatically creates routes based on directory structure
 - World routes handle redirects from root domains to Japanese subdomains
