@@ -3,13 +3,19 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --hot app/server.tsx",
+		"dev:com": "cd com && bunx wrangler dev --port 4001",
+		"dev:app": "cd app && bunx wrangler dev --port 4002",
+		"dev:org": "cd org && bunx wrangler dev --port 4003",
+		"deploy:com": "cd com && bunx wrangler deploy",
+		"deploy:app": "cd app && bunx wrangler deploy",
+		"deploy:org": "cd org && bunx wrangler deploy",
 		"build": "vite build && cp -r public/* dist/",
 		"preview": "vite preview",
 		"deploy": "bun run build && bunx wrangler deploy",
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
-		"format": "bunx @biomejs/biome format app/ --write",
-		"lint": "bunx @biomejs/biome lint app/ --fix",
-		"typecheck": "bunx tsgo --noEmit",
+		"format": "bunx @biomejs/biome format . --write",
+		"lint": "bunx @biomejs/biome lint . --fix",
+		"typecheck": "bunx tsc --noEmit",
 		"test": "bun test"
 	},
 	"dependencies": {
@@ -29,7 +35,7 @@
 		"@types/react": "^19.1.9",
 		"@types/react-dom": "^19.1.7",
 		"@typescript/native-preview": "^7.0.0-dev.20250809.1",
-		"happy-dom": "^14.12.3",
+		"happy-dom": "^18.0.1",
 		"typescript": "^5.9.2",
 		"wrangler": "^4.28.1"
 	},

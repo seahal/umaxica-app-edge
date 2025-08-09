@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { html } from "hono/html";
-
 const app = new Hono();
-
 app.get("/", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -10,17 +8,17 @@ app.get("/", (c) => {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Umaxica Org</title>
+        <title>Umaxica Com</title>
         <style>
           body { 
             font-family: system-ui, -apple-system, sans-serif; 
             margin: 0; 
             padding: 40px; 
-            background-color: #faf5ff; 
+            background-color: #f8fafc; 
             color: #1e293b;
           }
           h1 { 
-            color: #7c3aed; 
+            color: #059669; 
             margin-bottom: 16px; 
           }
           p { 
@@ -28,7 +26,7 @@ app.get("/", (c) => {
             margin-bottom: 12px; 
           }
           a { 
-            color: #7c3aed; 
+            color: #0ea5e9; 
             text-decoration: none; 
           }
           a:hover { 
@@ -37,58 +35,50 @@ app.get("/", (c) => {
           .btn {
             display: inline-block;
             padding: 10px;
-            background-color: #7c3aed;
+            margin-right: 10px;
+            background-color: #0ea5e9;
             color: white;
             text-decoration: none;
             border-radius: 5px;
           }
           .btn:hover {
-            background-color: #6d28d9;
+            background-color: #0284c7;
           }
         </style>
       </head>
       <body>
-        <h1>Umaxica Org</h1>
-        <p>Welcome to the Org domain of Umaxica. This is our organizational interface.</p>
-        <p>This domain serves organizational and administrative functions.</p>
+        <h1>Umaxica Com</h1>
+        <p>Welcome to the Com domain of Umaxica. This is our commercial interface.</p>
         <div style="margin-top: 20px;">
-          <a href="/admin" class="btn">Admin Panel</a>
+          <a href="/about" class="btn">About</a>
         </div>
       </body>
     </html>
   `);
 });
-
-app.get("/admin", (c) => {
+app.get("/about", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Admin Panel - Umaxica Org</title>
+        <title>About - Umaxica Com</title>
         <style>
           body { 
             font-family: system-ui, -apple-system, sans-serif; 
             margin: 0; 
             padding: 40px; 
-            background-color: #faf5ff; 
+            background-color: #f8fafc; 
             color: #1e293b;
           }
           h1 { 
-            color: #7c3aed; 
+            color: #059669; 
             margin-bottom: 16px; 
           }
           p { 
             line-height: 1.6; 
             margin-bottom: 12px; 
-          }
-          ul {
-            margin: 16px 0;
-            line-height: 1.8;
-          }
-          li {
-            margin-bottom: 8px;
           }
           .btn {
             display: inline-block;
@@ -104,14 +94,9 @@ app.get("/admin", (c) => {
         </style>
       </head>
       <body>
-        <h1>Admin Panel</h1>
-        <p>Administrative functions for Umaxica organization.</p>
-        <ul>
-          <li>User management</li>
-          <li>System configuration</li>
-          <li>Reports and analytics</li>
-          <li>Security settings</li>
-        </ul>
+        <h1>About Com</h1>
+        <p>This is the about page for the Com domain. Learn more about our commercial services.</p>
+        <p>We offer enterprise-grade commercial solutions for businesses worldwide.</p>
         <div style="margin-top: 20px;">
           <a href="/" class="btn">Back to Home</a>
         </div>
@@ -119,5 +104,4 @@ app.get("/admin", (c) => {
     </html>
   `);
 });
-
 export default app;

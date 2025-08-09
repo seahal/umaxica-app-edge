@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { html } from "hono/html";
-
 const app = new Hono();
-
 app.get("/", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -67,7 +65,6 @@ app.get("/", (c) => {
     </html>
   `);
 });
-
 app.get("/about", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -126,7 +123,6 @@ app.get("/about", (c) => {
     </html>
   `);
 });
-
 app.get("/contact", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -185,9 +181,7 @@ app.get("/contact", (c) => {
     </html>
   `);
 });
-
 // Health check endpoints
 app.get("/health", (c) => c.json({ status: "OK", domain: "app" }));
 app.get("/health.json", (c) => c.json({ status: "OK", domain: "app" }));
-
 export default app;

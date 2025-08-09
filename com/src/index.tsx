@@ -1,10 +1,10 @@
-import { Hono } from 'hono'
-import { html } from 'hono/html'
+import { Hono } from "hono";
+import { html } from "hono/html";
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/', (c) => {
-  return c.html(html`
+app.get("/", (c) => {
+	return c.html(html`
     <!DOCTYPE html>
     <html>
       <head>
@@ -56,11 +56,11 @@ app.get('/', (c) => {
         </div>
       </body>
     </html>
-  `)
-})
+  `);
+});
 
-app.get('/about', (c) => {
-  return c.html(html`
+app.get("/about", (c) => {
+	return c.html(html`
     <!DOCTYPE html>
     <html>
       <head>
@@ -105,7 +105,7 @@ app.get('/about', (c) => {
         </div>
       </body>
     </html>
-  `)
-})
+  `);
+});
 
-export default app
+export default app;

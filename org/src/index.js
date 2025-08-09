@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { html } from "hono/html";
-
 const app = new Hono();
-
 app.get("/", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -58,7 +56,6 @@ app.get("/", (c) => {
     </html>
   `);
 });
-
 app.get("/admin", (c) => {
 	return c.html(html`
     <!DOCTYPE html>
@@ -119,5 +116,4 @@ app.get("/admin", (c) => {
     </html>
   `);
 });
-
 export default app;

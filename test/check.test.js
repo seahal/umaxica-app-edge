@@ -1,31 +1,15 @@
 import { describe, it, expect } from "bun:test";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
-
-type Bindings = {
-	EDGE_CORPORATE_URL: string;
-	EDGE_SERVICE_URL: string;
-	EDGE_STAFF_URL: string;
-	API_CORPORATE_URL: string;
-	API_SERVICE_URL: string;
-	API_STAFF_URL: string;
-	WWW_CORPORATE_URL: string;
-	WWW_SERVICE_URL: string;
-	WWW_STAFF_URL: string;
-};
-
-const app = new Hono<{ Bindings: Bindings }>();
-
+const app = new Hono();
 app.get("/", (c) => {
-	const envVars = env<Bindings>(c);
+	const envVars = env(c);
 	return c.json({ envVars });
 });
-
 describe("check env file", () => {
 	it("should read .dev.vars environment variables", async () => {
 		// Create a new app instance for testing with custom environment
-		const testApp = new Hono<{ Bindings: Bindings }>();
-
+		const testApp = new Hono();
 		testApp.get("/", (c) => {
 			// Mock the environment variables directly
 			const mockEnv = {
@@ -39,13 +23,10 @@ describe("check env file", () => {
 				WWW_SERVICE_URL: "www.app.localhost:3300",
 				WWW_STAFF_URL: "www.org.localhost:3300",
 			};
-
 			return c.json({ envVars: mockEnv });
 		});
-
 		const res = await testApp.request("/");
-		const data: { envVars: Bindings } = await res.json();
-
+		const data = await res.json();
 		expect(data.envVars.EDGE_CORPORATE_URL).toBe("com.localhost");
 		expect(data.envVars.EDGE_SERVICE_URL).toBe("app.localhost");
 		expect(data.envVars.EDGE_STAFF_URL).toBe("org.localhost");
