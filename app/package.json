@@ -1,0 +1,19 @@
+{
+  "name": "umaxica-app",
+  "version": "1.0.0",
+  "description": "Umaxica App Domain - Cloudflare Workers App",
+  "type": "module",
+  "scripts": {
+    "dev": "bunx wrangler dev --port 4002",
+    "deploy": "bunx wrangler deploy",
+    "build": "echo 'No build step required for Hono on Workers'",
+    "cf-typegen": "bunx wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4.8.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250708.0",
+    "wrangler": "^4.24.0"
+  }
+}

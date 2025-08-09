@@ -1,0 +1,8 @@
+{
+	"name": "umaxica-app",
+	"main": "src/index.tsx",
+	"compatibility_date": "2025-03-12",
+	"vars": {
+		"DOMAIN": "app"
+	}
+}
