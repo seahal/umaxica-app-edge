@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Cloudflare Workers edge application built with HonoX framework that serves multiple domain variants (app, com, org) of the Umaxica service. The application uses domain-based routing to serve different content based on the host.
+This is a Cloudflare Workers edge application built with HonoX framework that serves multiple domain variants (app, com,
+org) of the Umaxica service. The application uses domain-based routing to serve different content based on the host.
 
 ## Development Commands
 
@@ -41,31 +42,35 @@ bun run cf-typegen
 ## Architecture
 
 ### Domain-Based Routing
+
 The application routes based on domain patterns:
+
 - `jp.umaxica.app` / `app.localdomain:4000` → app routes
-- `jp.umaxica.com` / `com.localdomain:4000` → com routes  
+- `jp.umaxica.com` / `com.localdomain:4000` → com routes
 - `jp.umaxica.org` / `org.localdomain:4000` → org routes
 - `umaxica.{com,org,app}` → world routes (redirects to jp.* variants)
 
 Routes are defined using HonoX's file-based routing system in the `app/routes/` directory.
 
 ### Project Structure
+
 - `app/` - HonoX application directory
-  - `app/server.ts` - Server entry point using HonoX's createApp
-  - `app/client.tsx` - Client-side entry point with HonoX's createClient
-  - `app/global.tsx` - Global JSX renderer configuration for HTML templates
-  - `app/_middleware.ts` - Global middleware configuration
-  - `app/routes/` - File-based routes for each domain
-    - `app/routes/jp.umaxica.app/` - App domain routes
-    - `app/routes/jp.umaxica.com/` - Com domain routes  
-    - `app/routes/jp.umaxica.org/` - Org domain routes
-    - `app/routes/app.localdomain/` - Local development app domain
-    - `app/routes/com.localdomain/` - Local development com domain
-    - `app/routes/org.localdomain/` - Local development org domain
+    - `app/server.ts` - Server entry point using HonoX's createApp
+    - `app/client.tsx` - Client-side entry point with HonoX's createClient
+    - `app/global.tsx` - Global JSX renderer configuration for HTML templates
+    - `app/_middleware.ts` - Global middleware configuration
+    - `app/routes/` - File-based routes for each domain
+        - `app/routes/jp.umaxica.app/` - App domain routes
+        - `app/routes/jp.umaxica.com/` - Com domain routes
+        - `app/routes/jp.umaxica.org/` - Org domain routes
+        - `app/routes/app.localdomain/` - Local development app domain
+        - `app/routes/com.localdomain/` - Local development com domain
+        - `app/routes/org.localdomain/` - Local development org domain
 - `public/` - Static assets
 - `dist-server/` - Built server-side files for Cloudflare Workers deployment
 
 ### Technology Stack
+
 - **Runtime**: Cloudflare Workers (production) / Bun + Vite (development)
 - **Framework**: HonoX (Hono.js meta-framework with file-based routing)
 - **Build**: Vite with HonoX plugin
@@ -74,6 +79,7 @@ Routes are defined using HonoX's file-based routing system in the `app/routes/` 
 - **TypeScript**: Strict mode enabled
 
 ### Middleware Stack (in order)
+
 1. Request logging
 2. CSRF protection
 3. CORS headers
@@ -96,7 +102,9 @@ Routes are defined using HonoX's file-based routing system in the `app/routes/` 
 ## Environment Variables
 
 ### Local Development
+
 Environment variables for local development are defined in `.dev.vars` file:
+
 ```
 EDGE_CORPORATE_URL='com.localhost'
 EDGE_SERVICE_URL='app.localhost'
@@ -110,6 +118,7 @@ WWW_STAFF_URL='www.org.localhost:3300'
 ```
 
 ### Accessing Environment Variables
+
 In Cloudflare Workers, environment variables must be accessed via the context object, not `process.env`:
 
 ```typescript
@@ -121,4 +130,6 @@ app.get('/example', (c) => {
 ```
 
 ### Production Deployment
-Before deploying to Cloudflare Workers, set environment variables in the dashboard or via `wrangler secret put` command. The `.dev.vars` file is only used for local development.
+
+Before deploying to Cloudflare Workers, set environment variables in the dashboard or via `wrangler secret put` command.
+The `.dev.vars` file is only used for local development.

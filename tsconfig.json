@@ -14,8 +14,8 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 		"noImplicitOverride": true,
-		// Use React JSX for client-side
+		// Use Hono JSX
 		"jsx": "react-jsx",
-		"jsxImportSource": "react"
+		"jsxImportSource": "hono/jsx"
 	}
 }
