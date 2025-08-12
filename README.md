@@ -1,22 +1,28 @@
 [![Deploy Worker](https://github.com/seahal/umaxica-app-edge/actions/workflows/deploy.yaml/badge.svg?branch=main)](https://github.com/seahal/umaxica-app-edge/actions/workflows/deploy.yaml) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/seahal/umaxica-app-edge/main)
 
-# how to install
+# how to install (Bun)
+
 ```
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 # deploy to cloudflare
+
 ```
-npm run deploy
+bun run deploy
 ```
 
 # how to test
+
 ```
-npm run test
+bun test
 ```
 
-# how to lint
+# how to lint / format / typecheck
+
 ```
-npm run test
+bun run lint
+bun run format
+bun run typecheck
 ```

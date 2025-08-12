@@ -1,8 +1,13 @@
 {
 	"name": "umaxica-com",
-	"main": "src/index.tsx",
-	"compatibility_date": "2025-03-12",
+	"main": "app/server.ts",
 	"vars": {
 		"DOMAIN": "com"
+	},
+	"compatibility_date": "2025-08-03",
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
 	}
 }

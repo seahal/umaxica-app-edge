@@ -1,10 +1,8 @@
-import { defineConfig } from "vite";
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { defineConfig, type PluginOption } from "vite";
+import ssrPlugin from "vite-ssr-components/plugin";
+import honox from "honox/vite";
 
 export default defineConfig({
-	// Simple Vite config for TypeScript support
-	// Wrangler handles the bundling for Cloudflare Workers
-	esbuild: {
-		jsx: "automatic",
-		jsxImportSource: "hono/jsx",
-	},
+	plugins: [honox(), cloudflare(), ssrPlugin()] as PluginOption[],
 });

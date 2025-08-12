@@ -14,15 +14,22 @@ permissions:
   contents: read
   pull-requests: write
 jobs:
-  deploy:
+  checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version-file: '.node-version'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-      - run: npm ci
-      - run: npx biome ci
+          bun-version: latest
+      - name: Install deps
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Lint (Biome)
+        run: bunx @biomejs/biome ci
+      - name: Audit
+        run: bun audit
+      - name: Test
+        run: bun test
