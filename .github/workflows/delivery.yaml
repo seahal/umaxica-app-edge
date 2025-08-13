@@ -16,19 +16,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      matrix:
+        workspace: [app, com, org]
     steps:
       - uses: actions/checkout@v4
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      - name: Install deps
+      - name: Install root dependencies
         run: bun install --frozen-lockfile
-      - name: Build
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+        working-directory: ./${{ matrix.workspace }}
+      - name: Build workspace
         run: bun run build
-      - name: Deploy Worker
+        working-directory: ./${{ matrix.workspace }}
+      - name: Deploy ${{ matrix.workspace }} Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+          workingDirectory: ./${{ matrix.workspace }}
