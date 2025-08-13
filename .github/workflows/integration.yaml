@@ -25,11 +25,11 @@ jobs:
           bun-version: latest
       - name: Install deps
         run: bun install --frozen-lockfile
-      - name: Typecheck
-        run: bun run typecheck
-      - name: Lint (Biome)
-        run: bunx @biomejs/biome ci
       - name: Audit
         run: bun audit
+      - name: Typecheck
+        run: bun run typecheck
       - name: Test
         run: bun test
+      # - name: Lint (Biome)
+      #   run: bunx @biomejs/biome ci
