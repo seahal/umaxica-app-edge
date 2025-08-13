@@ -14,7 +14,7 @@ testApp.get("/json", (c) => {
 
 testApp.get("/status/:code", (c) => {
 	const code = parseInt(c.req.param("code"));
-	return c.text(`Status ${code}`, code as any);
+	return c.text(`Status ${code}`, code as 200 | 201 | 400 | 401 | 404 | 500);
 });
 
 describe("Server Routes", () => {

@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"baseUrl": "./app",
 		"target": "ESNext",
+		"paths": {
+			"*": ["./app/*"]
+		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
@@ -12,8 +14,8 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 		"noImplicitOverride": true,
-		// Use React JSX for client-side
+		// Use Hono JSX
 		"jsx": "react-jsx",
-		"jsxImportSource": "react"
+		"jsxImportSource": "hono/jsx"
 	}
 }
