@@ -1,3 +1,1 @@
-import { createClient } from "honox/client";
-
-createClient();
+// Client-side functionality not needed for standard Hono setup

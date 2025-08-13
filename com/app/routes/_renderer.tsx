@@ -1,12 +1,26 @@
 import { jsxRenderer } from "hono/jsx-renderer";
-import { Link, ViteClient } from "vite-ssr-components/hono";
+import { createHMRScript } from "../../hmr-client";
 
 export const renderer = jsxRenderer(({ children }) => {
+	const isDev = process.env.NODE_ENV !== "production";
+
 	return (
 		<html lang="ja">
 			<head>
-				<ViteClient />
-				<Link href="/src/style.css" rel="stylesheet" />
+				<meta charset="UTF-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+				<link href="/src/style.css" rel="stylesheet" />
+				{isDev && (
+					<>
+						<script type="module" src="/@vite/client"></script>
+						<script
+							type="module"
+							dangerouslySetInnerHTML={{
+								__html: createHMRScript(),
+							}}
+						/>
+					</>
+				)}
 				<title>Com</title>
 			</head>
 			<body>{children}</body>
