@@ -28,7 +28,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.1.4",
-		"@cloudflare/vite-plugin": "^1.11.3",
+		"@cloudflare/vite-plugin": "^1.11.4",
 		"@cloudflare/workers-types": "^4.20250813.0",
 		"@hono/vite-build": "^1.7.0",
 		"@hono/vite-dev-server": "^0.20.1",
@@ -37,11 +37,10 @@
 		"@types/bun": "^1.2.20",
 		"@types/react": "^19.1.10",
 		"@types/react-dom": "^19.1.7",
-		"@typescript/native-preview": "^7.0.0-dev.20250812.1",
+		"@typescript/native-preview": "^7.0.0-dev.20250814.1",
 		"happy-dom": "^18.0.1",
-		"typescript": "^5.9.2",
 		"vite": "^7.1.2",
-		"wrangler": "^4.29.0"
+		"wrangler": "^4.29.1"
 	},
 	"private": true
 }
