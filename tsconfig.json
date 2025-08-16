@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"paths": {
-			"*": ["./app/*"]
+			"*": ["./app/*", "./com/*", "./org/*", "./test/*"]
 		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",

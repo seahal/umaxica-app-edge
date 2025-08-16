@@ -15,11 +15,10 @@
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
 		"format": "bunx @biomejs/biome format . --write",
 		"lint": "bunx @biomejs/biome lint . --fix",
-		"typecheck": "bunx tsc --noEmit",
+		"typecheck": "bunx tsgo --noEmit",
 		"test": "bun test"
 	},
 	"dependencies": {
-		"@types/react-router": "^5.1.20",
 		"hono": "^4.9.2",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
@@ -27,6 +26,7 @@
 		"react-router-dom": "^7.8.1"
 	},
 	"devDependencies": {
+		"@types/react-router": "^5.1.20",
 		"@biomejs/biome": "^2.2.0",
 		"@cloudflare/vite-plugin": "^1.11.5",
 		"@cloudflare/workers-types": "^4.20250816.0",

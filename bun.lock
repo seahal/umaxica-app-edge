@@ -4,7 +4,6 @@
     "": {
       "name": "umaxica-edge",
       "dependencies": {
-        "@types/react-router": "latest",
         "hono": "latest",
         "react": "latest",
         "react-dom": "latest",
@@ -22,6 +21,7 @@
         "@types/bun": "latest",
         "@types/react": "latest",
         "@types/react-dom": "latest",
+        "@types/react-router": "latest",
         "@typescript/native-preview": "latest",
         "happy-dom": "latest",
         "vite": "latest",
