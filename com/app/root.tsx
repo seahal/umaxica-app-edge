@@ -7,7 +7,7 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
-import type { Route } from "./+types/root";
+import type { Route } from "../src/+types/root";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -63,7 +63,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 	return (
 		<>
-			<title>Error!</title>
 			<main className="pt-16 p-4 container mx-auto">
 				<h1>{message}</h1>
 				<p>{details}</p>
