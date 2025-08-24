@@ -7,7 +7,7 @@
 		"app/**/.client/**/*",
 		"workers/**/*",
 		"worker-configuration.d.ts",
-		"virtual-modules.d.ts",
+		"virtual-modules.d.ts"
 	],
 	"compilerOptions": {
 		"composite": true,

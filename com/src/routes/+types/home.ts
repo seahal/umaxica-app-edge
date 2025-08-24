@@ -1,11 +1,12 @@
 // Generated type file
-export interface Route {
-	MetaArgs: {
+export namespace Route {
+	export interface MetaArgs {
 		data?: any;
 		params: Record<string, string>;
 		matches: any[];
-	};
-	LoaderArgs: {
+	}
+
+	export interface LoaderArgs {
 		context: {
 			cloudflare: {
 				env: any;
@@ -14,10 +15,11 @@ export interface Route {
 		};
 		params: Record<string, string>;
 		request: Request;
-	};
-	ComponentProps: {
+	}
+
+	export interface ComponentProps {
 		loaderData: {
 			message: string;
 		};
-	};
+	}
 }
