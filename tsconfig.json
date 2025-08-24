@@ -1,4 +1,5 @@
 {
+	"exclude": ["a/**/*", "com/**/*", "org/**/*"],
 	"compilerOptions": {
 		"target": "ESNext",
 		"paths": {

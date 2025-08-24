@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -15,7 +15,8 @@
 			"**/out/**",
 			"bun.lock",
 			"package-lock.json",
-			"worker-configuration.d.ts"
+			"worker-configuration.d.ts",
+			"**/.react-router/**"
 		]
 	},
 	"formatter": {
@@ -28,6 +29,12 @@
 			"recommended": true,
 			"security": {
 				"noDangerouslySetInnerHtml": "off"
+			},
+			"complexity": {
+				"noBannedTypes": "off"
+			},
+			"suspicious": {
+				"noUnknownAtRules": "off"
 			}
 		}
 	},

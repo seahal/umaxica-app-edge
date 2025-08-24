@@ -1,41 +1,79 @@
-# Umaxica Com Domain
+# Welcome to React Router!
 
-This is the commercial domain application for Umaxica, built with Hono and deployed on Cloudflare Workers.
-
-## Setup
-
-1. Install dependencies:
-   ```bash
-   bun install
-   ```
-
-2. Run development server:
-   ```bash
-   bun run dev
-   ```
-   > **Development URL:** http://localhost:4001
-
-3. Deploy to Cloudflare Workers:
-   ```bash
-   bun run deploy
-   ```
-
-## Structure
-
-- `src/index.tsx` - Main application entry point
-- `wrangler.jsonc` - Cloudflare Workers configuration
-- `package.json` - Dependencies and scripts
-
-## Environment
-
-- **Development**: http://localhost:4001 (port 4001)
-- **Production**: Deployed to Cloudflare Workers
-- **Domain**: jp.umaxica.com (production)
+A modern, production-ready template for building full-stack React applications using React Router.
 
 ## Features
 
-- Server-side rendered pages with Hono HTML templates
-- Clean, semantic HTML
-- Responsive design
-- About page with company information
-- Green theme color scheme
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
+
+## Getting Started
+
+### Installation
+
+Install the dependencies:
+
+```bash
+npm install
+```
+
+### Development
+
+Start the development server with HMR:
+
+```bash
+npm run dev
+```
+
+Your application will be available at `http://localhost:5173`.
+
+## Previewing the Production Build
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Building for Production
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+Deployment is done using the Wrangler CLI.
+
+To build and deploy directly to production:
+
+```sh
+npm run deploy
+```
+
+To deploy a preview URL:
+
+```sh
+npx wrangler versions upload
+```
+
+You can then promote a version to production after verification or roll it out progressively.
+
+```sh
+npx wrangler versions deploy
+```
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+
+---
+
+Built with ❤️ using React Router.
