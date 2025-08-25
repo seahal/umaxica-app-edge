@@ -4,11 +4,11 @@
  */
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
-	"name": "umaxica-edge-org",
+	"name": "umaxica-edge-app",
 	"compatibility_date": "2025-04-04",
 	"main": "./workers/app.ts",
 	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Umaxica (org)!"
+		"VALUE_FROM_CLOUDFLARE": "Hello from Umaxica (app)!"
 	},
 	"observability": {
 		"enabled": true
