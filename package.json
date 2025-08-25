@@ -5,8 +5,7 @@
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
 		"format": "bunx @biomejs/biome format . --write",
 		"lint": "bunx @biomejs/biome lint . --fix",
-		"typecheck": "bunx tsgo --noEmit",
-		"test": "bun test"
+		"typecheck": "bunx tsgo --noEmit"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.12",
