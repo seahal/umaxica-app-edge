@@ -1,5 +1,7 @@
 {
-	"name": "weathered-star-5e17",
+	"name": "umaxica-edge-org",
+	"version": "0.0.1",
+	"description": "coder for xx.umaxica.com",
 	"private": true,
 	"type": "module",
 	"scripts": {
