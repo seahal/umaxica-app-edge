@@ -4,18 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Cloudflare Workers edge application built with HonoX framework that serves multiple domain variants (app, com,
-org) of the Umaxica service. The application uses domain-based routing to serve different content based on the host.
+This is a Cloudflare Workers edge application that serves multiple domain variants (app, com, org) of the Umaxica service. The project has migrated from HonoX to React Router v7 and uses a multi-domain monorepo architecture where each domain is an independent React Router application.
 
 ## Development Commands
 
-This project uses Bun as the package manager and runtime, with Vite for development and building.
+This project uses Bun as the package manager. Each domain directory (com/, org/) has its own React Router application with independent development commands.
 
+### Root Level Commands
 ```bash
-# Install dependencies
+# Install dependencies for all domains
 bun install
 
-# Development server (runs on port 4000)
+# Testing (uses Bun test runner)
+bun test
+
+# Code quality (affects all domains)
+bun run format         # Format with Biome
+bun run lint           # Lint with Biome (auto-fix)
+bun run typecheck      # TypeScript type checking
+
+# Generate Cloudflare types
+bun run cf-typegen
+```
+
+### Per-Domain Commands (com/, org/)
+```bash
+# Development server (React Router dev server on port 5173)
 bun run dev
 
 # Build for production
@@ -27,109 +41,141 @@ bun run preview
 # Deploy to Cloudflare Workers
 bun run deploy
 
-# Testing
-bun run test  # Uses Bun test runner
-
-# Code quality
-bun run format         # Format with Biome
-bun run lint           # Lint with Biome (auto-fix)
-bun run typecheck      # TypeScript type checking
-
-# Generate Cloudflare types
-bun run cf-typegen
+# TypeScript type checking for domain
+bun run typecheck      # Includes cf-typegen, react-router typegen, and tsc
 ```
 
 ## Architecture
 
-### Domain-Based Routing
+### Multi-Domain Monorepo Structure
 
-The application routes based on domain patterns:
+The project uses a **domain-separated architecture** where each domain is a completely independent React Router v7 application:
 
-- `jp.umaxica.app` / `app.localdomain:4000` → app routes
-- `jp.umaxica.com` / `com.localdomain:4000` → com routes
-- `jp.umaxica.org` / `org.localdomain:4000` → org routes
-- `umaxica.{com,org,app}` → world routes (redirects to jp.* variants)
+- `/com/` - Commercial domain (`umaxica-edge-com`)
+- `/org/` - Organization domain (`weathered-star-5e17`)
+- `/app/` - Application domain (referenced in tests, not yet implemented)
 
-Routes are defined using HonoX's file-based routing system in the `app/routes/` directory.
+### Domain Structure
 
-### Project Structure
+Each domain directory contains:
 
-- `app/` - HonoX application directory
-    - `app/server.ts` - Server entry point using HonoX's createApp
-    - `app/client.tsx` - Client-side entry point with HonoX's createClient
-    - `app/global.tsx` - Global JSX renderer configuration for HTML templates
-    - `app/_middleware.ts` - Global middleware configuration
-    - `app/routes/` - File-based routes for each domain
-        - `app/routes/jp.umaxica.app/` - App domain routes
-        - `app/routes/jp.umaxica.com/` - Com domain routes
-        - `app/routes/jp.umaxica.org/` - Org domain routes
-        - `app/routes/app.localdomain/` - Local development app domain
-        - `app/routes/com.localdomain/` - Local development com domain
-        - `app/routes/org.localdomain/` - Local development org domain
-- `public/` - Static assets
-- `dist-server/` - Built server-side files for Cloudflare Workers deployment
+```
+{domain}/
+├── app/
+│   ├── root.tsx           # Root layout with error boundaries
+│   ├── routes.ts          # Route configuration
+│   ├── routes/home.tsx    # Home route component
+│   ├── entry.client.tsx   # Client hydration entry
+│   ├── entry.server.tsx   # Server-side rendering entry
+│   └── welcome/           # Welcome component
+├── workers/app.ts         # Cloudflare Worker entry point
+├── react-router.config.ts # React Router configuration
+├── vite.config.ts         # Vite + plugins configuration
+├── wrangler.jsonc         # Cloudflare deployment config
+└── package.json          # Domain-specific scripts and dependencies
+```
 
 ### Technology Stack
 
-- **Runtime**: Cloudflare Workers (production) / Bun + Vite (development)
-- **Framework**: HonoX (Hono.js meta-framework with file-based routing)
-- **Build**: Vite with HonoX plugin
+- **Runtime**: Cloudflare Workers (production) / Vite dev server (development)
+- **Framework**: React Router v7 with server-side rendering
+- **React Version**: React 19 with React Compiler integration
+- **Build System**: React Router dev tools + Vite
 - **Testing**: Bun test runner
 - **Code Quality**: Biome (formatting + linting)
-- **TypeScript**: Strict mode enabled
+- **TypeScript**: Strict mode with comprehensive type generation
 
-### Middleware Stack (in order)
+### Domain Routing Strategy
 
-1. Request logging
-2. CSRF protection
-3. CORS headers
-4. Security headers
-5. JSON pretty printing
-6. Trailing slash trimming
-7. Request timeout (2000ms)
-8. Domain-based routing middleware
+The application implements domain-based routing:
 
-## Development Notes
+**Domain Mapping:**
+- `*.umaxica.com` / `com.localdomain` → Commercial domain
+- `*.umaxica.org` / `org.localdomain` → Organization domain
+- `*.umaxica.app` / `app.localdomain` → Application domain
+- Root domains (`umaxica.{com,org,app}`) → Redirect to `jp.*` Japanese variants
 
-- The server runs on port 4000 in development via Bun
-- Uses domain-based routing with middleware for local development domains (*.localdomain:4000)
-- JSX is configured to use Hono's JSX runtime (`jsxImportSource: "hono/jsx"`)
-- File-based routing automatically creates routes based on directory structure
-- World routes handle redirects from root domains to Japanese subdomains
-- Development server uses Vite's dev server for fast hot reload
-- Production builds target Cloudflare Workers runtime
+**Development Domains:**
+- `com.localdomain:5173` for com/ domain development
+- `org.localdomain:5173` for org/ domain development
 
-## Environment Variables
+### React Compiler Integration
 
-### Local Development
-
-Environment variables for local development are defined in `.dev.vars` file:
-
-```
-EDGE_CORPORATE_URL='com.localhost'
-EDGE_SERVICE_URL='app.localhost'
-EDGE_STAFF_URL='org.localhost'
-API_CORPORATE_URL='api.com.localhost:3300'
-API_SERVICE_URL='api.app.localhost:3300'
-API_STAFF_URL='api.org.localhost:3300'
-WWW_CORPORATE_URL='www.com.localhost:3300'
-WWW_SERVICE_URL='www.app.localhost:3300'
-WWW_STAFF_URL='www.org.localhost:3300'
-```
-
-### Accessing Environment Variables
-
-In Cloudflare Workers, environment variables must be accessed via the context object, not `process.env`:
+Both domains include **React Compiler** for React 19:
 
 ```typescript
-// Correct way to access environment variables
-app.get('/example', (c) => {
-  const corporateUrl = c.env.EDGE_CORPORATE_URL
-  return c.text(`Corporate URL: ${corporateUrl}`)
-})
+// vite.config.ts
+const ReactCompilerConfig = {
+  target: "19"  // React 19 target
+};
+
+plugins: [
+  babel({
+    filter: /\.[jt]sx?$/,
+    babelConfig: {
+      presets: ["@babel/preset-typescript"],
+      plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+    },
+  }),
+]
 ```
 
-### Production Deployment
+### Shared Configuration
 
-Before deploying to Cloudflare Workers, set environment variables in the dashboard or via `wrangler secret put` command.
-The `.dev.vars` file is only used for local development.
+- `/shared/` - Centralized configuration for domain-specific settings
+- `/test/` - Cross-domain testing utilities and domain routing tests
+
+## React Router Configuration
+
+Each domain uses React Router v7 with the following configuration:
+
+```typescript
+// react-router.config.ts
+export default {
+  appDirectory: "app",
+  ssr: true,
+  future: {
+    unstable_viteEnvironmentApi: true,
+  },
+} satisfies Config;
+```
+
+## Working with Domains
+
+### Development Workflow
+
+1. Navigate to the specific domain directory (`com/` or `org/`)
+2. Each domain has independent package.json and can be developed separately
+3. Use `bun run dev` within the domain directory to start the development server
+4. Access via `localhost:5173` or configured local domains
+
+### Adding New Domains
+
+To add a new domain (like `app/`):
+
+1. Create domain directory with React Router v7 structure
+2. Copy `package.json`, `react-router.config.ts`, `vite.config.ts` from existing domain
+3. Include React Compiler configuration in `vite.config.ts`
+4. Add Babel preset and React Compiler plugin dependencies
+5. Create Cloudflare Worker entry in `workers/app.ts`
+6. Configure domain routing in tests
+
+### Environment Variables
+
+Environment variables in Cloudflare Workers are accessed via the context object:
+
+```typescript
+// In React Router loaders/actions
+export async function loader({ context }) {
+  const { env } = context.cloudflare;
+  const apiUrl = env.API_URL;
+  // Use environment variables
+}
+```
+
+### Deployment
+
+Each domain deploys independently to Cloudflare Workers:
+- Use `bun run deploy` within the domain directory
+- Configure environment variables in Cloudflare dashboard or via `wrangler secret put`
+- Each domain has its own `wrangler.jsonc` configuration

@@ -10,10 +10,5 @@
 		"postinstall": "npm run cf-typegen",
 		"preview": "bun run build && vite preview",
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
-	},
-	"devDependencies": {
-		"@babel/preset-typescript": "^7.27.1",
-		"babel-plugin-react-compiler": "^19.1.0-rc.2",
-		"vite-plugin-babel": "^1.3.2"
 	}
 }
