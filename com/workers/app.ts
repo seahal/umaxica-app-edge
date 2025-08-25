@@ -10,7 +10,8 @@ declare module "react-router" {
 }
 
 const requestHandler = createRequestHandler(
-	async () => (await import("virtual:react-router/server-build")).default,
+	// @ts-expect-error - Virtual module import type issue
+	() => import("virtual:react-router/server-build"),
 	import.meta.env.MODE,
 );
 

@@ -12,7 +12,7 @@ export function loader({ context }: Route.LoaderArgs) {
 	return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
 }
 
-export default function About({ loaderData }: Route.ComponentProps) {
+export default function About(_: Route.ComponentProps) {
 	return (
 		<>
 			<Link to="/">

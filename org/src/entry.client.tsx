@@ -16,8 +16,8 @@ startTransition(() => {
 	);
 });
 function reportToErrorService(
-	error: unknown,
-	errorInfo: ErrorInfo | undefined,
+	_error: unknown,
+	_errorInfo: ErrorInfo | undefined,
 ) {
 	throw new Error("Function not implemented.");
 }

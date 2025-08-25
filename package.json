@@ -1,5 +1,6 @@
 {
 	"name": "umaxica-edge",
+	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
