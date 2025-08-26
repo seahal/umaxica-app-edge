@@ -267,12 +267,12 @@ export default function PrivacyLayout() {
 							</Link>
 						</div>
 						<div>
-							<Link
-								to="/"
+							<a
+								href="/"
 								className="text-blue-600 hover:text-blue-800 font-medium"
 							>
 								← ホームに戻る
-							</Link>
+							</a>
 						</div>
 					</div>
 				</div>
@@ -280,3 +280,6 @@ export default function PrivacyLayout() {
 		</div>
 	);
 }
+
+("use client");
+console.log("aaa");
