@@ -15,9 +15,7 @@ describe("Page Meta Information", () => {
 		const titleMeta = meta.find((m: any) => m.title);
 		const descriptionMeta = meta.find((m: any) => m.name === "description");
 
-		expect(titleMeta?.title).toBe(
-			"Umaxica - 革新的なソリューションをお届けします",
-		);
+		expect(titleMeta?.title).toBe("Umaxica - Home");
 		expect(descriptionMeta?.content).toContain("Umaxicaは最先端のテクノロジー");
 	});
 
