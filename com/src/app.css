@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+	--font-sans:
+		"Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+		"Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html,
+body {
+	@apply bg-white dark:bg-gray-950;
+
+	@media (prefers-color-scheme: dark) {
+		color-scheme: dark;
+	}
+}
+
+/* NavLink active state styling */
+nav a.active {
+	@apply font-bold text-blue-600 dark:text-blue-400;
+}
+
+nav a.active li {
+	@apply border-l-4 border-blue-600 dark:border-blue-400 pl-2;
+}

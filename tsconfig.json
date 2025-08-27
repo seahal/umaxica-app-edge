@@ -1,8 +1,9 @@
 {
+	"exclude": ["a/**/*", "com/**/*", "org/**/*"],
 	"compilerOptions": {
 		"target": "ESNext",
 		"paths": {
-			"*": ["./app/*"]
+			"*": ["./app/*", "./com/*", "./org/*", "./test/*"]
 		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
@@ -14,8 +15,6 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 		"noImplicitOverride": true,
-		// Use Hono JSX
-		"jsx": "react-jsx",
-		"jsxImportSource": "hono/jsx"
+		"jsx": "react-jsx"
 	}
 }

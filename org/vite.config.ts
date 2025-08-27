@@ -1,30 +1,26 @@
+import { reactRouter } from "@react-router/dev/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
-import build from "@hono/vite-build/cloudflare-workers";
-import devServer from "@hono/vite-dev-server";
+import tsconfigPaths from "vite-tsconfig-paths";
+import babel from "vite-plugin-babel";
+
+const ReactCompilerConfig = {
+	target: "19",
+};
 
 export default defineConfig({
 	plugins: [
-		cloudflare(),
-		build({
-			entry: "./server.tsx",
+		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		tailwindcss(),
+		reactRouter(),
+		babel({
+			filter: /\.[jt]sx?$/,
+			babelConfig: {
+				presets: ["@babel/preset-typescript"], // if you use TypeScript
+				plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+			},
 		}),
-		devServer({
-			entry: "./server.tsx",
-		}),
+		tsconfigPaths(),
 	],
-	server: {
-		hmr: {
-			port: 24680, // Different port for org
-			overlay: true,
-		},
-		fs: {
-			allow: [".."],
-		},
-	},
-	define: {
-		"process.env.NODE_ENV": JSON.stringify(
-			process.env.NODE_ENV || "development",
-		),
-	},
 });

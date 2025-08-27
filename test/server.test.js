@@ -9,7 +9,7 @@ testApp.get("/json", (c) => {
 	return c.json({ message: "Hello JSON" });
 });
 testApp.get("/status/:code", (c) => {
-	const code = parseInt(c.req.param("code"));
+	const code = parseInt(c.req.param("code"), 10);
 	return c.text(`Status ${code}`, code);
 });
 describe("Server Routes", () => {
