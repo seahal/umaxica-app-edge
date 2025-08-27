@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, useLocation } from "react-router";
+import { Outlet, NavLink, Link, useLocation, redirect } from "react-router";
 import type { Route } from "../../src/routes/+types/privacy";
 
 // メタ情報の責務: プライバシーセクションのSEO対応メタデータを定義
@@ -41,34 +41,6 @@ function Breadcrumb() {
 			icon: "📚",
 		});
 	}
-
-	return (
-		<nav aria-label="パンくずナビゲーション" className="py-4">
-			<ol className="flex items-center space-x-2 text-sm">
-				{breadcrumbItems.map((item, index) => (
-					<li key={item.path} className="flex items-center">
-						{index > 0 && <span className="mx-2 text-gray-400">→</span>}
-						{index === breadcrumbItems.length - 1 ? (
-							// 現在のページは非アクティブなテキスト
-							<span className="text-gray-600 flex items-center">
-								<span className="mr-1">{item.icon}</span>
-								{item.label}
-							</span>
-						) : (
-							// 他のページはリンク（Linkコンポーネントのデモ）
-							<Link
-								to={item.path}
-								className="text-blue-600 hover:text-blue-800 hover:underline flex items-center transition-colors duration-200"
-							>
-								<span className="mr-1">{item.icon}</span>
-								{item.label}
-							</Link>
-						)}
-					</li>
-				))}
-			</ol>
-		</nav>
-	);
 }
 
 // プライバシーセクションのサイドナビゲーション
@@ -77,11 +49,11 @@ function Breadcrumb() {
 function PrivacyNavigation() {
 	return (
 		<nav className="w-64 bg-white shadow-sm border-r border-gray-200 p-6">
+			bbbbb
 			<h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
 				<span className="mr-2">🔒</span>
-				プライバシー
+				プライバシーaaa
 			</h3>
-
 			<ul className="space-y-2">
 				{/* NavLinkのデモ - 様々なスタイリングパターン */}
 				<li>
@@ -170,7 +142,6 @@ function PrivacyNavigation() {
 					</NavLink>
 				</li>
 			</ul>
-
 			{/* 追加のナビゲーション要素 */}
 			<div className="mt-8 p-4 bg-blue-50 rounded-lg">
 				<h4 className="text-sm font-medium text-blue-900 mb-2">関連ページ</h4>
@@ -208,78 +179,10 @@ function PrivacyNavigation() {
 // この部分はレイアウト構成の責務: ネストしたルートの共通レイアウトを提供
 // テストではこう確認する: Outlet が適切に機能し、ナビゲーションが表示されるかをテスト
 export default function PrivacyLayout() {
-	return (
-		<div className="bg-gray-50 min-h-screen">
-			{/* ヘッダーセクション */}
-			<div className="bg-white border-b border-gray-200">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="py-6">
-						<h1 className="text-3xl font-bold text-gray-900 flex items-center">
-							<span className="mr-3">🔒</span>
-							プライバシーとデータ保護
-						</h1>
-						<p className="mt-2 text-lg text-gray-600">
-							お客様の個人情報保護に関する取り組みと方針について
-						</p>
-
-						{/* パンくずナビゲーション */}
-						<Breadcrumb />
-					</div>
-				</div>
-			</div>
-
-			{/* メインコンテンツエリア */}
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-				<div className="flex gap-8">
-					{/* サイドナビゲーション */}
-					<PrivacyNavigation />
-
-					{/* メインコンテンツ（子ルートが表示される）*/}
-					<main className="flex-1 bg-white rounded-lg shadow-sm p-8">
-						{/* Outlet: ネストした子ルートのコンテンツがここに表示される */}
-						<Outlet />
-					</main>
-				</div>
-			</div>
-
-			{/* フッターセクション（リンクの例） */}
-			<footer className="bg-white border-t border-gray-200 mt-16">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="flex justify-between items-center text-sm text-gray-600">
-						<div className="flex space-x-4">
-							<Link
-								to="/privacy"
-								className="hover:text-blue-600 transition-colors"
-							>
-								プライバシートップ
-							</Link>
-							<Link
-								to="/privacy/policy"
-								className="hover:text-blue-600 transition-colors"
-							>
-								ポリシー詳細
-							</Link>
-							<Link
-								to="/privacy/docs"
-								className="hover:text-blue-600 transition-colors"
-							>
-								関連資料
-							</Link>
-						</div>
-						<div>
-							<a
-								href="/"
-								className="text-blue-600 hover:text-blue-800 font-medium"
-							>
-								← ホームに戻る
-							</a>
-						</div>
-					</div>
-				</div>
-			</footer>
-		</div>
-	);
+	return <p>xxxxx</p>;
 }
 
-("use client");
-console.log("aaa");
+export async function loader({ request }) {
+	console.log("loader");
+	return redirect("/");
+}

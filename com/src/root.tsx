@@ -6,10 +6,23 @@ import {
 	Scripts,
 	ScrollRestoration,
 	NavLink,
+	Link,
+	Form,
+	redirect,
 } from "react-router";
 
 import type { Route } from "../src/+types/root";
 import "./app.css";
+
+// 動的インポートを使用してコンポーネントを遅延読み込み
+
+// 不明なエラーの場合
+import {
+	ErrorPage,
+	InternalServerErrorPage,
+	NotFoundPage,
+	ServiceUnavailablePage,
+} from "./components/ErrorPage";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,48 +67,43 @@ function Navigation() {
 	];
 
 	return (
-		<nav className="bg-white shadow-lg border-b border-gray-200">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex justify-between h-16">
-					<div className="flex items-center">
-						<div className="flex-shrink-0">
-							{/* ロゴの責務: ブランドアイデンティティを表示 */}
-							<h1 className="text-xl font-bold text-blue-600">Umaxica</h1>
-						</div>
-					</div>
-					<div className="flex space-x-8">
-						{navItems.map((item) => (
-							<NavLink
-								key={item.to}
-								to={item.to}
-								className={({ isActive }) =>
-									`inline-flex items-center px-1 pt-1 text-sm font-medium ${
-										isActive
-											? "text-blue-600 border-b-2 border-blue-600"
-											: "text-gray-500 hover:text-gray-700 hover:border-gray-300"
-									}`
-								}
-							>
-								{item.label}
-							</NavLink>
-						))}
-					</div>
-				</div>
-			</div>
-		</nav>
+		<>
+			<nav>
+				{/* ヒーローセクション */}
+				<Link to="/" end="true">
+					<h1>ヒーローセクション</h1>
+				</Link>
+				<ul>
+					<NavLink to="sample">
+						<li>sample</li>
+					</NavLink>
+					<NavLink to="about">
+						<li>about</li>
+					</NavLink>
+				</ul>
+				<Form action="/search">
+					<input type="text" name="q" />
+				</Form>
+			</nav>
+		</>
 	);
+}
+
+function Footer() {
+	return <>(c) umaxica.</>;
 }
 
 export default function App() {
 	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
 	// テストではこう確認する: Navigation コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<>
 			<Navigation />
-			<main className="flex-1">
+			<main>
 				<Outlet />
 			</main>
-		</div>
+			<Footer />
+		</>
 	);
 }
 
@@ -106,14 +114,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 	if (isRouteErrorResponse(error)) {
 		// 404エラーの場合
 		if (error.status === 404) {
-			// 動的インポートを使用してコンポーネントを遅延読み込み
-			const { NotFoundPage } = require("./components/ErrorPage");
 			return <NotFoundPage />;
 		}
 
 		// 500番台のサーバーエラーの場合
 		if (error.status >= 500) {
-			const { InternalServerErrorPage } = require("./components/ErrorPage");
 			return (
 				<InternalServerErrorPage
 					details={
@@ -126,12 +131,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 		// 503 Service Unavailable の場合
 		if (error.status === 503) {
-			const { ServiceUnavailablePage } = require("./components/ErrorPage");
 			return <ServiceUnavailablePage />;
 		}
 
 		// その他のHTTPエラー（400番台など）
-		const { ErrorPage } = require("./components/ErrorPage");
+
 		return (
 			<ErrorPage
 				status={error.status}
@@ -147,7 +151,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 	// JavaScript エラー（予期しないエラー）の場合
 	if (error instanceof Error) {
-		const { InternalServerErrorPage } = require("./components/ErrorPage");
 		return (
 			<InternalServerErrorPage
 				details={error.message}
@@ -156,9 +159,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 			/>
 		);
 	}
-
-	// 不明なエラーの場合
-	const { ErrorPage } = require("./components/ErrorPage");
 	return (
 		<ErrorPage
 			status={500}

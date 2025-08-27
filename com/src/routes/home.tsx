@@ -1,5 +1,6 @@
 import type { Route } from "../../src/routes/+types/home";
 import { Suspense } from "react";
+import { Link, NavLink } from "react-router";
 
 // メタ情報の責務: SEO対応のためのページメタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト
@@ -8,8 +9,7 @@ export function meta(_: Route.MetaArgs) {
 		{ title: "Umaxica - Home" },
 		{
 			name: "description",
-			content:
-				"Umaxicaは最先端のテクノロジーでビジネスの課題を解決します。お客様のニーズに合わせたカスタムソリューションを提供いたします。",
+			content: "",
 		},
 	];
 }
@@ -24,13 +24,14 @@ export function loader({ context }: Route.LoaderArgs) {
 		return {
 			message: companyMessage,
 			stats: {
-				projectsCompleted: 500,
+				projectsCompleted: 5000,
 				clientsSatisfied: 150,
 				yearsOfExperience: 10,
 			},
 		};
 	} catch (error) {
-		// ローダーでエラーが発生した場合は500エラーとして処理
+		// ローダーでエラーが発生した場合は5
+		//                 </ul>00エラーとして処理
 		console.error("Home loader error:", error);
 		throw new Response("Internal Server Error", {
 			status: 500,
@@ -44,32 +45,7 @@ export function loader({ context }: Route.LoaderArgs) {
 // テストではこう確認する: loaderDataが正しく表示され、統計情報が適切にレンダリングされるかをテスト
 export default function Home({ loaderData }: Route.ComponentProps) {
 	return (
-		<div className="bg-white">
-			{/* ヒーローセクション */}
-			<div className="relative bg-gradient-to-br from-blue-600 to-purple-700">
-				<div className="absolute inset-0 bg-black opacity-20"></div>
-				<div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-					<h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-						革新的なソリューションで
-						<br />
-						ビジネスを変革
-					</h1>
-					<p className="mt-6 max-w-3xl text-xl text-blue-100">
-						{loaderData.message}
-						<br />
-						私たちは最先端のテクノロジーを活用し、お客様のビジネスの成長と成功をサポートします。
-					</p>
-					<div className="mt-10">
-						<button
-							type="button"
-							className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-semibold text-lg transition duration-200"
-						>
-							詳しく見る
-						</button>
-					</div>
-				</div>
-			</div>
-
+		<>
 			{/* 統計セクション */}
 			<div className="bg-gray-50 py-16">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,6 +149,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }

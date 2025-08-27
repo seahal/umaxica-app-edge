@@ -14,3 +14,12 @@ body {
 		color-scheme: dark;
 	}
 }
+
+/* NavLink active state styling */
+nav a.active {
+	@apply font-bold text-blue-600 dark:text-blue-400;
+}
+
+nav a.active li {
+	@apply border-l-4 border-blue-600 dark:border-blue-400 pl-2;
+}
