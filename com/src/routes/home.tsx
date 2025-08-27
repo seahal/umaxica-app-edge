@@ -5,7 +5,7 @@ import { Suspense } from "react";
 // テストではこう確認する: title と description が正しく設定されるかをテスト
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Umaxica - 革新的なソリューションをお届けします" },
+		{ title: "Umaxica - Home" },
 		{
 			name: "description",
 			content:
