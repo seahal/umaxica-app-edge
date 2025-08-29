@@ -3,7 +3,7 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 // ルート定義の責務: アプリケーション全体のルーティング設定を管理
 // テストではこう確認する: 各ルートが正しいコンポーネントにマッピングされていることをテスト
 export default [
-	index("routes/home.tsx"), // ホームページ（/）
+	index("routes/_index.tsx"), // ルートインデックス（/）
 
 	route("about", "routes/about.tsx"), // About Us ページ（/about）
 	route("services", "routes/services.tsx"), // サービス紹介ページ（/services）

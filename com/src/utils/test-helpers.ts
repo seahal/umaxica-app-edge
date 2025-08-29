@@ -74,7 +74,9 @@ export function createMockCloudflareContext(
 				...overrides,
 			},
 			cf: {},
-			ctx: { waitUntil: () => {} },
+			ctx: {
+				waitUntil: () => {},
+			},
 		},
 	};
 }

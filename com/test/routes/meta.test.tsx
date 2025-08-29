@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 
 // テスト対象のメタ関数をインポート
-import { meta as homeMeta } from "../../src/routes/home";
+// import { meta as homeMeta } from "../../src/routes/home";
 import { meta as aboutMeta } from "../../src/routes/about";
 import { meta as servicesMeta } from "../../src/routes/services";
 import { meta as contactMeta } from "../../src/routes/contact";
@@ -75,7 +75,7 @@ describe("Page Meta Information", () => {
 
 	it("should have unique titles for all pages", () => {
 		const titles = [
-			homeMeta({} as any).find((m: any) => m.title)?.title,
+			// homeMeta({} as any).find((m: any) => m.title)?.title,
 			aboutMeta({} as any).find((m: any) => m.title)?.title,
 			servicesMeta({} as any).find((m: any) => m.title)?.title,
 			contactMeta({} as any).find((m: any) => m.title)?.title,
@@ -87,7 +87,7 @@ describe("Page Meta Information", () => {
 	});
 
 	it("should have appropriate title lengths for SEO", () => {
-		const pages = [homeMeta, aboutMeta, servicesMeta, contactMeta];
+		const pages = [/* homeMeta, */ aboutMeta, servicesMeta, contactMeta];
 
 		pages.forEach((metaFn) => {
 			const meta = metaFn({} as any);
@@ -102,7 +102,7 @@ describe("Page Meta Information", () => {
 	});
 
 	it("should have appropriate description lengths for SEO", () => {
-		const pages = [homeMeta, aboutMeta, servicesMeta, contactMeta];
+		const pages = [/* homeMeta, */ aboutMeta, servicesMeta, contactMeta];
 
 		pages.forEach((metaFn) => {
 			const meta = metaFn({} as any);

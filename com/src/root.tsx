@@ -13,6 +13,9 @@ import {
 
 import type { Route } from "../src/+types/root";
 import "./app.css";
+import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
+import { useLoaderData } from "react-router";
 
 // 動的インポートを使用してコンポーネントを遅延読み込み
 
@@ -34,10 +37,16 @@ export const links: Route.LinksFunction = () => [
 	},
 ];
 
+export const loader: Route.LoaderFunction = async ({ context }) => {
+	const { env } = context.cloudflare;
+	return { codeName: env.CODE_NAME || "???" };
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
 			<head>
+				<title></title>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
@@ -52,54 +61,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	);
 }
 
-// ナビゲーションコンポーネントの責務: グローバルなナビゲーション機能を提供
-// テストではこう確認する: 各リンクが正しいpathを持っているか、アクティブ状態が正しく設定されるかをテスト
-function Header() {
-	const navItems = [
-		{ to: "/", label: "Home" },
-		{ to: "/about", label: "About" },
-		{ to: "/services", label: "Services" },
-		{ to: "/privacy", label: "Privacy" },
-		{ to: "/contact", label: "Contact" },
-	];
-
-	return (
-		<>
-			<nav>
-				{/* ヒーローセクション */}
-				<Link to="/">
-					<h1>umaxica</h1>
-				</Link>
-				<ul>
-					<NavLink to="sample">
-						<li>sample</li>
-					</NavLink>
-					<NavLink to="about">
-						<li>about</li>
-					</NavLink>
-				</ul>
-				<Form action="/search">
-					<input type="text" name="q" />
-				</Form>
-			</nav>
-		</>
-	);
-}
-
-function Footer() {
-	return <>(c) umaxica.</>;
-}
-
 export default function App() {
 	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
 	// テストではこう確認する: Header コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
+	const { codeName } = useLoaderData<typeof loader>();
+
 	return (
 		<>
-			<Header />
+			<Header codeName={codeName} />
 			<main>
 				<Outlet />
 			</main>
-			<Footer />
+			<Footer codeName={codeName} />
 		</>
 	);
 }

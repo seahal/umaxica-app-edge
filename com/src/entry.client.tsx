@@ -15,6 +15,7 @@ startTransition(() => {
 		</StrictMode>,
 	);
 });
+
 function reportToErrorService(
 	_error: unknown,
 	_errorInfo: ErrorInfo | undefined,

@@ -23,7 +23,4 @@ export default defineConfig({
 		}),
 		tsconfigPaths(),
 	],
-	optimizeDeps: {
-		rollupOptions: {},
-	},
 });
