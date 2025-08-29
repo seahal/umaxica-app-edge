@@ -17,12 +17,9 @@ import "./app.css";
 // 動的インポートを使用してコンポーネントを遅延読み込み
 
 // 不明なエラーの場合
-import {
-	ErrorPage,
-	InternalServerErrorPage,
-	NotFoundPage,
-	ServiceUnavailablePage,
-} from "./components/ErrorPage";
+import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
+import { NotFoundPage } from "./components/NotFoundPage";
+import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -57,7 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 // ナビゲーションコンポーネントの責務: グローバルなナビゲーション機能を提供
 // テストではこう確認する: 各リンクが正しいpathを持っているか、アクティブ状態が正しく設定されるかをテスト
-function Navigation() {
+function Header() {
 	const navItems = [
 		{ to: "/", label: "Home" },
 		{ to: "/about", label: "About" },
@@ -70,8 +67,8 @@ function Navigation() {
 		<>
 			<nav>
 				{/* ヒーローセクション */}
-				<Link to="/" end="true">
-					<h1>ヒーローセクション</h1>
+				<Link to="/">
+					<h1>umaxica</h1>
 				</Link>
 				<ul>
 					<NavLink to="sample">
@@ -95,10 +92,10 @@ function Footer() {
 
 export default function App() {
 	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
-	// テストではこう確認する: Navigation コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
+	// テストではこう確認する: Header コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
 	return (
 		<>
-			<Navigation />
+			<Header />
 			<main>
 				<Outlet />
 			</main>
