@@ -1,5 +1,5 @@
 import { NotFoundPage } from "../components/NotFoundPage";
-import type { Route } from "../../src/routes/+types/catch-all";
+import type { Route } from "./+types/catch-all";
 
 // メタ情報の責務: 404ページのSEO対応メタデータを定義
 // テストではこう確認する: 404ページの適切なメタ情報が設定されるかをテスト

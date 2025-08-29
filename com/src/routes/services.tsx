@@ -1,4 +1,4 @@
-import type { Route } from "../../src/routes/+types/services";
+import type { Route } from "./+types/services";
 import { useState, useTransition, startTransition } from "react";
 
 // メタ情報の責務: Services ページのSEO対応メタデータを定義

@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useId } from "react";
-import type { Route } from "../../../src/routes/privacy/+types/docs";
+import type { Route } from "./+types/docs";
 
 // メタ情報の責務: プライバシー関連ドキュメントページのSEO対応メタデータを定義
 // テストではこう確認する: titleとdescriptionが適切に設定されるかをテスト

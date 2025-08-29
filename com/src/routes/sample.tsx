@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link, useLocation } from "react-router";
-import type { Route } from "../../src/routes/+types/privacy";
+import type { Route } from "./+types/sample";
 
 // テストではこう確認する: Outlet が適切に機能し、ナビゲーションが表示されるかをテスト
 export function meta(_: Route.MetaArgs) {

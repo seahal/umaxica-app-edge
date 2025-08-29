@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link, useLocation, redirect } from "react-router";
-import type { Route } from "../../src/routes/+types/privacy";
+import type { Route } from "./+types/privacy";
 
 // メタ情報の責務: プライバシーセクションのSEO対応メタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト

@@ -1,4 +1,4 @@
-import type { Route } from "../../src/routes/+types/about";
+import type { Route } from "./+types/about";
 import { use, Suspense } from "react";
 
 // メタ情報の責務: About ページのSEO対応メタデータを定義

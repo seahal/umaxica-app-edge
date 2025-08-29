@@ -1,5 +1,5 @@
-import type { Route } from "../../src/routes/+types/contact";
-import { useState, useActionState, useOptimistic, useId } from "react";
+import { useActionState, useId, useOptimistic } from "react";
+import type { Route } from "./+types/contact";
 
 // メタ情報の責務: Contact ページのSEO対応メタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト
@@ -22,6 +22,13 @@ type ContactFormData = {
 	company: string;
 	message: string;
 	category: string;
+};
+
+type ActionState = {
+	success: boolean;
+	errors: Record<string, string>;
+	data: ContactFormData | null;
+	message: string;
 };
 
 // サーバーアクション（React 19の action 機能）
@@ -117,8 +124,11 @@ export async function action({ request }: Route.ActionArgs) {
 // テストではこう確認する: フォーム送信、バリデーション、エラー表示が正しく動作するかをテスト
 function ContactForm() {
 	const idBase = useId();
-	const [state, submitAction, isPending] = useActionState(
-		async (prevState: any, formData: FormData) => {
+	const [state, submitAction, isPending] = useActionState<
+		ActionState,
+		FormData
+	>(
+		async (_prevState: ActionState, formData: FormData) => {
 			// この部分でサーバーアクションを呼び出すシミュレーション
 			const contactData: ContactFormData = {
 				name: formData.get("name") as string,

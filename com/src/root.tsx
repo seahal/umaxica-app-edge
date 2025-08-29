@@ -11,7 +11,7 @@ import {
 	redirect,
 } from "react-router";
 
-import type { Route } from "../src/+types/root";
+import type { Route } from "./+types/root";
 import "./app.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -37,7 +37,7 @@ export const links: Route.LinksFunction = () => [
 	},
 ];
 
-export const loader: Route.LoaderFunction = async ({ context }) => {
+export const loader = async ({ context }: Route.LoaderArgs) => {
 	const { env } = context.cloudflare;
 	return { codeName: env.CODE_NAME || "???" };
 };

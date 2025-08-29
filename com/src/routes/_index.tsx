@@ -1,4 +1,4 @@
-import type { Route } from "../../src/routes/+types/home";
+import type { Route } from "./+types/_index";
 import { Suspense } from "react";
 import { Link, NavLink } from "react-router";
 
