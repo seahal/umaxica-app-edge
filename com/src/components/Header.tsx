@@ -1,12 +1,20 @@
 // ナビゲーションコンポーネントの責務: グローバルなナビゲーション機能を提供
 // テストではこう確認する: 各リンクが正しいpathを持っているか、アクティブ状態が正しく設定されるかをテスト
-import { Link, NavLink } from "react-router";
+import { NavLink } from "react-router";
 
 interface HeaderProps {
 	codeName?: string;
+	newsUrl?: string;
+	docsUrl?: string;
+	helpUrl?: string;
 }
 
-export function Header({ codeName = "" }: HeaderProps) {
+export function Header({
+	codeName = "",
+	newsUrl = "",
+	docsUrl = "",
+	helpUrl = "",
+}: HeaderProps) {
 	const _navItems = [
 		{ to: "/", label: "Home" },
 		{ to: "/about", label: "About" },
@@ -28,15 +36,15 @@ export function Header({ codeName = "" }: HeaderProps) {
 				<NavLink to="about">
 					<li>about</li>
 				</NavLink>
-				<NavLink to="services">
-					<li>services</li>
-				</NavLink>
-				<NavLink to="privacy">
-					<li>privacy</li>
-				</NavLink>
-				<NavLink to="contact">
-					<li>contact</li>
-				</NavLink>
+				<a href={newsUrl} target="_blank">
+					<li>news</li>
+				</a>
+				<a href={docsUrl} target="_blank">
+					<li>docs</li>
+				</a>
+				<a href={helpUrl} target="_blank">
+					<li>help</li>
+				</a>
 			</ul>
 		</nav>
 	);

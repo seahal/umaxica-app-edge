@@ -36,7 +36,12 @@ export const links: Route.LinksFunction = () => [
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
 	const { env } = context.cloudflare;
-	return { codeName: env.CODE_NAME || "???" };
+	return {
+		codeName: env.CODE_NAME || "???",
+		newsUrl: env.NEWS_URL || "",
+		docsUrl: env.DOCS_URL || "",
+		helpUrl: env.HELP_URL || "",
+	};
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -61,11 +66,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
 	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
 	// テストではこう確認する: Header コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
-	const { codeName } = useLoaderData<typeof loader>();
+	const { codeName, newsUrl, docsUrl, helpUrl } =
+		useLoaderData<typeof loader>();
 
 	return (
 		<>
-			<Header codeName={codeName} />
+			<Header
+				codeName={codeName}
+				newsUrl={newsUrl}
+				docsUrl={docsUrl}
+				helpUrl={helpUrl}
+			/>
 			<main>
 				<Outlet />
 			</main>

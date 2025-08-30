@@ -2,13 +2,11 @@
 	"extends": "./tsconfig.json",
 	"include": [
 		".react-router/types/**/*",
-		"app/**/*",
-		"app/**/.server/**/*",
-		"app/**/.client/**/*",
 		"src/**/*",
 		"workers/**/*",
 		"worker-configuration.d.ts",
-		"virtual-modules.d.ts"
+		"virtual-modules.d.ts",
+		"test-setup.ts"
 	],
 	"compilerOptions": {
 		"composite": true,
