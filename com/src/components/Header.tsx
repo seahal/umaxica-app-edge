@@ -18,9 +18,9 @@ export function Header({ codeName = "" }: HeaderProps) {
 	return (
 		<nav>
 			{/* ヒーローセクション */}
-			<Link to="/">
+			<a href="/">
 				<h1>{codeName}</h1>
-			</Link>
+			</a>
 			<ul>
 				<NavLink to="sample">
 					<li>sample</li>
