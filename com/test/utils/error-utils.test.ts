@@ -1,12 +1,12 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
-	getErrorType,
-	getErrorSeverity,
-	getJapaneseErrorMessage,
-	getErrorAction,
 	formatErrorForLogging,
-	shouldRetry,
+	getErrorAction,
+	getErrorSeverity,
+	getErrorType,
+	getJapaneseErrorMessage,
 	getRetryDelay,
+	shouldRetry,
 } from "../../src/utils/error-utils";
 
 // エラーユーティリティ関数のテスト
@@ -203,7 +203,7 @@ describe("Error Utils", () => {
 
 		it("should handle client error workflow", () => {
 			const status = 404;
-			const error = new Response("Not Found", { status });
+			const _error = new Response("Not Found", { status });
 
 			const type = getErrorType(status);
 			const severity = getErrorSeverity(status);
@@ -216,7 +216,7 @@ describe("Error Utils", () => {
 
 		it("should handle critical service error workflow", () => {
 			const status = 503;
-			const error = new Response("Service Unavailable", { status });
+			const _error = new Response("Service Unavailable", { status });
 
 			const severity = getErrorSeverity(status);
 			const message = getJapaneseErrorMessage(status);
@@ -231,10 +231,10 @@ describe("Error Utils", () => {
 	describe("Edge cases", () => {
 		it("should handle null and undefined inputs gracefully", () => {
 			expect(getErrorType(NaN)).toBe("unknown");
-			expect(getJapaneseErrorMessage(null as any)).toBe(
+			expect(getJapaneseErrorMessage(null as unknown as number)).toBe(
 				"予期しないエラーが発生しました。",
 			);
-			expect(shouldRetry(undefined as any, 0)).toBe(false);
+			expect(shouldRetry(undefined as unknown as number, 0)).toBe(false);
 		});
 
 		it("should handle extreme values", () => {

@@ -1,5 +1,5 @@
-import { Link } from "react-router";
 import { useId } from "react";
+import { Link } from "react-router";
 import type { Route } from "./+types/docs";
 
 // メタ情報の責務: プライバシー関連ドキュメントページのSEO対応メタデータを定義

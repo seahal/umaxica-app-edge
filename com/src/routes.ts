@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { index, type RouteConfig, route } from "@react-router/dev/routes";
 
 // ルート定義の責務: アプリケーション全体のルーティング設定を管理
 // テストではこう確認する: 各ルートが正しいコンポーネントにマッピングされていることをテスト

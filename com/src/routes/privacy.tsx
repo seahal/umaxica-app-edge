@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, useLocation, redirect } from "react-router";
+import { Link, NavLink, redirect, useLocation } from "react-router";
 import type { Route } from "./+types/privacy";
 
 // メタ情報の責務: プライバシーセクションのSEO対応メタデータを定義
@@ -17,7 +17,7 @@ export function meta(_: Route.MetaArgs) {
 // パンくずナビゲーションコンポーネント
 // この部分はパンくずナビゲーションの責務: ユーザーの現在位置とナビゲーション経路を表示
 // テストではこう確認する: 現在のパスに応じて適切なパンくずが表示されるかをテスト
-function Breadcrumb() {
+function _Breadcrumb() {
 	const location = useLocation();
 	const pathSegments = location.pathname.split("/").filter(Boolean);
 
@@ -46,7 +46,7 @@ function Breadcrumb() {
 // プライバシーセクションのサイドナビゲーション
 // この部分はセクションナビゲーションの責務: プライバシー関連ページ間のナビゲーションを提供
 // テストではこう確認する: NavLinkのアクティブ状態が正しく動作するかをテスト
-function PrivacyNavigation() {
+function _PrivacyNavigation() {
 	return (
 		<nav className="w-64 bg-white shadow-sm border-r border-gray-200 p-6">
 			bbbbb
@@ -182,7 +182,7 @@ export default function PrivacyLayout() {
 	return <p>xxxxx</p>;
 }
 
-export async function loader({ request }) {
+export async function loader({ request: _request }) {
 	console.log("loader");
 	return redirect("/");
 }

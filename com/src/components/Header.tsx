@@ -7,7 +7,7 @@ interface HeaderProps {
 }
 
 export function Header({ codeName = "" }: HeaderProps) {
-	const navItems = [
+	const _navItems = [
 		{ to: "/", label: "Home" },
 		{ to: "/about", label: "About" },
 		{ to: "/services", label: "Services" },
@@ -16,21 +16,28 @@ export function Header({ codeName = "" }: HeaderProps) {
 	];
 
 	return (
-		<>
-			<nav>
-				{/* ヒーローセクション */}
-				<Link to="/">
-					<h1>{codeName}</h1>
-				</Link>
-				<ul>
-					<NavLink to="sample">
-						<li>sample</li>
-					</NavLink>
-					<NavLink to="about">
-						<li>about</li>
-					</NavLink>
-				</ul>
-			</nav>
-		</>
+		<nav>
+			{/* ヒーローセクション */}
+			<Link to="/">
+				<h1>{codeName}</h1>
+			</Link>
+			<ul>
+				<NavLink to="sample">
+					<li>sample</li>
+				</NavLink>
+				<NavLink to="about">
+					<li>about</li>
+				</NavLink>
+				<NavLink to="services">
+					<li>services</li>
+				</NavLink>
+				<NavLink to="privacy">
+					<li>privacy</li>
+				</NavLink>
+				<NavLink to="contact">
+					<li>contact</li>
+				</NavLink>
+			</ul>
+		</nav>
 	);
 }

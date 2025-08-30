@@ -1,5 +1,5 @@
+import { useState, useTransition } from "react";
 import type { Route } from "./+types/services";
-import { useState, useTransition, startTransition } from "react";
 
 // メタ情報の責務: Services ページのSEO対応メタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト

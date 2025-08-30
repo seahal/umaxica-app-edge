@@ -2,18 +2,19 @@
 	"extends": "./tsconfig.json",
 	"include": [
 		".react-router/types/**/*",
-		"app/**/*",
-		"app/**/.server/**/*",
-		"app/**/.client/**/*",
+		"src/**/*",
+		"src/**/.server/**/*",
+		"src/**/.client/**/*",
 		"workers/**/*",
 		"worker-configuration.d.ts",
-		"virtual-modules.d.ts"
+		"virtual-modules.d.ts",
+		"react-router-types.d.ts"
 	],
 	"compilerOptions": {
 		"composite": true,
 		"strict": true,
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
-		"types": ["vite/client"],
+		"skipLibCheck": true,
 		"target": "ES2022",
 		"module": "ES2022",
 		"moduleResolution": "bundler",
@@ -22,8 +23,10 @@
 		"baseUrl": ".",
 		"rootDirs": [".", "./.react-router/types"],
 		"paths": {
-			"~/*": ["./app/*"]
+			"~/*": ["./src/*"]
 		},
+		"typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+		"moduleSuffixes": [""],
 		"esModuleInterop": true,
 		"resolveJsonModule": true
 	}

@@ -5,7 +5,9 @@ interface FooterProps {
 export function Footer({ codeName = "" }: FooterProps) {
 	return (
 		<footer style={{ textAlign: "center" }}>
-			<small>© {codeName}.</small>
+			<small>
+				© {new Date().getFullYear()} {codeName}.
+			</small>
 		</footer>
 	);
 }

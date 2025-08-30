@@ -3,7 +3,7 @@
 // テストではこう確認する: jest-domマッチャーが正しく設定され、テスト環境が適切に初期化されるかをテスト
 
 import "@testing-library/jest-dom";
-import { afterEach, beforeAll, afterAll } from "bun:test";
+import { afterAll, afterEach, beforeAll } from "bun:test";
 import { cleanup } from "@testing-library/react";
 
 // React Testing Library のクリーンアップ
@@ -14,12 +14,17 @@ afterEach(() => {
 
 // React Router のナビゲーション関数をモック
 // この部分はルーティングモックの責務: テスト環境でのナビゲーション機能を提供
-(globalThis as any).navigate = () => {};
+type GlobalWithNavigate = typeof globalThis & {
+	navigate: () => void;
+	performance?: { now: () => number };
+};
+
+(globalThis as GlobalWithNavigate).navigate = () => {};
 
 // パフォーマンス測定のモック
 // この部分はパフォーマンステストの責務: performance.now()をテスト環境で利用可能にする
 if (typeof globalThis.performance === "undefined") {
-	(globalThis as any).performance = {
+	(globalThis as GlobalWithNavigate).performance = {
 		now: () => Date.now(),
 	};
 }

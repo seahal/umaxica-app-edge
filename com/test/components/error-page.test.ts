@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 // エラーページコンポーネントのテスト
 // この部分はエラーページUIテストの責務: エラーページの表示要素とプロパティ処理を検証
@@ -229,7 +229,7 @@ describe("Error Page Components", () => {
 				503: "サービスが一時的に利用できません。",
 			};
 
-			Object.entries(japaneseMessages).forEach(([status, message]) => {
+			Object.entries(japaneseMessages).forEach(([_status, message]) => {
 				expect(message).toBeDefined();
 				expect(typeof message).toBe("string");
 				// 日本語文字が含まれていることを確認

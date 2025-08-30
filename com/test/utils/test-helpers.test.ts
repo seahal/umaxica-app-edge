@@ -1,13 +1,13 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
-	getMetaProperty,
-	getTitle,
-	getDescription,
-	isValidSEOLength,
 	containsJapanese,
 	createMockCloudflareContext,
-	validateServiceData,
+	getDescription,
+	getMetaProperty,
+	getTitle,
+	isValidSEOLength,
 	validateContactForm,
+	validateServiceData,
 	validateStatsData,
 } from "../../src/utils/test-helpers";
 
@@ -270,10 +270,13 @@ describe("Test Helpers", () => {
 
 			expect(title).toBeDefined();
 			expect(description).toBeDefined();
-			expect(isValidSEOLength(title!, "title")).toBe(true);
-			expect(isValidSEOLength(description!, "description")).toBe(true);
-			expect(containsJapanese(title!)).toBe(true);
-			expect(containsJapanese(description!)).toBe(true);
+			if (!title || !description) {
+				throw new Error("Title or description is undefined");
+			}
+			expect(isValidSEOLength(title, "title")).toBe(true);
+			expect(isValidSEOLength(description, "description")).toBe(true);
+			expect(containsJapanese(title)).toBe(true);
+			expect(containsJapanese(description)).toBe(true);
 		});
 
 		it("should handle end-to-end service validation", () => {

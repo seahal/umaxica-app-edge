@@ -1,16 +1,16 @@
 // Generated type file
 export namespace Route {
 	export interface MetaArgs {
-		data?: any;
+		data?: unknown;
 		params: Record<string, string>;
-		matches: any[];
+		matches: unknown[];
 	}
 
 	export interface LoaderArgs {
 		context: {
 			cloudflare: {
-				env: any;
-				ctx: any;
+				env: unknown;
+				ctx: unknown;
 			};
 		};
 		params: Record<string, string>;

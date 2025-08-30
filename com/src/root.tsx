@@ -5,24 +5,21 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	NavLink,
-	Link,
-	Form,
-	redirect,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
 import { useLoaderData } from "react-router";
+import { Footer } from "./components/Footer";
+import { Header } from "./components/Header";
 
 // 動的インポートを使用してコンポーネントを遅延読み込み
 
+import type { JSX } from "react";
 // 不明なエラーの場合
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
-import { NotFoundPage } from "./components/NotFoundPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
+import { NotFoundPage } from "./components/NotFoundPage";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -79,7 +76,9 @@ export default function App() {
 
 // エラーバウンダリの責務: アプリケーション全体のエラーをキャッチし、適切なエラーページを表示
 // テストではこう確認する: 各種エラー（404、500、その他）に対して適切なUIが表示されるかをテスト
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({
+	error,
+}: Route.ErrorBoundaryProps): JSX.Element {
 	// React Router の isRouteErrorResponse を使用してルートエラーを識別
 	if (isRouteErrorResponse(error)) {
 		// 404エラーの場合

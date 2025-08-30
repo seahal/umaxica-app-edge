@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { rmSync, existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const cwd = new URL("..", import.meta.url);

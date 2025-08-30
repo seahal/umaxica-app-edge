@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import type { Route } from "./+types/index";
 
 // メタ情報の責務: プライバシー概要ページのSEO対応メタデータを定義

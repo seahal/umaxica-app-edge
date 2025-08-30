@@ -16,7 +16,8 @@
 			"bun.lock",
 			"package-lock.json",
 			"worker-configuration.d.ts",
-			"**/.react-router/**"
+			"**/.react-router/**",
+			"**/+types/**"
 		]
 	},
 	"formatter": {

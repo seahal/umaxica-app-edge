@@ -1,14 +1,19 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 // テスト対象のメタ関数をインポート
 // import { meta as homeMeta } from "../../src/routes/home";
 import { meta as aboutMeta } from "../../src/routes/about";
-import { meta as servicesMeta } from "../../src/routes/services";
 import { meta as contactMeta } from "../../src/routes/contact";
+import { meta as servicesMeta } from "../../src/routes/services";
 
 // メタ情報テスト
 // この部分はSEO対応の責務: 各ページのメタデータが正しく設定されることを検証
 // テストではこう確認する: title と description が期待される値になっているかをテスト
+// Helper types derived from route meta functions
+type AboutMetaItem = ReturnType<typeof aboutMeta>[number];
+type ServicesMetaItem = ReturnType<typeof servicesMeta>[number];
+type ContactMetaItem = ReturnType<typeof contactMeta>[number];
+
 describe("Page Meta Information", () => {
 	// it("should return correct meta information for Home page", () => {
 	// 	const meta = homeMeta({} as any);
@@ -20,27 +25,43 @@ describe("Page Meta Information", () => {
 	// });
 
 	it("should return correct meta information for About page", () => {
-		const meta = aboutMeta({} as any);
-		const titleMeta = meta.find((m: any) => m.title);
-		const descriptionMeta = meta.find((m: any) => m.name === "description");
+		const meta = aboutMeta({} as unknown as Parameters<typeof aboutMeta>[0]);
+		const titleMeta = meta.find(
+			(m: AboutMetaItem) => (m as { title?: string }).title,
+		);
+		const descriptionMeta = meta.find(
+			(m: AboutMetaItem) => (m as { name?: string }).name === "description",
+		);
 
 		expect(titleMeta?.title).toBe("About Us - Umaxica");
 		expect(descriptionMeta?.content).toContain("Umaxicaの会社概要");
 	});
 
 	it("should return correct meta information for Services page", () => {
-		const meta = servicesMeta({} as any);
-		const titleMeta = meta.find((m: any) => m.title);
-		const descriptionMeta = meta.find((m: any) => m.name === "description");
+		const meta = servicesMeta(
+			{} as unknown as Parameters<typeof servicesMeta>[0],
+		);
+		const titleMeta = meta.find(
+			(m: ServicesMetaItem) => (m as { title?: string }).title,
+		);
+		const descriptionMeta = meta.find(
+			(m: ServicesMetaItem) => (m as { name?: string }).name === "description",
+		);
 
 		expect(titleMeta?.title).toBe("Services - Umaxica");
 		expect(descriptionMeta?.content).toContain("Webアプリケーション開発");
 	});
 
 	it("should return correct meta information for Contact page", () => {
-		const meta = contactMeta({} as any);
-		const titleMeta = meta.find((m: any) => m.title);
-		const descriptionMeta = meta.find((m: any) => m.name === "description");
+		const meta = contactMeta(
+			{} as unknown as Parameters<typeof contactMeta>[0],
+		);
+		const titleMeta = meta.find(
+			(m: ContactMetaItem) => (m as { title?: string }).title,
+		);
+		const descriptionMeta = meta.find(
+			(m: ContactMetaItem) => (m as { name?: string }).name === "description",
+		);
 
 		expect(titleMeta?.title).toBe("Contact - Umaxica");
 		expect(descriptionMeta?.content).toContain("お問い合わせはこちらから");
@@ -75,10 +96,16 @@ describe("Page Meta Information", () => {
 
 	it("should have unique titles for all pages", () => {
 		const titles = [
-			// homeMeta({} as any).find((m: any) => m.title)?.title,
-			aboutMeta({} as any).find((m: any) => m.title)?.title,
-			servicesMeta({} as any).find((m: any) => m.title)?.title,
-			contactMeta({} as any).find((m: any) => m.title)?.title,
+			// homeMeta({} as unknown as Parameters<typeof homeMeta>[0]).find((m: HomeMetaItem) => (m as { title?: string }).title)?.title,
+			aboutMeta({} as unknown as Parameters<typeof aboutMeta>[0]).find(
+				(m: AboutMetaItem) => (m as { title?: string }).title,
+			)?.title,
+			servicesMeta({} as unknown as Parameters<typeof servicesMeta>[0]).find(
+				(m: ServicesMetaItem) => (m as { title?: string }).title,
+			)?.title,
+			contactMeta({} as unknown as Parameters<typeof contactMeta>[0]).find(
+				(m: ContactMetaItem) => (m as { title?: string }).title,
+			)?.title,
 		];
 
 		// 重複がないことを確認
@@ -87,11 +114,18 @@ describe("Page Meta Information", () => {
 	});
 
 	it("should have appropriate title lengths for SEO", () => {
-		const pages = [/* homeMeta, */ aboutMeta, servicesMeta, contactMeta];
+		const pages = [
+			/* homeMeta, */ aboutMeta,
+			servicesMeta,
+			contactMeta,
+		] as const;
 
 		pages.forEach((metaFn) => {
-			const meta = metaFn({} as any);
-			const titleMeta = meta.find((m: any) => m.title);
+			const meta = metaFn({} as unknown as Parameters<typeof metaFn>[0]);
+			const titleMeta = meta.find(
+				(m: ReturnType<typeof metaFn>[number]) =>
+					(m as { title?: string }).title,
+			);
 
 			if (titleMeta?.title) {
 				// SEO的に適切なタイトル長（10-60文字程度）
@@ -102,11 +136,18 @@ describe("Page Meta Information", () => {
 	});
 
 	it("should have appropriate description lengths for SEO", () => {
-		const pages = [/* homeMeta, */ aboutMeta, servicesMeta, contactMeta];
+		const pages = [
+			/* homeMeta, */ aboutMeta,
+			servicesMeta,
+			contactMeta,
+		] as const;
 
 		pages.forEach((metaFn) => {
-			const meta = metaFn({} as any);
-			const descriptionMeta = meta.find((m: any) => m.name === "description");
+			const meta = metaFn({} as unknown as Parameters<typeof metaFn>[0]);
+			const descriptionMeta = meta.find(
+				(m: ReturnType<typeof metaFn>[number]) =>
+					(m as { name?: string }).name === "description",
+			);
 
 			if (descriptionMeta?.content) {
 				// SEO的に適切な説明文長（50-160文字程度）

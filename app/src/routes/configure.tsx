@@ -9,7 +9,10 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+	return {
+		message: (context.cloudflare.env as Env & { VALUE_FROM_CLOUDFLARE: string })
+			.VALUE_FROM_CLOUDFLARE,
+	};
 }
 
 export default function About(_: Route.ComponentProps) {

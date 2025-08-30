@@ -6,8 +6,10 @@
  * メタデータから特定のプロパティを取得するヘルパー
  * この部分はメタデータ操作の責務: メタデータ配列から特定の要素を安全に取得
  */
+type MetaEntry = Record<string, string>;
+
 export function getMetaProperty(
-	meta: any[],
+	meta: MetaEntry[],
 	property: string,
 	key?: string,
 ): string | undefined {
@@ -23,7 +25,7 @@ export function getMetaProperty(
  * メタデータからタイトルを取得
  * この部分はSEO支援の責務: ページタイトルの取得を簡略化
  */
-export function getTitle(meta: any[]): string | undefined {
+export function getTitle(meta: MetaEntry[]): string | undefined {
 	return getMetaProperty(meta, "title");
 }
 
@@ -31,7 +33,7 @@ export function getTitle(meta: any[]): string | undefined {
  * メタデータから説明文を取得
  * この部分はSEO支援の責務: ページ説明文の取得を簡略化
  */
-export function getDescription(meta: any[]): string | undefined {
+export function getDescription(meta: MetaEntry[]): string | undefined {
 	const item = meta.find((m) => m.name === "description");
 	return item?.content;
 }
@@ -65,7 +67,7 @@ export function containsJapanese(text: string): boolean {
  * この部分はテストデータ生成の責務: 一貫したテストデータの提供
  */
 export function createMockCloudflareContext(
-	overrides: Record<string, any> = {},
+	overrides: Record<string, unknown> = {},
 ) {
 	return {
 		cloudflare: {
@@ -85,7 +87,7 @@ export function createMockCloudflareContext(
  * サービスデータの検証
  * この部分はデータ検証の責務: サービス情報の完整性を確認
  */
-export function validateServiceData(service: any): boolean {
+export function validateServiceData(service: Record<string, unknown>): boolean {
 	const requiredFields = [
 		"id",
 		"title",
@@ -142,7 +144,7 @@ export function validateContactForm(formData: {
  * 統計データの妥当性チェック
  * この部分は統計検証の責務: 表示する統計情報の妥当性を確認
  */
-export function validateStatsData(stats: any): boolean {
+export function validateStatsData(stats: Record<string, unknown>): boolean {
 	return (
 		typeof stats === "object" &&
 		stats !== null &&
