@@ -6,7 +6,14 @@
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"name": "umaxica-edge-com",
 	"compatibility_date": "2025-04-04",
-	"main": "./workers/app.ts",
+	// Use the file produced by `react-router build`
+	"main": "./build/server/index.js",
+	// Serve static assets built by React Router/Vite
+	"assets": { "directory": "./build/client" },
+	// Avoid re-bundling the already-built server bundle
+	"no_bundle": true,
+	// Ensure the server/client bundles exist before Wrangler runs
+	"build": { "command": "bun run build" },
 	"observability": {
 		"enabled": true
 	},

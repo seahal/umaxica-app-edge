@@ -1,0 +1,14 @@
+/**
+ * Wrangler config used by Vite/React Router during build/dev.
+ * Keeps `main` pointing at the source worker so the Cloudflare Vite plugin
+ * can resolve and serve the app while building.
+ */
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "umaxica-edge-com-dev",
+  "compatibility_date": "2025-04-04",
+  "main": "./workers/app.ts",
+  "observability": { "enabled": true },
+  "vars": {}
+}
+

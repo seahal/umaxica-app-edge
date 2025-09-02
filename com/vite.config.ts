@@ -11,7 +11,10 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
 	plugins: [
-		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		cloudflare({
+			configPath: "./wrangler.build.jsonc",
+			viteEnvironment: { name: "ssr" },
+		}),
 		tailwindcss(),
 		reactRouter(),
 		babel({
