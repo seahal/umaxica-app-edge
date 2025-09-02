@@ -9,6 +9,22 @@
 	"main": "./workers/app.ts",
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"EDGE_CORPORATE_URL": "",
+		"EDGE_SERVICE_URL": "",
+		"EDGE_STAFF_URL": "",
+		"API_CORPORATE_URL": "",
+		"API_SERVICE_URL": "",
+		"API_STAFF_URL": "",
+		"WWW_CORPORATE_URL": "",
+		"WWW_SERVICE_URL": "",
+		"WWW_STAFF_URL": "",
+		"APEX_CORPORATE_URL": "",
+		"APEX_SERVICE_URL": "",
+		"APEX_STAFF_URL": "",
+		"AUTH_SERVICE_URL": "",
+		"AUTH_STAFF_URL": ""
 	}
 	/**
 	 * Smart Placement

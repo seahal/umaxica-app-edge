@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export function Header({
-	codeName = "",
+	codeName = "UMAXICA",
 	newsUrl = "",
 	docsUrl = "",
 	helpUrl = "",
