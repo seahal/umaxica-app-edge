@@ -12,6 +12,7 @@ const ReactCompilerConfig = {
 export default defineConfig({
 	plugins: [
 		cloudflare({
+			// Use a lightweight dev config that points to an existing source entry
 			configPath: "./wrangler.build.jsonc",
 			viteEnvironment: { name: "ssr" },
 		}),
