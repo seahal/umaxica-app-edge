@@ -13,7 +13,6 @@
 		"preview": "bun run build && vite preview",
 		"test": "bun test",
 		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
-		"clean": "node ./scripts/clean.mjs",
 		"format": "../node_modules/.bin/biome format src test --write"
 	}
 }

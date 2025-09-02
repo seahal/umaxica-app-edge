@@ -11,23 +11,17 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
 	plugins: [
-		cloudflare({
-			// Use a lightweight dev config that points to an existing source entry
-			configPath: "./wrangler.build.jsonc",
-			viteEnvironment: { name: "ssr" },
-		}),
+		cloudflare({ viteEnvironment: { name: "ssr" } }),
 		tailwindcss(),
 		reactRouter(),
 		babel({
 			filter: /\.[jt]sx?$/,
 			babelConfig: {
-				presets: ["@babel/preset-typescript"], // if you use TypeScript
+				presets: ["@babel/preset-typescript"],
 				plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
 			},
 		}),
 		tsconfigPaths(),
 	],
-	server: {
-		port: 5170,
-	},
+	server: { port: 5170 },
 });
