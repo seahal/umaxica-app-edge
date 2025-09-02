@@ -35,12 +35,14 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { env } = context.cloudflare;
+	const env =
+		(context as unknown as { cloudflare?: { env?: Record<string, string> } })
+			?.cloudflare?.env ?? {};
 	return {
-		codeName: env.CODE_NAME || "???",
-		newsUrl: env.NEWS_URL || "",
-		docsUrl: env.DOCS_URL || "",
-		helpUrl: env.HELP_URL || "",
+		codeName: env.CODE_NAME ?? "???",
+		newsUrl: env.NEWS_URL ?? "",
+		docsUrl: env.DOCS_URL ?? "",
+		helpUrl: env.HELP_URL ?? "",
 	};
 };
 
@@ -67,7 +69,7 @@ export default function App() {
 	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
 	// テストではこう確認する: Header コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
 	const { codeName, newsUrl, docsUrl, helpUrl } =
-		useLoaderData<typeof loader>();
+		useLoaderData<Awaited<ReturnType<typeof loader>>>();
 
 	return (
 		<>
@@ -92,25 +94,24 @@ export function ErrorBoundary({
 }: Route.ErrorBoundaryProps): JSX.Element {
 	// React Router の isRouteErrorResponse を使用してルートエラーを識別
 	if (isRouteErrorResponse(error)) {
+		const rr = error as { status: number; statusText?: string };
 		// 404エラーの場合
-		if (error.status === 404) {
+		if (rr.status === 404) {
 			return <NotFoundPage />;
 		}
 
 		// 500番台のサーバーエラーの場合
-		if (error.status >= 500) {
+		if (rr.status >= 500) {
 			return (
 				<InternalServerErrorPage
-					details={
-						error.statusText || `HTTP ${error.status} エラーが発生しました`
-					}
+					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
 					showDetails={import.meta.env.DEV}
 				/>
 			);
 		}
 
 		// 503 Service Unavailable の場合
-		if (error.status === 503) {
+		if (rr.status === 503) {
 			return <ServiceUnavailablePage />;
 		}
 
@@ -118,11 +119,9 @@ export function ErrorBoundary({
 
 		return (
 			<ErrorPage
-				status={error.status}
-				title={`${error.status} エラー`}
-				message={
-					error.statusText || "リクエストの処理中にエラーが発生しました。"
-				}
+				status={rr.status}
+				title={`${rr.status} エラー`}
+				message={rr.statusText || "リクエストの処理中にエラーが発生しました。"}
 				suggestion="時間をおいて再度お試しいただくか、お問い合わせフォームからご連絡ください。"
 				showNavigation={true}
 			/>

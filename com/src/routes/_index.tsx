@@ -16,8 +16,10 @@ export function meta(_: Route.MetaArgs) {
 // テストではこう確認する: 環境変数が正しく取得され、適切なデータが返されるかをテスト
 export function loader({ context }: Route.LoaderArgs) {
 	try {
-		const companyMessage =
-			context.cloudflare.env.VALUE_FROM_CLOUDFLARE || "Welcome to Umaxica";
+		const env =
+			(context as unknown as { cloudflare?: { env?: Record<string, string> } })
+				?.cloudflare?.env ?? {};
+		const companyMessage = env.VALUE_FROM_CLOUDFLARE || "Welcome to Umaxica";
 
 		return {
 			message: companyMessage,

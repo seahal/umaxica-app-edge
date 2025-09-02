@@ -6,13 +6,13 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
-		"cf-typegen": "wrangler types",
+		"cf-typegen": "bunx wrangler types",
 		"deploy": "bun run build && wrangler deploy",
 		"dev": "react-router dev",
-		"postinstall": "npm run cf-typegen || true",
+		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
 		"test": "bun test",
-		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
+		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
 		"clean": "node ./scripts/clean.mjs",
 		"format": "../node_modules/.bin/biome format src test --write"
 	}

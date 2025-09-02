@@ -146,7 +146,7 @@ function ContactForm() {
 				errors.message = "お問い合わせ内容は必須です";
 
 			if (Object.keys(errors).length > 0) {
-				return { success: false, errors, data: contactData };
+				return { success: false, errors, data: contactData, message: "" };
 			}
 
 			// 送信成功をシミュレート

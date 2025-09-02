@@ -1,22 +1,32 @@
-// React Router type declarations for app
+// Minimal React Router type shims for the com site
 declare module "react-router" {
 	export interface EntryContext {
 		[key: string]: unknown;
 	}
+
 	export interface ServerRouterProps {
 		context: EntryContext;
 		url: string;
 	}
 	export function ServerRouter(props: ServerRouterProps): JSX.Element;
-	// minimal helper used in app/src/root.tsx
+
+	// Hooks / helpers used in this project
 	export function useLoaderData<T = unknown>(): T;
-	export function isRouteErrorResponse(error: unknown): boolean;
+	export function isRouteErrorResponse(
+		error: unknown,
+	): error is { status: number; statusText?: string };
+
 	export function Links(): JSX.Element;
 	export function Meta(): JSX.Element;
 	export function Outlet(): JSX.Element;
 	export function Scripts(): JSX.Element;
 	export function ScrollRestoration(): JSX.Element;
+
 	export function Link(props: Record<string, unknown>): JSX.Element;
+	export function NavLink(props: Record<string, unknown>): JSX.Element;
+	export function redirect(url: string): Response;
+	export function useLocation(): Location;
+
 	export function createRequestHandler(
 		...args: unknown[]
 	): (request: Request, context: unknown) => Promise<Response>;
@@ -27,6 +37,11 @@ declare module "react-router" {
 			request: Request;
 			params: Record<string, string>;
 		}
+		export interface ActionArgs {
+			request: Request;
+			context: AppLoadContext;
+			params: Record<string, string>;
+		}
 		export interface MetaArgs {
 			data?: unknown;
 			params: Record<string, string>;
@@ -34,7 +49,7 @@ declare module "react-router" {
 			matches: unknown[];
 		}
 		export interface ComponentProps {
-			loaderData?: unknown;
+			loaderData?: any;
 		}
 		export interface ErrorBoundaryProps {
 			error: unknown;

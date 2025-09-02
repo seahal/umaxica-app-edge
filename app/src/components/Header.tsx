@@ -14,25 +14,22 @@ export function Header({
 	helpUrl = "",
 }: HeaderProps) {
 	return (
-		<header>
+		<header className="p-4 border-b">
 			<a href="/">
-				<h1>{codeName}</h1>
+				<h1 className="text-xl font-semibold">{codeName}</h1>
 			</a>
-			<nav>
-				<ul>
-					<Link to="sample">
-						<li>sample</li>
-					</Link>
+			<nav className="mt-2">
+				<ul className="flex gap-4">
 					<Link to="about">
 						<li>about</li>
 					</Link>
-					<a href={newsUrl} target="_blank">
+					<a href={newsUrl} target="_blank" rel="noreferrer">
 						<li>news</li>
 					</a>
-					<a href={docsUrl} target="_blank">
+					<a href={docsUrl} target="_blank" rel="noreferrer">
 						<li>docs</li>
 					</a>
-					<a href={helpUrl} target="_blank">
+					<a href={helpUrl} target="_blank" rel="noreferrer">
 						<li>help</li>
 					</a>
 				</ul>

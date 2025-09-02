@@ -60,7 +60,13 @@ function _PrivacyNavigation() {
 					<NavLink
 						to="/privacy"
 						end // 完全一致のみアクティブにする（子ルートではアクティブにしない）
-						className={({ isActive, isPending }) =>
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) =>
 							`block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
 								isActive
 									? "bg-blue-100 text-blue-700 border-l-4 border-blue-500 shadow-sm"
@@ -70,7 +76,7 @@ function _PrivacyNavigation() {
 							}`
 						}
 					>
-						{({ isActive }) => (
+						{({ isActive }: { isActive: boolean }) => (
 							<span className="flex items-center">
 								<span className="mr-3">{isActive ? "📍" : "📄"}</span>
 								概要
@@ -85,7 +91,13 @@ function _PrivacyNavigation() {
 				<li>
 					<NavLink
 						to="/privacy/policy"
-						className={({ isActive, isPending }) =>
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) =>
 							`block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
 								isActive
 									? "bg-green-100 text-green-700 border-l-4 border-green-500 shadow-sm"
@@ -95,7 +107,13 @@ function _PrivacyNavigation() {
 							}`
 						}
 					>
-						{({ isActive, isPending }) => (
+						{({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) => (
 							<span className="flex items-center">
 								<span className="mr-3">
 									{isPending ? "⏳" : isActive ? "📋" : "📝"}
@@ -113,7 +131,13 @@ function _PrivacyNavigation() {
 				<li>
 					<NavLink
 						to="/privacy/docs"
-						className={({ isActive, isPending }) => {
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) => {
 							// 動的なクラス名の生成（NavLinkの高度な使用例）
 							const baseClasses =
 								"block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 relative";
@@ -127,7 +151,7 @@ function _PrivacyNavigation() {
 							}
 						}}
 					>
-						{({ isActive }) => (
+						{({ isActive }: { isActive: boolean }) => (
 							<span className="flex items-center">
 								<span className="mr-3">{isActive ? "📚" : "📖"}</span>
 								関連ドキュメント
@@ -182,7 +206,7 @@ export default function PrivacyLayout() {
 	return <p>xxxxx</p>;
 }
 
-export async function loader({ request: _request }) {
+export async function loader({ request: _request }: Route.LoaderArgs) {
 	console.log("loader");
 	return redirect("/");
 }

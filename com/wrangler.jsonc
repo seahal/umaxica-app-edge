@@ -7,14 +7,6 @@
 	"name": "umaxica-edge-com",
 	"compatibility_date": "2025-04-04",
 	"main": "./workers/app.ts",
-	"vars": {
-		"CODE_NAME": "UMAXICA",
-		"API_URL": "api.com.localhost:3000",
-		"AUTH_URL": "",
-		"DOCS_URL": "docs.com.localhost:3000",
-		"HELP_URL": "help.com.localhost:3000",
-		"NEWS_URL": "news.com.localhost:3000"
-	},
 	"observability": {
 		"enabled": true
 	}
