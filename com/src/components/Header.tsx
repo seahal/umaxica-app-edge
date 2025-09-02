@@ -36,7 +36,7 @@ export function Header({
 						<li>help</li>
 					</a>
 					<a href={helpUrl} target="_blank">
-						<li>...x3</li>
+						<li>...</li>
 					</a>
 				</ul>
 			</nav>
