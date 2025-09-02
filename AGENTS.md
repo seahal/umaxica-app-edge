@@ -1,49 +1,42 @@
 # Repository Guidelines
 
-## Project Structure & Modules
+## Project Structure & Module Organization
+- Root is a Cloudflare Workers monorepo using Hono/Honox + Vite (SSR).
+- App site: `app/`
+  - Routes grouped by host: `app/routes/<host>/*` (e.g., `app/routes/jp.umaxica.app/index.tsx`).
+  - Shared entries: `server.tsx`, `client.tsx`, `global.tsx`; static assets in `app/public/`.
+  - Reusable components/utilities in `app/src/`.
+- Additional worker sites: `com/`, `org/` (each has `src/`, `public/`, and its own `.wrangler` config).
+- Tests: `test/*.test.ts`.
+- Key config: `vite.config.ts` (root `./app`, dev on `:4000`), `tsconfig.json`, `lefthook.yml`, `biome.json`.
 
-- Root: Cloudflare Workers project using Hono/Honox + Vite.
-- `app/`: SSR app and routes grouped by host (e.g., `app/routes/jp.umaxica.app/*`, `app/routes/com.localdomain/*`).
-  Shared entrypoints: `server.tsx`, `client.tsx`, `global.tsx`, assets in `app/public/`.
-- `com/`, `org/`: Additional worker sites with their own `src/`, `public/`, and `.wrangler` configs.
-- `test/`: Bun tests (`*.test.ts`).
-- Config: `vite.config.ts` (root: `./app`, dev on port 4000), `tsconfig.json`, `lefthook.yml`, `biome.json`.
-
-## Build, Test, Develop (Bun)
-
-- Install: `bun install` (requires Bun). Confirm with `bun -v`.
-- Dev: `bun run dev` → Vite at `http://localhost:4000`.
-- Build: `bun run build` → production build for Workers.
-- Preview: `bun run preview` → preview built app.
+## Build, Test, and Development Commands
+- Install deps: `bun install` (requires Bun; verify with `bun -v`).
+- Dev server: `bun run dev` → Vite at `http://localhost:4000`.
+- Build workers: `bun run build`.
+- Preview built app: `bun run preview`.
 - Test: `bun test` or `bun run test`.
-- Lint/format: `bun run lint`, `bun run format` (Biome)。
-- Type check: `bun run typecheck`。
-- Deploy: `bun run deploy`（build + `wrangler deploy`）。
-- CF typegen: `bun run cf-typegen`。
+- Lint/format: `bun run lint`, `bun run format` (Biome).
+- Type check: `bun run typecheck`.
+- Deploy: `bun run deploy` (build + `wrangler deploy`).
+- CF bindings types: `bun run cf-typegen`.
 
-## Coding Style & Naming
-
+## Coding Style & Naming Conventions
 - Language: TypeScript (strict). JSX via Hono (`jsxImportSource: hono/jsx`).
-- Formatting/linting: Biome. Use 2-space indentation, single quotes, trailing commas where valid.
-- Routes: organize by host directory under `app/routes/<host>/<page>.tsx` (e.g., `index.tsx`, `about.tsx`). Components
-  and utilities live under `app/src/`.
+- Formatting: Biome — 2-space indent, single quotes, trailing commas.
+- Route files live under `app/routes/<host>/` using clear names like `index.tsx`, `about.tsx`.
+- Keep components/hooks/utils under `app/src/`; prefer descriptive filenames.
 
 ## Testing Guidelines
-
 - Framework: `bun:test` with `happy-dom` for DOM.
-- Location/pattern: `test/*.test.ts`.
-- Run: `bun test` or `npm run test`.
-- Aim for meaningful unit tests of route handlers and utilities; prefer fast, isolated tests.
+- Location: `test/*.test.ts`; name files after the unit under test.
+- Run with `bun test`. Favor fast, isolated unit tests for route handlers and utilities.
 
-## Commits & Pull Requests
+## Commit & Pull Request Guidelines
+- Commits: short, imperative subject; optional bracketed scope (e.g., `[system]`, `[misc]`). Group related changes; keep refactors separate.
+- PRs: clear description, linked issues, steps to test, and screenshots/GIFs for UI changes. Ensure CI hooks are clean and tests pass.
 
-- Commits: short, imperative subject; include a bracketed scope when helpful (e.g., `[system]`, `[misc]`). Group related
-  changes; keep noisy refactors separate.
-- PRs: clear description, linked issues, steps to test, and screenshots/GIFs for UI changes. Ensure CI passes and hooks
-  are clean.
-
-## Security & Config
-
-- Local env: `.dev.vars` is for development host mapping. Do not commit secrets. Use `wrangler secret put <NAME>` for
-  production.
-- Bindings/types: keep `wrangler.jsonc` in sync and regenerate with `npm run cf-typegen` after changes.
+## Security & Configuration Tips
+- Do not commit secrets. Use `.dev.vars` only for local dev mapping.
+- For production, store secrets with `wrangler secret put <NAME>`.
+- Keep `wrangler.jsonc` in sync with bindings and rerun `bun run cf-typegen` after changes.

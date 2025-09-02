@@ -1,5 +1,5 @@
-import type { Route } from "../../src/routes/+types/about";
-import { use, Suspense } from "react";
+import { Suspense, use } from "react";
+import type { Route } from "./+types/about";
 
 // メタ情報の責務: About ページのSEO対応メタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト
@@ -17,30 +17,44 @@ export function meta(_: Route.MetaArgs) {
 // 会社情報を非同期で取得するPromise（React 19のuse()デモのため）
 // この部分はデータ取得の責務: 会社情報を非同期で取得
 // テストではこう確認する: Promise が正しく解決され、適切なデータが返されるかをテスト
-function createCompanyInfoPromise() {
-	return new Promise<{
-		founded: number;
-		employees: number;
-		locations: string[];
-		certifications: string[];
-	}>((resolve) => {
-		// 実際のAPIコールをシミュレート
-		setTimeout(() => {
-			resolve({
-				founded: 2014,
-				employees: 25,
-				locations: ["東京", "大阪", "福岡"],
-				certifications: ["ISO 27001", "プライバシーマーク", "AWS Partner"],
-			});
-		}, 100);
-	});
+
+// Promiseをキャッシュして再利用可能にする
+let companyInfoPromise: Promise<{
+	founded: number;
+	employees: number;
+	locations: string[];
+	certifications: string[];
+}> | null = null;
+
+function getCompanyInfoPromise() {
+	if (!companyInfoPromise) {
+		companyInfoPromise = new Promise<{
+			founded: number;
+			employees: number;
+			locations: string[];
+			certifications: string[];
+		}>((resolve) => {
+			// 実際のAPIコールをシミュレート（2秒の遅延でSuspenseを確認）
+			console.log("🔄 会社情報を読み込み中...");
+			setTimeout(() => {
+				console.log("✅ 会社情報の読み込み完了");
+				resolve({
+					founded: 2014,
+					employees: 25,
+					locations: ["東京", "大阪", "福岡"],
+					certifications: ["ISO 27001", "プライバシーマーク", "AWS Partner"],
+				});
+			}, 2000); // 2秒の遅延でSuspenseの動作を確認
+		});
+	}
+	return companyInfoPromise;
 }
 
 // React 19のuse()フックを使用したコンポーネント
 // この部分はデータ表示の責務: 取得した会社情報を表示
 // テストではこう確認する: use() フックが正しく動作し、データが適切に表示されるかをテスト
 function CompanyStats() {
-	const companyInfo = use(createCompanyInfoPromise());
+	const companyInfo = use(getCompanyInfoPromise());
 
 	return (
 		<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
@@ -95,16 +109,38 @@ export default function About() {
 			{/* 統計情報セクション（React 19のuse()を使用） */}
 			<div className="py-16">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div className="text-center mb-12">
+						<h2 className="text-3xl font-extrabold text-gray-900">
+							会社統計情報
+						</h2>
+						<p className="mt-4 text-xl text-gray-600">数字で見る私たちの実績</p>
+					</div>
 					<Suspense
 						fallback={
-							<div className="animate-pulse">
-								<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-									{["s1", "s2", "s3", "s4"].map((id) => (
-										<div key={id} className="text-center">
-											<div className="h-8 bg-gray-200 rounded mb-2"></div>
-											<div className="h-4 bg-gray-200 rounded"></div>
-										</div>
-									))}
+							<div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
+								<div className="text-center mb-6">
+									<div className="inline-flex items-center space-x-2">
+										<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+										<span className="text-blue-800 font-medium">
+											🔄 会社統計情報を読み込み中...
+										</span>
+									</div>
+								</div>
+								<div className="grid grid-cols-2 gap-8 sm:grid-cols-4 animate-pulse">
+									{["設立年", "従業員数", "拠点数", "認定資格数"].map(
+										(label, _index) => (
+											<div
+												key={label}
+												className="text-center bg-white p-4 rounded-lg shadow"
+											>
+												<div className="h-8 bg-gray-200 rounded mb-2 mx-auto w-16"></div>
+												<div className="h-4 bg-gray-200 rounded mx-auto w-20"></div>
+												<div className="text-sm text-gray-500 mt-2">
+													{label}
+												</div>
+											</div>
+										),
+									)}
 								</div>
 							</div>
 						}

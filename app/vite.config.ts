@@ -1,9 +1,9 @@
-import { reactRouter } from "@react-router/dev/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import babel from "vite-plugin-babel";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 const ReactCompilerConfig = {
 	target: "19",
@@ -23,4 +23,7 @@ export default defineConfig({
 		}),
 		tsconfigPaths(),
 	],
+	server: {
+		port: 5171,
+	},
 });

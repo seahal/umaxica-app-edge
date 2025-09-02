@@ -2,13 +2,12 @@
 	"extends": "./tsconfig.json",
 	"include": [
 		".react-router/types/**/*",
-		"app/**/*",
-		"app/**/.server/**/*",
-		"app/**/.client/**/*",
 		"src/**/*",
 		"workers/**/*",
 		"worker-configuration.d.ts",
-		"virtual-modules.d.ts"
+		"virtual-modules.d.ts",
+		"react-router-types.d.ts",
+		"test-setup.ts"
 	],
 	"compilerOptions": {
 		"composite": true,
@@ -20,10 +19,10 @@
 		"moduleResolution": "bundler",
 		"jsx": "react-jsx",
 		"jsxImportSource": "react",
-		"baseUrl": ".",
 		"rootDirs": [".", "./.react-router/types"],
 		"paths": {
-			"~/*": ["./app/*"]
+			"*": ["./*"],
+			"~/*": ["./src/*"]
 		},
 		"esModuleInterop": true,
 		"resolveJsonModule": true

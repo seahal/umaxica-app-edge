@@ -158,43 +158,7 @@ export function ErrorPage({
 // 404エラー専用コンポーネント
 // この部分は404エラー表示の責務: ページが見つからない場合の専用UI
 // テストではこう確認する: 404専用のメッセージとリンクが正しく表示されるかをテスト
-export function NotFoundPage() {
-	return (
-		<ErrorPage
-			status={404}
-			title="ページが見つかりません"
-			message="お探しのページは存在しないか、移動または削除された可能性があります。"
-			suggestion="URLを確認するか、ホームページから目的のページをお探しください。"
-			showNavigation={true}
-		/>
-	);
-}
-
-// 500エラー専用コンポーネント
-// この部分は500エラー表示の責務: サーバーエラー発生時の専用UI
-// テストではこう確認する: 500専用のメッセージが表示され、適切な対処法が示されるかをテスト
-export function InternalServerErrorPage({
-	details,
-	stack,
-	showDetails = false,
-}: {
-	details?: string;
-	stack?: string;
-	showDetails?: boolean;
-}) {
-	return (
-		<ErrorPage
-			status={500}
-			title="サーバーエラー"
-			message="申し訳ございません。サーバーで予期しないエラーが発生しました。"
-			suggestion="しばらく時間をおいて再度お試しください。問題が継続する場合は、お問い合わせフォームからご連絡ください。"
-			showNavigation={true}
-			showDetails={showDetails}
-			details={details}
-			stack={stack}
-		/>
-	);
-}
+// 404/500 専用コンポーネントは別ファイルに分離しました
 
 // 503メンテナンス専用コンポーネント
 // この部分はメンテナンス表示の責務: サービスメンテナンス中の専用UI

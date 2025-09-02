@@ -9,10 +9,15 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+	const env =
+		(context as unknown as { cloudflare?: { env?: Record<string, string> } })
+			?.cloudflare?.env ?? {};
+	return { message: env.VALUE_FROM_CLOUDFLARE };
 }
 
-export default function About({ loaderData }: Route.ComponentProps) {
+export default function About({
+	loaderData: _loaderData,
+}: Route.ComponentProps) {
 	return (
 		<>
 			<Link to="/">

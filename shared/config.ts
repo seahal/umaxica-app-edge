@@ -106,9 +106,10 @@ export const config = {
  * Environment detection utilities
  */
 export const env = {
-	isDevelopment: () => process.env.NODE_ENV !== "production",
-	isProduction: () => process.env.NODE_ENV === "production",
-	isTest: () => process.env.NODE_ENV === "test",
+	// Use Vite's compile-time env flags for browser/Workers compatibility
+	isDevelopment: () => import.meta.env.DEV,
+	isProduction: () => import.meta.env.PROD,
+	isTest: () => import.meta.env.MODE === "test",
 } as const;
 
 /**

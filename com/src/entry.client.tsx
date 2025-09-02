@@ -1,4 +1,4 @@
-import { startTransition, StrictMode, type ErrorInfo } from "react";
+import { type ErrorInfo, StrictMode, startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
@@ -15,6 +15,7 @@ startTransition(() => {
 		</StrictMode>,
 	);
 });
+
 function reportToErrorService(
 	_error: unknown,
 	_errorInfo: ErrorInfo | undefined,

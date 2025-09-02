@@ -1,5 +1,5 @@
-import { Outlet, NavLink, Link, useLocation, redirect } from "react-router";
-import type { Route } from "../../src/routes/+types/privacy";
+import { Link, NavLink, redirect, useLocation } from "react-router";
+import type { Route } from "./+types/privacy";
 
 // メタ情報の責務: プライバシーセクションのSEO対応メタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト
@@ -17,7 +17,7 @@ export function meta(_: Route.MetaArgs) {
 // パンくずナビゲーションコンポーネント
 // この部分はパンくずナビゲーションの責務: ユーザーの現在位置とナビゲーション経路を表示
 // テストではこう確認する: 現在のパスに応じて適切なパンくずが表示されるかをテスト
-function Breadcrumb() {
+function _Breadcrumb() {
 	const location = useLocation();
 	const pathSegments = location.pathname.split("/").filter(Boolean);
 
@@ -46,7 +46,7 @@ function Breadcrumb() {
 // プライバシーセクションのサイドナビゲーション
 // この部分はセクションナビゲーションの責務: プライバシー関連ページ間のナビゲーションを提供
 // テストではこう確認する: NavLinkのアクティブ状態が正しく動作するかをテスト
-function PrivacyNavigation() {
+function _PrivacyNavigation() {
 	return (
 		<nav className="w-64 bg-white shadow-sm border-r border-gray-200 p-6">
 			bbbbb
@@ -60,7 +60,13 @@ function PrivacyNavigation() {
 					<NavLink
 						to="/privacy"
 						end // 完全一致のみアクティブにする（子ルートではアクティブにしない）
-						className={({ isActive, isPending }) =>
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) =>
 							`block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
 								isActive
 									? "bg-blue-100 text-blue-700 border-l-4 border-blue-500 shadow-sm"
@@ -70,7 +76,7 @@ function PrivacyNavigation() {
 							}`
 						}
 					>
-						{({ isActive }) => (
+						{({ isActive }: { isActive: boolean }) => (
 							<span className="flex items-center">
 								<span className="mr-3">{isActive ? "📍" : "📄"}</span>
 								概要
@@ -85,7 +91,13 @@ function PrivacyNavigation() {
 				<li>
 					<NavLink
 						to="/privacy/policy"
-						className={({ isActive, isPending }) =>
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) =>
 							`block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
 								isActive
 									? "bg-green-100 text-green-700 border-l-4 border-green-500 shadow-sm"
@@ -95,7 +107,13 @@ function PrivacyNavigation() {
 							}`
 						}
 					>
-						{({ isActive, isPending }) => (
+						{({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) => (
 							<span className="flex items-center">
 								<span className="mr-3">
 									{isPending ? "⏳" : isActive ? "📋" : "📝"}
@@ -113,7 +131,13 @@ function PrivacyNavigation() {
 				<li>
 					<NavLink
 						to="/privacy/docs"
-						className={({ isActive, isPending }) => {
+						className={({
+							isActive,
+							isPending,
+						}: {
+							isActive: boolean;
+							isPending: boolean;
+						}) => {
 							// 動的なクラス名の生成（NavLinkの高度な使用例）
 							const baseClasses =
 								"block w-full text-left px-4 py-3 rounded-lg transition-all duration-200 relative";
@@ -127,7 +151,7 @@ function PrivacyNavigation() {
 							}
 						}}
 					>
-						{({ isActive }) => (
+						{({ isActive }: { isActive: boolean }) => (
 							<span className="flex items-center">
 								<span className="mr-3">{isActive ? "📚" : "📖"}</span>
 								関連ドキュメント
@@ -182,7 +206,7 @@ export default function PrivacyLayout() {
 	return <p>xxxxx</p>;
 }
 
-export async function loader({ request }) {
+export async function loader({ request: _request }: Route.LoaderArgs) {
 	console.log("loader");
 	return redirect("/");
 }

@@ -1,6 +1,4 @@
-import type { Route } from "../../src/routes/+types/home";
-import { Suspense } from "react";
-import { Link, NavLink } from "react-router";
+import type { Route } from "./+types/_index";
 
 // メタ情報の責務: SEO対応のためのページメタデータを定義
 // テストではこう確認する: title と description が正しく設定されるかをテスト
@@ -18,8 +16,10 @@ export function meta(_: Route.MetaArgs) {
 // テストではこう確認する: 環境変数が正しく取得され、適切なデータが返されるかをテスト
 export function loader({ context }: Route.LoaderArgs) {
 	try {
-		const companyMessage =
-			context.cloudflare.env.VALUE_FROM_CLOUDFLARE || "Welcome to Umaxica";
+		const env =
+			(context as unknown as { cloudflare?: { env?: Record<string, string> } })
+				?.cloudflare?.env ?? {};
+		const companyMessage = env.VALUE_FROM_CLOUDFLARE || "Welcome to Umaxica";
 
 		return {
 			message: companyMessage,
@@ -58,46 +58,28 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 						</p>
 					</div>
 					<div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
-						<Suspense
-							fallback={
-								<div className="animate-pulse bg-gray-200 h-20 rounded"></div>
-							}
-						>
-							<div className="text-center">
-								<div className="text-4xl font-bold text-blue-600">
-									{loaderData.stats.projectsCompleted}+
-								</div>
-								<div className="mt-2 text-lg text-gray-900">
-									完了プロジェクト
-								</div>
+						{/* Note: これらのSuspenseは既にloaderDataが取得済みなので、実際には表示されません */}
+						{/* 実際のSuspenseの動作を見たい場合は、about.tsxの会社統計情報セクションをご覧ください */}
+						<div className="text-center">
+							<div className="text-4xl font-bold text-blue-600">
+								{loaderData.stats.projectsCompleted}+
 							</div>
-						</Suspense>
-						<Suspense
-							fallback={
-								<div className="animate-pulse bg-gray-200 h-20 rounded"></div>
-							}
-						>
-							<div className="text-center">
-								<div className="text-4xl font-bold text-blue-600">
-									{loaderData.stats.clientsSatisfied}+
-								</div>
-								<div className="mt-2 text-lg text-gray-900">
-									満足いただいたお客様
-								</div>
+							<div className="mt-2 text-lg text-gray-900">完了プロジェクト</div>
+						</div>
+						<div className="text-center">
+							<div className="text-4xl font-bold text-blue-600">
+								{loaderData.stats.clientsSatisfied}+
 							</div>
-						</Suspense>
-						<Suspense
-							fallback={
-								<div className="animate-pulse bg-gray-200 h-20 rounded"></div>
-							}
-						>
-							<div className="text-center">
-								<div className="text-4xl font-bold text-blue-600">
-									{loaderData.stats.yearsOfExperience}
-								</div>
-								<div className="mt-2 text-lg text-gray-900">年の実績</div>
+							<div className="mt-2 text-lg text-gray-900">
+								満足いただいたお客様
 							</div>
-						</Suspense>
+						</div>
+						<div className="text-center">
+							<div className="text-4xl font-bold text-blue-600">
+								{loaderData.stats.yearsOfExperience}
+							</div>
+							<div className="mt-2 text-lg text-gray-900">年の実績</div>
+						</div>
 					</div>
 				</div>
 			</div>

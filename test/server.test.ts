@@ -1,26 +1,31 @@
-import { describe, it, expect } from "bun:test";
-import { Hono } from "hono";
+import { describe, expect, it } from "bun:test";
 
-// Mock route handler for testing
-const testApp = new Hono();
+// Minimal route handler without Hono
+function handle(req: Request): Response {
+	const url = new URL(req.url);
+	const path = url.pathname;
 
-testApp.get("/", (c) => {
-	return c.text("Hello World");
-});
+	if (path === "/") return new Response("Hello World", { status: 200 });
 
-testApp.get("/json", (c) => {
-	return c.json({ message: "Hello JSON" });
-});
+	if (path === "/json")
+		return new Response(JSON.stringify({ message: "Hello JSON" }), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		});
 
-testApp.get("/status/:code", (c) => {
-	const code = parseInt(c.req.param("code"), 10);
-	return c.text(`Status ${code}`, code as 200 | 201 | 400 | 401 | 404 | 500);
-});
+	const statusMatch = path.match(/^\/status\/(\d{3})$/);
+	if (statusMatch) {
+		const code = Number(statusMatch[1]);
+		return new Response(`Status ${code}`, { status: code });
+	}
+
+	return new Response("Not Found", { status: 404 });
+}
 
 describe("Server Routes", () => {
 	it("should return hello world on root path", async () => {
 		const req = new Request("http://localhost/");
-		const res = await testApp.request(req);
+		const res = handle(req);
 
 		expect(res.status).toBe(200);
 		expect(await res.text()).toBe("Hello World");
@@ -28,7 +33,7 @@ describe("Server Routes", () => {
 
 	it("should return JSON response", async () => {
 		const req = new Request("http://localhost/json");
-		const res = await testApp.request(req);
+		const res = handle(req);
 
 		expect(res.status).toBe(200);
 		const jsonResponse = (await res.json()) as { message: string };
@@ -37,7 +42,7 @@ describe("Server Routes", () => {
 
 	it("should handle dynamic status codes", async () => {
 		const req = new Request("http://localhost/status/404");
-		const res = await testApp.request(req);
+		const res = handle(req);
 
 		expect(res.status).toBe(404);
 		expect(await res.text()).toBe("Status 404");
@@ -45,7 +50,7 @@ describe("Server Routes", () => {
 
 	it("should return 404 for unknown routes", async () => {
 		const req = new Request("http://localhost/unknown");
-		const res = await testApp.request(req);
+		const res = handle(req);
 
 		expect(res.status).toBe(404);
 	});
