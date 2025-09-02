@@ -4,12 +4,12 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
-		"cf-typegen": "bunx wrangler types",
-		"deploy": "bun run build && bun wrangler deploy",
+		"cf-typegen": "wrangler types",
+		"deploy": "npm run build && wrangler deploy",
 		"dev": "react-router dev",
-		"postinstall": "bun run cf-typegen || true",
-		"preview": "bun run build && vite preview",
-		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsgo -b",
+		"postinstall": "npm run cf-typegen || true",
+		"preview": "npm run build && vite preview",
+		"typecheck": "npm run cf-typegen && react-router typegen && tsgo -b",
 		"format": "../node_modules/.bin/biome format src test --write"
 	}
 }
