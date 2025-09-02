@@ -1,15 +1,18 @@
 {
 	"name": "umaxica-edge-com",
+	"version": "0.0.1",
+	"description": "code for xx.umaxica.com",
 	"private": true,
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
-		"cf-typegen": "wrangler types",
-		"deploy": "npm run build && wrangler deploy",
+		"cf-typegen": "bunx wrangler types",
+		"deploy": "bun run build && wrangler deploy",
 		"dev": "react-router dev",
-		"postinstall": "npm run cf-typegen || true",
-		"preview": "npm run build && vite preview",
-		"typecheck": "npm run cf-typegen && react-router typegen && tsgo -b",
+		"postinstall": "bun run cf-typegen || true",
+		"preview": "bun run build && vite preview",
+		"test": "bun test",
+		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
 		"format": "../node_modules/.bin/biome format src test --write"
 	}
 }

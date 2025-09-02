@@ -41,6 +41,7 @@
     },
     "com": {
       "name": "umaxica-edge-com",
+      "version": "0.0.1",
     },
     "org": {
       "name": "umaxica-edge-org",

@@ -6,14 +6,9 @@
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"name": "umaxica-edge-com",
 	"compatibility_date": "2025-04-04",
-	// Use the file produced by `react-router build`
-	"main": "./build/server/worker.js",
-	// Serve static assets built by React Router/Vite
-	"assets": { "directory": "./build/client" },
-	// Avoid re-bundling the already-built server bundle
-	"no_bundle": true,
-	// Ensure the server/client bundles exist before Wrangler runs
-	"build": { "command": "npm run build" },
+	"main": "./workers/app.ts",
+	// Ensure the server/client bundles exist before Wrangler runs (react-router)
+	"build": { "command": "bun run build" },
 	"observability": {
 		"enabled": true
 	},
@@ -43,6 +38,7 @@
 	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
 	 * databases, object storage, AI inference, real-time communication and more.
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+	 */
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
@@ -56,5 +52,5 @@
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
-	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]0
+	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }
