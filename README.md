@@ -22,7 +22,7 @@ bun test
 # how to lint / format / typecheck
 
 ```
-bun run lint
-bun run format
-bun run typecheck
+npm run lint
+npm run format
+npm run typecheck
 ```
