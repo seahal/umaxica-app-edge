@@ -23,7 +23,6 @@ export default defineConfig({
 		}),
 		tsconfigPaths(),
 	],
-	server: {
-		port: 5172,
-	},
+	// Do not bind to Wrangler's port; let Vite choose its own (default 5173)
+	// so the Cloudflare plugin can proxy HMR correctly through Wrangler dev.
 });

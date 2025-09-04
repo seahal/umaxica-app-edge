@@ -16,12 +16,15 @@ export function Header({
 	return (
 		<header className="p-4 border-b">
 			<a href="/">
-				<h1 className="text-xl font-semibold">{codeName}?</h1>
+				<h1 className="text-xl font-semibold">{codeName}</h1>
 			</a>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
 					<Link to="about">
 						<li>about</li>
+					</Link>
+					<Link to="sample">
+						<li>sample</li>
 					</Link>
 					<a href={newsUrl} target="_blank" rel="noreferrer">
 						<li>news</li>

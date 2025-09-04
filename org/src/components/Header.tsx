@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { NavLink } from "react-router";
 
 interface HeaderProps {
 	codeName?: string;
@@ -20,16 +20,19 @@ export function Header({
 			</a>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
-					<Link to="about">
+					<NavLink to="about">
 						<li>about</li>
-					</Link>
-					<a href={newsUrl} target="_blank" rel="noreferrer">
+					</NavLink>
+					<NavLink to="about">
+						<li>sample</li>
+					</NavLink>
+					<a href={newsUrl} target="_blank">
 						<li>news</li>
 					</a>
-					<a href={docsUrl} target="_blank" rel="noreferrer">
+					<a href={docsUrl} target="_blank">
 						<li>docs</li>
 					</a>
-					<a href={helpUrl} target="_blank" rel="noreferrer">
+					<a href={helpUrl} target="_blank">
 						<li>help</li>
 					</a>
 				</ul>
