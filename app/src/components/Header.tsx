@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
 	codeName?: string;
@@ -8,16 +8,16 @@ interface HeaderProps {
 }
 
 export function Header({
-	codeName = "UMAXICA",
+	codeName = "",
 	newsUrl = "",
 	docsUrl = "",
 	helpUrl = "",
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
-			<a href="/">
+			<Link to="/">
 				<h1 className="text-xl font-semibold">{codeName}</h1>
-			</a>
+			</Link>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
 					<Link to="about">

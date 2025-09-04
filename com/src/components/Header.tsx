@@ -15,9 +15,9 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header>
-			<a href="/">
+			<Link to="/">
 				<h1>{codeName}</h1>
-			</a>
+			</Link>
 			<nav>
 				<ul>
 					<NavLink to="sample">
