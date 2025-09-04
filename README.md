@@ -35,7 +35,7 @@ bun test
 # how to lint / format / typecheck
 
 ```
-npm run lint
-npm run format
-npm run typecheck
+bun run lint
+bun run format
+bun run typecheck
 ```

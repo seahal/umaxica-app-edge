@@ -8,7 +8,7 @@
 		"build": "react-router build",
 		"cf-typegen": "bunx wrangler types",
 		"deploy": "bun run build && bunx wrangler deploy",
-		"dev": " react-router dev",
+		"dev": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
 		"test": "bun test",
