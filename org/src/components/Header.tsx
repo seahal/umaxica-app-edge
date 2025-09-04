@@ -1,4 +1,4 @@
-import { NavLink } from "react-router";
+import { NavLink, Link } from "react-router";
 
 interface HeaderProps {
 	codeName?: string;
@@ -15,9 +15,9 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
-			<a href="/">
+			<Link to="/">
 				<h1 className="text-xl font-semibold">{codeName}</h1>
-			</a>
+			</Link>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
 					<NavLink to="about">
