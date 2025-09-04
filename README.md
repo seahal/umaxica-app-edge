@@ -11,19 +11,19 @@ bun install
 Run each workspace locally with Cloudflare Wrangler so dev matches production:
 
 ```
-cd com && bun run dev   # http://localhost:5170
+bun run --cwd com dev  # http://localhost:5170
 # in another terminal
-cd app && bun run dev   # http://localhost:5171
+bun run --cwd app dev # http://localhost:5171
 # in another terminal
-cd org && bun run dev   # http://localhost:5172
+bun run --cwd org dev   # http://localhost:5172
 ```
 
 # Deploy to Cloudflare
 
 ```
-cd com && bun run deploy
-cd app && bun run deploy
-cd org && bun run deploy
+bun run --cwd com deploy
+bun run --cwd app deploy
+bun run --cwd org deploy
 ```
 
 # how to test
