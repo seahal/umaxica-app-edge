@@ -39,7 +39,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		(context as unknown as { cloudflare?: { env?: Record<string, string> } })
 			?.cloudflare?.env ?? {};
 	return {
-		codeName: env.CODE_NAME ?? "???",
+		codeName: env.CODE_NAME ?? "",
 		newsUrl: env.NEWS_URL ?? "",
 		docsUrl: env.DOCS_URL ?? "",
 		helpUrl: env.HELP_URL ?? "",
