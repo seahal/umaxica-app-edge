@@ -26,7 +26,6 @@ export function Header({
 					<NavLink to="sample">
 						<li>sample</li>
 					</NavLink>
-
 					<a href={newsUrl} target="_blank">
 						<li>news</li>
 					</a>
