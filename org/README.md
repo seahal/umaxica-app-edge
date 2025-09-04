@@ -24,13 +24,13 @@ npm install
 
 ### Development
 
-Start the development server with HMR:
+Start the development server with Wrangler (HMR via Vite under the hood):
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Your application will be available at `http://localhost:5172`.
 
 ## Previewing the Production Build
 

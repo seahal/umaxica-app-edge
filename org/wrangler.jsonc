@@ -11,10 +11,10 @@
 		"enabled": true
 	},
 	"vars": {
-		"EDGE_STAFF_URL": "",
-		"API_STAFF_URL": "",
+		"EDGE_STAFF_URL": "org.localhost",
+		"API_STAFF_URL": "api.org.localhost:3300",
 		"WWW_STAFF_URL": "",
-		"AUTH_STAFF_URL": ""
+		"AUTH_STAFF_URL": "auth.org.localhost:3300"
 	}
 	/**
 	 * Smart Placement
