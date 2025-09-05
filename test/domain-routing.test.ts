@@ -5,25 +5,25 @@ function getDomainType(host: string): string {
 	const cleanHost = host.split(":")[0];
 	if (
 		cleanHost === "umaxica.app" ||
-		cleanHost.endsWith(".umaxica.app") ||
+		cleanHost?.endsWith(".umaxica.app") ||
 		cleanHost === "app.localdomain" ||
-		cleanHost.endsWith(".app.localdomain")
+		cleanHost?.endsWith(".app.localdomain")
 	) {
 		return "app";
 	}
 	if (
 		cleanHost === "umaxica.com" ||
-		cleanHost.endsWith(".umaxica.com") ||
+		cleanHost?.endsWith(".umaxica.com") ||
 		cleanHost === "com.localdomain" ||
-		cleanHost.endsWith(".com.localdomain")
+		cleanHost?.endsWith(".com.localdomain")
 	) {
 		return "com";
 	}
 	if (
 		cleanHost === "umaxica.org" ||
-		cleanHost.endsWith(".umaxica.org") ||
+		cleanHost?.endsWith(".umaxica.org") ||
 		cleanHost === "org.localdomain" ||
-		cleanHost.endsWith(".org.localdomain")
+		cleanHost?.endsWith(".org.localdomain")
 	) {
 		return "org";
 	}

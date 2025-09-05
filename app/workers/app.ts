@@ -1,4 +1,5 @@
 import { createRequestHandler } from "react-router";
+import { withSecurityHeaders } from "../../shared/security";
 
 const requestHandler = createRequestHandler(
 	() => import("virtual:react-router/server-build"),
@@ -7,8 +8,9 @@ const requestHandler = createRequestHandler(
 
 export default {
 	async fetch(request, env, ctx) {
-		return requestHandler(request, {
+		const res = await requestHandler(request, {
 			cloudflare: { env, ctx },
 		});
+		return withSecurityHeaders(request, res);
 	},
 } satisfies ExportedHandler<Env>;
