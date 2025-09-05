@@ -4,6 +4,7 @@
 		".react-router/types/**/*",
 		"src/**/*",
 		"workers/**/*",
+		"../shared/**/*",
 		"worker-configuration.d.ts",
 		"virtual-modules.d.ts",
 		"react-router-types.d.ts",

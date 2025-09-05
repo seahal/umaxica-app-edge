@@ -2,13 +2,29 @@ import { describe, expect, it } from "bun:test";
 
 // Domain routing logic tests
 function getDomainType(host: string): string {
-	if (host.includes("umaxica.app") || host.includes("app.localdomain")) {
+	const cleanHost = host.split(":")[0];
+	if (
+		cleanHost === "umaxica.app" ||
+		cleanHost?.endsWith(".umaxica.app") ||
+		cleanHost === "app.localdomain" ||
+		cleanHost?.endsWith(".app.localdomain")
+	) {
 		return "app";
 	}
-	if (host.includes("umaxica.com") || host.includes("com.localdomain")) {
+	if (
+		cleanHost === "umaxica.com" ||
+		cleanHost?.endsWith(".umaxica.com") ||
+		cleanHost === "com.localdomain" ||
+		cleanHost?.endsWith(".com.localdomain")
+	) {
 		return "com";
 	}
-	if (host.includes("umaxica.org") || host.includes("org.localdomain")) {
+	if (
+		cleanHost === "umaxica.org" ||
+		cleanHost?.endsWith(".umaxica.org") ||
+		cleanHost === "org.localdomain" ||
+		cleanHost?.endsWith(".org.localdomain")
+	) {
 		return "org";
 	}
 	return "world";
