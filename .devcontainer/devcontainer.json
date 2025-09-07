@@ -1,0 +1,22 @@
+{
+	"name": "Umaxica Dev (Bun)",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"target": "development"
+	},
+	"remoteUser": "bun",
+	"workspaceFolder": "/workspaces/umaxica-app-edge",
+	"postCreateCommand": "bun --version && bun install",
+	"forwardPorts": [4000],
+	"portsAttributes": {
+		"4000": { "label": "Vite dev server" }
+	},
+	"customizations": {
+		"jetbrains": {
+			"plugins": [
+				// Install popular JetBrains plugins if desired
+				// e.g., "org.intellij.plugins.markdown"
+			]
+		}
+	}
+}
