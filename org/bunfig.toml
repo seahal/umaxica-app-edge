@@ -10,7 +10,11 @@ environment = "happy-dom"
 setupFiles = ["./test-setup.ts"]
 
 # テストファイルのパターン
-include = ["src/**/*.test.{ts,tsx}", "src/**/__tests__/**/*.{ts,tsx}"]
+include = [
+  "test/**/*.{ts,tsx,js,jsx}",
+  "src/**/*.test.{ts,tsx,js,jsx}",
+  "src/**/__tests__/**/*.{ts,tsx,js,jsx}"
+]
 
 # 除外するファイルパターン  
 exclude = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/workers/**"]
