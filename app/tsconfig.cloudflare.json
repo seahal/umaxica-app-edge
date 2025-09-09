@@ -24,7 +24,13 @@
 		"rootDirs": [".", "./.react-router/types"],
 		"paths": {
 			"*": ["./*"],
-			"~/*": ["./src/*"]
+			"~/*": ["./src/*"],
+			"@app/*": ["./src/*"],
+			"@app/test/*": ["./test/*"],
+			"@com/*": ["../com/src/*"],
+			"@com/test/*": ["../com/test/*"],
+			"@org/*": ["../org/src/*"],
+			"@org/test/*": ["../org/test/*"]
 		},
 		"typeRoots": ["../node_modules/@types", "./node_modules/@types"],
 		"moduleSuffixes": [""],
