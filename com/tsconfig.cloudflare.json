@@ -23,7 +23,13 @@
 		"rootDirs": [".", "./.react-router/types"],
 		"paths": {
 			"*": ["./*"],
-			"~/*": ["./src/*"]
+			"~/*": ["./src/*"],
+			"@com/*": ["./src/*"],
+			"@com/test/*": ["./test/*"],
+			"@app/*": ["../app/src/*"],
+			"@app/test/*": ["../app/test/*"],
+			"@org/*": ["../org/src/*"],
+			"@org/test/*": ["../org/test/*"]
 		},
 		"esModuleInterop": true,
 		"resolveJsonModule": true
