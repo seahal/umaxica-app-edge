@@ -46,11 +46,15 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 	};
 };
 
+// 既定のメタ情報（各ページで未指定の場合のデフォルト）
+export function meta() {
+	return [{ title: "Umaxica" }];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
 			<head>
-				<title></title>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
