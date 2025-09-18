@@ -6,6 +6,16 @@
 bun install
 ```
 
+# Development (Docker Compose)
+
+``
+docker compose up -d dev
+docker compose exec dev bun install
+docker compose exec dev bun run dev  # http://localhost:4000
+```
+
+Stop the container with `docker compose down` when you are done.
+
 # Development (wrangler dev)
 
 Run each workspace locally with Cloudflare Wrangler so dev matches production:

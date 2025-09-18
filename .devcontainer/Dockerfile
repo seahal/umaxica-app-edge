@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 
 # Single-stage image explicitly named "development" to satisfy build targets
-FROM oven/bun:1.1.34-debian AS development
+FROM mcr.microsoft.com/devcontainers/typescript-node:20 AS development
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    PNPM_HOME=/home/bun/.local/share/pnpm \
-    PATH="/home/bun/.bun/bin:/home/bun/.local/share/pnpm:$PATH"
+    BUN_INSTALL=/home/node/.bun \
+    PATH="${BUN_INSTALL}/bin:${PATH}"
 
 # Base tooling commonly needed in dev containers
+# Extra X11/font libraries keep JetBrains remote IDE backends happy
 RUN apt-get update -qq \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -16,6 +17,12 @@ RUN apt-get update -qq \
     openssh-client \
     less \
     nano \
+    unzip \
+    libfreetype6 \
+    libfontconfig1 \
+    libxi6 \
+    libxrender1 \
+    libxtst6 \
   && rm -rf /var/lib/apt/lists/*
 
 # Optional: GitHub CLI (keep here to avoid devcontainer "features" target mismatch)
@@ -28,21 +35,19 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
   && apt-get install -y --no-install-recommends gh \
   && rm -rf /var/lib/apt/lists/*
 
-# Create workspace and set ownership to default bun user
+# Create workspace and set ownership to default node user
 WORKDIR /workspaces/umaxica-app-edge
 RUN mkdir -p /workspaces/umaxica-app-edge \
-  && chown -R bun:bun /workspaces
+  && chown -R node:node /workspaces
 
-# Switch to the non-root default user from oven/bun image
-USER bun
+# Switch to the non-root default user provided by the base image
+USER node
 
 # Pre-create Bun cache dirs to avoid permission friction
-RUN mkdir -p /home/bun/.bun \
-  && mkdir -p /home/bun/.cache \
-  && bun --version
+RUN mkdir -p "$BUN_INSTALL" \
+  && mkdir -p "$HOME/.cache"
 
 # Expose Vite dev port (documentary)
-EXPOSE 4000
+EXPOSE 5173
 
 # Keep default command; IDE will start the workspace and tasks
-
