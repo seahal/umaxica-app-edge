@@ -1,9 +1,20 @@
-ARG NODE_VERSION=24-trixie
+# syntax=docker/dockerfile:1.7
+ARG NODE_VERSION=22-bookworm
+ARG BUN_VERSION=1.1.34
+ARG DOCKER_UID=1000
+ARG DOCKER_USER=dev
+ARG DOCKER_GID=1000
+ARG DOCKER_GROUP=dev
 
 FROM node:${NODE_VERSION} AS base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
+ARG BUN_VERSION
+ARG DOCKER_UID
+ARG DOCKER_USER
+ARG DOCKER_GID
+ARG DOCKER_GROUP
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -24,40 +35,41 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@latest" \
+RUN npm install -g "bun@${BUN_VERSION}" \
   && npm cache clean --force
 
 RUN set -eux; \
-  : "${DOCKER_UID:=1000}"; \
-  : "${DOCKER_GID:=1000}"; \
-  : "${DOCKER_USER:=user}"; \
-  : "${DOCKER_GROUP:=group}"; \
-  BASE_USER=node; \
-  BASE_GROUP=node; \
-  TARGET_GROUP="${DOCKER_GROUP}"; \
-  TARGET_USER="${DOCKER_USER}"; \
-  groupmod --gid "${DOCKER_GID}" "${BASE_GROUP}"; \
-  if [ "${TARGET_GROUP}" != "${BASE_GROUP}" ]; then \
-    groupmod --new-name "${TARGET_GROUP}" "${BASE_GROUP}"; \
+  base_user=node; \
+  base_group=node; \
+  target_user="${DOCKER_USER}"; \
+  target_group="${DOCKER_GROUP}"; \
+  groupmod --gid "${DOCKER_GID}" "${base_group}"; \
+  if [ "${target_group}" != "${base_group}" ]; then \
+    groupmod --new-name "${target_group}" "${base_group}"; \
   else \
-    TARGET_GROUP="${BASE_GROUP}"; \
+    target_group="${base_group}"; \
   fi; \
-  usermod --gid "${DOCKER_GID}" --shell /bin/bash "${BASE_USER}"; \
-  if [ "${TARGET_USER}" != "${BASE_USER}" ]; then \
-    usermod --login "${TARGET_USER}" --home "/home/${TARGET_USER}" --move-home "${BASE_USER}"; \
+  usermod --gid "${DOCKER_GID}" --shell /bin/bash "${base_user}"; \
+  if [ "${target_user}" != "${base_user}" ]; then \
+    usermod --login "${target_user}" --home "/home/${target_user}" --move-home "${base_user}"; \
   else \
-    TARGET_USER="${BASE_USER}"; \
+    target_user="${base_user}"; \
   fi; \
-  usermod --uid "${DOCKER_UID}" "${TARGET_USER}"; \
-  usermod --gid "${DOCKER_GID}" "${TARGET_USER}"; \
-  usermod --append --groups sudo "${TARGET_USER}"; \
-  install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" /workspaces; \
-  install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" /workspaces/umaxica-app-edge
+  usermod --uid "${DOCKER_UID}" "${target_user}"; \
+  usermod --gid "${DOCKER_GID}" "${target_user}"; \
+  usermod --append --groups sudo "${target_user}"; \
+  install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces; \
+  install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces/umaxica-app-edge
 
 RUN printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${DOCKER_USER}" > /etc/sudoers.d/devcontainer \
   && chmod 0440 /etc/sudoers.d/devcontainer
 
 FROM base AS development
+
+ARG DOCKER_UID
+ARG DOCKER_USER
+ARG DOCKER_GID
+ARG DOCKER_GROUP
 
 ENV HOME=/home/${DOCKER_USER} \
     USER=${DOCKER_USER} \
@@ -69,12 +81,14 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
-WORKDIR /edge
+WORKDIR /workspaces/umaxica-app-edge
 
 USER ${DOCKER_UID}:${DOCKER_GID}
+
+RUN bun --version
 
 EXPOSE 4000 5170 5171 5172 5173
 
 ENTRYPOINT ["dumb-init", "--"]
 
-CMD ["sleep", "infinity"]
+CMD ["sleep", "10000000"]

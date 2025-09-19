@@ -5,10 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
-    working_dir: /edge/
+    working_dir: /workspaces/umaxica-app-edge
     volumes:
-      - ./:/edge:cached
+      - ./:/workspaces/umaxica-app-edge:cached
     ports:
+      - '4000:4000'
       - '5170:5170'
       - '5171:5171'
       - '5172:5172'
