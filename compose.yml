@@ -1,0 +1,20 @@
+services:
+  edge:
+    container_name: umaxica-app-edge
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    working_dir: /edge/
+    volumes:
+      - ./:/edge:cached
+    ports:
+      - '5170:5170'
+      - '5171:5171'
+      - '5172:5172'
+      - '5173:5173'
+    command: sleep infinity
+    tty: true
+    stdin_open: true
+    init: true
+    user: "${UID:-1000}:${GID:-1000}"

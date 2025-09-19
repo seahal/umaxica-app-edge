@@ -23,4 +23,12 @@ export default defineConfig({
 		}),
 		tsconfigPaths(),
 	],
+	server: {
+		host: true,
+		port: 5137,
+		strictPort: true,
+		watch: {
+			usePolling: true,
+		},
+	},
 });
