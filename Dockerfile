@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7
 ARG NODE_VERSION=22-bookworm
-ARG BUN_VERSION=1.1.34
+ARG BUN_VERSION=1.2.22
 ARG DOCKER_UID=1000
-ARG DOCKER_USER=dev
+ARG DOCKER_USER=user
 ARG DOCKER_GID=1000
-ARG DOCKER_GROUP=dev
+ARG DOCKER_GROUP=group
 
 FROM node:${NODE_VERSION} AS base
 
@@ -81,7 +81,7 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
-WORKDIR /workspaces/umaxica-app-edge
+WORKDIR /edge
 
 USER ${DOCKER_UID}:${DOCKER_GID}
 
