@@ -1,3 +1,4 @@
+name: "edge"
 services:
   edge:
     container_name: umaxica-app-edge
@@ -5,11 +6,17 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
-    working_dir: /workspaces/umaxica-app-edge
+    working_dir: /edge
     volumes:
-      - ./:/workspaces/umaxica-app-edge:cached
+      - type: bind
+        source: .
+        target: /edge
+      - type: volume
+        source: node-volume
+        target: /edge/node_modules
+        volume:
+          nocopy: true
     ports:
-      - '4000:4000'
       - '5170:5170'
       - '5171:5171'
       - '5172:5172'
@@ -19,3 +26,5 @@ services:
     stdin_open: true
     init: true
     user: "${UID:-1000}:${GID:-1000}"
+volumes:
+  node-volume:
