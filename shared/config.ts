@@ -54,8 +54,8 @@ export const config = {
 			csp: {
 				defaultSrc: ["'self'"],
 				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'report-sample'"],
-				styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-				fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+				styleSrc: ["'self'", "'unsafe-inline'"],
+				fontSrc: ["'self'", "data:"],
 				imgSrc: ["'self'", "data:"],
 				connectSrc: ["'self'", "ws:", "wss:"],
 				frameAncestors: ["'none'"],
@@ -66,8 +66,8 @@ export const config = {
 			csp: {
 				defaultSrc: ["'self'"],
 				scriptSrc: ["'self'", "'report-sample'"],
-				styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-				fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+				styleSrc: ["'self'", "'unsafe-inline'"],
+				fontSrc: ["'self'", "data:"],
 				imgSrc: ["'self'", "data:"],
 				connectSrc: ["'self'"],
 				frameAncestors: ["'none'"],

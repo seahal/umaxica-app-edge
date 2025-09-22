@@ -14,14 +14,7 @@ import "./app.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 
-export const links: Route.LinksFunction = () => [
-	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
-	{
-		rel: "preconnect",
-		href: "https://fonts.gstatic.com",
-		crossOrigin: "anonymous",
-	},
-];
+export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const rootData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
