@@ -57,7 +57,7 @@ export function meta() {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData = useRouteLoaderData<typeof loader>("root");
+	const rootData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
 	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
