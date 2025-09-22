@@ -12,6 +12,9 @@ export namespace Route {
 				env: unknown;
 				ctx: unknown;
 			};
+			security?: {
+				nonce?: string;
+			};
 		};
 		params: Record<string, string>;
 		request: Request;
