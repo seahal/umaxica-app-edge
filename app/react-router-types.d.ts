@@ -10,11 +10,15 @@ declare module "react-router" {
 	export function ServerRouter(props: ServerRouterProps): JSX.Element;
 	// minimal helper used in app/src/root.tsx
 	export function useLoaderData<T = unknown>(): T;
+	export function useRouteLoaderData<T = unknown>(routeId: string): T | undefined;
 	export function isRouteErrorResponse(error: unknown): boolean;
 	export function Links(): JSX.Element;
 	export function Meta(): JSX.Element;
 	export function Outlet(): JSX.Element;
-	export function Scripts(): JSX.Element;
+	export interface ScriptsProps {
+		nonce?: string;
+	}
+	export function Scripts(props?: ScriptsProps): JSX.Element;
 	export function ScrollRestoration(): JSX.Element;
 	export function Link(props: Record<string, unknown>): JSX.Element;
 	export function createRequestHandler(

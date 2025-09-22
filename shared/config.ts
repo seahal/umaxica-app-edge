@@ -52,26 +52,26 @@ export const config = {
 	security: {
 		development: {
 			csp: {
-				defaultSrc: "'self'",
-				scriptSrc: "'self' 'unsafe-inline' 'unsafe-eval' 'report-sample'",
-				styleSrc: "'self' 'unsafe-inline' https://fonts.googleapis.com",
-				fontSrc: "'self' https://fonts.gstatic.com data:",
-				imgSrc: "'self' data:",
-				connectSrc: "'self' ws: wss:",
-				frameAncestors: "'none'",
-				baseUri: "'self'",
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'report-sample'"],
+				styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+				fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+				imgSrc: ["'self'", "data:"],
+				connectSrc: ["'self'", "ws:", "wss:"],
+				frameAncestors: ["'none'"],
+				baseUri: ["'self'"],
 			},
 		},
 		production: {
 			csp: {
-				defaultSrc: "'self'",
-				scriptSrc: "'self' 'unsafe-inline' 'report-sample'",
-				styleSrc: "'self' 'unsafe-inline' https://fonts.googleapis.com",
-				fontSrc: "'self' https://fonts.gstatic.com data:",
-				imgSrc: "'self' data:",
-				connectSrc: "'self'",
-				frameAncestors: "'none'",
-				baseUri: "'self'",
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'report-sample'"],
+				styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+				fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+				imgSrc: ["'self'", "data:"],
+				connectSrc: ["'self'"],
+				frameAncestors: ["'none'"],
+				baseUri: ["'self'"],
 			},
 		},
 	},
@@ -135,17 +135,22 @@ export function getConfig() {
  */
 export function generateCSP(
 	environment: "development" | "production" = "development",
+	options?: { nonce?: string },
 ): string {
 	const csp = config.security[environment].csp;
 
 	return Object.entries(csp)
 		.map(([key, value]) => {
+			const directiveValues = Array.isArray(value) ? [...value] : String(value).split(/\s+/).filter(Boolean);
+			if (key === "scriptSrc" && options?.nonce) {
+				directiveValues.push(`'nonce-${options.nonce}'`);
+			}
 			// Convert camelCase to kebab-case
 			const directive = key.replace(
 				/[A-Z]/g,
 				(letter) => `-${letter.toLowerCase()}`,
 			);
-			return `${directive} ${value}`;
+			return `${directive} ${directiveValues.join(" ")}`;
 		})
 		.join("; ");
 }

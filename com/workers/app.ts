@@ -1,5 +1,5 @@
 import { createRequestHandler } from "react-router";
-import { withSecurityHeaders } from "../../shared/security";
+import { generateNonce, withSecurityHeaders } from "../../shared/security";
 
 const requestHandler = createRequestHandler(
 	() => import("virtual:react-router/server-build"),
@@ -8,9 +8,11 @@ const requestHandler = createRequestHandler(
 
 export default {
 	async fetch(request, env, ctx) {
+		const nonce = generateNonce();
 		const res = await requestHandler(request, {
 			cloudflare: { env, ctx },
+			security: { nonce },
 		});
-		return withSecurityHeaders(request, res);
+		return withSecurityHeaders(request, res, { cspNonce: nonce });
 	},
 } satisfies ExportedHandler<Env>;

@@ -5,6 +5,7 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useRouteLoaderData,
 	useLoaderData,
 } from "react-router";
 
@@ -27,6 +28,8 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+	const rootData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
+	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
 			<head>
@@ -38,7 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			<body>
 				{children}
 				<ScrollRestoration />
-				<Scripts />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);
@@ -92,13 +95,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-	const env =
-		(context as unknown as { cloudflare?: { env?: Record<string, string> } })
-			?.cloudflare?.env ?? {};
+	const { cloudflare, security } = (context as unknown as {
+		cloudflare?: { env?: Record<string, string> };
+		security?: { nonce?: string };
+	}) ?? {};
+	const env = cloudflare?.env ?? {};
+	const cspNonce = security?.nonce ?? "";
 	return {
 		codeName: env.CODE_NAME ?? "",
 		newsUrl: env.NEWS_URL ?? "",
 		docsUrl: env.DOCS_URL ?? "",
 		helpUrl: env.HELP_URL ?? "",
+		cspNonce,
 	};
 };
