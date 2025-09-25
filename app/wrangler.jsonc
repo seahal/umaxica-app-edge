@@ -31,12 +31,12 @@
     "env": {
 	"staging": {
 	    "vars": {
-		"API_HOST": "staging.example.com"
+		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) staging"
 	    }
 	},
 	"production": {
 	    "vars": {
-		"API_HOST": "production.example.com"
+		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
 	    }
 	}
     },
