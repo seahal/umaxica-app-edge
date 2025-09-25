@@ -16,6 +16,11 @@ import { Footer } from "./components/Footer";
 
 export const links: Route.LinksFunction = () => [];
 
+// 既定のメタ情報（各ページで未指定の場合のデフォルト）
+export function meta() {
+	return [{ title: "Umaxica" }];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
 	const rootData =
 		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
