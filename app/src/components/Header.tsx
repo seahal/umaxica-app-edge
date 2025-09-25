@@ -40,7 +40,3 @@ export function Header({
 		</header>
 	);
 }
-
-console.log(import.meta.env.VALUE_FROM_CLOUDFLARE);
-console.log(import.meta.env.CODE_NAME);
-console.log(import.meta.env);
