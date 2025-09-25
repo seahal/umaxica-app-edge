@@ -16,7 +16,14 @@
 		"WWW_STAFF_URL": "",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
 		"VALUE_FROM_CLOUDFLARE": "Umaxica ORG (local via wrangler.jsonc)",
-		"CODE_NAME": "Umaxica"
+		"CODE_NAME": "UMAXICA"
+	},
+	"env": {
+		"production": {
+			"vars": {
+				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
+			}
+		}
 	},
 	/**
 	 * Smart Placement

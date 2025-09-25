@@ -13,7 +13,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"CODE_NAME": "Umaxica",
+		"CODE_NAME": "UMAXICA",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"API_CORPORATE_URL": "api.com.localhost:3300",
 		"WWW_CORPORATE_URL": "",
@@ -21,6 +21,13 @@
 		"AUTH_SERVICE_URL": "auth.app.localhost:3300",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
 		"VALUE_FROM_CLOUDFLARE": "Umaxica COM (local via wrangler.jsonc)"
+	},
+	"env": {
+		"production": {
+			"vars": {
+				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
+			}
+		}
 	},
 	/**
 	 * Smart Placement
