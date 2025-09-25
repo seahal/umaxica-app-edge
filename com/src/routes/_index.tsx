@@ -1,10 +1,7 @@
 import type { Route } from "./+types/_index";
 
-// メタ情報の責務: SEO対応のためのページメタデータを定義
-// テストではこう確認する: title と description が正しく設定されるかをテスト
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Umaxica - Home" },
 		{
 			name: "description",
 			content: "",
@@ -32,7 +29,7 @@ export function loader({ context }: Route.LoaderArgs) {
 	} catch (error) {
 		// ローダーでエラーが発生した場合は5
 		//                 </ul>00エラーとして処理
-		console.error("Home loader error:", error);
+		console.error("_index loader error:", error);
 		throw new Response("Internal Server Error", {
 			status: 500,
 			statusText: "データの読み込み中にエラーが発生しました",

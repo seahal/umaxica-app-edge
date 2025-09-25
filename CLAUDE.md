@@ -64,7 +64,7 @@ Each domain directory contains:
 ├── app/
 │   ├── root.tsx           # Root layout with error boundaries
 │   ├── routes.ts          # Route configuration
-│   ├── routes/home.tsx    # Home route component
+│   ├── routes/home.tsx    # _index route component
 │   ├── entry.client.tsx   # Client hydration entry
 │   ├── entry.server.tsx   # Server-side rendering entry
 │   └── welcome/           # Welcome component

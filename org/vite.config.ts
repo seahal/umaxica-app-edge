@@ -9,17 +9,7 @@ const ReactCompilerConfig = {
 	target: "19",
 };
 
-export default defineConfig(({ mode }) => {
-	const isProduction =
-		process.env.NODE_ENV === "production" || mode === "production";
-	const resolvedMode = isProduction ? "production" : "development";
-	const env = loadEnv(resolvedMode, process.cwd(), "VITE_");
-	// Align dotenv loading with NODE_ENV so dev builds can opt into production env vars.
-
-	for (const [key, value] of Object.entries(env)) {
-		process.env[key] = value;
-	}
-
+export default defineConfig(() => {
 	return {
 		plugins: [
 			tailwindcss(),

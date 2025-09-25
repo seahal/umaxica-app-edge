@@ -35,9 +35,23 @@ const defaults: Record<EnvKey, string> = {
 	VALUE_FROM_CLOUDFLARE: "",
 };
 
+type MaybeEnv = Record<string, string | undefined> | undefined;
+
+const importMetaEnv = (
+	(import.meta as ImportMeta & { env?: MaybeEnv })
+		.env ?? undefined
+);
+
+const processEnv = (() => {
+	const globalWithProcess = globalThis as typeof globalThis & {
+		process?: { env?: MaybeEnv };
+	};
+	return globalWithProcess.process?.env;
+})();
+
 const resolveEnvValue = (key: EnvKey): string => {
-	const envKey = `VITE_${key}` as keyof ImportMetaEnv;
-	const value = import.meta.env[envKey];
+	const envKey = `VITE_${key}`;
+	const value = importMetaEnv?.[envKey] ?? processEnv?.[envKey];
 	return typeof value === "string" && value.length > 0 ? value : defaults[key];
 };
 
