@@ -43,15 +43,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { codeName, newsUrl, docsUrl, helpUrl } =
-		useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const {
+		codeName,
+		apiServiceUrl,
+		edgeServiceUrl,
+		helpServiceUrl,
+		docsServiceUrl,
+		newsServiceUrl,
+	} = useLoaderData<Awaited<ReturnType<typeof loader>>>();
 	return (
 		<>
 			<Header
 				codeName={codeName}
-				newsUrl={newsUrl}
-				docsUrl={docsUrl}
-				helpUrl={helpUrl}
+				apiServiceUrl={apiServiceUrl}
+				edgeServiceUrl={edgeServiceUrl}
+				helpServiceUrl={helpServiceUrl}
+				docsServiceUrl={docsServiceUrl}
+				newsServiceUrl={newsServiceUrl}
 			/>
 			<Outlet />
 			<Footer codeName={codeName} />
@@ -99,9 +107,12 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 	const cspNonce = security?.nonce ?? "";
 	return {
 		codeName: env.CODE_NAME ?? "",
-		newsUrl: env.NEWS_URL ?? "",
-		docsUrl: env.DOCS_URL ?? "",
-		helpUrl: env.HELP_URL ?? "",
+		helpServiceUrl: env.HELP_SERVICE_URL ?? "",
+		docsServiceUrl: env.DOCS_SERVICE_URL ?? "",
+		newsServiceUrl: env.NEWS_SERVICE_URL ?? "",
+		apiServiceUrl: env.API_SERVICE_URL ?? "",
+		apexServiceUrl: env.APEX_SERVICE_URL ?? "",
+		edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
 		cspNonce,
 	};
 };

@@ -37,10 +37,8 @@ const defaults: Record<EnvKey, string> = {
 
 type MaybeEnv = Record<string, string | undefined> | undefined;
 
-const importMetaEnv = (
-	(import.meta as ImportMeta & { env?: MaybeEnv })
-		.env ?? undefined
-);
+const importMetaEnv =
+	(import.meta as ImportMeta & { env?: MaybeEnv }).env ?? undefined;
 
 const processEnv = (() => {
 	const globalWithProcess = globalThis as typeof globalThis & {

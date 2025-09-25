@@ -26,13 +26,25 @@ export function Header({
 					<NavLink to="sample">
 						<li>sample</li>
 					</NavLink>
-					<a href={newsUrl} target="_blank">
+					<a
+						href={newsUrl ? `https://${newsUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<li>news</li>
 					</a>
-					<a href={docsUrl} target="_blank">
+					<a
+						href={docsUrl ? `https://${docsUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<li>docs</li>
 					</a>
-					<a href={helpUrl} target="_blank">
+					<a
+						href={helpUrl ? `https://${helpUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<li>help</li>
 					</a>
 				</ul>
