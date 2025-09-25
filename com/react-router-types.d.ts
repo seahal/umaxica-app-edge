@@ -55,7 +55,7 @@ declare module "react-router" {
 			matches: unknown[];
 		}
 		export interface ComponentProps {
-			loaderData?: any;
+			loaderData?: unknown;
 		}
 		export interface ErrorBoundaryProps {
 			error: unknown;

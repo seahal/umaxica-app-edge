@@ -11,26 +11,17 @@
 		"enabled": true
 	},
 	"vars": {
-		"EDGE_CORPORATE_URL": "com.localhost",
-		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
-		"API_CORPORATE_URL": "api.com.localhost:3300",
-		"API_SERVICE_URL": "api.app.localhost:3300",
 		"API_STAFF_URL": "api.org.localhost:3300",
-		"WWW_CORPORATE_URL": "",
-		"WWW_SERVICE_URL": "",
 		"WWW_STAFF_URL": "",
-		"APEX_CORPORATE_URL": "com.localhost:3300",
-		"APEX_SERVICE_URL": "app.localhost:3300",
-		"APEX_STAFF_URL": "org.localhost:3300",
-		"AUTH_SERVICE_URL": "auth.app.localhost:3300",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
-		"CODE_NAME": "UMAXICA",
-		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
+		"VALUE_FROM_CLOUDFLARE": "Umaxica ORG (local via wrangler.jsonc)",
+		"CODE_NAME": "UMAXICA"
 	},
 	"env": {
 		"production": {
 			"vars": {
+				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
 			}
 		}

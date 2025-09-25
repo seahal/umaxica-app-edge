@@ -22,7 +22,6 @@
 - CF bindings types: `bun run cf-typegen`.
 
 ## Coding Style & Naming Conventions
-- Language: TypeScript (strict). JSX via Hono (`jsxImportSource: hono/jsx`).
 - Formatting: Biome — 2-space indent, single quotes, trailing commas.
 - Route files live under `app/routes/<host>/` using clear names like `index.tsx`, `about.tsx`.
 - Keep components/hooks/utils under `app/src/`; prefer descriptive filenames.
