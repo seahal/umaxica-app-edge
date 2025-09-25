@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 
 interface HeaderProps {
-	codeName?: string;
 	newsUrl?: string;
 	docsUrl?: string;
 	helpUrl?: string;
+	codeName?: string;
 }
 
 export function Header({
-	codeName = "",
 	newsUrl = "",
 	docsUrl = "",
 	helpUrl = "",
+	codeName = "",
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
@@ -40,3 +40,7 @@ export function Header({
 		</header>
 	);
 }
+
+console.log(import.meta.env.VALUE_FROM_CLOUDFLARE);
+console.log(import.meta.env.CODE_NAME);
+console.log(import.meta.env);
