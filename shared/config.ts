@@ -53,7 +53,12 @@ export const config = {
 		development: {
 			csp: {
 				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'report-sample'"],
+				scriptSrc: [
+					"'self'",
+					"'unsafe-inline'",
+					"'unsafe-eval'",
+					"'report-sample'",
+				],
 				styleSrc: ["'self'", "'unsafe-inline'"],
 				fontSrc: ["'self'", "data:"],
 				imgSrc: ["'self'", "data:"],
@@ -141,7 +146,9 @@ export function generateCSP(
 
 	return Object.entries(csp)
 		.map(([key, value]) => {
-			const directiveValues = Array.isArray(value) ? [...value] : String(value).split(/\s+/).filter(Boolean);
+			const directiveValues = Array.isArray(value)
+				? [...value]
+				: String(value).split(/\s+/).filter(Boolean);
 			if (key === "scriptSrc" && options?.nonce) {
 				directiveValues.push(`'nonce-${options.nonce}'`);
 			}

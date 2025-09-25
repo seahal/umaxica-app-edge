@@ -11,7 +11,8 @@ export function generateNonce() {
 	for (const byte of bytes) {
 		string += String.fromCharCode(byte);
 	}
-	const nodeBuffer = (globalThis as typeof globalThis & { Buffer?: NodeBuffer }).Buffer;
+	const nodeBuffer = (globalThis as typeof globalThis & { Buffer?: NodeBuffer })
+		.Buffer;
 	if (typeof btoa !== "function" && !nodeBuffer) {
 		throw new Error("No base64 encoder available in this environment.");
 	}
