@@ -25,16 +25,16 @@
 		"APEX_STAFF_URL": "org.localhost:3300",
 		"AUTH_SERVICE_URL": "auth.app.localhost:3300",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
-	    "CODE_NAME": "UMAXICA",
-	    "VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
+		"CODE_NAME": "UMAXICA",
+		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
 	},
-    "env": {
-	"production": {
-	    "vars": {
-		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
-	    }
-	}
-    },
+	"env": {
+		"production": {
+			"vars": {
+				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
+			}
+		}
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

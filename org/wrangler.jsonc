@@ -18,6 +18,13 @@
 		"VALUE_FROM_CLOUDFLARE": "Umaxica ORG (local via wrangler.jsonc)",
 		"CODE_NAME": "UMAXICA"
 	},
+	"env": {
+		"production": {
+			"vars": {
+				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
+			}
+		}
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
