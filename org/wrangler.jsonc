@@ -21,6 +21,7 @@
 	"env": {
 		"production": {
 			"vars": {
+				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
 			}
 		}
