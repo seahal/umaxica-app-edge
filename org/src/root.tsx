@@ -102,6 +102,5 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		newsUrl: env.NEWS_STAFF_URL ?? "",
 		docsUrl: env.DOCS_STAFF_URL ?? "",
 		helpUrl: env.HELP_STAFF_URL ?? "",
-		cspNonce,
 	};
 };

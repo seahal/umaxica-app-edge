@@ -30,7 +30,7 @@ export function Header({
 					<Link to="sample">
 						<li>sample</li>
 					</Link>
-					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener" >
+					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener">
 						<li>news</li>
 					</a>
 					<a href={`https://${docsServiceUrl}`} target="_blank" rel="noopener">
