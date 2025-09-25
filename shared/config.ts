@@ -80,6 +80,7 @@ export const config = {
 				defaultSrc: ["'self'"],
 				scriptSrc: [
 					"'self'",
+					"'unsafe-inline'",
 					"'report-sample'",
 					"https://static.cloudflareinsights.com",
 				],
