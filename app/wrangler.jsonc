@@ -11,7 +11,6 @@
 		"enabled": true
 	},
 	"vars": {
-		// Local/dev defaults. Override in Cloudflare dashboard for production.
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
@@ -26,9 +25,21 @@
 		"APEX_STAFF_URL": "org.localhost:3300",
 		"AUTH_SERVICE_URL": "auth.app.localhost:3300",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
-		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)",
-		"CODE_NAME": "Umaxica"
+	    "CODE_NAME": "Umaxica",
+	    "VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
 	},
+    "env": {
+	"staging": {
+	    "vars": {
+		"API_HOST": "staging.example.com"
+	    }
+	},
+	"production": {
+	    "vars": {
+		"API_HOST": "production.example.com"
+	    }
+	}
+    },
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
