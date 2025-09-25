@@ -12,7 +12,9 @@ declare module "react-router" {
 
 	// Hooks / helpers used in this project
 	export function useLoaderData<T = unknown>(): T;
-	export function useRouteLoaderData<T = unknown>(routeId: string): T | undefined;
+	export function useRouteLoaderData<T = unknown>(
+		routeId: string,
+	): T | undefined;
 	export function isRouteErrorResponse(
 		error: unknown,
 	): error is { status: number; statusText?: string };

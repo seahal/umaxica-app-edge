@@ -25,10 +25,11 @@ import { NotFoundPage } from "./components/NotFoundPage";
 export const links: Route.LinksFunction = () => [];
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { cloudflare, security } = (context as unknown as {
-		cloudflare?: { env?: Record<string, string> };
-		security?: { nonce?: string };
-	}) ?? {};
+	const { cloudflare, security } =
+		(context as unknown as {
+			cloudflare?: { env?: Record<string, string> };
+			security?: { nonce?: string };
+		}) ?? {};
 	const env = cloudflare?.env ?? {};
 	const cspNonce = security?.nonce ?? "";
 	return {
@@ -46,7 +47,8 @@ export function meta() {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
+	const rootData =
+		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
 	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">

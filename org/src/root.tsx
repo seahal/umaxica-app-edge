@@ -17,7 +17,8 @@ import { Footer } from "./components/Footer";
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
+	const rootData =
+		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
 	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
@@ -84,10 +85,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { cloudflare, security } = (context as unknown as {
-		cloudflare?: { env?: Record<string, string> };
-		security?: { nonce?: string };
-	}) ?? {};
+	const { cloudflare, security } =
+		(context as unknown as {
+			cloudflare?: { env?: Record<string, string> };
+			security?: { nonce?: string };
+		}) ?? {};
 	const env = cloudflare?.env ?? {};
 	const cspNonce = security?.nonce ?? "";
 	return {

@@ -11,7 +11,9 @@ declare module "react-router" {
 	export function ServerRouter(props: ServerRouterProps): JSX.Element;
 
 	export function useLoaderData<T = unknown>(): T;
-	export function useRouteLoaderData<T = unknown>(routeId: string): T | undefined;
+	export function useRouteLoaderData<T = unknown>(
+		routeId: string,
+	): T | undefined;
 	export function isRouteErrorResponse(
 		error: unknown,
 	): error is { status: number; statusText?: string };
