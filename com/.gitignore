@@ -15,3 +15,5 @@
 !.dev.vars.example
 .env*
 !.env.example
+!.env.local
+!.env.production.local

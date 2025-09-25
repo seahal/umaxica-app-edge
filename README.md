@@ -36,6 +36,21 @@ bun run --cwd app deploy
 bun run --cwd org deploy
 ```
 
+# Environment variables
+
+Vite looks for `.env.local` during development and `.env.production.local` when you build with `NODE_ENV=production`. Each workspace ships examples you can copy:
+
+```
+cp app/.env.local.example app/.env.local
+cp app/.env.production.local.example app/.env.production.local
+cp com/.env.local.example com/.env.local
+cp com/.env.production.local.example com/.env.production.local
+cp org/.env.local.example org/.env.local
+cp org/.env.production.local.example org/.env.production.local
+```
+
+Edit the copied files with your real hostnames and API endpoints. Only `VITE_`-prefixed values are exposed to the client; secrets must stay in Cloudflare via `wrangler secret put` or `wrangler.jsonc` `vars`.
+
 # how to test
 
 ```

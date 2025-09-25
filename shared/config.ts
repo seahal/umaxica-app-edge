@@ -2,6 +2,7 @@
  * Shared configuration for the Umaxica Edge application
  * Centralized configuration management for all domains
  */
+import { runtimeEnv } from "./env";
 
 export const HMR_PORTS = {
 	app: 24678,
@@ -142,6 +143,7 @@ export function getConfig() {
 
 	return {
 		...config,
+		env: runtimeEnv,
 		current: {
 			environment: isDev ? "development" : "production",
 			...config[isDev ? "development" : "production"],

@@ -1,6 +1,6 @@
 import type { Buffer as NodeBuffer } from "node:buffer";
 
-import { generateCSP } from "./config";
+import { env as runtimeEnv, generateCSP } from "./config";
 
 const NONCE_BYTES = 16;
 
@@ -11,15 +11,16 @@ export function generateNonce() {
 	for (const byte of bytes) {
 		string += String.fromCharCode(byte);
 	}
-	const nodeBuffer = (globalThis as typeof globalThis & { Buffer?: NodeBuffer })
-		.Buffer;
-	if (typeof btoa !== "function" && !nodeBuffer) {
+	const nodeGlobal = globalThis as typeof globalThis & { Buffer?: NodeBuffer };
+	const nodeBuffer = nodeGlobal.Buffer;
+	let base64: string;
+	if (typeof btoa === "function") {
+		base64 = btoa(string);
+	} else if (nodeBuffer) {
+		base64 = nodeBuffer.from(string, "binary").toString("base64");
+	} else {
 		throw new Error("No base64 encoder available in this environment.");
 	}
-	const base64 =
-		typeof btoa === "function"
-			? btoa(string)
-			: nodeBuffer!.from(string, "binary").toString("base64");
 	return base64.replace(/=+$/, "");
 }
 
@@ -33,7 +34,7 @@ export function withSecurityHeaders(
 ): Response {
 	const headers = new Headers(response.headers);
 
-	const env: "development" | "production" = (import.meta as any).env?.DEV
+	const environment: "development" | "production" = runtimeEnv.isDevelopment()
 		? "development"
 		: "production";
 
@@ -41,7 +42,7 @@ export function withSecurityHeaders(
 	try {
 		headers.set(
 			"Content-Security-Policy",
-			generateCSP(env, { nonce: options?.cspNonce }),
+			generateCSP(environment, { nonce: options?.cspNonce }),
 		);
 	} catch {}
 
