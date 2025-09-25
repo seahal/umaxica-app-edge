@@ -25,7 +25,7 @@
 		"APEX_STAFF_URL": "org.localhost:3300",
 		"AUTH_SERVICE_URL": "auth.app.localhost:3300",
 		"AUTH_STAFF_URL": "auth.org.localhost:3300",
-	    "CODE_NAME": "Umaxica",
+	    "CODE_NAME": "UMAXICA",
 	    "VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
 	},
     "env": {

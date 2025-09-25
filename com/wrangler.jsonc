@@ -13,7 +13,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"CODE_NAME": "Umaxica",
+		"CODE_NAME": "UMAXICA",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"API_CORPORATE_URL": "api.com.localhost:3300",
 		"WWW_CORPORATE_URL": "",
