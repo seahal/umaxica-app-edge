@@ -2,7 +2,7 @@
 	"name": "Umaxica Dev (Node)",
 	"dockerComposeFile": ["../compose.yml"],
 	"remoteUser": "dev",
-	"workspaceFolder": "/workspaces/umaxica-app-edge",
+	"workspaceFolder": "/edge",
 	"postCreateCommand": "bun install",
 	"forwardPorts": [4000],
 	"portsAttributes": {

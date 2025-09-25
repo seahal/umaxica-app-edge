@@ -1,7 +1,5 @@
 import type { Buffer as NodeBuffer } from "node:buffer";
 
-import { env as runtimeEnv, generateCSP } from "./config";
-
 const NONCE_BYTES = 16;
 
 export function generateNonce() {
@@ -30,21 +28,12 @@ export function generateNonce() {
 export function withSecurityHeaders(
 	request: Request,
 	response: Response,
-	options?: { cspNonce?: string },
+	_options?: { cspNonce?: string },
 ): Response {
 	const headers = new Headers(response.headers);
 
-	const environment: "development" | "production" = runtimeEnv.isDevelopment()
-		? "development"
-		: "production";
-
-	// Content Security Policy aligned with config and current asset usage
-	try {
-		headers.set(
-			"Content-Security-Policy",
-			generateCSP(environment, { nonce: options?.cspNonce }),
-		);
-	} catch {}
+	// Remove any existing CSP header until policy is reintroduced
+	headers.delete("Content-Security-Policy");
 
 	// Clickjacking and referrer/data leakage protections
 	headers.set("X-Frame-Options", "DENY");
