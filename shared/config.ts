@@ -147,7 +147,8 @@ const fallbackMode =
 	globalWithProcess.process?.env?.NODE_ENV ??
 	"production";
 
-const resolvedMode = typeof fallbackMode === "string" ? fallbackMode : "production";
+const resolvedMode =
+	typeof fallbackMode === "string" ? fallbackMode : "production";
 const resolvedDev = rawMetaEnv?.DEV ?? resolvedMode === "development";
 const resolvedProd = rawMetaEnv?.PROD ?? resolvedMode === "production";
 

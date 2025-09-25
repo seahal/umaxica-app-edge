@@ -1,17 +1,21 @@
 import { Link } from "react-router-dom";
 
 interface HeaderProps {
-	newsUrl?: string;
-	docsUrl?: string;
-	helpUrl?: string;
 	codeName?: string;
+	apiServiceUrl?: string;
+	edgeServiceUrl?: string;
+	helpServiceUrl?: string;
+	docsServiceUrl?: string;
+	newsServiceUrl?: string;
 }
 
 export function Header({
-	newsUrl = "",
-	docsUrl = "",
-	helpUrl = "",
 	codeName = "",
+	apiServiceUrl = "",
+	edgeServiceUrl = "",
+	helpServiceUrl = "",
+	docsServiceUrl = "",
+	newsServiceUrl = "",
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
@@ -26,13 +30,13 @@ export function Header({
 					<Link to="sample">
 						<li>sample</li>
 					</Link>
-					<a href={newsUrl} target="_blank" rel="noreferrer">
+					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener" >
 						<li>news</li>
 					</a>
-					<a href={docsUrl} target="_blank" rel="noreferrer">
+					<a href={`https://${docsServiceUrl}`} target="_blank" rel="noopener">
 						<li>docs</li>
 					</a>
-					<a href={helpUrl} target="_blank" rel="noreferrer">
+					<a href={`https://${helpServiceUrl}`} target="_blank" rel="noopener">
 						<li>help</li>
 					</a>
 				</ul>

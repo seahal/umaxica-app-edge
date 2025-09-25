@@ -13,8 +13,7 @@ type LoaderContext = {
 
 export function loader({ context }: Route.LoaderArgs) {
 	const loaderContext = context as LoaderContext;
-	const message =
-		loaderContext.cloudflare?.env?.VALUE_FROM_CLOUDFLARE ?? "";
+	const message = loaderContext.cloudflare?.env?.VALUE_FROM_CLOUDFLARE ?? "";
 
 	return { message };
 }
