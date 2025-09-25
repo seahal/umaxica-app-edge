@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 ARG NODE_VERSION=22-bookworm
 ARG BUN_VERSION=1.2.22
 ARG DOCKER_UID=1000

@@ -14,6 +14,11 @@ import "./app.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 
+// 既定のメタ情報（各ページで未指定の場合のデフォルト）
+export function meta() {
+	return [{ title: "Umaxica" }];
+}
+
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -31,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			<body>
 				{children}
 				<ScrollRestoration />
-				<Scripts nonce={nonce} />
+				<Scripts />
 			</body>
 		</html>
 	);
