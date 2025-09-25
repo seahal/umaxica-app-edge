@@ -29,11 +29,6 @@
 	    "VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
 	},
     "env": {
-	"staging": {
-	    "vars": {
-		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) staging"
-	    }
-	},
 	"production": {
 	    "vars": {
 		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
