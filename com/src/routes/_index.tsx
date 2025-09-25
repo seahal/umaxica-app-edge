@@ -1,10 +1,7 @@
 import type { Route } from "./+types/_index";
 
-// メタ情報の責務: SEO対応のためのページメタデータを定義
-// テストではこう確認する: title と description が正しく設定されるかをテスト
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Umaxica - _index" },
 		{
 			name: "description",
 			content: "",

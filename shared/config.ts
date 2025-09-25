@@ -129,11 +129,33 @@ export const config = {
 /**
  * Environment detection utilities
  */
+type MetaEnvFlags = {
+	MODE?: string;
+	DEV?: boolean;
+	PROD?: boolean;
+};
+
+const rawMetaEnv = (import.meta as ImportMeta & { env?: MetaEnvFlags }).env;
+
+const globalWithProcess = globalThis as typeof globalThis & {
+	process?: { env?: Record<string, string | undefined> };
+};
+
+const fallbackMode =
+	rawMetaEnv?.MODE ??
+	globalWithProcess.process?.env?.VITE_MODE ??
+	globalWithProcess.process?.env?.NODE_ENV ??
+	"production";
+
+const resolvedMode = typeof fallbackMode === "string" ? fallbackMode : "production";
+const resolvedDev = rawMetaEnv?.DEV ?? resolvedMode === "development";
+const resolvedProd = rawMetaEnv?.PROD ?? resolvedMode === "production";
+
 export const env = {
 	// Use Vite's compile-time env flags for browser/Workers compatibility
-	isDevelopment: () => import.meta.env.DEV,
-	isProduction: () => import.meta.env.PROD,
-	isTest: () => import.meta.env.MODE === "test",
+	isDevelopment: () => resolvedDev,
+	isProduction: () => resolvedProd,
+	isTest: () => resolvedMode === "test",
 } as const;
 
 /**
