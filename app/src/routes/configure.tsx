@@ -17,11 +17,11 @@ export function loader({ context }: Route.LoaderArgs) {
 
 export default function About(_: Route.ComponentProps) {
 	return (
-		<>
+		<main className="p-4 container mx-auto">
 			<Link to="/">
 				<h1>umaxica</h1>
 			</Link>
 			<Link to="/">home</Link> &lt; <Link to="/configure">configure</Link>
-		</>
+		</main>
 	);
 }

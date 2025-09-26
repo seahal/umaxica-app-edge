@@ -25,12 +25,15 @@ export function Header({
 			<nav className="mt-2">
 				<ul className="flex gap-4">
 					<Link to="about">
-						<li>about</li>
+						<li>About</li>
 					</Link>
 					<Link to="sample">
-						<li>sample</li>
+						<li>Sample</li>
 					</Link>
-					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener" >
+					<Link to="configure">
+						<li>Configure</li>
+					</Link>
+					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener">
 						<li>news</li>
 					</a>
 					<a href={`https://${docsServiceUrl}`} target="_blank" rel="noopener">
