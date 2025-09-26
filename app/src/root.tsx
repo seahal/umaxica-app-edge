@@ -17,14 +17,35 @@ import { Footer } from "./components/Footer";
 export const links: Route.LinksFunction = () => [];
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
-export function meta() {
-	return [{ title: "Umaxica" }];
+export function meta({ matches }: Route.MetaArgs) {
+	const siteTitle = "UMAXICA";
+	const otherMatches = Array.isArray(matches) ? matches.slice(1) : [];
+	const childTitle = [...otherMatches]
+		.reverse()
+		.map((match) => {
+			if (!match || typeof match !== "object") {
+				return "";
+			}
+			const meta = (match as { meta?: { title?: unknown } }).meta;
+			const title = meta?.title;
+			return typeof title === "string" ? title.trim() : "";
+		})
+		.find((title) => title.length > 0);
+
+	if (!childTitle) {
+		return [{ title: siteTitle }];
+	}
+
+	if (childTitle.toLowerCase().startsWith(siteTitle.toLowerCase())) {
+		return [{ title: childTitle }];
+	}
+
+	return [{ title: `${siteTitle} | ${childTitle}` }];
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const rootData =
 		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
-	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
 			<head>

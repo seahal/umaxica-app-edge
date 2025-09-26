@@ -2,7 +2,7 @@ import type { Route } from "./+types/about";
 
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Sample - Umaxica App" },
+		{ title: "Sample" },
 		{ name: "description", content: "About this application" },
 	];
 }

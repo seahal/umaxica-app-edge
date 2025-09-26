@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export function Header({
-	codeName = "UMAXICA",
+	codeName = "",
 	newsUrl = "",
 	docsUrl = "",
 	helpUrl = "",
@@ -21,10 +21,13 @@ export function Header({
 			<nav className="mt-2">
 				<ul className="flex gap-4">
 					<NavLink to="about">
-						<li>about</li>
+						<li>About</li>
 					</NavLink>
 					<NavLink to="sample">
-						<li>sample</li>
+						<li>Sample</li>
+					</NavLink>
+					<NavLink to="configure">
+						<li>Configure</li>
 					</NavLink>
 					<a
 						href={newsUrl ? `https://${newsUrl}` : "#"}
