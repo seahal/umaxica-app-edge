@@ -19,18 +19,34 @@ export const links: Route.LinksFunction = () => [];
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta({ matches }: Route.MetaArgs) {
 	const siteTitle = "UMAXICA";
-	const otherMatches = Array.isArray(matches) ? matches.slice(1) : [];
-	const childTitle = [...otherMatches]
-		.reverse()
-		.map((match) => {
-			if (!match || typeof match !== "object") {
-				return "";
+	const childTitle = (() => {
+		if (!Array.isArray(matches)) {
+			return "";
+		}
+		for (let index = matches.length - 1; index >= 1; index -= 1) {
+			const match = matches[index] as { meta?: unknown } | null | undefined;
+			const descriptors = Array.isArray(match?.meta)
+				? (match?.meta as Array<{ title?: unknown }> | undefined)
+				: undefined;
+			if (!descriptors) {
+				continue;
 			}
-			const meta = (match as { meta?: { title?: unknown } }).meta;
-			const title = meta?.title;
-			return typeof title === "string" ? title.trim() : "";
-		})
-		.find((title) => title.length > 0);
+			for (const descriptor of descriptors) {
+				if (!descriptor || typeof descriptor !== "object") {
+					continue;
+				}
+				const rawTitle = (descriptor as { title?: unknown }).title;
+				if (typeof rawTitle !== "string") {
+					continue;
+				}
+				const trimmed = rawTitle.trim();
+				if (trimmed.length > 0) {
+					return trimmed;
+				}
+			}
+		}
+		return "";
+	})();
 
 	if (!childTitle) {
 		return [{ title: siteTitle }];
