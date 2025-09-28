@@ -1,5 +1,4 @@
-ARG NODE_VERSION=22-bookworm
-ARG BUN_VERSION=1.2.22
+ARG NODE_VERSION=24-trixie
 ARG DOCKER_UID=1000
 ARG DOCKER_USER=user
 ARG DOCKER_GID=1000
@@ -34,7 +33,7 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@${BUN_VERSION}" \
+RUN npm install -g "bun@latest" \
   && npm cache clean --force
 
 RUN set -eux; \
