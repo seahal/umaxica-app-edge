@@ -28,8 +28,7 @@
 		}
 	},
 	"features": {
-		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
-		"ghcr.io/openai/codex-universal:latest": {}
+		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
 	},
 	"mounts": [
 		"source=${localEnv:HOME}/.claude,target=/main/.claude,type=bind",

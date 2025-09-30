@@ -3,7 +3,6 @@ services:
   main:
     build:
       context: .
-      dockerfile: Dockerfile
       target: development
     working_dir: /main
     volumes:

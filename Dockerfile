@@ -79,12 +79,13 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/evilmartians/lefthook/setup.deb.sh' | bash \
+    && apt install lefthook
+
 WORKDIR /main
 
 USER ${DOCKER_UID}:${DOCKER_GID}
 
-EXPOSE 4000 5170 5171 5172 5173
+EXPOSE 5170 5171 5172 5173
 
-ENTRYPOINT ["dumb-init", "--"]
-
-CMD ["sleep", "10000000"]
+CMD ["sleep", "infinity"]

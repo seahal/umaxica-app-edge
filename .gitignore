@@ -155,4 +155,4 @@ package-lock.json
 .bash_history
 .claude.json
 .claude.json.backup
-.claude/
+.codex/
