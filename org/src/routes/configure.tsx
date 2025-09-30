@@ -19,11 +19,11 @@ export default function About({
 	loaderData: _loaderData,
 }: Route.ComponentProps) {
 	return (
-		<>
+		<main className="p-4 container mx-auto">
 			<Link to="/">
-				<h1>umaxica</h1>
+				<h2 className="text-lg font-semibold">umaxica</h2>
 			</Link>
 			<Link to="/">home</Link> &lt; <Link to="/configure">configure</Link>
-		</>
+		</main>
 	);
 }

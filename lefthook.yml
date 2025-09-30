@@ -2,18 +2,18 @@ pre-commit:
   parallel: true
   commands:
     format:
-      run: docker compose run edge bun run format
+      run: docker compose run main bun run format
       stage_fixed: true
       glob: "*.{js,jsx,ts,tsx,json,md}"
     lint:
-      run: docker compose run edge bun run lint
+      run: docker compose run main bun run lint
       stage_fixed: true
       glob: "*.{js,jsx,ts,tsx}"
     typecheck:
-      run: docker compose run edge bun run typecheck
+      run: docker compose run main bun run typecheck
       glob: "*.{ts,tsx}"
     audit:
-      run: docker compose run edge bun audit
+      run: docker compose run main bun audit
       skip:
         - merge
         - rebase
@@ -22,4 +22,4 @@ pre-push:
   parallel: true
   commands:
     test:
-      run: docker compose run edge bun test
+      run: docker compose run main bun test

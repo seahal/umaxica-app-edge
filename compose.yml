@@ -1,19 +1,19 @@
 name: "edge"
 services:
-  edge:
+  main:
     container_name: umaxica-app-edge
     build:
       context: .
       dockerfile: Dockerfile
       target: development
-    working_dir: /edge
+    working_dir: /main
     volumes:
       - type: bind
         source: .
-        target: /edge
+        target: /main
       - type: volume
         source: node-volume
-        target: /edge/node_modules
+        target: /main/node_modules
         volume:
           nocopy: true
     ports:
