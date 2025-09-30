@@ -15,6 +15,11 @@ services:
         target: /main/node_modules
         volume:
           nocopy: true
+      - type: volume
+        source: bun-volume
+        target: /main/.bun
+        volume:
+          nocopy: true
     ports:
       - '5170:5170'
       - '5171:5171'
@@ -26,4 +31,5 @@ services:
     init: true
     user: "${UID:-1000}:${GID:-1000}"
 volumes:
+  bun-volume:
   node-volume:
