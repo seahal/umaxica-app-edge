@@ -140,3 +140,15 @@ out
 .DS_Store
 .vscode/
 .claude/
+# Devcontainer home artifacts
+.config/
+.devcontainer/.onCreateCommandMarker
+.devcontainer/.postCreateCommandMarker
+.devcontainer/.updateContentCommandMarker
+.dotnet/
+.gitconfig
+.gnupg/
+.local/
+.ssh/
+.vscode-server/
+package-lock.json

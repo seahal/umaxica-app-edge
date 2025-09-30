@@ -1,39 +1,30 @@
 {
-	"name": "Umaxica Dev (Node)",
+	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
-	"remoteUser": "dev",
+	"service": "edge",
 	"workspaceFolder": "/edge",
+	"runServices": ["edge"],
+	"overrideCommand": false,
 	"postCreateCommand": "bun install",
-	"forwardPorts": [4000],
+	"forwardPorts": [4000, 5170, 5171, 5172, 5173],
 	"portsAttributes": {
-		"4000": { "label": "Vite dev server" }
+		"4000": {
+			"label": "Vite Dev Server"
+		}
 	},
 	"customizations": {
 		"vscode": {
-			"settings": {
-				"editor.formatOnSave": true,
-				"[typescript]": {
-					"editor.defaultFormatter": "biomejs.biome"
-				},
-				"[typescriptreact]": {
-					"editor.defaultFormatter": "biomejs.biome"
-				},
-				"[javascript]": {
-					"editor.defaultFormatter": "biomejs.biome"
-				},
-				"[javascriptreact]": {
-					"editor.defaultFormatter": "biomejs.biome"
-				}
-			},
 			"extensions": [
+				"oven.bun-vscode",
 				"biomejs.biome",
-				"oven-sh.bun-vscode",
-				"dbaeumer.vscode-eslint"
-			]
-		},
-		"jetbrains": {
-			"remoteIDE": "intellij",
-			"plugins": ["org.intellij.plugins.markdown"]
+				"dbaeumer.vscode-eslint",
+				"eamodio.gitlens"
+			],
+			"settings": {
+				"editor.defaultFormatter": "biomejs.biome",
+				"editor.formatOnSave": true,
+				"files.eol": "\n"
+			}
 		}
 	}
 }
