@@ -69,7 +69,7 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
-ENV HOME=/edge \
+ENV HOME=/main \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
     SHELL=/bin/bash \
@@ -79,11 +79,9 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
-WORKDIR /edge
+WORKDIR /main
 
 USER ${DOCKER_UID}:${DOCKER_GID}
-
-RUN bun --version
 
 EXPOSE 4000 5170 5171 5172 5173
 

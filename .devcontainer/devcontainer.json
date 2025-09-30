@@ -26,5 +26,13 @@
 				"files.eol": "\n"
 			}
 		}
-	}
+	},
+	"features": {
+		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
+		"ghcr.io/openai/codex-universal:latest": {}
+	},
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/main/.claude,type=bind",
+		"source=${localEnv:HOME}/.codex,target=/main/.codex,type=bind"
+	]
 }
