@@ -1,9 +1,9 @@
 {
 	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
-	"service": "edge",
-	"workspaceFolder": "/edge",
-	"runServices": ["edge"],
+	"service": "main",
+	"workspaceFolder": "/main",
+	"runServices": ["main"],
 	"overrideCommand": false,
 	"postCreateCommand": "bun install",
 	"forwardPorts": [4000, 5170, 5171, 5172, 5173],
