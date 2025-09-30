@@ -1,7 +1,6 @@
 name: "edge"
 services:
   main:
-    container_name: umaxica-app-edge
     build:
       context: .
       dockerfile: Dockerfile
