@@ -69,7 +69,7 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
-ENV HOME=/main \
+ENV HOME=/home/edge \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
     SHELL=/bin/bash \
@@ -79,10 +79,7 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/evilmartians/lefthook/setup.deb.sh' | bash \
-    && apt install lefthook
-
-WORKDIR /main
+WORKDIR ${HOME}/main
 
 USER ${DOCKER_UID}:${DOCKER_GID}
 
