@@ -2,7 +2,7 @@
 	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
 	"service": "main",
-	"workspaceFolder": "/main",
+	"workspaceFolder": "/home/jit/main",
 	"runServices": ["main"],
 	"overrideCommand": false,
 	"postCreateCommand": "bun install",
