@@ -2,7 +2,7 @@
 	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
 	"service": "main",
-	"workspaceFolder": "/main",
+	"workspaceFolder": "/home/jit/main",
 	"runServices": ["main"],
 	"overrideCommand": false,
 	"postCreateCommand": "bun install",
@@ -26,5 +26,12 @@
 				"files.eol": "\n"
 			}
 		}
-	}
+	},
+	"features": {
+		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
+	},
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/main/.claude,type=bind",
+		"source=${localEnv:HOME}/.codex,target=/main/.codex,type=bind"
+	]
 }

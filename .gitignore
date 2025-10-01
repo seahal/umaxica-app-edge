@@ -153,3 +153,6 @@ out
 .vscode-server/
 package-lock.json
 .bash_history
+.claude.json
+.claude.json.backup
+.codex/

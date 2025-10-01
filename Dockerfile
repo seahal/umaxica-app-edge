@@ -1,6 +1,6 @@
 ARG NODE_VERSION=24-trixie
 ARG DOCKER_UID=1000
-ARG DOCKER_USER=user
+ARG DOCKER_USER=edge
 ARG DOCKER_GID=1000
 ARG DOCKER_GROUP=group
 
@@ -69,7 +69,7 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
-ENV HOME=/edge \
+ENV HOME=/home/edge \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
     SHELL=/bin/bash \
@@ -79,14 +79,10 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
 
-WORKDIR /edge
+WORKDIR ${HOME}/main
 
 USER ${DOCKER_UID}:${DOCKER_GID}
 
-RUN bun --version
+EXPOSE 5170 5171 5172 5173
 
-EXPOSE 4000 5170 5171 5172 5173
-
-ENTRYPOINT ["dumb-init", "--"]
-
-CMD ["sleep", "10000000"]
+CMD ["sleep", "infinity"]
