@@ -16,7 +16,7 @@ export function Header({
 	return (
 		<header className="p-4 border-b">
 			<Link to="/">
-				<h1 className="text-xl font-semibold">{codeName}</h1>
+				<h1 className="text-xl font-semibold">{codeName} (Org)</h1>
 			</Link>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
