@@ -21,7 +21,7 @@ export default function About({
 	return (
 		<main className="p-4 container mx-auto">
 			<Link to="/">
-				<h2 className="text-lg font-semibold">umaxica</h2>
+				<h2 className="text-lg font-semibold">Umaxica</h2>
 			</Link>
 			<Link to="/">home</Link> &lt; <Link to="/configure">configure</Link>
 		</main>
