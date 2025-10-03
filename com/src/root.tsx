@@ -11,40 +11,19 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
-
-// 動的インポートを使用してコンポーネントを遅延読み込み
-
-import type { JSX } from "react";
-// 不明なエラーの場合
+import { Footer } from "./components/Footer";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
 
-export const links: Route.LinksFunction = () => [];
+import type { JSX } from "react";
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { cloudflare, security } =
-		(context as unknown as {
-			cloudflare?: { env?: Record<string, string> };
-			security?: { nonce?: string };
-		}) ?? {};
-	const env = cloudflare?.env ?? {};
-	const cspNonce = security?.nonce ?? "";
-	return {
-		codeName: env.CODE_NAME ?? "",
-		newsUrl: env.NEWS_URL ?? "",
-		docsUrl: env.DOCS_URL ?? "",
-		helpUrl: env.HELP_URL ?? "",
-		cspNonce,
-	};
-};
-
-// 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta() {
 	return [{ title: "Umaxica" }];
 }
+
+export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const _rootData =
@@ -67,11 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	// アプリケーションの責務: 全体のレイアウト構造を定義し、共通コンポーネントを配置
-	// テストではこう確認する: Header コンポーネントがレンダリングされ、Outlet が適切に機能するかをテスト
 	const { codeName, newsUrl, docsUrl, helpUrl } =
 		useLoaderData<Awaited<ReturnType<typeof loader>>>();
-
 	return (
 		<>
 			<Header
@@ -80,28 +56,22 @@ export default function App() {
 				docsUrl={docsUrl}
 				helpUrl={helpUrl}
 			/>
-			<main>
-				<Outlet />
-			</main>
+			<Outlet />
 			<Footer codeName={codeName} />
 		</>
 	);
 }
 
-// エラーバウンダリの責務: アプリケーション全体のエラーをキャッチし、適切なエラーページを表示
-// テストではこう確認する: 各種エラー（404、500、その他）に対して適切なUIが表示されるかをテスト
 export function ErrorBoundary({
 	error,
 }: Route.ErrorBoundaryProps): JSX.Element {
-	// React Router の isRouteErrorResponse を使用してルートエラーを識別
 	if (isRouteErrorResponse(error)) {
 		const rr = error as { status: number; statusText?: string };
-		// 404エラーの場合
+
 		if (rr.status === 404) {
 			return <NotFoundPage />;
 		}
 
-		// 500番台のサーバーエラーの場合
 		if (rr.status >= 500) {
 			return (
 				<InternalServerErrorPage
@@ -111,12 +81,9 @@ export function ErrorBoundary({
 			);
 		}
 
-		// 503 Service Unavailable の場合
 		if (rr.status === 503) {
 			return <ServiceUnavailablePage />;
 		}
-
-		// その他のHTTPエラー（400番台など）
 
 		return (
 			<ErrorPage
@@ -129,7 +96,6 @@ export function ErrorBoundary({
 		);
 	}
 
-	// JavaScript エラー（予期しないエラー）の場合
 	if (error instanceof Error) {
 		return (
 			<InternalServerErrorPage
@@ -139,6 +105,7 @@ export function ErrorBoundary({
 			/>
 		);
 	}
+
 	return (
 		<ErrorPage
 			status={500}
@@ -151,3 +118,17 @@ export function ErrorBoundary({
 		/>
 	);
 }
+
+export const loader = async ({ context }: Route.LoaderArgs) => {
+	const { cloudflare } =
+		(context as unknown as {
+			cloudflare?: { env?: Record<string, string> };
+		}) ?? {};
+	const env = cloudflare?.env ?? {};
+	return {
+		codeName: env.CODE_NAME ?? "",
+		newsUrl: env.NEWS_CORPORATE_URL ?? "",
+		docsUrl: env.DOCS_CORPORATE_URL ?? "",
+		helpUrl: env.HELP_CORPORATE_URL ?? "",
+	};
+};
