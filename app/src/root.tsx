@@ -16,8 +16,11 @@ import { Footer } from "./components/Footer";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
+import { isDevelopmentEnvironment } from "../../shared/meta-env";
 
 import type { JSX } from "react";
+
+const isDevEnvironment = isDevelopmentEnvironment();
 
 export const links: Route.LinksFunction = () => [];
 
@@ -85,20 +88,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const {
-		codeName,
-		apiServiceUrl,
-		edgeServiceUrl,
-		helpServiceUrl,
-		docsServiceUrl,
-		newsServiceUrl,
-	} = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const { codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl } =
+		useLoaderData<Awaited<ReturnType<typeof loader>>>();
 	return (
 		<>
 			<Header
 				codeName={codeName}
-				apiServiceUrl={apiServiceUrl}
-				edgeServiceUrl={edgeServiceUrl}
 				helpServiceUrl={helpServiceUrl}
 				docsServiceUrl={docsServiceUrl}
 				newsServiceUrl={newsServiceUrl}
@@ -123,7 +118,7 @@ export function ErrorBoundary({
 			return (
 				<InternalServerErrorPage
 					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
-					showDetails={import.meta.env.DEV}
+					showDetails={isDevEnvironment}
 				/>
 			);
 		}
@@ -147,8 +142,8 @@ export function ErrorBoundary({
 		return (
 			<InternalServerErrorPage
 				details={error.message}
-				stack={import.meta.env.DEV ? error.stack : undefined}
-				showDetails={import.meta.env.DEV}
+				stack={isDevEnvironment ? error.stack : undefined}
+				showDetails={isDevEnvironment}
 			/>
 		);
 	}
@@ -160,8 +155,8 @@ export function ErrorBoundary({
 			message="申し訳ございません。予期しないエラーが発生しました。"
 			suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
 			showNavigation={true}
-			showDetails={import.meta.env.DEV}
-			details={import.meta.env.DEV ? String(error) : undefined}
+			showDetails={isDevEnvironment}
+			details={isDevEnvironment ? String(error) : undefined}
 		/>
 	);
 }

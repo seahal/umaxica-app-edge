@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router";
+import { Link, NavLink } from "react-router-dom";
 
 interface HeaderProps {
 	codeName?: string;
@@ -14,26 +14,41 @@ export function Header({
 	helpUrl = "",
 }: HeaderProps) {
 	return (
-		<header>
+		<header className="p-4 border-b">
 			<Link to="/">
-				<h1>{codeName}</h1>
+				<h1 className="text-xl font-semibold">{codeName} (Com)</h1>
 			</Link>
-			<nav>
-				<ul>
-					<NavLink to="sample">
-						<li>sample</li>
-					</NavLink>
+			<nav className="mt-2">
+				<ul className="flex gap-4">
 					<NavLink to="about">
-						<li>about</li>
+						<li>About</li>
 					</NavLink>
-					<a href={newsUrl} target="_blank">
-						<li>news</li>
+					<NavLink to="sample">
+						<li>Sample</li>
+					</NavLink>
+					<NavLink to="configure">
+						<li>Configure</li>
+					</NavLink>
+					<a
+						href={newsUrl ? `https://${newsUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<li>News</li>
 					</a>
-					<a href={docsUrl} target="_blank">
-						<li>docs</li>
+					<a
+						href={docsUrl ? `https://${docsUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<li>Docs</li>
 					</a>
-					<a href={helpUrl} target="_blank">
-						<li>help</li>
+					<a
+						href={helpUrl ? `https://${helpUrl}` : "#"}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<li>Help</li>
 					</a>
 				</ul>
 			</nav>
