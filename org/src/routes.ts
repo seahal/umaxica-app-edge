@@ -5,4 +5,5 @@ export default [
 	route("configure", "routes/configure.tsx"),
 	route("about", "routes/about.tsx"),
 	route("sample", "routes/sample.tsx"),
+	route("*", "routes/catch-all.tsx"),
 ] satisfies RouteConfig;
