@@ -1,10 +1,7 @@
-import { NavLink } from "react-router";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 interface HeaderProps {
 	codeName?: string;
-	apiServiceUrl?: string;
-	edgeServiceUrl?: string;
 	helpServiceUrl?: string;
 	docsServiceUrl?: string;
 	newsServiceUrl?: string;
@@ -12,8 +9,6 @@ interface HeaderProps {
 
 export function Header({
 	codeName = "",
-	apiServiceUrl = "",
-	edgeServiceUrl = "",
 	helpServiceUrl = "",
 	docsServiceUrl = "",
 	newsServiceUrl = "",
