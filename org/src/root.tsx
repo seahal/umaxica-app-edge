@@ -27,9 +27,8 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData =
+	const _rootData =
 		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
-	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
 			<head>
@@ -40,8 +39,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration nonce={nonce} />
-				<Scripts nonce={nonce} />
+				<ScrollRestoration />
+				<Scripts />
 			</body>
 		</html>
 	);
@@ -122,18 +121,15 @@ export function ErrorBoundary({
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { cloudflare, security } =
+	const { cloudflare } =
 		(context as unknown as {
 			cloudflare?: { env?: Record<string, string> };
-			security?: { nonce?: string };
 		}) ?? {};
 	const env = cloudflare?.env ?? {};
-	const cspNonce = security?.nonce ?? "";
 	return {
 		codeName: env.CODE_NAME ?? "",
 		newsUrl: env.NEWS_STAFF_URL ?? "",
 		docsUrl: env.DOCS_STAFF_URL ?? "",
 		helpUrl: env.HELP_STAFF_URL ?? "",
-		cspNonce,
 	};
 };

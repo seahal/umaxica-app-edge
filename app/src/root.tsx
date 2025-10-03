@@ -65,9 +65,8 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData =
+	const _rootData =
 		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
-	const nonce = rootData?.cspNonce;
 	return (
 		<html lang="en">
 			<head>
@@ -78,8 +77,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration nonce={nonce} />
-				<Scripts nonce={nonce} />
+				<ScrollRestoration />
+				<Scripts />
 			</body>
 		</html>
 	);
