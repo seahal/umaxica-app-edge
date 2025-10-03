@@ -34,21 +34,21 @@ export function Header({
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<li>news</li>
+						<li>News</li>
 					</a>
 					<a
 						href={docsUrl ? `https://${docsUrl}` : "#"}
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<li>docs</li>
+						<li>Docs</li>
 					</a>
 					<a
 						href={helpUrl ? `https://${helpUrl}` : "#"}
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<li>help</li>
+						<li>Help</li>
 					</a>
 				</ul>
 			</nav>
