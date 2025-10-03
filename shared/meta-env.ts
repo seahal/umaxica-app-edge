@@ -39,9 +39,11 @@ export const isDevelopmentEnvironment = (): boolean => {
 		return metaMode === "development";
 	}
 
-	const processEnv = (globalThis as typeof globalThis & {
-		process?: { env?: MaybeProcessEnv };
-	}).process?.env;
+	const processEnv = (
+		globalThis as typeof globalThis & {
+			process?: { env?: MaybeProcessEnv };
+		}
+	).process?.env;
 	const processFlag = normalizeBoolean(processEnv?.VITE_DEV);
 	if (processFlag !== undefined) {
 		return processFlag;
