@@ -1,0 +1,3 @@
+User-agent: moget
+Disallow: /himitsu/
+Disallow: /cgi-bin/
