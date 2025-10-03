@@ -33,6 +33,24 @@ export function Header({
 					<Link to="configure">
 						<li>Configure</li>
 					</Link>
+					{apiServiceUrl && (
+						<a
+							href={`https://${apiServiceUrl}`}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<li>api</li>
+						</a>
+					)}
+					{edgeServiceUrl && (
+						<a
+							href={`https://${edgeServiceUrl}`}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<li>edge</li>
+						</a>
+					)}
 					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener">
 						<li>news</li>
 					</a>

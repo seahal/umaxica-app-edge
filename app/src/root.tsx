@@ -13,6 +13,11 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
+import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
+import { NotFoundPage } from "./components/NotFoundPage";
+
+import type { JSX } from "react";
 
 export const links: Route.LinksFunction = () => [];
 
@@ -60,7 +65,7 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const rootData =
+	const _rootData =
 		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
 	return (
 		<html lang="en">
@@ -104,33 +109,60 @@ export default function App() {
 	);
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	let message = "Oops!";
-	let details = "An unexpected error occurred.";
-	let stack: string | undefined;
-
+export function ErrorBoundary({
+	error,
+}: Route.ErrorBoundaryProps): JSX.Element {
 	if (isRouteErrorResponse(error)) {
-		const routeError = error as { status: number; statusText?: string };
-		message = routeError.status === 404 ? "404" : "Error";
-		details =
-			routeError.status === 404
-				? "The requested page could not be found."
-				: routeError.statusText || details;
-	} else if (import.meta.env.DEV && error instanceof Error) {
-		details = error.message;
-		stack = error.stack;
+		const rr = error as { status: number; statusText?: string };
+
+		if (rr.status === 404) {
+			return <NotFoundPage />;
+		}
+
+		if (rr.status >= 500) {
+			return (
+				<InternalServerErrorPage
+					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
+					showDetails={import.meta.env.DEV}
+				/>
+			);
+		}
+
+		if (rr.status === 503) {
+			return <ServiceUnavailablePage />;
+		}
+
+		return (
+			<ErrorPage
+				status={rr.status}
+				title={`${rr.status} エラー`}
+				message={rr.statusText || "リクエストの処理中にエラーが発生しました。"}
+				suggestion="時間をおいて再度お試しいただくか、お問い合わせフォームからご連絡ください。"
+				showNavigation={true}
+			/>
+		);
+	}
+
+	if (error instanceof Error) {
+		return (
+			<InternalServerErrorPage
+				details={error.message}
+				stack={import.meta.env.DEV ? error.stack : undefined}
+				showDetails={import.meta.env.DEV}
+			/>
+		);
 	}
 
 	return (
-		<main className="pt-16 p-4 container mx-auto">
-			<h1>{message}</h1>
-			<p>{details}</p>
-			{stack && (
-				<pre className="w-full p-4 overflow-x-auto">
-					<code>{stack}</code>
-				</pre>
-			)}
-		</main>
+		<ErrorPage
+			status={500}
+			title="予期しないエラー"
+			message="申し訳ございません。予期しないエラーが発生しました。"
+			suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
+			showNavigation={true}
+			showDetails={import.meta.env.DEV}
+			details={import.meta.env.DEV ? String(error) : undefined}
+		/>
 	);
 }
 

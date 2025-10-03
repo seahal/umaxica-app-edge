@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-}
-
 html,
 body {
 	@apply bg-white dark:bg-gray-950;
