@@ -20,10 +20,26 @@ export default function About({
 }: Route.ComponentProps) {
 	return (
 		<main className="p-4 container mx-auto">
-			<Link to="/">
-				<h2 className="text-lg font-semibold">Umaxica</h2>
-			</Link>
-			<Link to="/">home</Link> &lt; <Link to="/configure">configure</Link>
+			<h2>Configuration</h2>
+			<ul>
+				<li className="list-disc list-inside">
+					acccount
+					<ul className="list-disc list-inside pl-4">
+						<li>change email</li>
+						<li>delete account</li>
+						<li>region</li>
+					</ul>
+				</li>
+				<li className="list-disc list-inside">
+					preferences
+					<ul className="list-disc list-inside pl-4">
+						<li>language</li>
+						<li>timezone</li>
+						<li>darkmode</li>
+						<li>accesivility</li>
+					</ul>
+				</li>
+			</ul>
 		</main>
 	);
 }
