@@ -1,4 +1,4 @@
-import { ErrorPage } from "./ErrorPage";
+import { ErrorPage } from "../components/ErrorPage";
 
 type Props = {
 	details?: string;
