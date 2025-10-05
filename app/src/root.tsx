@@ -14,8 +14,8 @@ import "./app.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
-import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
-import { NotFoundPage } from "./components/NotFoundPage";
+import { InternalServerErrorPage } from "./routes/InternalServerErrorPage";
+import { NotFoundPage } from "./routes/NotFoundPage";
 import { isDevelopmentEnvironment } from "../../shared/meta-env";
 
 import type { JSX } from "react";

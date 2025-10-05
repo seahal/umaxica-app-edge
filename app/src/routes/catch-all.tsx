@@ -1,4 +1,4 @@
-import { NotFoundPage } from "../components/NotFoundPage";
+import { NotFoundPage } from "./NotFoundPage";
 import type { Route } from "./+types/catch-all";
 
 export function meta(_: Route.MetaArgs) {
