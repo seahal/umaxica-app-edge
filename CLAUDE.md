@@ -15,8 +15,8 @@ This project uses Bun as the package manager. Each domain directory (com/, org/)
 # Install dependencies for all domains
 bun install
 
-# Testing (uses Bun test runner)
-bun test
+# Testing (Vitest via Bun scripts)
+bun run test
 
 # Code quality (affects all domains)
 bun run format         # Format with Biome
@@ -81,7 +81,7 @@ Each domain directory contains:
 - **Framework**: React Router v7 with server-side rendering
 - **React Version**: React 19 with React Compiler integration
 - **Build System**: React Router dev tools + Vite
-- **Testing**: Bun test runner
+- **Testing**: Vitest (run through Bun scripts)
 - **Code Quality**: Biome (formatting + linting)
 - **TypeScript**: Strict mode with comprehensive type generation
 

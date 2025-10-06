@@ -1,5 +1,11 @@
-// Bun test setup for app
-// Keep minimal: happy-dom is configured via bunfig.
-// Add any globals/polyfills needed by tests here.
+// Vitest setup for app
+// Ensure a DOM-like environment when running component tests.
+import { GlobalRegistrator } from "happy-dom";
+import matchers from "@testing-library/jest-dom/matchers";
+import { expect } from "vitest";
 
-export {};
+if (typeof window === "undefined") {
+	GlobalRegistrator.register();
+}
+
+expect.extend(matchers);

@@ -1,9 +1,11 @@
 import { NotFoundPage } from "./NotFoundPage";
 import type { Route } from "./+types/catch-all";
 
+export const handle = { titleName: "404 - ページが見つかりません" };
+
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "404 - ページが見つかりません | UMAXICA" },
+		{ title: "404 - ページが見つかりません" },
 		{
 			name: "description",
 			content:

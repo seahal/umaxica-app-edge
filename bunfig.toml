@@ -1,7 +1,7 @@
-## Monorepo Bun test configuration
+## Legacy Bun test configuration (kept for compatibility)
 [test]
 # Use a DOM-like environment so React component tests work from repo root
 environment = "happy-dom"
 
 # Keep default discovery; each package may also have its own bunfig
-# Root config ensures `bun test` at repo root has `document` available
+# Retained so legacy Bun-based workflows still get a DOM-like environment
