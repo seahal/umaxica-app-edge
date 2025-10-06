@@ -1,5 +1,7 @@
 import type { Route } from "./+types/about";
 
+export const handle = { titleName: "Sample" };
+
 export function meta(_: Route.MetaArgs) {
 	return [
 		{ title: "Sample" },

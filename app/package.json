@@ -11,7 +11,7 @@
 		"dev": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
-		"test": "bun test",
+		"test": "vitest",
 		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
 		"format": "../node_modules/.bin/biome format src test --write"
 	}

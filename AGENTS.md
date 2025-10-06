@@ -15,7 +15,7 @@
 - Dev server: `bun run dev` → Vite at `http://localhost:4000`.
 - Build workers: `bun run build`.
 - Preview built app: `bun run preview`.
-- Test: `bun test` or `bun run test`.
+- Test: `bun run test` (Vitest).
 - Lint/format: `bun run lint`, `bun run format` (Biome).
 - Type check: `bun run typecheck`.
 - Deploy: `bun run deploy` (build + `wrangler deploy`).
@@ -27,9 +27,9 @@
 - Keep components/hooks/utils under `app/src/`; prefer descriptive filenames.
 
 ## Testing Guidelines
-- Framework: `bun:test` with `happy-dom` for DOM.
+- Framework: Vitest with `happy-dom` for DOM.
 - Location: `test/*.test.ts`; name files after the unit under test.
-- Run with `bun test`. Favor fast, isolated unit tests for route handlers and utilities.
+- Run with `bun run test`. Favor fast, isolated unit tests for route handlers and utilities.
 
 ## Commit & Pull Request Guidelines
 - Commits: short, imperative subject; optional bracketed scope (e.g., `[system]`, `[misc]`). Group related changes; keep refactors separate.

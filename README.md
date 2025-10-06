@@ -54,7 +54,7 @@ Edit the copied files with your real hostnames and API endpoints. Only `VITE_`-p
 # how to test
 
 ```
-bun test
+bun run test
 ```
 
 # how to lint / format / typecheck

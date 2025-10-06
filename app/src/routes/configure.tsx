@@ -1,11 +1,9 @@
-import { Link } from "react-router";
 import type { Route } from "./+types/home";
 
+export const handle = { titleName: "Configuration" };
+
 export function meta(_: Route.MetaArgs) {
-	return [
-		{ title: "configure" },
-		{ name: "description", content: "Welcome to React Router!" },
-	];
+	return [{ name: "description", content: "Welcome to React Router!" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
