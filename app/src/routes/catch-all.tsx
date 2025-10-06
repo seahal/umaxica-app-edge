@@ -1,7 +1,10 @@
 import { NotFoundPage } from "./NotFoundPage";
 import type { Route } from "./+types/catch-all";
 
-export const handle = { titleName: "404 - ページが見つかりません" };
+export const handle = {
+	titleName: "404 - ページが見つかりません",
+	breadcrumb: () => "404",
+};
 
 export function meta(_: Route.MetaArgs) {
 	return [

@@ -1,6 +1,9 @@
 import type { Route } from "./+types/home";
 
-export const handle = { titleName: "Configuration" };
+export const handle = {
+	titleName: "Configuration",
+	breadcrumb: () => "Configuration",
+};
 
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "Welcome to React Router!" }];
