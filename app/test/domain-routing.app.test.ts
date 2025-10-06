@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 // Local helpers mirroring routing checks
 function getDomainType(host: string): string {
