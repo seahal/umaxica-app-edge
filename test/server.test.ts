@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 // Minimal route handler without Hono
 function handle(req: Request): Response {

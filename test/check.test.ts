@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 type Bindings = {
 	EDGE_CORPORATE_URL: string;
