@@ -1,4 +1,4 @@
-import type { Route } from "./+types/about";
+import type { Route } from "../+types/about";
 
 export const handle = {
 	titleName: "Account",
