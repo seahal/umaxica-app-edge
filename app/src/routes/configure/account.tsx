@@ -1,8 +1,8 @@
-import type { Route } from "./+types/about";
+import type { Route } from "../+types/about";
 
 export const handle = {
-	titleName: "Sample",
-	breadcrumb: () => "Sample",
+	titleName: "Account",
+	breadcrumb: () => "Account",
 };
 
 export function meta(_: Route.MetaArgs) {
@@ -12,7 +12,7 @@ export function meta(_: Route.MetaArgs) {
 	];
 }
 
-export default function About() {
+export default function Account() {
 	return (
 		<main className="p-4 container mx-auto">
 			<h2 className="text-lg font-semibold">Sample</h2>

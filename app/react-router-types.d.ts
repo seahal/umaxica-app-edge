@@ -15,6 +15,16 @@ declare module "react-router" {
 	export function useRouteLoaderData<T = unknown>(
 		routeId: string,
 	): T | undefined;
+
+	export interface UIMatch<Data = unknown, Handle = unknown> {
+		id: string;
+		pathname: string;
+		pathnameBase: string;
+		params: Record<string, string>;
+		data: Data;
+		handle: Handle;
+	}
+	export function useMatches<Match extends UIMatch = UIMatch>(): Match[];
 	export function isRouteErrorResponse(
 		error: unknown,
 	): error is { status: number; statusText?: string };

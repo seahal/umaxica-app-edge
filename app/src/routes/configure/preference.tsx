@@ -1,13 +1,13 @@
-import type { Route } from "./+types/about";
+import type { Route } from "../+types/about";
 
 export const handle = {
-	titleName: "Sample",
-	breadcrumb: () => "Sample",
+	titleName: "preference",
+	breadcrumb: () => "preference",
 };
 
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Sample" },
+		{ title: "preference" },
 		{ name: "description", content: "About this application" },
 	];
 }

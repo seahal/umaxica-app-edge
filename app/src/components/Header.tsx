@@ -15,7 +15,7 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
-			<Link to="/">
+			<Link>
 				<h1 className="text-xl font-semibold">{codeName} (App)</h1>
 			</Link>
 			<nav className="mt-2">
@@ -23,20 +23,17 @@ export function Header({
 					<NavLink to="about">
 						<li>About</li>
 					</NavLink>
-					<NavLink to="sample">
-						<li>Sample</li>
-					</NavLink>
 					<NavLink to="configure">
 						<li>Configuration</li>
 					</NavLink>
 					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener">
-						<li>news</li>
+						<li>News</li>
 					</a>
 					<a href={`https://${docsServiceUrl}`} target="_blank" rel="noopener">
-						<li>docs</li>
+						<li>Documents</li>
 					</a>
 					<a href={`https://${helpServiceUrl}`} target="_blank" rel="noopener">
-						<li>help</li>
+						<li>Help</li>
 					</a>
 				</ul>
 			</nav>

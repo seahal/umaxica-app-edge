@@ -2,7 +2,10 @@ import { Activity } from "react";
 import type { Route } from "./+types/about";
 import { Button } from "react-aria-components";
 
-export const handle = { titleName: "About" };
+export const handle = {
+	titleName: "About",
+	breadcrumb: () => "About",
+};
 
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "About this application" }];
