@@ -1,4 +1,4 @@
-import { NavLink, useMatches } from "react-router";
+import { Link, useMatches } from "react-router";
 import type { ReactNode } from "react";
 import type { UIMatch } from "react-router";
 
@@ -86,9 +86,9 @@ export function Breadcrumb() {
 									{item.label}
 								</span>
 							) : (
-								<NavLink to={item.to} className="hover:underline">
+								<Link to={item.to} className="hover:underline">
 									{item.label}
-								</NavLink>
+								</Link>
 							)}
 							{!isLast && <span aria-hidden="true">/</span>}
 						</li>
