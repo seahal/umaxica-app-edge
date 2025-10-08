@@ -40,8 +40,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl, authServiceUrl } =
-		useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const {
+		codeName,
+		helpServiceUrl,
+		docsServiceUrl,
+		newsServiceUrl,
+		authServiceUrl,
+	} = useLoaderData<Awaited<ReturnType<typeof loader>>>();
 	return (
 		<>
 			<Header

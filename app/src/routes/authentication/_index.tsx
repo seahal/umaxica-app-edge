@@ -21,7 +21,7 @@ export default function About(_: Route.ComponentProps) {
 	return (
 		<main className="p-4 container mx-auto">
 			<h2>Authentication</h2>
-			<a href='' rel="noopener">
+			<a href="https://auth.umaxica.app/registration/new" rel="noopener">
 				<p>Sign up</p>
 			</a>
 		</main>
