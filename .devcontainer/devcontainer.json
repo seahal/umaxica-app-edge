@@ -17,8 +17,7 @@
 			"extensions": [
 				"oven.bun-vscode",
 				"biomejs.biome",
-				"dbaeumer.vscode-eslint",
-				"eamodio.gitlens"
+				"dbaeumer.vscode-eslint"
 			],
 			"settings": {
 				"editor.defaultFormatter": "biomejs.biome",
@@ -28,7 +27,13 @@
 		}
 	},
 	"features": {
-		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
+		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
+		"ghcr.io/thamaji/devcontainer-features/codex-cli:latest": {
+			"VERSION": "latest"
+		},
+		"ghcr.io/thamaji/devcontainer-features/lefthook:latest": {
+      		"VERSION": "latest"
+    	}
 	},
 	"mounts": [
 		"source=${localEnv:HOME}/.claude,target=~/main/.claude,type=bind",
