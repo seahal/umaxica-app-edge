@@ -1,5 +1,5 @@
-declare module 'react-aria-components' {
-	import type { ComponentType, ReactNode } from 'react';
+declare module "react-aria-components" {
+	import type { ComponentType, ReactNode } from "react";
 
 	export interface ButtonProps {
 		children?: ReactNode;

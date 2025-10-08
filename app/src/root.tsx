@@ -40,8 +40,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl } =
-		useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const {
+		codeName,
+		helpServiceUrl,
+		docsServiceUrl,
+		newsServiceUrl,
+		authServiceUrl,
+	} = useLoaderData<Awaited<ReturnType<typeof loader>>>();
 	return (
 		<>
 			<Header
@@ -49,6 +54,7 @@ export default function App() {
 				helpServiceUrl={helpServiceUrl}
 				docsServiceUrl={docsServiceUrl}
 				newsServiceUrl={newsServiceUrl}
+				authServiceUrl={authServiceUrl}
 			/>
 			<Outlet />
 			<Breadcrumb />
@@ -72,6 +78,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		newsServiceUrl: env.NEWS_SERVICE_URL ?? "",
 		apiServiceUrl: env.API_SERVICE_URL ?? "",
 		apexServiceUrl: env.APEX_SERVICE_URL ?? "",
+		authServiceUrl: env.AUTH_SERVICE_URL ?? "",
 		edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
 		cspNonce,
 	};

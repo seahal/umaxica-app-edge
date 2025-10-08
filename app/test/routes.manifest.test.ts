@@ -2,16 +2,37 @@ import { describe, expect, it } from "bun:test";
 
 import routes from "../src/routes";
 
+const findByPath = (path: string) =>
+	routes.find((entry) => entry.path === path);
+const findByFile = (file: string) =>
+	routes.find((entry) => entry.file === file);
+
 describe("route manifest", () => {
-	it("lists the homepage index route", () => {
-		const homepageRoute = routes.find(
-			(entry) => entry.index && entry.file === "routes/_index.tsx",
-		);
-		expect(homepageRoute).toBeTruthy();
+	it("includes the application index route", () => {
+		expect(findByFile("routes/_index.tsx")).toMatchObject({
+			file: "routes/_index.tsx",
+			index: true,
+		});
 	});
 
-	it("lists the about route", () => {
-		const about = routes.find((entry) => entry.path === "about");
-		expect(about).toMatchObject({ path: "about", file: "routes/about.tsx" });
+	it.each([
+		["configuration", "routes/configurations/_index.tsx"],
+		["message", "routes/messages/_index.tsx"],
+		["notification", "routes/notifications/_index.tsx"],
+		["search", "routes/search/_index.tsx"],
+		["authentication", "routes/authentication/_index.tsx"],
+	])("exposes the %s index route", (path, file) => {
+		expect(findByPath(path)).toMatchObject({ path, file });
+	});
+
+	it("includes the configuration child routes", () => {
+		expect(findByPath("configuration/account")).toMatchObject({
+			path: "configuration/account",
+			file: "routes/configurations/account.tsx",
+		});
+		expect(findByPath("configuration/preference")).toMatchObject({
+			path: "configuration/preference",
+			file: "routes/configurations/preference.tsx",
+		});
 	});
 });
