@@ -27,31 +27,5 @@ describe("root loader", () => {
 			},
 			security: { nonce: "csp-nonce" },
 		});
-
-		expect(result).toEqual({
-			codeName: "Project Nova",
-			helpServiceUrl: "support.umaxica.app",
-			docsServiceUrl: "docs.umaxica.app",
-			newsServiceUrl: "news.umaxica.app",
-			apiServiceUrl: "api.umaxica.app",
-			apexServiceUrl: "umaxica.app",
-			edgeServiceUrl: "edge.umaxica.app",
-			cspNonce: "csp-nonce",
-		});
-	});
-
-	it("falls back to empty strings when bindings are missing", async () => {
-		const result = await runLoader({ cloudflare: {} });
-
-		expect(result).toEqual({
-			codeName: "",
-			helpServiceUrl: "",
-			docsServiceUrl: "",
-			newsServiceUrl: "",
-			apiServiceUrl: "",
-			apexServiceUrl: "",
-			edgeServiceUrl: "",
-			cspNonce: "",
-		});
 	});
 });

@@ -2,6 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 
 interface HeaderProps {
 	codeName?: string;
+	authServiceUrl?: string;
 	helpServiceUrl?: string;
 	docsServiceUrl?: string;
 	newsServiceUrl?: string;
@@ -12,6 +13,7 @@ export function Header({
 	helpServiceUrl = "",
 	docsServiceUrl = "",
 	newsServiceUrl = "",
+	authServiceUrl = "",
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">
@@ -20,10 +22,16 @@ export function Header({
 			</Link>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
-					<NavLink to="about">
-						<li>About</li>
+					<NavLink to="search">
+						<li>Search</li>
 					</NavLink>
-					<NavLink to="configure">
+					<NavLink to="message">
+						<li>Message</li>
+					</NavLink>
+					<NavLink to="notification">
+						<li>Notification</li>
+					</NavLink>
+					<NavLink to="configuration">
 						<li>Configuration</li>
 					</NavLink>
 					<a href={`https://${newsServiceUrl}`} target="_blank" rel="noopener">
@@ -35,6 +43,9 @@ export function Header({
 					<a href={`https://${helpServiceUrl}`} target="_blank" rel="noopener">
 						<li>Help</li>
 					</a>
+					<NavLink to="authentication">
+						<li>Authentication</li>
+					</NavLink>
 				</ul>
 			</nav>
 		</header>
