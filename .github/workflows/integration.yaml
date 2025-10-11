@@ -27,11 +27,11 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Audit
         run: bun audit
-      - name: Test
-        run: bun test
       - name: format (Biome)
         run: bun run format
       - name: Lint (Biome)
         run: bun run lint
       - name: Typecheck
         run: bun run typecheck
+      - name: Test
+        run: bun test
