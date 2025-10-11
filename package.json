@@ -5,7 +5,8 @@
 	"workspaces": [
 		"app",
 		"com",
-		"org"
+		"org",
+		"info"
 	],
 	"scripts": {
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",

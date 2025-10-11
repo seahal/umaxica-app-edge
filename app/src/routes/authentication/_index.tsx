@@ -1,5 +1,4 @@
 import type { Route } from "../+types/home";
-import { Link } from "react-router-dom";
 
 export const handle = {
 	titleName: "Authentication",

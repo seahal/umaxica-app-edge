@@ -27,5 +27,15 @@ describe("root loader", () => {
 			},
 			security: { nonce: "csp-nonce" },
 		});
+		expect(result).toMatchObject({
+			codeName: "Project Nova",
+			helpServiceUrl: "support.umaxica.app",
+			docsServiceUrl: "docs.umaxica.app",
+			newsServiceUrl: "news.umaxica.app",
+			apiServiceUrl: "api.umaxica.app",
+			apexServiceUrl: "umaxica.app",
+			edgeServiceUrl: "edge.umaxica.app",
+			cspNonce: "csp-nonce",
+		});
 	});
 });

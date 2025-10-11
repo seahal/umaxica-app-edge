@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 describe("smoke", () => {
 	it("basic truthiness", () => {
-		expect(!!"ok").toBe(true);
+		const value = "ok";
+		expect(Boolean(value)).toBe(true);
 	});
 });

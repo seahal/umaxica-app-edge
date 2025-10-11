@@ -1,5 +1,4 @@
 import {
-	isRouteErrorResponse,
 	Links,
 	Meta,
 	Outlet,
@@ -14,14 +13,14 @@ import { Header } from "./components/Header";
 import { Breadcrumb } from "./components/Breadcrumb";
 import { Footer } from "./components/Footer";
 
-import type { JSX } from "react";
+import type { ReactNode } from "react";
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
-export function meta({ matches }: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
 	return [{ title: "" }];
 }
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html lang="ja">
 			<head>
@@ -40,13 +39,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const {
-		codeName,
-		helpServiceUrl,
-		docsServiceUrl,
-		newsServiceUrl,
-		authServiceUrl,
-	} = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const { codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl } =
+		useLoaderData<Awaited<ReturnType<typeof loader>>>();
 	return (
 		<>
 			<Header
@@ -54,7 +48,6 @@ export default function App() {
 				helpServiceUrl={helpServiceUrl}
 				docsServiceUrl={docsServiceUrl}
 				newsServiceUrl={newsServiceUrl}
-				authServiceUrl={authServiceUrl}
 			/>
 			<Outlet />
 			<Breadcrumb />
@@ -78,7 +71,6 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		newsServiceUrl: env.NEWS_SERVICE_URL ?? "",
 		apiServiceUrl: env.API_SERVICE_URL ?? "",
 		apexServiceUrl: env.APEX_SERVICE_URL ?? "",
-		authServiceUrl: env.AUTH_SERVICE_URL ?? "",
 		edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
 		cspNonce,
 	};
