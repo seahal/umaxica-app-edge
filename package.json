@@ -41,7 +41,7 @@
 		"@types/react-router": "^5.1.20",
 		"@typescript/native-preview": "^7.0.0-dev.20251012.1",
 		"@vitejs/plugin-react": "^5.0.4",
-		"babel-plugin-react-compiler": "^1.0.0",
+		"babel-plugin-react-compiler": "^19.1.0-rc.1-rc-af1b7da-20250421",
 		"happy-dom": "^20.0.0",
 		"miniflare": "^4.20251008.0",
 		"vite": "npm:rolldown-vite@^7.1.16",
