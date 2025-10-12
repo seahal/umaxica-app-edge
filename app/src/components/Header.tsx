@@ -2,7 +2,6 @@ import { Link, NavLink } from "react-router-dom";
 
 interface HeaderProps {
 	codeName?: string;
-	authServiceUrl?: string;
 	helpServiceUrl?: string;
 	docsServiceUrl?: string;
 	newsServiceUrl?: string;
@@ -13,7 +12,6 @@ export function Header({
 	helpServiceUrl = "",
 	docsServiceUrl = "",
 	newsServiceUrl = "",
-	authServiceUrl = "",
 }: HeaderProps) {
 	return (
 		<header className="p-4 border-b">

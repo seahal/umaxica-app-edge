@@ -5,7 +5,7 @@
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"name": "umaxica-edge-com",
-	"compatibility_date": "2025-04-04",
+	"compatibility_date": "2025-09-15",
 	"main": "./workers/app.ts",
 	// Ensure the server/client bundles exist before Wrangler runs (react-router)
 	"build": { "command": "bun run build" },

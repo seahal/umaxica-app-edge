@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 function getDomainType(host: string): string {
-	const cleanHost = host.split(":")[0];
+	const [cleanHost = ""] = host.split(":");
 	if (
 		cleanHost === "umaxica.app" ||
 		cleanHost.endsWith(".umaxica.app") ||
