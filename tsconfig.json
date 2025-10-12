@@ -9,8 +9,8 @@
 			"@com/test/*": ["./com/test/*"],
 			"@org/*": ["./org/src/*"],
 			"@org/test/*": ["./org/test/*"],
-			"@info/*": ["./org/src/*"],
-			"@info/test/*": ["./org/test/*"]
+			"@info/*": ["./info/src/*"],
+			"@info/test/*": ["./info/test/*"]
 		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
