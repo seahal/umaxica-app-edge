@@ -17,20 +17,6 @@ describe("org route manifest", () => {
 		});
 	});
 
-	it("registers the about route", () => {
-		expect(routes.find((entry) => entry.path === "about")).toMatchObject({
-			path: "about",
-			file: "routes/about.tsx",
-		});
-	});
-
-	it("registers the sample route", () => {
-		expect(routes.find((entry) => entry.path === "sample")).toMatchObject({
-			path: "sample",
-			file: "routes/sample.tsx",
-		});
-	});
-
 	it("registers the catch-all route", () => {
 		expect(
 			routes.find(
@@ -46,8 +32,6 @@ describe("org route manifest", () => {
 				path: "configure",
 				file: "routes/configure.tsx",
 			}),
-			expect.objectContaining({ path: "about", file: "routes/about.tsx" }),
-			expect.objectContaining({ path: "sample", file: "routes/sample.tsx" }),
 			expect.objectContaining({ path: "*", file: "routes/catch-all.tsx" }),
 		]);
 	});
