@@ -14,8 +14,5 @@
 		"test": "vitest",
 		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
 		"format": "../node_modules/.bin/biome format src test --write"
-	},
-	"dependencies": {
-		"isbot": "^5.1.31"
 	}
 }

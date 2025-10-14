@@ -20,12 +20,6 @@ export function Header({
 			</Link>
 			<nav className="mt-2">
 				<ul className="flex gap-4">
-					<NavLink to="about">
-						<li>About</li>
-					</NavLink>
-					<NavLink to="sample">
-						<li>Sample</li>
-					</NavLink>
 					<NavLink to="configure">
 						<li>Configure</li>
 					</NavLink>
