@@ -5,3 +5,7 @@ environment = "happy-dom"
 
 # Keep default discovery; each package may also have its own bunfig
 # Retained so legacy Bun-based workflows still get a DOM-like environment
+[test]
+
+# always enable coverage
+coverage = true
