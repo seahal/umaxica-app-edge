@@ -21,25 +21,23 @@ export default function About(_: Route.ComponentProps) {
 	return (
 		<main className="p-4 container mx-auto">
 			<h2>Search</h2>
-			<ul>
-				<li className="list-disc list-inside">
-					<Link to="/configure/account">acccount</Link>
-					<ul className="list-disc list-inside pl-4">
-						<li>change email</li>
-						<li>delete account</li>
-						<li>region</li>
-					</ul>
-				</li>
-				<li className="list-disc list-inside">
-					<Link to="/configure/preference">preference</Link>
-					<ul className="list-disc list-inside pl-4">
-						<li>language</li>
-						<li>timezone</li>
-						<li>darkmode</li>
-						<li>accesivility</li>
-					</ul>
-				</li>
-			</ul>
+			<form>
+				<input
+					type="text"
+					name="q"
+					placeholder="Search..."
+					className="border border-gray-300 rounded-md p-2 w-full"
+				/>
+				<button
+					type="submit"
+					className="mt-2 bg-blue-500 text-white rounded-md p-2"
+				>
+					Search
+				</button>
+				<div className="mt-4">
+					<Link to="/">Go to Home</Link>
+				</div>
+			</form>
 		</main>
 	);
 }
