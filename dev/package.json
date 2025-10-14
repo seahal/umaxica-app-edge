@@ -1,0 +1,8 @@
+{
+	"name": "umaxica-edge-dev",
+	"version": "0.0.1",
+	"description": "code for xx.umaxica.dev",
+	"private": true,
+	"type": "module",
+	"scripts": {}
+}
