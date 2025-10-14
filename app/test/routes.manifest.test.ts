@@ -26,6 +26,11 @@ describe("route manifest", () => {
 	});
 
 	it("includes the configuration child routes", () => {
+		expect(findByPath("configuration")).toMatchObject({
+			path: "configuration",
+			index: true,
+			file: "routes/configurations/_index.tsx",
+		});
 		expect(findByPath("configuration/account")).toMatchObject({
 			path: "configuration/account",
 			file: "routes/configurations/account.tsx",
