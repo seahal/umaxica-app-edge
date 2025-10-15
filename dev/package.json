@@ -1,8 +1,16 @@
 {
 	"name": "umaxica-edge-dev",
-	"version": "0.0.1",
-	"description": "code for xx.umaxica.dev",
+	"version": "0.1.0",
 	"private": true,
 	"type": "module",
-	"scripts": {}
+	"scripts": {
+		"build": "react-router build",
+		"server": "react-router dev",
+		"start": "react-router-serve ./build/server/index.js"
+	},
+	"dependencies": {
+		"@react-router/node": "^7.9.2",
+		"@react-router/serve": "^7.9.2",
+		"isbot": "^5.1.31"
+	}
 }
