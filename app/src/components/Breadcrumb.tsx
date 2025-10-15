@@ -15,7 +15,12 @@ type BreadcrumbItem = {
 
 const HOME_PATH = "/";
 
-function resolveBreadcrumb(match: UIMatch): BreadcrumbItem | null {
+type BreadcrumbMatch = UIMatch & {
+	pathname?: string;
+	pathnameBase?: string;
+};
+
+function resolveBreadcrumb(match: BreadcrumbMatch): BreadcrumbItem | null {
 	const handle = match.handle as BreadcrumbHandle | undefined;
 	const label = (() => {
 		if (!handle) {
@@ -45,7 +50,7 @@ function resolveBreadcrumb(match: UIMatch): BreadcrumbItem | null {
 }
 
 export function Breadcrumb() {
-	const matches = useMatches();
+	const matches = useMatches() as BreadcrumbMatch[];
 	const breadcrumbs = matches.reduce<BreadcrumbItem[]>((acc, match) => {
 		const item = resolveBreadcrumb(match);
 		if (item) {

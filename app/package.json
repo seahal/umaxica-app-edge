@@ -1,6 +1,6 @@
 {
 	"name": "umaxica-edge-app",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "code for xx.umaxica.com",
 	"private": true,
 	"type": "module",
@@ -8,7 +8,7 @@
 		"build": "react-router build",
 		"cf-typegen": "bunx wrangler types",
 		"deploy": "bun run build && bunx wrangler deploy",
-		"dev": "react-router dev",
+		"server": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
 		"test": "vitest",
