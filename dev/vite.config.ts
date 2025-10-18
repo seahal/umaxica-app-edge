@@ -1,4 +1,3 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
@@ -13,7 +12,6 @@ export default defineConfig(() => {
 	return {
 		plugins: [
 			tailwindcss(),
-			cloudflare({ viteEnvironment: { name: "ssr" } }),
 			reactRouter(),
 			babel({
 				filter: /\.[jt]sx?$/,
@@ -26,13 +24,11 @@ export default defineConfig(() => {
 		],
 		server: {
 			host: true,
-			port: 5172,
+			port: 5173,
 			strictPort: true,
 			watch: {
 				usePolling: true,
 			},
 		},
-		// Do not bind to Wrangler's port; let Vite choose its own (default 5173)
-		// so the Cloudflare plugin can proxy HMR correctly through Wrangler dev.
 	};
 });

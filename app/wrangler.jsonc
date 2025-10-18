@@ -55,8 +55,8 @@
 				"DOCS_SERVICE_URL": "jp.docs.umaxica.app",
 				"DOCS_STAFF_URL": "jp.docs.umaxica.org",
 				"HELP_CORPORATE_URL": "help.umaxica.com",
-				"HELP_SERVICE_URL": "help.umaxica.app",
-				"HELP_STAFF_URL": "help.umaxica.org",
+				"HELP_SERVICE_URL": "jp.help.umaxica.app",
+				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (production via wrangler.jsonc)"
 			}

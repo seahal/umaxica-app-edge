@@ -1,11 +1,6 @@
 import { Welcome } from "../welcome/welcome";
 import type { Route } from "./+types/_index";
 
-export const handle = {
-	titleName: "Home",
-	breadcrumb: () => "Home",
-};
-
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "Welcome!" }];
 }

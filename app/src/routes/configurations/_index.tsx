@@ -1,11 +1,6 @@
 import type { Route } from "../+types/home";
 import { Link } from "react-router-dom";
 
-export const handle = {
-	titleName: "Configuration",
-	breadcrumb: () => "Configuration",
-};
-
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "Welcome to React Router!" }];
 }
@@ -23,7 +18,7 @@ export default function About(_: Route.ComponentProps) {
 			<h2>Configuration</h2>
 			<ul>
 				<li className="list-disc list-inside">
-					<Link to="/configure/account">acccount</Link>
+					<Link to="/configuration/account">acccount</Link>
 					<ul className="list-disc list-inside pl-4">
 						<li>change email</li>
 						<li>delete account</li>
@@ -31,7 +26,7 @@ export default function About(_: Route.ComponentProps) {
 					</ul>
 				</li>
 				<li className="list-disc list-inside">
-					<Link to="/configure/preference">preference</Link>
+					<Link to="/configuration/preference">preference</Link>
 					<ul className="list-disc list-inside pl-4">
 						<li>language</li>
 						<li>timezone</li>

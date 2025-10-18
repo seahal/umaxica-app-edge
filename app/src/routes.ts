@@ -16,4 +16,5 @@ export default [
 	...prefix("notification", [index("routes/notifications/_index.tsx")]),
 	...prefix("search", [index("routes/search/_index.tsx")]),
 	...prefix("authentication", [index("routes/authentication/_index.tsx")]),
+	...prefix("health", [index("routes/healths/_index.tsx")]),
 ] satisfies RouteConfig;
