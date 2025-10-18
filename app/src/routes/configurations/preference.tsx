@@ -1,10 +1,5 @@
 import type { Route } from "../+types/about";
 
-export const handle = {
-	titleName: "preference",
-	breadcrumb: () => "preference",
-};
-
 export function meta(_: Route.MetaArgs) {
 	return [
 		{ title: "preference" },

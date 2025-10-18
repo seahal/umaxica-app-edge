@@ -1,7 +1,7 @@
 import type { Route } from "../+types/home";
 
 export function meta(_: Route.MetaArgs) {
-	return [{ name: "description", content: "Welcome to React Router!" }];
+	return [{ name: "description", content: "status page!" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -11,11 +11,10 @@ export function loader({ context }: Route.LoaderArgs) {
 	};
 }
 
-export default function App(_: Route.ComponentProps) {
+export default function Index(_: Route.ComponentProps) {
 	return (
 		<main className="p-4 container mx-auto">
-			<h2>Message</h2>
-			<p>underconstrution...</p>
+			<h2>ok</h2>
 		</main>
 	);
 }

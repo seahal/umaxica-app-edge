@@ -10,7 +10,6 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Header } from "./components/Header";
-import { Breadcrumb } from "./components/Breadcrumb";
 import { Footer } from "./components/Footer";
 
 import type { ReactNode } from "react";
@@ -50,7 +49,6 @@ export default function App() {
 				newsServiceUrl={newsServiceUrl}
 			/>
 			<Outlet />
-			<Breadcrumb />
 			<Footer codeName={codeName} />
 		</>
 	);

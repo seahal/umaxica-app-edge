@@ -1,10 +1,5 @@
 import type { Route } from "../+types/home";
 
-export const handle = {
-	titleName: "Authentication",
-	breadcrumb: () => "Authentication",
-};
-
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "Welcome to React Router!" }];
 }
@@ -22,6 +17,9 @@ export default function About(_: Route.ComponentProps) {
 			<h2>Authentication</h2>
 			<a href="https://auth.umaxica.app/registration/new" rel="noopener">
 				<p>Sign up</p>
+			</a>
+			<a href="https://auth.umaxica.app/authentication/new" rel="noopener">
+				<p>Sign in</p>
 			</a>
 		</main>
 	);

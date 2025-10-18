@@ -156,3 +156,4 @@ package-lock.json
 .claude.json
 .claude.json.backup
 .codex/
+.vercel

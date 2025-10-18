@@ -9,3 +9,5 @@ environment = "happy-dom"
 
 # always enable coverage
 coverage = true
+coverageReporter  = ["text", "lcov"]
+coverageDir = "coverage"  # default "coverage"
