@@ -2,31 +2,34 @@ import { describe, expect, it } from "bun:test";
 
 import routes from "../src/routes";
 
+type RouteManifestEntry = {
+	children?: RouteManifestEntry[];
+	file?: string;
+	index?: boolean;
+	path?: string;
+};
+
+const flattenRoutes = (entries: RouteManifestEntry[]): RouteManifestEntry[] =>
+	entries.reduce<RouteManifestEntry[]>((acc, entry) => {
+		acc.push(entry);
+		if (entry.children?.length) {
+			acc.push(...flattenRoutes(entry.children));
+		}
+		return acc;
+	}, []);
+
+const manifest = flattenRoutes(routes as RouteManifestEntry[]);
+
+const findByPath = (path: string) =>
+	manifest.find((entry) => entry.path === path);
+const findByFile = (file: string) =>
+	manifest.find((entry) => entry.file === file);
+
 describe("org route manifest", () => {
-	it("includes the index route", () => {
-		const homepage = routes.find(
-			(entry) => entry.index && entry.file === "routes/_index.tsx",
-		);
-		expect(homepage).toBeTruthy();
-	});
-
-	it("registers the configure route", () => {
-		expect(routes.find((entry) => entry.path === "configure")).toMatchObject({
-			path: "configure",
-			file: "routes/configure.tsx",
-		});
-	});
-
-	it("registers the catch-all route", () => {
-		expect(
-			routes.find(
-				(entry) => entry.path === "*" && entry.file === "routes/catch-all.tsx",
-			),
-		).toBeTruthy();
-	});
-
-	it("preserves the expected order", () => {
-		expect(routes).toEqual([
+	it("wraps primary routes with the decorated layout", () => {
+		const decorated = routes[0];
+		expect(decorated).toMatchObject({ file: "../src/layouts/decorated.tsx" });
+		expect(decorated?.children ?? []).toEqual([
 			expect.objectContaining({ index: true, file: "routes/_index.tsx" }),
 			expect.objectContaining({
 				path: "configure",
@@ -34,5 +37,34 @@ describe("org route manifest", () => {
 			}),
 			expect.objectContaining({ path: "*", file: "routes/catch-all.tsx" }),
 		]);
+	});
+
+	it("includes the index route", () => {
+		expect(findByFile("routes/_index.tsx")).toMatchObject({
+			file: "routes/_index.tsx",
+			index: true,
+		});
+	});
+
+	it("registers configure and catch-all routes", () => {
+		expect(findByPath("configure")).toMatchObject({
+			path: "configure",
+			file: "routes/configure.tsx",
+		});
+		expect(findByPath("*")).toMatchObject({
+			path: "*",
+			file: "routes/catch-all.tsx",
+		});
+	});
+
+	it("registers the baremetal layout for health checks", () => {
+		expect(findByFile("../src/layouts/baremetal.tsx")).toBeDefined();
+	});
+
+	it("exposes the /health route", () => {
+		expect(findByPath("/health")).toMatchObject({
+			path: "/health",
+			file: "routes/healths/_index.tsx",
+		});
 	});
 });

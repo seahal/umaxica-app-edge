@@ -10,6 +10,8 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 
+import type { ReactNode } from "react";
+
 type RouteErrorBoundaryProps = {
 	error: unknown;
 };
@@ -27,7 +29,7 @@ export const links: Route.LinksFunction = () => [
 	},
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html lang="en">
 			<head>
@@ -37,7 +39,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Links />
 			</head>
 			<body>
-				<h1>UMAXICA (DEV)</h1>
 				{children}
 				<ScrollRestoration />
 				<Scripts />
