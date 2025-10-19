@@ -1,16 +1,7 @@
-import {
-	Links,
-	Meta,
-	Outlet,
-	Scripts,
-	ScrollRestoration,
-	useLoaderData,
-} from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
 
 import type { ReactNode } from "react";
 
@@ -38,20 +29,7 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-	const { codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl } =
-		useLoaderData<Awaited<ReturnType<typeof loader>>>();
-	return (
-		<>
-			<Header
-				codeName={codeName}
-				helpServiceUrl={helpServiceUrl}
-				docsServiceUrl={docsServiceUrl}
-				newsServiceUrl={newsServiceUrl}
-			/>
-			<Outlet />
-			<Footer codeName={codeName} />
-		</>
-	);
+	return <Outlet />;
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
