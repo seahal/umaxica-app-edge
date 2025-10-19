@@ -2,10 +2,28 @@ import { describe, expect, it } from "bun:test";
 
 import routes from "../src/routes";
 
+type RouteManifestEntry = {
+	children?: RouteManifestEntry[];
+	file?: string;
+	index?: boolean;
+	path?: string;
+};
+
+const flattenRoutes = (entries: RouteManifestEntry[]): RouteManifestEntry[] =>
+	entries.reduce<RouteManifestEntry[]>((acc, entry) => {
+		acc.push(entry);
+		if (entry.children?.length) {
+			acc.push(...flattenRoutes(entry.children));
+		}
+		return acc;
+	}, []);
+
+const manifest = flattenRoutes(routes as RouteManifestEntry[]);
+
 const findByPath = (path: string) =>
-	routes.find((entry) => entry.path === path);
+	manifest.find((entry) => entry.path === path);
 const findByFile = (file: string) =>
-	routes.find((entry) => entry.file === file);
+	manifest.find((entry) => entry.file === file);
 
 describe("route manifest", () => {
 	it("includes the application index route", () => {
@@ -13,6 +31,10 @@ describe("route manifest", () => {
 			file: "routes/_index.tsx",
 			index: true,
 		});
+	});
+
+	it("registers the decorated layout shell", () => {
+		expect(findByFile("../src/layouts/decorated.tsx")).toBeDefined();
 	});
 
 	it.each([
@@ -38,6 +60,13 @@ describe("route manifest", () => {
 		expect(findByPath("configuration/preference")).toMatchObject({
 			path: "configuration/preference",
 			file: "routes/configurations/preference.tsx",
+		});
+	});
+
+	it("exposes the baremetal health check", () => {
+		expect(findByPath("/health")).toMatchObject({
+			path: "/health",
+			file: "routes/healths/_index.tsx",
 		});
 	});
 });
