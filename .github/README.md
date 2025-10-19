@@ -52,15 +52,18 @@ cp org/.env.production.local.example org/.env.production.local
 Edit the copied files with your real hostnames and API endpoints. Only `VITE_`-prefixed values are exposed to the client; secrets must stay in Cloudflare via `wrangler secret put` or `wrangler.jsonc` `vars`.
 
 # how to test
-
-```
-bun run test
-```
+`bun run test`
 
 # how to lint / format / typecheck
+- lint
+`bun run lint`
+- format
+`bun run format`
+- typecheck
+`bun run typecheck`
 
-```
-bun run lint
-bun run format
-bun run typecheck
-```
+# site
+- https://jp.umaxica.com
+- https://jp.umaxica.app
+- https://jp.umaxica.org 
+- https://jp.umaxica.dev
