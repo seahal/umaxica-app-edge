@@ -5,20 +5,16 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useLoaderData,
-	useRouteLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
 import { isDevelopmentEnvironment } from "../../shared/meta-env";
 
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
 const isDevEnvironment = isDevelopmentEnvironment();
 
@@ -28,9 +24,7 @@ export function meta() {
 
 export const links: Route.LinksFunction = () => [];
 
-export function Layout({ children }: { children: React.ReactNode }) {
-	const _rootData =
-		useRouteLoaderData<Awaited<ReturnType<typeof loader>>>("root");
+export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html lang="en">
 			<head>
@@ -49,20 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { codeName, newsUrl, docsUrl, helpUrl } =
-		useLoaderData<Awaited<ReturnType<typeof loader>>>();
-	return (
-		<>
-			<Header
-				codeName={codeName}
-				newsUrl={newsUrl}
-				docsUrl={docsUrl}
-				helpUrl={helpUrl}
-			/>
-			<Outlet />
-			<Footer codeName={codeName} />
-		</>
-	);
+	return <Outlet />;
 }
 
 export function ErrorBoundary({

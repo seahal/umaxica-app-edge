@@ -25,43 +25,24 @@ const findByPath = (path: string) =>
 const findByFile = (file: string) =>
 	manifest.find((entry) => entry.file === file);
 
-describe("com route manifest", () => {
-	it("wraps primary routes with the decorated layout", () => {
+describe("dev route manifest", () => {
+	it("wraps the home route with the decorated layout", () => {
 		const decorated = routes[0];
 		expect(decorated).toMatchObject({ file: "../src/layouts/decorated.tsx" });
 		expect(decorated?.children ?? []).toEqual([
-			expect.objectContaining({ index: true, file: "routes/_index.tsx" }),
-			expect.objectContaining({
-				path: "configure",
-				file: "routes/configure.tsx",
-			}),
-			expect.objectContaining({ path: "*", file: "routes/catch-all.tsx" }),
+			expect.objectContaining({ index: true, file: "routes/home.tsx" }),
 		]);
 	});
 
-	it("includes the application index route", () => {
-		expect(findByFile("routes/_index.tsx")).toMatchObject({
-			file: "routes/_index.tsx",
+	it("exposes the home index route", () => {
+		expect(findByFile("routes/home.tsx")).toMatchObject({
+			file: "routes/home.tsx",
 			index: true,
 		});
 	});
 
-	it("registers the configure and catch-all routes", () => {
-		expect(findByPath("configure")).toMatchObject({
-			path: "configure",
-			file: "routes/configure.tsx",
-		});
-		expect(findByPath("*")).toMatchObject({
-			path: "*",
-			file: "routes/catch-all.tsx",
-		});
-	});
-
-	it("registers the baremetal layout for health checks", () => {
+	it("registers the baremetal health route", () => {
 		expect(findByFile("../src/layouts/baremetal.tsx")).toBeDefined();
-	});
-
-	it("exposes the /health route", () => {
 		expect(findByPath("/health")).toMatchObject({
 			path: "/health",
 			file: "routes/healths/_index.tsx",
