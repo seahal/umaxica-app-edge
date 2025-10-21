@@ -13,6 +13,7 @@
 		"enabled": true
 	},
 	"vars": {
+		"CODE_NAME": "UMAXICA",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
@@ -33,12 +34,12 @@
 		"HELP_CORPORATE_URL": "jp.help.umaxica.com",
 		"HELP_SERVICE_URL": "jp.help.umaxica.app",
 		"HELP_STAFF_URL": "jp.help.umaxica.org",
-		"CODE_NAME": "UMAXICA",
 		"VALUE_FROM_CLOUDFLARE": "Umaxica COM (local via wrangler.jsonc)"
 	},
 	"env": {
 		"production": {
 			"vars": {
+				"CODE_NAME": "UMAXICA",
 				"APEX_CORPORATE_URL": "umaxica.com",
 				"APEX_SERVICE_URL": "umaxica.app",
 				"APEX_STAFF_URL": "umaxica.org",
@@ -59,16 +60,8 @@
 				"HELP_CORPORATE_URL": "help.umaxica.com",
 				"HELP_SERVICE_URL": "jp.help.umaxica.app",
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
-				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica COM (production via wrangler.jsonc)"
-			},
-			"secrets_store_secrets": [
-				{
-					"binding": "UMAXICA_JP_COM_JWT_PUBLIC_KEY",
-					"store_id": "eb74dec1a757471281526676fb6e6509",
-					"secret_name": "JWT_PUBLIC_KEY"
-				}
-			]
+			}
 		}
 	},
 	/**
