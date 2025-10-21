@@ -59,7 +59,14 @@
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (production via wrangler.jsonc)"
-			}
+			},
+			"secrets_store_secrets": [
+				{
+					"binding": "UMAXICA_JP_APP_JWT_PUBLIC_KEY",
+					"store_id": "eb74dec1a757471281526676fb6e6509",
+					"secret_name": "JWT_PUBLIC_KEY"
+				}
+			]
 		}
 	},
 	/**

@@ -19,9 +19,6 @@
 		"API_CORPORATE_URL": "api.com.localhost:3300",
 		"API_SERVICE_URL": "api.app.localhost:3300",
 		"API_STAFF_URL": "api.org.localhost:3300",
-		"WWW_CORPORATE_URL": "",
-		"WWW_SERVICE_URL": "",
-		"WWW_STAFF_URL": "",
 		"APEX_CORPORATE_URL": "com.localhost:3300",
 		"APEX_SERVICE_URL": "app.localhost:3300",
 		"APEX_STAFF_URL": "org.localhost:3300",
@@ -64,7 +61,14 @@
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica COM (production via wrangler.jsonc)"
-			}
+			},
+			"secrets_store_secrets": [
+				{
+					"binding": "UMAXICA_JP_COM_JWT_PUBLIC_KEY",
+					"store_id": "eb74dec1a757471281526676fb6e6509",
+					"secret_name": "JWT_PUBLIC_KEY"
+				}
+			]
 		}
 	},
 	/**
