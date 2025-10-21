@@ -6,7 +6,7 @@
 		"src/**/.server/**/*",
 		"src/**/.client/**/*",
 		"workers/**/*",
-		"../shared/**/*",
+		"../edge-runtime.ts",
 		"worker-configuration.d.ts",
 		"virtual-modules.d.ts",
 		"react-router-types.d.ts"

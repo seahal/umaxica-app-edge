@@ -12,7 +12,7 @@ import "./app.css";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { isDevelopmentEnvironment } from "../../shared/meta-env";
+import { isDevelopmentEnvironment } from "../../edge-runtime";
 
 import type { JSX, ReactNode } from "react";
 

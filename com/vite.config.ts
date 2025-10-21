@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { migrateOptimizeDepsPlugin } from "../edge-runtime";
 
 const ReactCompilerConfig = {
 	target: "19",
@@ -23,6 +24,7 @@ export default defineConfig(() => {
 				},
 			}),
 			tsconfigPaths(),
+			migrateOptimizeDepsPlugin(),
 		],
 		server: {
 			host: true,
