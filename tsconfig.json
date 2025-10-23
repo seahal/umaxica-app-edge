@@ -1,5 +1,5 @@
 {
-	"exclude": ["app/**/*", "com/**/*", "org/**/*, info/**/*"],
+	"exclude": ["app/**/*", "com/**/*", "org/**/*, dev/**/*"],
 	"compilerOptions": {
 		"target": "ESNext",
 		"paths": {
@@ -9,8 +9,8 @@
 			"@com/test/*": ["./com/test/*"],
 			"@org/*": ["./org/src/*"],
 			"@org/test/*": ["./org/test/*"],
-			"@info/*": ["./info/src/*"],
-			"@info/test/*": ["./info/test/*"]
+			"@dev/*": ["./dev/src/*"],
+			"@dev/test/*": ["./dev/test/*"]
 		},
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
