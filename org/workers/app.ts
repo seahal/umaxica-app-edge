@@ -1,5 +1,4 @@
 import { createRequestHandler } from "react-router";
-import { generateNonce, withSecurityHeaders } from "../../edge-runtime";
 
 const requestHandler = createRequestHandler(
 	() => import("virtual:react-router/server-build"),

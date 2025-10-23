@@ -6,17 +6,13 @@ import {
 	Scripts,
 	ScrollRestoration,
 } from "react-router";
-
-import type { Route } from "./+types/root";
-import "./app.css";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { isDevelopmentEnvironment } from "../../edge-runtime";
+import "./app.css";
 
 import type { JSX, ReactNode } from "react";
-
-const isDevEnvironment = isDevelopmentEnvironment();
+import type { Route } from "./+types/root";
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta() {
