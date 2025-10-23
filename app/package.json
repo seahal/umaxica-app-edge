@@ -1,7 +1,7 @@
 {
-	"name": "umaxica-edge-app",
+	"name": "umaxica-app-edge-app",
 	"version": "0.1.0",
-	"description": "code for xx.umaxica.com",
+	"description": "code for xx.umaxica.app",
 	"private": true,
 	"type": "module",
 	"scripts": {

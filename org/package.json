@@ -1,5 +1,5 @@
 {
-	"name": "umaxica-edge-org",
+	"name": "umaxica-app-edge-org",
 	"version": "0.0.1",
 	"description": "code for xx.umaxica.com",
 	"private": true,
@@ -10,9 +10,6 @@
 		"deploy": "bun run build && bunx wrangler deploy",
 		"server": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
-		"preview": "bun run build && vite preview",
-		"test": "vitest",
-		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
-		"format": "../node_modules/.bin/biome format src test --write"
+		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b"
 	}
 }

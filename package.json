@@ -2,12 +2,6 @@
 	"name": "umaxica-app-edge",
 	"version": "0.1.0",
 	"type": "module",
-	"workspaces": [
-		"app/**",
-		"com/**",
-		"org/**",
-		"dev/**"
-	],
 	"scripts": {
 		"cf-typegen": "bunx wrangler types --env-interface CloudflareBindings",
 		"format": "bunx @biomejs/biome format . --write",
@@ -54,5 +48,11 @@
 		"vite-tsconfig-paths": "^5.1.4",
 		"wrangler": "^4.45.0"
 	},
-	"private": true
+	"private": true,
+	"workspaces": [
+		"app",
+		"com",
+		"dev",
+		"org"
+	]
 }

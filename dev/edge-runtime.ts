@@ -9,17 +9,28 @@ const NONCE_ALPHABET =
 export function generateNonce(length = 32): string {
 	const characters = NONCE_ALPHABET;
 	const count = characters.length;
-	const values =
+	const hasCrypto =
 		typeof crypto !== "undefined" &&
-		typeof crypto.getRandomValues === "function"
-			? crypto.getRandomValues(new Uint8Array(length))
-			: undefined;
+		typeof crypto.getRandomValues === "function";
 
-	if (values) {
+	if (hasCrypto) {
+		const buffer = new Uint8Array(length);
+		const maxMultiple = Math.floor(256 / count) * count;
+		let remaining = length;
 		let result = "";
-		for (let index = 0; index < values.length; index++) {
-			result += characters[values[index]! % count]!;
+
+		while (remaining > 0) {
+			crypto.getRandomValues(buffer);
+			for (let index = 0; index < buffer.length && remaining > 0; index++) {
+				const value = buffer[index]!;
+				if (value >= maxMultiple) {
+					continue;
+				}
+				result += characters[value % count]!;
+				remaining -= 1;
+			}
 		}
+
 		return result;
 	}
 
