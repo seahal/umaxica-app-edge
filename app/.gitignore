@@ -17,3 +17,6 @@
 !.env.example
 !.env.local
 !.env.production.local
+
+# added by coder
+.react-router/

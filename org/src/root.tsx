@@ -5,18 +5,15 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLoaderData,
 } from "react-router";
-
-import type { Route } from "./+types/root";
-import "./app.css";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { isDevelopmentEnvironment } from "../../shared/meta-env";
+import "./app.css";
 
 import type { JSX, ReactNode } from "react";
-
-const isDevEnvironment = isDevelopmentEnvironment();
+import type { Route } from "./+types/root";
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta() {
@@ -26,6 +23,9 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
+	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const nonce = cspNonce || undefined;
+
 	return (
 		<html lang="en">
 			<head>
@@ -36,8 +36,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration />
-				<Scripts />
+				<ScrollRestoration nonce={nonce} />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);
@@ -61,7 +61,6 @@ export function ErrorBoundary({
 			return (
 				<InternalServerErrorPage
 					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
-					showDetails={isDevEnvironment}
 				/>
 			);
 		}
@@ -82,13 +81,7 @@ export function ErrorBoundary({
 	}
 
 	if (error instanceof Error) {
-		return (
-			<InternalServerErrorPage
-				details={error.message}
-				stack={isDevEnvironment ? error.stack : undefined}
-				showDetails={isDevEnvironment}
-			/>
-		);
+		return <InternalServerErrorPage details={error.message} />;
 	}
 
 	return (
@@ -98,22 +91,23 @@ export function ErrorBoundary({
 			message="申し訳ございません。予期しないエラーが発生しました。"
 			suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
 			showNavigation={true}
-			showDetails={isDevEnvironment}
-			details={isDevEnvironment ? String(error) : undefined}
 		/>
 	);
 }
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
-	const { cloudflare } =
+export async function loader({ context }: Route.LoaderArgs) {
+	const { cloudflare, security } =
 		(context as unknown as {
 			cloudflare?: { env?: Record<string, string> };
+			security?: { nonce?: string };
 		}) ?? {};
 	const env = cloudflare?.env ?? {};
+	const cspNonce = security?.nonce ?? "";
 	return {
 		codeName: env.CODE_NAME ?? "",
 		newsUrl: env.NEWS_STAFF_URL ?? "",
 		docsUrl: env.DOCS_STAFF_URL ?? "",
 		helpUrl: env.HELP_STAFF_URL ?? "",
+		cspNonce,
 	};
-};
+}

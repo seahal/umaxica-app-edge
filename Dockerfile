@@ -35,7 +35,7 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@latest" \
+RUN npm install -g "bun@1.3.1" \
   && npm cache clean --force
 
 RUN set -eux; \

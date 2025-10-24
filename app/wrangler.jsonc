@@ -11,6 +11,7 @@
 		"enabled": true
 	},
 	"vars": {
+		"CODE_NAME": "UMAXICA",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
@@ -31,7 +32,6 @@
 		"HELP_CORPORATE_URL": "jp.help.umaxica.com",
 		"HELP_SERVICE_URL": "jp.help.umaxica.app",
 		"HELP_STAFF_URL": "jp.help.umaxica.org",
-		"CODE_NAME": "UMAXICA",
 		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)"
 	},
 	"env": {
@@ -62,6 +62,13 @@
 			}
 		}
 	},
+	"secret_store_secrets": [
+		{
+			"binding": "UMAXICA_JP_APP_JWT_PUBLIC_KEY",
+			"store_id": "eb74dec1a757471281526676fb6e6509",
+			"secret_name": "JWT_PUBLIC_KEY"
+		}
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

@@ -122,7 +122,7 @@ plugins: [
 
 ### Shared Configuration
 
-- `/shared/` - Centralized configuration for domain-specific settings
+- `<domain>/edge-runtime.ts` - Runtime helpers co-located with each domain (app/com/org/dev)
 - `/test/` - Cross-domain testing utilities and domain routing tests
 
 ## React Router Configuration

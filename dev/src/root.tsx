@@ -5,11 +5,12 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLoaderData,
 } from "react-router";
 
-import type { Route } from "./+types/root";
 import "./app.css";
 
+import type { Route } from "./+types/root";
 import type { ReactNode } from "react";
 
 type RouteErrorBoundaryProps = {
@@ -30,6 +31,9 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
+	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const nonce = cspNonce || undefined;
+
 	return (
 		<html lang="en">
 			<head>
@@ -40,8 +44,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration />
-				<Scripts />
+				<ScrollRestoration nonce={nonce} />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);
@@ -49,6 +53,11 @@ export function Layout({ children }: { children: ReactNode }) {
 
 export default function App() {
 	return <Outlet />;
+}
+
+export function loader({ context }: Route.LoaderArgs) {
+	const cspNonce = context?.security?.nonce ?? "";
+	return { cspNonce };
 }
 
 export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {

@@ -1,69 +1,90 @@
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/seahal/umaxica-app-edge/main)
 
-# Setup (Bun)
+# Umaxica Edge Monorepo
 
-```
+Cloudflare Workers applications for the `umaxica` properties, managed as a Bun workspace monorepo. Each workspace targets a separate hostname while sharing a single toolchain and dependency tree.
+
+## Prerequisites
+- [Bun](https://bun.sh/) 1.1+ (verify with `bun -v`)
+- [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/)
+- Docker & Docker Compose (optional for containerized dev)
+
+## Workspace Overview
+
+| Workspace | Purpose | Default Dev Port |
+| --------- | ------- | ---------------- |
+| `app` | SSR app for `*.umaxica.app` | `http://localhost:5171` |
+| `com` | Marketing site for `*.umaxica.com` | `http://localhost:5170` |
+| `org` | Corporate site for `*.umaxica.org` | `http://localhost:5172` |
+| `dev` | Playground / staging site | `http://localhost:5173` |
+
+Install dependencies once from the repo root:
+
+```bash
 bun install
 ```
 
-# Development (Docker Compose)
+## Local Development
 
-``
-docker compose up -d dev
-docker compose exec dev bun install
-docker compose exec dev bun run dev  # http://localhost:4000
+### Dev Containers
+- Works best with VS Code Remote Containers / Dev Containers.
+- JetBrains IDEs are not fully supported in the container yet.
+
+### Docker Compose
+
+Spin up the development environment inside Docker:
+
+```bash
+docker compose up
 ```
 
-Stop the container with `docker compose down` when you are done.
+Stop the stack with `docker compose down` when finished.
 
-# Development (wrangler dev)
+### Bun + Wrangler (bare metal)
 
-Run each workspace locally with Cloudflare Wrangler so dev matches production:
+Run each workspace in its own terminal so that Wrangler mirrors the production runtime:
 
+```bash
+bun run --cwd com server   # http://localhost:5170
+bun run --cwd app server   # http://localhost:5171
+bun run --cwd org server   # http://localhost:5172
+bun run --cwd dev server   # http://localhost:5173
 ```
-bun run --cwd com dev  # http://localhost:5170
-# in another terminal
-bun run --cwd app dev # http://localhost:5171
-# in another terminal
-bun run --cwd org dev   # http://localhost:5172
+
+## Environment Variables
+
+Vite reads `.env.local` while developing and `.env.production.local` when `NODE_ENV=production`. Copy the examples provided per workspace, update hostnames and API endpoints, and remember that only `VITE_`-prefixed variables are exposed to the client. Secrets should be stored with `wrangler secret put` or in `wrangler.jsonc` `vars`.
+
+## Common Scripts
+
+- Format code: `bun run format`
+- Lint code: `bun run lint`
+- Generate Cloudflare types: `bun run cf-typegen`
+- Workspace-specific tasks: `bun run --cwd <workspace> <script>`
+
+Workspace scripts for testing, preview builds, and deployments live in each `package.json`. Example:
+
+```bash
+bun run --cwd app test
+bun run --cwd com preview
+bun run --cwd org deploy
 ```
 
-# Deploy to Cloudflare
+## Deployment
 
-```
+Deploy each Workers site to Cloudflare:
+
+```bash
 bun run --cwd com deploy
 bun run --cwd app deploy
 bun run --cwd org deploy
 ```
 
-# Environment variables
+`dev` is typically deployed on demand for demos.
 
-Vite looks for `.env.local` during development and `.env.production.local` when you build with `NODE_ENV=production`. Each workspace ships examples you can copy:
+## Staging Hosts
 
-```
-cp app/.env.local.example app/.env.local
-cp app/.env.production.local.example app/.env.production.local
-cp com/.env.local.example com/.env.local
-cp com/.env.production.local.example com/.env.production.local
-cp org/.env.local.example org/.env.local
-cp org/.env.production.local.example org/.env.production.local
-```
-
-Edit the copied files with your real hostnames and API endpoints. Only `VITE_`-prefixed values are exposed to the client; secrets must stay in Cloudflare via `wrangler secret put` or `wrangler.jsonc` `vars`.
-
-# how to test
-`bun run test`
-
-# how to lint / format / typecheck
-- lint
-`bun run lint`
-- format
-`bun run format`
-- typecheck
-`bun run typecheck`
-
-# site
-- https://jp.umaxica.com
-- https://jp.umaxica.app
-- https://jp.umaxica.org 
-- https://jp.umaxica.dev
+- `com`: https://jp.umaxica.com, https://us.umaxica.com  
+- `app`: https://jp.umaxica.app, https://us.umaxica.app  
+- `org`: https://jp.umaxica.org, https://us.umaxica.org  
+- `dev`: https://jp.umaxica.dev, https://us.umaxica.dev

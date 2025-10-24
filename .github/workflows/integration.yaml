@@ -14,7 +14,7 @@ permissions:
   contents: read
   pull-requests: write
 jobs:
-  checks:
+  audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -24,18 +24,82 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.3.0'
+          bun-version: '1.3.1'
       - name: Install deps
         run: bun install
       - name: Audit
         run: bun audit
-      - name: format (Biome)
+
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - name: Install deps
+        run: bun install
+      - name: Format (Biome)
         run: bun run format
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - name: Install deps
+        run: bun install
       - name: Lint (Biome)
         run: bun run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - name: Install deps
+        run: bun install
       - name: Typecheck
-        run: bun run typecheck
+        run: bun run type
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - name: Install deps
+        run: bun install
       - name: Test
         run: bun test

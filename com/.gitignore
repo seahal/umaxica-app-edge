@@ -17,3 +17,5 @@
 !.env.example
 !.env
 !.env.production.local
+
+.react-router/

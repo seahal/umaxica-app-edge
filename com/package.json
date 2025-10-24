@@ -6,10 +6,12 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
+		"typegen": "react-router typegen",
 		"cf-typegen": "bunx wrangler types",
 		"deploy": "bun run build && bunx wrangler deploy",
 		"server": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
-		"preview": "bun run build && vite preview"
+		"preview": "bun run build && vite preview",
+		"type": "bunx tsgo --noEmit"
 	}
 }

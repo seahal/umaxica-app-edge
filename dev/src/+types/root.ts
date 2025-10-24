@@ -37,4 +37,12 @@ export namespace Route {
 	export type MetaFunction = (
 		args: unknown,
 	) => MetaDescriptor[] | Promise<MetaDescriptor[]>;
+
+	export interface LoaderArgs {
+		context?: {
+			security?: {
+				nonce?: string;
+			};
+		};
+	}
 }
