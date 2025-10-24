@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.1'
       - name: Install deps
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.1'
       - name: Install deps
@@ -60,7 +60,7 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.1'
       - name: Install deps
@@ -78,7 +78,7 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.1'
       - name: Install deps
@@ -96,7 +96,7 @@ jobs:
         with:
           node-version: '24.x'
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.1'
       - name: Install deps
