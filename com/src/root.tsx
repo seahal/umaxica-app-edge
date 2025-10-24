@@ -16,8 +16,6 @@ import { NotFoundPage } from "./components/NotFoundPage";
 
 import type { JSX, ReactNode } from "react";
 
-const isDevEnvironment = isDevelopmentEnvironment();
-
 export function meta() {
 	return [{ title: "Umaxica" }];
 }
@@ -63,7 +61,6 @@ export function ErrorBoundary({
 			return (
 				<InternalServerErrorPage
 					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
-					showDetails={isDevEnvironment}
 				/>
 			);
 		}
@@ -100,8 +97,6 @@ export function ErrorBoundary({
 			message="申し訳ございません。予期しないエラーが発生しました。"
 			suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
 			showNavigation={true}
-			showDetails={isDevEnvironment}
-			details={isDevEnvironment ? String(error) : undefined}
 		/>
 	);
 }
