@@ -12,7 +12,6 @@
 		"server": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
-		"test": "vitest",
 		"format": "../node_modules/.bin/biome format src test --write",
 		"type": "bunx tsgo --noEmit"
 	}
