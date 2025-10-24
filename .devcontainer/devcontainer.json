@@ -29,8 +29,8 @@
 			"VERSION": "latest"
 		}
 	} //,
-	//"mounts": [
-	//	"source=${localEnv:HOME}/.claude,target=~/main/.claude,type=bind",
-	//	"source=${localEnv:HOME}/.codex,target=~/main/.codex,type=bind"
+	// "mounts": [
+	// 	"source=${localEnv:HOME}/.claude,target=~/main/.claude,type=bind",
+	// 	"source=${localEnv:HOME}/.codex,target=~/main/.codex,type=bind"
 	//]
 }
