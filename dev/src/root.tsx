@@ -40,8 +40,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration />
-				<Scripts />
+				<ScrollRestoration nonce={nonce} />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);

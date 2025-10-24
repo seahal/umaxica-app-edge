@@ -11,7 +11,6 @@ import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
 import "./app.css";
-import { isDevelopmentEnvironment } from "../edge-runtime";
 
 import type { JSX, ReactNode } from "react";
 import type { Route } from "./+types/root";
@@ -22,8 +21,6 @@ export function meta() {
 }
 
 export const links: Route.LinksFunction = () => [];
-
-const isDevEnvironment = isDevelopmentEnvironment();
 
 export function Layout({ children }: { children: ReactNode }) {
 	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();

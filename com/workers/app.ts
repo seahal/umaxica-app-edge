@@ -1,5 +1,13 @@
 import { createRequestHandler } from "react-router";
-import { generateNonce, withSecurityHeaders } from "../edge-runtime";
+
+declare module "react-router" {
+	export interface AppLoadContext {
+		cloudflare: {
+			env: Env;
+			ctx: ExecutionContext;
+		};
+	}
+}
 
 const requestHandler = createRequestHandler(
 	() => import("virtual:react-router/server-build"),
@@ -8,11 +16,8 @@ const requestHandler = createRequestHandler(
 
 export default {
 	async fetch(request, env, ctx) {
-		const nonce = generateNonce();
-		const res = await requestHandler(request, {
+		return requestHandler(request, {
 			cloudflare: { env, ctx },
-			security: { nonce },
 		});
-		return withSecurityHeaders(request, res, { cspNonce: nonce });
 	},
 } satisfies ExportedHandler<Env>;
