@@ -24,9 +24,7 @@
 	},
 	"features": {
 		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
-		// "ghcr.io/thamaji/devcontainer-features/codex-cli:latest": {
-		// 	"VERSION": "latest"
-		// },
+		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/thamaji/devcontainer-features/lefthook:latest": {
 			"VERSION": "latest"
 		}
