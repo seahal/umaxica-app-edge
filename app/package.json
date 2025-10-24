@@ -6,13 +6,14 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
+		"typegen": "react-router typegen",
 		"cf-typegen": "bunx wrangler types",
 		"deploy": "bun run build && bunx wrangler deploy",
 		"server": "react-router dev",
 		"postinstall": "bun run cf-typegen || true",
 		"preview": "bun run build && vite preview",
 		"test": "vitest",
-		"typecheck": "bun run cf-typegen && react-router typegen && bunx tsc -b",
-		"format": "../node_modules/.bin/biome format src test --write"
+		"format": "../node_modules/.bin/biome format src test --write",
+		"type": "bunx tsgo --noEmit"
 	}
 }

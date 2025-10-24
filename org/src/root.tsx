@@ -61,7 +61,6 @@ export function ErrorBoundary({
 			return (
 				<InternalServerErrorPage
 					details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
-					showDetails={isDevEnvironment}
 				/>
 			);
 		}
@@ -82,13 +81,7 @@ export function ErrorBoundary({
 	}
 
 	if (error instanceof Error) {
-		return (
-			<InternalServerErrorPage
-				details={error.message}
-				stack={isDevEnvironment ? error.stack : undefined}
-				showDetails={isDevEnvironment}
-			/>
-		);
+		return <InternalServerErrorPage details={error.message} />;
 	}
 
 	return (
@@ -98,8 +91,6 @@ export function ErrorBoundary({
 			message="申し訳ございません。予期しないエラーが発生しました。"
 			suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
 			showNavigation={true}
-			showDetails={isDevEnvironment}
-			details={isDevEnvironment ? String(error) : undefined}
 		/>
 	);
 }
