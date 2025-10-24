@@ -1,4 +1,11 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+	useLoaderData,
+} from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -11,6 +18,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const nonce = cspNonce || undefined;
+
 	return (
 		<html lang="ja">
 			<head>
@@ -21,8 +31,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration />
-				<Scripts />
+				<ScrollRestoration nonce={nonce} />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);
@@ -32,7 +42,7 @@ export default function App() {
 	return <Outlet />;
 }
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+export async function loader({ context }: Route.LoaderArgs) {
 	const { cloudflare, security } =
 		(context as unknown as {
 			cloudflare?: { env?: Record<string, string> };
@@ -50,4 +60,4 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
 		cspNonce,
 	};
-};
+}

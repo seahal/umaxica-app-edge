@@ -29,14 +29,25 @@ declare module "react-router" {
 		error: unknown,
 	): error is { status: number; statusText?: string };
 
-	export function Links(): JSX.Element;
-	export function Meta(): JSX.Element;
+	export interface LinksProps {
+		nonce?: string;
+	}
+	export function Links(props?: LinksProps): JSX.Element;
+	export interface MetaProps {
+		nonce?: string;
+	}
+	export function Meta(props?: MetaProps): JSX.Element;
 	export function Outlet(): JSX.Element;
 	export interface ScriptsProps {
 		nonce?: string;
 	}
 	export function Scripts(props?: ScriptsProps): JSX.Element;
-	export function ScrollRestoration(): JSX.Element;
+	export interface ScrollRestorationProps {
+		nonce?: string;
+	}
+	export function ScrollRestoration(
+		props?: ScrollRestorationProps,
+	): JSX.Element;
 
 	export function Link(props: Record<string, unknown>): JSX.Element;
 	export function NavLink(props: Record<string, unknown>): JSX.Element;
@@ -81,6 +92,9 @@ declare module "react-router" {
 		cloudflare: {
 			env: Env;
 			ctx: ExecutionContext;
+		};
+		security?: {
+			nonce?: string;
 		};
 	}
 }
