@@ -3,7 +3,7 @@ services:
   main:
     build:
       context: .
-      target: development
+#      target: development
     working_dir: /home/edge/main
     volumes:
       - type: bind
@@ -32,3 +32,4 @@ services:
 volumes:
   bun-volume:
   node-volume:
+  

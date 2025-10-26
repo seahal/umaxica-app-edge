@@ -17,6 +17,8 @@ pre-commit:
       skip:
         - merge
         - rebase
+    secret-scan:
+      run: gitleaks protect
 
 pre-push:
   parallel: true
