@@ -14,11 +14,29 @@
 	},
 	"customizations": {
 		"vscode": {
-			"extensions": ["oven.bun-vscode", "biomejs.biome", "openai.chatgpt"],
+			"extensions": [
+				"oven.bun-vscode",
+				"biomejs.biome",
+				"openai.chatgpt",
+				"anthropic.claude-code",
+				"bradlc.vscode-tailwindcss",
+				"-dbaeumer.vscode-eslint",
+				"-GitHub.copilot-chat"
+			],
 			"settings": {
 				"editor.defaultFormatter": "biomejs.biome",
 				"editor.formatOnSave": true,
 				"files.eol": "\n"
+			},
+			"terminal.integrated.defaultProfile.linux": "bash",
+			"terminal.integrated.profiles.linux": {
+				"bash": {
+					"path": "bash",
+					"icon": "terminal-bash"
+				},
+				"zsh": {
+					"path": "zsh"
+				}
 			}
 		}
 	},
@@ -27,8 +45,18 @@
 		"ghcr.io/thamaji/devcontainer-features/lefthook:latest": {
 			"VERSION": "latest"
 		},
-		"ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
+		"ghcr.io/jsburckhardt/devcontainer-features/codex:latest": {},
+		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
 		"ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {}
+	},
+	"mounts": [
+		"source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+		"source=claude-code-config-${devcontainerId},target=/home/edge/.claude,type=volume"
+		//		"source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=volume"
+	],
+	"containerEnv": {
+		"NODE_OPTIONS": "--max-old-space-size=4096",
+		"POWERLEVEL9K_DISABLE_GITSTATUS": "true"
 	} //,
 	// "mounts": [
 	// 	"source=${localEnv:HOME}/.claude,target=~/main/.claude,type=bind",

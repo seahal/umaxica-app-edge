@@ -9,10 +9,5 @@
 		"start": "react-router-serve ./build/server/index.js",
 		"typegen": "react-router typegen",
 		"type": "bunx tsgo --noEmit"
-	},
-	"dependencies": {
-		"@react-router/node": "^7.9.4",
-		"@vercel/react-router": "^1.2.3",
-		"isbot": "^5"
 	}
 }
