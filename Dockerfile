@@ -28,7 +28,6 @@ RUN apt-get update \
     libxi6 \
     libxrender1 \
     libxtst6 \
-    nano \
     openssh-client \
     sudo \
     tzdata \

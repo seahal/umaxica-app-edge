@@ -1,6 +1,8 @@
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/seahal/umaxica-app-edge/main)
 
-# Umaxica Edge Monorepo
+
+# Umaxica App (EDGE)
+（ ＾ν＾） Hello, World!
 
 Cloudflare Workers applications for the `umaxica` properties, managed as a Bun workspace monorepo. Each workspace targets a separate hostname while sharing a single toolchain and dependency tree.
 
@@ -88,3 +90,9 @@ bun run --cwd org deploy
 - `app`: https://jp.umaxica.app, https://us.umaxica.app  
 - `org`: https://jp.umaxica.org, https://us.umaxica.org  
 - `dev`: https://jp.umaxica.dev, https://us.umaxica.dev
+
+
+## Known Issues & Limitations
+- This is a work in progress.
+- The public availability of this repository is not guaranteed permanently.
+- No warranty is provided, and the authors shall not be held liable for any damages arising from the use of this repository.
