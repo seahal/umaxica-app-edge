@@ -19,9 +19,5 @@ pre-commit:
         - rebase
     secret-scan:
       run: gitleaks protect
-
-pre-push:
-  parallel: true
-  commands:
-    test:
+    Test(Bun):
       run: bun test
