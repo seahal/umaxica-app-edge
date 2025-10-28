@@ -51,7 +51,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 	const env = cloudflare?.env ?? {};
 	const cspNonce = security?.nonce ?? "";
 	return {
-		codeName: env.CODE_NAME ?? "",
+		codeName: env.BRAND_NAME ?? "",
 		helpServiceUrl: env.HELP_SERVICE_URL ?? "",
 		docsServiceUrl: env.DOCS_SERVICE_URL ?? "",
 		newsServiceUrl: env.NEWS_SERVICE_URL ?? "",

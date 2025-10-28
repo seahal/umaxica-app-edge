@@ -41,25 +41,13 @@
 		}
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/thamaji/devcontainer-features/lefthook:latest": {
 			"VERSION": "latest"
 		},
-		"ghcr.io/jsburckhardt/devcontainer-features/codex:latest": {},
-		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {},
 		"ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {}
 	},
-	"mounts": [
-		"source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
-		"source=claude-code-config-${devcontainerId},target=/home/edge/.claude,type=volume"
-		//		"source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=volume"
-	],
 	"containerEnv": {
 		"NODE_OPTIONS": "--max-old-space-size=4096",
 		"POWERLEVEL9K_DISABLE_GITSTATUS": "true"
-	} //,
-	// "mounts": [
-	// 	"source=${localEnv:HOME}/.claude,target=~/main/.claude,type=bind",
-	// 	"source=${localEnv:HOME}/.codex,target=~/main/.codex,type=bind"
-	//]
+	}
 }

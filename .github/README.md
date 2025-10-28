@@ -13,12 +13,12 @@ Cloudflare Workers applications for the `umaxica` properties, managed as a Bun w
 
 ## Workspace Overview
 
-| Workspace | Purpose | Default Dev Port |
-| --------- | ------- | ---------------- |
-| `app` | SSR app for `*.umaxica.app` | `http://localhost:5171` |
-| `com` | Marketing site for `*.umaxica.com` | `http://localhost:5170` |
-| `org` | Corporate site for `*.umaxica.org` | `http://localhost:5172` |
-| `dev` | Playground / staging site | `http://localhost:5173` |
+| Workspace | Purpose                            | Default Dev Port |
+| --------- |------------------------------------| ---------------- |
+| `app` | Service app for `*.umaxica.app`    | `http://localhost:5171` |
+| `com` | Corporate site for `*.umaxica.com` | `http://localhost:5170` |
+| `org` | Organize site for `*.umaxica.org`  | `http://localhost:5172` |
+| `dev` | Status site  for `*.umaxica.de`    | `http://localhost:5173` |
 
 Install dependencies once from the repo root:
 
