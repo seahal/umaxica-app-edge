@@ -9,5 +9,8 @@
 		"start": "react-router-serve ./build/server/index.js",
 		"typegen": "react-router typegen",
 		"type": "bunx tsgo --noEmit"
+	},
+	"dependencies": {
+		"@vercel/speed-insights": "^1.2.0"
 	}
 }
