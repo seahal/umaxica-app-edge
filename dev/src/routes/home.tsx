@@ -9,5 +9,13 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export default function Home() {
-	return <Welcome />;
+	return (
+		<>
+			<Welcome />
+
+			<footer style={{ textAlign: "center" }} className="p-6 text-gray-500">
+				<small>© {new Date().getFullYear()} umaxica</small>
+			</footer>
+		</>
+	);
 }

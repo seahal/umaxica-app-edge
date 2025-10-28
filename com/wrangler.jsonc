@@ -13,7 +13,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"CODE_NAME": "UMAXICA",
+		"CODE_NAME": "UMAXICA", // TODO: RENAME
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
@@ -68,7 +68,7 @@
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
-	// "placement": { "mode": "smart" }
+	"placement": { "mode": "smart" },
 	/**
 	 * Bindings
 	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
@@ -83,13 +83,10 @@
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
-	"assets": { "directory": "./public/", "binding": "ASSETS" },
+	"assets": { "directory": "./public/", "binding": "ASSETS" }
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }],
-	"placement": {
-		"mode": "smart"
-	}
 }
