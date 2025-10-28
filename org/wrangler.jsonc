@@ -26,6 +26,7 @@
 		"HELP_SERVICE_URL": "jp.help.umaxica.app",
 		"HELP_STAFF_URL": "jp.help.umaxica.org",
 		"VALUE_FROM_CLOUDFLARE": "Umaxica ORG (local via wrangler.jsonc)",
+		"BRAND_NAME": "UMAXICA",
 		"CODE_NAME": "UMAXICA" // TODO: RENAME
 	},
 	"env": {
@@ -51,6 +52,7 @@
 				"HELP_CORPORATE_URL": "help.umaxica.com",
 				"HELP_SERVICE_URL": "jp.help.umaxica.app",
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
+				"BRAND_NAME": "UMAXICA",
 				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc) production"
 			}

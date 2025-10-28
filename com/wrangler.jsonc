@@ -14,6 +14,7 @@
 	},
 	"vars": {
 		"CODE_NAME": "UMAXICA", // TODO: RENAME
+		"BRAND_NAME": "UMAXICA",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
 		"EDGE_STAFF_URL": "org.localhost",
@@ -40,6 +41,7 @@
 		"production": {
 			"vars": {
 				"CODE_NAME": "UMAXICA",
+				"BRAND_NAME": "UMAXICA",
 				"APEX_CORPORATE_URL": "umaxica.com",
 				"APEX_SERVICE_URL": "umaxica.app",
 				"APEX_STAFF_URL": "umaxica.org",
