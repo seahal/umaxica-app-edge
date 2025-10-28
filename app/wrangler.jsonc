@@ -12,6 +12,7 @@
 	},
 	"vars": {
 		"CODE_NAME": "UMAXICA", // TODO: RENAME
+		"BRAND_NAME": "UMAXICA",
 		"SECRET_SAMPLE": "SAMPLE_VALUE",
 		"EDGE_CORPORATE_URL": "com.localhost",
 		"EDGE_SERVICE_URL": "app.localhost",
@@ -58,6 +59,7 @@
 				"HELP_CORPORATE_URL": "help.umaxica.com",
 				"HELP_SERVICE_URL": "jp.help.umaxica.app",
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
+				"BRAND_NAME": "UMAXICA",
 				"CODE_NAME": "UMAXICA",
 				"VALUE_FROM_CLOUDFLARE": "Umaxica App (production via wrangler.jsonc)"
 			}

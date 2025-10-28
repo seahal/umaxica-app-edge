@@ -9,7 +9,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const env = context.cloudflare.env as Env & { VALUE_FROM_CLOUDFLARE: string };
+	const env = context.cloudflare.env as Env;
 	return { message: env.SECRET_SAMPLE };
 }
 
@@ -37,7 +37,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
 				</li>
 			</ul>
 
-			<p>丼未遂っと ⇢ {loaderData.message}</p>
+			<p>SECRET ⇢ {loaderData.message}</p>
 		</main>
 	);
 }
