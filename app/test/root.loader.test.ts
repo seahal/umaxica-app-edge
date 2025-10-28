@@ -16,7 +16,7 @@ describe("root loader", () => {
 		const result = await runLoader({
 			cloudflare: {
 				env: {
-					CODE_NAME: "Project Nova",
+					BRAND_NAME: "Project Nova",
 					HELP_SERVICE_URL: "support.umaxica.app",
 					DOCS_SERVICE_URL: "docs.umaxica.app",
 					NEWS_SERVICE_URL: "news.umaxica.app",
