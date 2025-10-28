@@ -2,17 +2,18 @@ import type { Route } from "../+types/home";
 import { Link } from "react-router-dom";
 
 export function meta(_: Route.MetaArgs) {
-	return [{ name: "description", content: "Welcome to React Router!" }];
+	return [
+		{ name: "title", content: "hello!!!" },
+		{ name: "description", content: "Welcome to React Router!" },
+	];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	return {
-		message: (context.cloudflare.env as Env & { VALUE_FROM_CLOUDFLARE: string })
-			.VALUE_FROM_CLOUDFLARE,
-	};
+	const env = context.cloudflare.env as Env & { VALUE_FROM_CLOUDFLARE: string };
+	return { message: env.SECRET_SAMPLE };
 }
 
-export default function About(_: Route.ComponentProps) {
+export default function About({ loaderData }: Route.ComponentProps) {
 	return (
 		<main className="p-4 container mx-auto">
 			<h2>Configuration</h2>
@@ -35,6 +36,8 @@ export default function About(_: Route.ComponentProps) {
 					</ul>
 				</li>
 			</ul>
+
+			<p>丼未遂っと ⇢ {loaderData.message}</p>
 		</main>
 	);
 }
