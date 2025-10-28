@@ -9,6 +9,16 @@
 	"main": "./workers/app.ts",
 	// Ensure the server/client bundles exist before Wrangler runs (react-router)
 	"build": { "command": "bun run build" },
+  "routes": [
+    {
+      "pattern": "jp.umaxica.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "us.umaxica.com",
+      "custom_domain": true
+    }
+  ],
 	"observability": {
 		"enabled": true
 	},
