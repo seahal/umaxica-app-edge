@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
-	"name": "umaxica-edge-org-staging-jp",
+	"name": "umaxica-app-edge-staging-org",
 	"compatibility_date": "2025-09-15",
 	"main": "./workers/app.ts",
 	"observability": {
