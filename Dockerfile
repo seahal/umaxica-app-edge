@@ -35,7 +35,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g "bun@1.3.1" \
-  && npm cache clean --force
+  && npm cache clean --force \
+  && corepack enable
 
 RUN set -eux; \
   base_user=node; \
@@ -70,19 +71,29 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
-ENV HOME=/home/edge \
+ENV HOME=/home/${DOCKER_USER} \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
     SHELL=/bin/bash \
-    BUN_INSTALL=/home/${DOCKER_USER}/.bun
+    BUN_INSTALL=/home/${DOCKER_USER}/.bun \
+    BUN_CACHE_DIR=/home/${DOCKER_USER}/.cache/bun
 ENV PATH=${BUN_INSTALL}/bin:${PATH}
 
-RUN mkdir -p "${BUN_INSTALL}" "${HOME}/.cache/bun" "${HOME}/.config" \
-  && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}"
+# Create necessary directories with proper permissions
+RUN mkdir -p "${BUN_INSTALL}" \
+             "${HOME}/.cache/bun" \
+             "${HOME}/.config" \
+             "${HOME}/main" \
+             "${HOME}/main/node_modules" \
+  && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}" \
+  && chmod -R 755 "${HOME}"
 
 WORKDIR ${HOME}/main
 
 USER ${DOCKER_UID}:${DOCKER_GID}
+
+# Set up bun for the user
+RUN bun --version
 
 EXPOSE 5170 5171 5172 5173
 

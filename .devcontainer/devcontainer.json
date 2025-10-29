@@ -5,11 +5,25 @@
 	"workspaceFolder": "/home/edge/main",
 	"runServices": ["main"],
 	"overrideCommand": false,
-	"postCreateCommand": "bun install",
-	"forwardPorts": [4000, 5130, 5131, 5132, 5133],
+	"postCreateCommand": "bun install && bun run cf-typegen",
+	"postStartCommand": "git config --global --add safe.directory /home/edge/main",
+	"forwardPorts": [5170, 5171, 5172, 5173],
 	"portsAttributes": {
-		"4000": {
-			"label": "Vite Dev Server"
+		"5170": {
+			"label": "Dev Domain (dev)",
+			"onAutoForward": "notify"
+		},
+		"5171": {
+			"label": "App Domain (app)",
+			"onAutoForward": "notify"
+		},
+		"5172": {
+			"label": "Com Domain (com)",
+			"onAutoForward": "notify"
+		},
+		"5173": {
+			"label": "Org Domain (org)",
+			"onAutoForward": "notify"
 		}
 	},
 	"customizations": {
@@ -26,16 +40,16 @@
 			"settings": {
 				"editor.defaultFormatter": "biomejs.biome",
 				"editor.formatOnSave": true,
-				"files.eol": "\n"
-			},
-			"terminal.integrated.defaultProfile.linux": "bash",
-			"terminal.integrated.profiles.linux": {
-				"bash": {
-					"path": "bash",
-					"icon": "terminal-bash"
-				},
-				"zsh": {
-					"path": "zsh"
+				"files.eol": "\n",
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					},
+					"zsh": {
+						"path": "zsh"
+					}
 				}
 			}
 		}

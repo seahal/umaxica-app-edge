@@ -4,8 +4,6 @@
 # Umaxica App (EDGE)
 （ ＾ν＾） Hello, World!
 
-Cloudflare Workers applications for the `umaxica` properties, managed as a Bun workspace monorepo. Each workspace targets a separate hostname while sharing a single toolchain and dependency tree.
-
 ## Prerequisites
 - [Bun](https://bun.sh/) 1.1+ (verify with `bun -v`)
 - [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/)
