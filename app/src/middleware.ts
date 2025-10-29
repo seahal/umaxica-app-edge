@@ -9,8 +9,8 @@
  * - Security policies (CSP, CORS, etc.)
  */
 export const unstable_middleware = async (
-	{ request, context }: any,
-	next: any,
+	{ request }: { request: Request; context: unknown },
+	next: () => Promise<Response>,
 ) => {
 	// You can access Cloudflare Workers env in Cloudflare deployments
 	// const { env } = context.cloudflare || {};
