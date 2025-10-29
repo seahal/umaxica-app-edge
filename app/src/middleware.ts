@@ -8,7 +8,10 @@
  * - Headers manipulation
  * - Security policies (CSP, CORS, etc.)
  */
-export const unstable_middleware = async ({ request, context }: any, next: any) => {
+export const unstable_middleware = async (
+	{ request, context }: any,
+	next: any,
+) => {
 	// You can access Cloudflare Workers env in Cloudflare deployments
 	// const { env } = context.cloudflare || {};
 

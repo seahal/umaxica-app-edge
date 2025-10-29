@@ -3,12 +3,17 @@ services:
   main:
     build:
       context: .
-#      target: development
+      args:
+        - DOCKER_UID=${UID:-1000}
+        - DOCKER_GID=${GID:-1000}
+        - DOCKER_USER=edge
+        - DOCKER_GROUP=group
     working_dir: /home/edge/main
     volumes:
       - type: bind
         source: .
         target: /home/edge/main
+        consistency: cached
       - type: volume
         source: node-volume
         target: /home/edge/main/node_modules
@@ -16,7 +21,7 @@ services:
           nocopy: true
       - type: volume
         source: bun-volume
-        target: /home/edge/main/.bun
+        target: /home/edge/.bun
         volume:
           nocopy: true
     ports:
@@ -29,7 +34,12 @@ services:
     stdin_open: true
     init: true
     user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+    restart: unless-stopped
 volumes:
   bun-volume:
+    driver: local
   node-volume:
+    driver: local
   
