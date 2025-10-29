@@ -83,12 +83,12 @@ ENV PATH=${BUN_INSTALL}/bin:${PATH}
 RUN mkdir -p "${BUN_INSTALL}" \
              "${HOME}/.cache/bun" \
              "${HOME}/.config" \
-             "${HOME}/main" \
-             "${HOME}/main/node_modules" \
+             "${HOME}/workspace" \
+             "${HOME}/workspace/node_modules" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}" \
   && chmod -R 755 "${HOME}"
 
-WORKDIR ${HOME}/main
+WORKDIR ${HOME}/workspace
 
 USER ${DOCKER_UID}:${DOCKER_GID}
 

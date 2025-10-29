@@ -2,11 +2,11 @@
 	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
 	"service": "main",
-	"workspaceFolder": "/home/edge/main",
+	"workspaceFolder": "/home/edge/workspace",
 	"runServices": ["main"],
 	"overrideCommand": false,
 	"postCreateCommand": "bun install && bun run cf-typegen",
-	"postStartCommand": "git config --global --add safe.directory /home/edge/main",
+	"postStartCommand": "git config --global --add safe.directory /home/edge/workspace",
 	"forwardPorts": [5170, 5171, 5172, 5173],
 	"portsAttributes": {
 		"5170": {
