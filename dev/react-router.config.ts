@@ -8,6 +8,7 @@ export default {
 	appDirectory: "src",
 	future: {
 		unstable_viteEnvironmentApi: true,
+        unstable_middleware: true,
 		//		v8_middleware: true,
 	},
 	presets: [vercelPreset()],
