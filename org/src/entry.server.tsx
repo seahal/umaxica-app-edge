@@ -40,7 +40,7 @@ export default async function handleRequest(
         "Strict-Transport-Security",
         "max-age=31536000; includeSubDomains; preload",
     );
-    
+
 	return new Response(body, {
 		headers: responseHeaders,
 		status: responseStatusCode,
