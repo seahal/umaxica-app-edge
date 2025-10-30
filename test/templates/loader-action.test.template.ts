@@ -16,6 +16,7 @@ import { describe, it } from "bun:test";
 // TODO: Import your loader and action
 // import { loader, action } from "../src/routes/your-route";
 
+// biome-ignore lint/correctness/noUnusedVariables: Template type used in commented helper functions
 type LoaderContext = {
 	cloudflare?: {
 		env?: Record<string, string>;
@@ -26,8 +27,6 @@ type LoaderContext = {
 	};
 	// Add other context properties as needed
 };
-
-type ActionContext = LoaderContext;
 
 // Helper to create mock loader arguments
 // Uncomment after importing loader
@@ -41,7 +40,7 @@ type ActionContext = LoaderContext;
 
 // Helper to create mock action arguments
 // Uncomment after importing action
-// function createActionArgs(formData: FormData, context: ActionContext = {}) {
+// function createActionArgs(formData: FormData, context: LoaderContext = {}) {
 // 	return {
 // 		request: new Request("http://localhost/", {
 // 			method: "POST",

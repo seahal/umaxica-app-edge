@@ -15,6 +15,7 @@
 		"composite": true,
 		"strict": true,
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"types": ["vite/client", "./worker-configuration.d.ts"],
 		"skipLibCheck": true,
 		"target": "ES2022",
 		"module": "ES2022",

@@ -7,7 +7,6 @@
 	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
-		"types": ["node", "vite/client"],
 		"target": "ES2022",
 		"module": "ES2022",
 		"moduleResolution": "bundler",
@@ -16,6 +15,7 @@
 		"paths": {
 			"~/*": ["./*"]
 		},
+		"typeRoots": ["../node_modules/@types", "./node_modules/@types"],
 		"esModuleInterop": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,
