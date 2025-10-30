@@ -3,7 +3,7 @@
 	"dockerComposeFile": ["../compose.yml"],
 	"service": "main",
 	"workspaceFolder": "/home/edge/workspace",
-	"runServices": ["main"],
+	"runServices": ["core"],
 	"overrideCommand": false,
 	"postCreateCommand": "bun install && bun run cf-typegen",
 	"postStartCommand": "git config --global --add safe.directory /home/edge/workspace",

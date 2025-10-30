@@ -1,6 +1,6 @@
 name: "edge"
 services:
-  main:
+  core:
     build:
       context: .
       args:
