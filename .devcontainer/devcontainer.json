@@ -1,12 +1,10 @@
 {
 	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml"],
-	"service": "main",
+	"service": "core",
 	"workspaceFolder": "/home/edge/workspace",
 	"runServices": ["core"],
 	"overrideCommand": false,
-	"postCreateCommand": "bun install && bun run cf-typegen",
-	"postStartCommand": "git config --global --add safe.directory /home/edge/workspace",
 	"forwardPorts": [5170, 5171, 5172, 5173],
 	"portsAttributes": {
 		"5170": {
@@ -46,22 +44,11 @@
 					"bash": {
 						"path": "bash",
 						"icon": "terminal-bash"
-					},
-					"zsh": {
-						"path": "zsh"
 					}
 				}
 			}
 		}
 	},
-	"features": {
-		"ghcr.io/thamaji/devcontainer-features/lefthook:latest": {
-			"VERSION": "latest"
-		},
-		"ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {}
-	},
-	"containerEnv": {
-		"NODE_OPTIONS": "--max-old-space-size=4096",
-		"POWERLEVEL9K_DISABLE_GITSTATUS": "true"
-	}
+	"features": {},
+	"containerEnv": {}
 }

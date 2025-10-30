@@ -1,8 +1,11 @@
-import { Welcome } from "../welcome/welcome";
+import { ProductCatalog } from "../components/ProductCatalog";
 import type { Route } from "./+types/_index";
 
 export function meta(_: Route.MetaArgs) {
-	return [{ name: "description", content: "Welcome!" }];
+	return [
+		{ title: "Umaxica Commerce - 商品カタログ" },
+		{ name: "description", content: "最適なプランを見つけましょう" },
+	];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -12,6 +15,6 @@ export function loader({ context }: Route.LoaderArgs) {
 	return { message: env.VALUE_FROM_CLOUDFLARE };
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-	return <Welcome message={loaderData.message} />;
+export default function Home(_: Route.ComponentProps) {
+	return <ProductCatalog />;
 }
