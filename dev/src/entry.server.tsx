@@ -8,14 +8,16 @@ export default async function handleRequest(
 	responseStatusCode: number,
 	responseHeaders: Headers,
 	routerContext: EntryContext,
-	_loadContext: AppLoadContext,
+	loadContext: AppLoadContext,
 ) {
 	let shellRendered = false;
 	const userAgent = request.headers.get("user-agent");
+	const nonce = loadContext?.security?.nonce ?? "";
 
 	const body = await renderToReadableStream(
 		<ServerRouter context={routerContext} url={request.url} />,
 		{
+			nonce: nonce || undefined,
 			onError(error: unknown) {
 				responseStatusCode = 500;
 				// Log streaming rendering errors from inside the shell.  Don't log
@@ -40,6 +42,15 @@ export default async function handleRequest(
 		"Strict-Transport-Security",
 		"max-age=31536000; includeSubDomains; preload",
 	);
+	responseHeaders.set(
+		"Content-Security-Policy",
+		`default-src 'self'; script-src 'self' ${nonce ? `'nonce-${nonce}'` : "'unsafe-inline'"} https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+	);
+	responseHeaders.set(
+		"Permissions-Policy",
+		"camera=(), microphone=(), geolocation=(), interest-cohort=()",
+	);
+	responseHeaders.set("Referrer-Policy", "strict-origin-when-cross-origin");
 	responseHeaders.set("X-Frame-Options", "SAMEORIGIN");
 	responseHeaders.set("X-Content-Type-Options", "nosniff");
 

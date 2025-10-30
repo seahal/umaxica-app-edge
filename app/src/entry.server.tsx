@@ -42,6 +42,14 @@ export default async function handleRequest(
 		"Strict-Transport-Security",
 		"max-age=31536000; includeSubDomains; preload",
 	);
+	responseHeaders.set(
+		"Content-Security-Policy",
+		`default-src 'self'; script-src 'self' ${nonce ? `'nonce-${nonce}'` : "'unsafe-inline'"}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+	);
+	responseHeaders.set(
+		"Permissions-Policy",
+		"camera=(), microphone=(), geolocation=(), interest-cohort=()",
+	);
 
 	return new Response(body, {
 		headers: responseHeaders,
