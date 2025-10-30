@@ -40,10 +40,24 @@ export const unstable_middleware = async (
 		"accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
 	);
 
+	// Cross-Origin Isolation Headers
+	// Cross-Origin-Embedder-Policy - Prevent loading cross-origin resources without CORS
+	response.headers.set("Cross-Origin-Embedder-Policy", "unsafe-none");
+
+	// Cross-Origin-Opener-Policy - Isolate browsing context from cross-origin windows
+	response.headers.set(
+		"Cross-Origin-Opener-Policy",
+		"same-origin-allow-popups",
+	);
+
+	// Cross-Origin-Resource-Policy - Control who can load the resource
+	response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
+
 	// Additional security headers
 	response.headers.set("X-Content-Type-Options", "nosniff");
-	response.headers.set("X-Frame-Options", "DENY");
-	response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+	response.headers.set("X-Frame-Options", "SAMEORIGIN");
+	response.headers.set("X-XSS-Protection", "1; mode=block");
+	response.headers.set("Referrer-Policy", "same-origin");
 
 	return response;
 };
