@@ -15,6 +15,12 @@ mock.module("react-router", () => ({
 	...actualRouter,
 	Outlet: (props: Record<string, unknown>) =>
 		createElement("mock-outlet", props),
+	Meta: () => createElement("mock-meta"),
+	Links: () => createElement("mock-links"),
+	Scripts: (props: Record<string, unknown>) =>
+		createElement("mock-scripts", props),
+	ScrollRestoration: (props: Record<string, unknown>) =>
+		createElement("mock-scroll-restoration", props),
 }));
 
 const baremetalModule = await import("../../src/layouts/baremetal");

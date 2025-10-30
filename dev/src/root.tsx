@@ -8,10 +8,7 @@ import {
 	useLoaderData,
 } from "react-router";
 
-import { SpeedInsights } from "@vercel/speed-insights/react";
-
 import "./app.css";
-
 import type { Route } from "./+types/root";
 import type { ReactNode } from "react";
 
@@ -48,7 +45,6 @@ export function Layout({ children }: { children: ReactNode }) {
 				{children}
 				<ScrollRestoration nonce={nonce} />
 				<Scripts nonce={nonce} />
-				<SpeedInsights />
 			</body>
 		</html>
 	);

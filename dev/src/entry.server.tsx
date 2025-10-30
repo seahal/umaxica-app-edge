@@ -3,6 +3,14 @@ import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 
+declare module "react-router" {
+	interface AppLoadContext {
+		security?: {
+			nonce?: string;
+		};
+	}
+}
+
 export default async function handleRequest(
 	request: Request,
 	responseStatusCode: number,
