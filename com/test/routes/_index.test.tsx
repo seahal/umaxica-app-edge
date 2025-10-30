@@ -12,9 +12,12 @@ const { loader, meta, default: Home } = await import("../../src/routes/_index");
 
 describe("Route: Home (com)", () => {
 	describe("Meta", () => {
-		it("should return correct meta description", () => {
+		it("should return localized title and description", () => {
 			const result = meta({} as never);
-			expect(result).toEqual([{ name: "description", content: "Welcome!" }]);
+			expect(result).toEqual([
+				{ title: "Umaxica Commerce - 商品カタログ" },
+				{ name: "description", content: "最適なプランを見つけましょう" },
+			]);
 		});
 	});
 
@@ -65,22 +68,22 @@ describe("Route: Home (com)", () => {
 	});
 
 	describe("Component", () => {
-		it("should render Home component with loaderData", () => {
-			const testMessage = "Test message from loader";
+		it("should render the product catalog shell", () => {
 			const markup = renderToStaticMarkup(
-				<Home loaderData={{ message: testMessage }} />,
+				<Home loaderData={{ message: "unused" }} />,
 			);
 
-			expect(markup).toContain(testMessage);
+			expect(markup).toContain("商品カタログ");
 		});
 
-		it("should render Welcome component", () => {
+		it("should render product offerings", () => {
 			const markup = renderToStaticMarkup(
 				<Home loaderData={{ message: "Hello" }} />,
 			);
 
-			// Welcome component renders a main element
-			expect(markup).toContain("<main");
+			expect(markup).toContain("プレミアムプラン");
+			expect(markup).toContain("スタンダードプラン");
+			expect(markup).toContain("ベーシックプラン");
 		});
 
 		it("should handle empty message", () => {

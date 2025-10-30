@@ -1,8 +1,11 @@
-import { Welcome } from "../welcome/welcome";
+import { Timeline } from "../components/Timeline";
 import type { Route } from "./+types/_index";
 
 export function meta(_: Route.MetaArgs) {
-	return [{ name: "description", content: "Welcome!" }];
+	return [
+		{ title: "Umaxica - ホーム" },
+		{ name: "description", content: "Umaxica SNS - 今何してる？" },
+	];
 }
 
 type LoaderContext = {
@@ -18,6 +21,10 @@ export function loader({ context }: Route.LoaderArgs) {
 	return { message };
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-	return <Welcome message={loaderData.message} />;
+export default function Home(_: Route.ComponentProps) {
+	return (
+		<div className="min-h-screen bg-white dark:bg-gray-950">
+			<Timeline />
+		</div>
+	);
 }
