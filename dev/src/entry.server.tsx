@@ -36,6 +36,13 @@ export default async function handleRequest(
 	}
 
 	responseHeaders.set("Content-Type", "text/html");
+	responseHeaders.set(
+		"Strict-Transport-Security",
+		"max-age=31536000; includeSubDomains; preload",
+	);
+	responseHeaders.set("X-Frame-Options", "SAMEORIGIN");
+	responseHeaders.set("X-Content-Type-Options", "nosniff");
+
 	return new Response(body, {
 		headers: responseHeaders,
 		status: responseStatusCode,
