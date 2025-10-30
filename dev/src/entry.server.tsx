@@ -44,7 +44,7 @@ export default async function handleRequest(
 	);
 	responseHeaders.set(
 		"Content-Security-Policy",
-		`default-src 'self'; script-src 'self' ${nonce ? `'nonce-${nonce}'` : "'unsafe-inline'"} https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+		`default-src 'self'; script-src 'self' 'nonce-${nonce}' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 	);
 	responseHeaders.set(
 		"Permissions-Policy",

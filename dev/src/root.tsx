@@ -58,8 +58,23 @@ export default function App() {
 	return <Outlet />;
 }
 
+function generateNonce(): string {
+	const array = new Uint8Array(16);
+	crypto.getRandomValues(array);
+	return btoa(String.fromCharCode(...array));
+}
+
 export function loader({ context }: Route.LoaderArgs) {
-	const cspNonce = context?.security?.nonce ?? "";
+	// Generate nonce if not provided by context
+	const cspNonce = context?.security?.nonce ?? generateNonce();
+
+	// Store nonce in context for entry.server.tsx to use
+	if (context && !context.security) {
+		Object.assign(context, { security: { nonce: cspNonce } });
+	} else if (context?.security && !context.security.nonce) {
+		Object.assign(context.security, { nonce: cspNonce });
+	}
+
 	return { cspNonce };
 }
 

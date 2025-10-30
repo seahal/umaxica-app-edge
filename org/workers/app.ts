@@ -6,7 +6,16 @@ declare module "react-router" {
 			env: Env;
 			ctx: ExecutionContext;
 		};
+		security?: {
+			nonce?: string;
+		};
 	}
+}
+
+function generateNonce(): string {
+	const array = new Uint8Array(16);
+	crypto.getRandomValues(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const requestHandler = createRequestHandler(
@@ -16,8 +25,10 @@ const requestHandler = createRequestHandler(
 
 export default {
 	async fetch(request, env, ctx) {
+		const nonce = generateNonce();
 		return requestHandler(request, {
 			cloudflare: { env, ctx },
+			security: { nonce },
 		});
 	},
 } satisfies ExportedHandler<Env>;
