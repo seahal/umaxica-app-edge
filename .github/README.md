@@ -5,49 +5,51 @@
 （ ＾ν＾） Hello, World!
 
 ## Prerequisites
-- [Bun](https://bun.sh/) 1.1+ (verify with `bun -v`)
-- [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/)
+- [Bun](https://bun.sh/) 1.3+ (verify with `bun -v`)
+- [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/) 
+- Vecerl
 - Docker & Docker Compose (optional for containerized dev)
 
 ## Workspace Overview
-
 | Workspace | Purpose                            | Default Dev Port |
 | --------- |------------------------------------| ---------------- |
 | `app` | Service app for `*.umaxica.app`    | `http://localhost:5171` |
 | `com` | Corporate site for `*.umaxica.com` | `http://localhost:5170` |
 | `org` | Organize site for `*.umaxica.org`  | `http://localhost:5172` |
-| `dev` | Status site  for `*.umaxica.de`    | `http://localhost:5173` |
+| `dev` | Status site  for `*.umaxica.dev`   | `http://localhost:5173` |
+
 
 Install dependencies once from the repo root:
-
 ```bash
 bun install
 ```
 
 ## Local Development
-
 ### Dev Containers
 - Works best with VS Code Remote Containers / Dev Containers.
 - JetBrains IDEs are not fully supported in the container yet.
-
 ### Docker Compose
-
 Spin up the development environment inside Docker:
 
 ```bash
 docker compose up
 ```
-
-Stop the stack with `docker compose down` when finished.
+- if you want to use '' as you want to dive in `docker compose exec bash`
+- separated env if you want to use `docker compose run bash`
+- Stop the stack with `docker compose down` when finished.
 
 ### Bun + Wrangler (bare metal)
-
 Run each workspace in its own terminal so that Wrangler mirrors the production runtime:
-
 ```bash
 bun run --cwd com server   # http://localhost:5170
+```
+```
 bun run --cwd app server   # http://localhost:5171
+```
+```
 bun run --cwd org server   # http://localhost:5172
+```
+```
 bun run --cwd dev server   # http://localhost:5173
 ```
 
