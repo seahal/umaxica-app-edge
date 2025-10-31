@@ -16,7 +16,7 @@ export default [
 		]),
 		...prefix("message", [index("routes/messages/_index.tsx")]),
 		...prefix("notification", [index("routes/notifications/_index.tsx")]),
-		...prefix("search", [index("routes/search/_index.tsx")]),
+		...prefix("explore", [index("routes/explore/_index.tsx")]),
 		...prefix("authentication", [index("routes/authentication/_index.tsx")]),
 	]),
 	layout("../src/layouts/baremetal.tsx", [

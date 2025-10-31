@@ -41,7 +41,7 @@ describe("route manifest", () => {
 		["configuration", "routes/configurations/_index.tsx"],
 		["message", "routes/messages/_index.tsx"],
 		["notification", "routes/notifications/_index.tsx"],
-		["search", "routes/search/_index.tsx"],
+		["explore", "routes/explore/_index.tsx"],
 		["authentication", "routes/authentication/_index.tsx"],
 	])("exposes the %s index route", (path, file) => {
 		expect(findByPath(path)).toMatchObject({ path, file });

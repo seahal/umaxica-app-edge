@@ -17,15 +17,17 @@ export default function DecoratedLayout() {
 	} = loaderData ?? {};
 
 	return (
-		<>
+		<div className="flex min-h-screen flex-col">
 			<Header
 				codeName={codeName}
 				helpServiceUrl={helpServiceUrl}
 				docsServiceUrl={docsServiceUrl}
 				newsServiceUrl={newsServiceUrl}
 			/>
-			<Outlet />
+			<main className="flex-1">
+				<Outlet />
+			</main>
 			<Footer codeName={codeName} />
-		</>
+		</div>
 	);
 }

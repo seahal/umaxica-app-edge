@@ -1,4 +1,3 @@
-import { ProductCatalog } from "../components/ProductCatalog";
 import type { Route } from "./+types/_index";
 
 export function meta(_: Route.MetaArgs) {
@@ -16,5 +15,5 @@ export function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function Home(_: Route.ComponentProps) {
-	return <ProductCatalog />;
+	return <div>Home</div>;
 }

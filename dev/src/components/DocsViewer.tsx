@@ -187,13 +187,13 @@ export function DocsViewer() {
 							items={filteredSections}
 							selectionMode="single"
 							selectedKeys={[selectedSection]}
-							onSelectionChange={(keys) => {
+							onSelectionChange={(keys: Iterable<string | number>) => {
 								const key = Array.from(keys)[0];
 								if (key) setSelectedSection(key as string);
 							}}
 							className="space-y-1 outline-none"
 						>
-							{(section) => (
+							{(section: DocSection) => (
 								<ListBoxItem
 									id={section.id}
 									className="px-3 py-2 rounded-lg cursor-pointer text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 data-[selected]:bg-blue-100 dark:data-[selected]:bg-blue-900/30 data-[selected]:text-blue-700 dark:data-[selected]:text-blue-400 data-[selected]:font-semibold outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -277,7 +277,7 @@ export function DocsViewer() {
 												<Button
 													onPress={() => {
 														navigator.clipboard.writeText(
-															currentSection.code || "",
+															currentSection?.code ?? "",
 														);
 														alert("コードをクリップボードにコピーしました！");
 													}}
@@ -286,7 +286,7 @@ export function DocsViewer() {
 													コピー
 												</Button>
 												<pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-6 rounded-xl overflow-x-auto">
-													<code>{currentSection.code}</code>
+													<code>{currentSection?.code ?? ""}</code>
 												</pre>
 											</div>
 										</TabPanel>
@@ -301,7 +301,10 @@ export function DocsViewer() {
 												(s) => s.id === selectedSection,
 											);
 											if (currentIndex > 0) {
-												setSelectedSection(docSections[currentIndex - 1].id);
+												const previous = docSections[currentIndex - 1];
+												if (previous) {
+													setSelectedSection(previous.id);
+												}
 											}
 										}}
 										isDisabled={
@@ -332,7 +335,10 @@ export function DocsViewer() {
 												(s) => s.id === selectedSection,
 											);
 											if (currentIndex < docSections.length - 1) {
-												setSelectedSection(docSections[currentIndex + 1].id);
+												const next = docSections[currentIndex + 1];
+												if (next) {
+													setSelectedSection(next.id);
+												}
 											}
 										}}
 										isDisabled={

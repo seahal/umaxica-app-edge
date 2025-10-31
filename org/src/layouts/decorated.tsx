@@ -11,21 +11,23 @@ export default function DecoratedLayout() {
 
 	const {
 		codeName = "",
-		newsUrl = "",
-		docsUrl = "",
-		helpUrl = "",
+		helpServiceUrl = "",
+		docsServiceUrl = "",
+		newsServiceUrl = "",
 	} = loaderData ?? {};
 
 	return (
-		<>
+		<div className="flex min-h-screen flex-col">
 			<Header
 				codeName={codeName}
-				newsUrl={newsUrl}
-				docsUrl={docsUrl}
-				helpUrl={helpUrl}
+				helpServiceUrl={helpServiceUrl}
+				docsServiceUrl={docsServiceUrl}
+				newsServiceUrl={newsServiceUrl}
 			/>
-			<Outlet />
+			<main className="flex-1">
+				<Outlet />
+			</main>
 			<Footer codeName={codeName} />
-		</>
+		</div>
 	);
 }

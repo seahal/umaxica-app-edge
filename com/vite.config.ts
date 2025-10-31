@@ -13,7 +13,10 @@ export default defineConfig(() => {
 	return {
 		plugins: [
 			tailwindcss(),
-			cloudflare({ viteEnvironment: { name: "ssr" } }),
+			cloudflare({
+				viteEnvironment: { name: "ssr" },
+				inspectorPort: false, // avoid get-port syscall failures in restricted runtimes
+			}),
 			reactRouter(),
 			babel({
 				filter: /\.[jt]sx?$/,

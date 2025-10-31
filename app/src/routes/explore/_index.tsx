@@ -18,14 +18,14 @@ import {
 import type { Post } from "../../components/PostCard";
 
 export const handle = {
-	titleName: "Search",
-	breadcrumb: () => "Search",
+	titleName: "Explore",
+	breadcrumb: () => "Explore",
 };
 
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Umaxica - 検索" },
-		{ name: "description", content: "ユーザー、投稿、トレンドを検索" },
+		{ title: "Umaxica - 探索" },
+		{ name: "description", content: "ユーザー、投稿、トレンドを探索" },
 	];
 }
 
@@ -162,7 +162,7 @@ export default function Search(_: Route.ComponentProps) {
 		: [];
 
 	return (
-		<div className="min-h-screen bg-white dark:bg-gray-950">
+		<div className="bg-white dark:bg-gray-950">
 			<div className="max-w-2xl mx-auto">
 				{/* 検索ヘッダー */}
 				<div className="sticky top-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-10">
