@@ -135,7 +135,7 @@ export function Footer({ codeName = "" }: FooterProps) {
 				<div className="mt-12 animate-in fade-in duration-700 delay-500 border-t border-gray-200 pt-8 dark:border-gray-800">
 					<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
 						<p className="text-center text-sm text-gray-600 dark:text-gray-400">
-							© {currentYear} {codeName || "Umaxica"}. All rights reserved.
+							© {currentYear} {codeName || "Umaxica"}.
 						</p>
 						<div className="flex flex-wrap justify-center gap-6">
 							<TooltipTrigger delay={200}>
@@ -159,6 +159,16 @@ export function Footer({ codeName = "" }: FooterProps) {
 								<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
 									サービス利用の規約
 								</Tooltip>
+							</TooltipTrigger>
+							<TooltipTrigger delay={200}>
+								<Link
+									href="https://jp.umaxica.dev/status"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-sm text-gray-600 transition-all duration-200 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+								>
+									ステータス
+								</Link>
 							</TooltipTrigger>
 						</div>
 					</div>
