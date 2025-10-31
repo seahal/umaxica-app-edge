@@ -27,7 +27,7 @@ function getNextSection(
 	if (currentIndex === -1 || currentIndex === sections.length - 1) {
 		return null;
 	}
-	return sections[currentIndex + 1];
+	return sections[currentIndex + 1] ?? null;
 }
 
 function getPreviousSection(
@@ -38,7 +38,7 @@ function getPreviousSection(
 	if (currentIndex <= 0) {
 		return null;
 	}
-	return sections[currentIndex - 1];
+	return sections[currentIndex - 1] ?? null;
 }
 
 function extractCodeSnippets(sections: DocSection[]): string[] {
@@ -84,7 +84,7 @@ describe("DocsViewer Utilities", () => {
 		it("should search by title", () => {
 			const results = searchSections(sampleSections, "Button コンポーネント");
 			expect(results.length).toBe(1);
-			expect(results[0].id).toBe("button");
+			expect(results[0]?.id).toBe("button");
 		});
 
 		it("should search by content", () => {
@@ -150,7 +150,7 @@ describe("DocsViewer Utilities", () => {
 		});
 
 		it("should handle sections without code", () => {
-			const snippets = extractCodeSnippets([sampleSections[3]]);
+			const snippets = extractCodeSnippets([sampleSections[3]!]);
 			expect(snippets).toEqual([]);
 		});
 	});

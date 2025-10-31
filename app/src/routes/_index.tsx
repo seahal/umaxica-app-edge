@@ -4,7 +4,7 @@ import type { Route } from "./+types/_index";
 export function meta(_: Route.MetaArgs) {
 	return [
 		{ title: "Umaxica - ホーム" },
-		{ name: "description", content: "Umaxica SNS - 今何してる？" },
+		{ name: "description", content: "Umaxica - 今何してる？" },
 	];
 }
 
@@ -23,7 +23,7 @@ export function loader({ context }: Route.LoaderArgs) {
 
 export default function Home(_: Route.ComponentProps) {
 	return (
-		<div className="min-h-screen bg-white dark:bg-gray-950">
+		<div className="bg-white dark:bg-gray-950">
 			<Timeline />
 		</div>
 	);

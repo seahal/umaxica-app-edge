@@ -319,7 +319,7 @@ function EventCard({ event }: { event: Event }) {
 						<ModalOverlay className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
 							<Modal className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full">
 								<Dialog className="outline-none p-6">
-									{({ close }) => (
+									{({ close }: { close: () => void }) => (
 										<>
 											<Heading
 												slot="title"
