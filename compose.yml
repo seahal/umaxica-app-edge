@@ -1,52 +1,42 @@
 name: "edge"
-
-x-dev-service: &dev-service
-  build:
-    context: .
-    args:
-      - DOCKER_UID=${UID:-1000}
-      - DOCKER_GID=${GID:-1000}
-      - DOCKER_USER=edge
-      - DOCKER_GROUP=group
-  working_dir: /home/edge/workspace
-  volumes:
-    - type: bind
-      source: .
-      target: /home/edge/workspace
-      consistency: cached
-    - type: volume
-      source: node-volume
-      target: /home/edge/workspace/node_modules
-      volume:
-        nocopy: true
-    - type: volume
-      source: bun-volume
-      target: /home/edge/.bun
-      volume:
-        nocopy: true
-  ports:
-    - '5170:5170'
-    - '5171:5171'
-    - '5172:5172'
-    - '5173:5173'
-  tty: true
-  stdin_open: true
-  init: true
-  user: "${UID:-1000}:${GID:-1000}"
-  environment:
-    - NODE_OPTIONS=--max-old-space-size=4096
-  restart: unless-stopped
-
 services:
-  bun:
-    <<: *dev-service
-    entrypoint:
-      - bun
   core:
-    <<: *dev-service
-    command:
-      - sleep
-      - infinity
+    build:
+      context: .
+      args:
+        - DOCKER_UID=${UID:-1000}
+        - DOCKER_GID=${GID:-1000}
+        - DOCKER_USER=edge
+        - DOCKER_GROUP=group
+    working_dir: /home/edge/workspace
+    volumes:
+      - type: bind
+        source: .
+        target: /home/edge/workspace
+        consistency: cached
+      - type: volume
+        source: node-volume
+        target: /home/edge/workspace/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: bun-volume
+        target: /home/edge/.bun
+        volume:
+          nocopy: true
+    ports:
+      - '5170:5170'
+      - '5171:5171'
+      - '5172:5172'
+      - '5173:5173'
+    command: sleep infinity
+    tty: true
+    stdin_open: true
+    init: true
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+    restart: unless-stopped
 volumes:
   bun-volume:
     driver: local

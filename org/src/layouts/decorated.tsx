@@ -11,18 +11,18 @@ export default function DecoratedLayout() {
 
 	const {
 		codeName = "",
-		helpServiceUrl = "",
-		docsServiceUrl = "",
-		newsServiceUrl = "",
+		helpUrl = "",
+		docsUrl = "",
+		newsUrl = "",
 	} = loaderData ?? {};
 
 	return (
 		<div className="flex min-h-screen flex-col">
 			<Header
 				codeName={codeName}
-				helpServiceUrl={helpServiceUrl}
-				docsServiceUrl={docsServiceUrl}
-				newsServiceUrl={newsServiceUrl}
+				helpServiceUrl={helpUrl}
+				docsServiceUrl={docsUrl}
+				newsServiceUrl={newsUrl}
 			/>
 			<main className="flex-1">
 				<Outlet />

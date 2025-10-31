@@ -150,7 +150,12 @@ describe("DocsViewer Utilities", () => {
 		});
 
 		it("should handle sections without code", () => {
-			const snippets = extractCodeSnippets([sampleSections[3]!]);
+			const sectionWithoutCode = sampleSections[3];
+			expect(sectionWithoutCode).toBeDefined();
+			if (!sectionWithoutCode) {
+				return;
+			}
+			const snippets = extractCodeSnippets([sectionWithoutCode]);
 			expect(snippets).toEqual([]);
 		});
 	});

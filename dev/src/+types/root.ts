@@ -43,6 +43,9 @@ export namespace Route {
 			security?: {
 				nonce?: string;
 			};
+			cloudflare?: {
+				env?: Record<string, string>;
+			};
 		};
 	}
 }

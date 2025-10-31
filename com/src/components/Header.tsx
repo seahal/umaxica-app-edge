@@ -179,34 +179,6 @@ export function Header({
 							</svg>
 							Explore
 						</NavLink>
-
-						<NavLink
-							to="/authentication"
-							className={({ isActive }: { isActive: boolean }) =>
-								`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4 sm:text-sm ${
-									isActive
-										? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-										: "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
-								}`
-							}
-						>
-							<svg
-								className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<title>Login</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-								/>
-							</svg>
-							Login
-						</NavLink>
 					</div>
 				</div>
 			</div>

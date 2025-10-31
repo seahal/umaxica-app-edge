@@ -85,7 +85,7 @@ describe("EventList Utilities", () => {
 		it("should filter by category", () => {
 			const filtered = filterByCategory(sampleEvents, "workshop");
 			expect(filtered.length).toBe(1);
-			expect(filtered[0]!.category).toBe("workshop");
+			expect(filtered[0]?.category).toBe("workshop");
 		});
 
 		it("should return all events for 'all' category", () => {
@@ -101,50 +101,91 @@ describe("EventList Utilities", () => {
 
 	describe("calculateFillRate", () => {
 		it("should calculate fill rate correctly", () => {
-			const rate = calculateFillRate(sampleEvents[0]!);
+			const event = sampleEvents[0];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			const rate = calculateFillRate(event);
 			expect(rate).toBe(64); // 32/50 * 100
 		});
 
 		it("should handle 100% fill rate", () => {
-			const rate = calculateFillRate(sampleEvents[3]!);
+			const event = sampleEvents[3];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			const rate = calculateFillRate(event);
 			expect(rate).toBe(100);
 		});
 
 		it("should handle 0% fill rate", () => {
-			const emptyEvent = { ...sampleEvents[0]!, registered: 0 };
+			const baseEvent = sampleEvents[0];
+			expect(baseEvent).toBeDefined();
+			if (!baseEvent) {
+				return;
+			}
+			const emptyEvent = { ...baseEvent, registered: 0 };
 			expect(calculateFillRate(emptyEvent)).toBe(0);
 		});
 	});
 
 	describe("getRemainingSlots", () => {
 		it("should calculate remaining slots", () => {
-			expect(getRemainingSlots(sampleEvents[0]!)).toBe(18); // 50 - 32
+			const event = sampleEvents[0];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			expect(getRemainingSlots(event)).toBe(18); // 50 - 32
 		});
 
 		it("should return 0 for full event", () => {
-			expect(getRemainingSlots(sampleEvents[3]!)).toBe(0);
+			const event = sampleEvents[3];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			expect(getRemainingSlots(event)).toBe(0);
 		});
 
 		it("should handle nearly full event", () => {
-			expect(getRemainingSlots(sampleEvents[2]!)).toBe(2); // 30 - 28
+			const event = sampleEvents[2];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			expect(getRemainingSlots(event)).toBe(2); // 30 - 28
 		});
 	});
 
 	describe("isEventFull", () => {
 		it("should return false for non-full event", () => {
-			expect(isEventFull(sampleEvents[0]!)).toBe(false);
+			const event = sampleEvents[0];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			expect(isEventFull(event)).toBe(false);
 		});
 
 		it("should return true for full event", () => {
-			expect(isEventFull(sampleEvents[3]!)).toBe(true);
+			const event = sampleEvents[3];
+			expect(event).toBeDefined();
+			if (!event) {
+				return;
+			}
+			expect(isEventFull(event)).toBe(true);
 		});
 	});
 
 	describe("sortEventsByDate", () => {
 		it("should sort events by date", () => {
 			const sorted = sortEventsByDate(sampleEvents);
-			expect(sorted[0]!.date).toBe("2025-11-08");
-			expect(sorted[sorted.length - 1]!.date).toBe("2025-11-30");
+			expect(sorted[0]?.date).toBe("2025-11-08");
+			const lastEvent = sorted.at(-1);
+			expect(lastEvent?.date).toBe("2025-11-30");
 		});
 
 		it("should not mutate original array", () => {
