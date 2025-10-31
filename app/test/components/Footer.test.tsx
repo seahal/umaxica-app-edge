@@ -1,103 +1,114 @@
-import "@testing-library/jest-dom/vitest";
-
-import { afterEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { Window } from "happy-dom";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { Footer } from "../../src/components/Footer";
 
 await import(new URL("../../../test/setup-happy-dom.ts", import.meta.url).href);
 
-const { cleanup, render, screen, within } = await import(
-	"@testing-library/react"
-);
+type FooterProps = Parameters<typeof Footer>[0];
 
-afterEach(() => {
-	cleanup();
-});
-
-function renderFooter(props?: Partial<Parameters<typeof Footer>[0]>) {
-	render(<Footer {...(props as Parameters<typeof Footer>[0])} />);
+function renderFooter(props?: Partial<FooterProps>) {
+	const markup = renderToStaticMarkup(
+		<Footer {...((props ?? {}) as FooterProps)} />,
+	);
+	const window = new Window();
+	window.document.body.innerHTML = markup;
+	return window.document;
 }
 
 describe("Footer component", () => {
 	it("renders a footer landmark with fallback branding when codeName is omitted", () => {
-		renderFooter();
+		const document = renderFooter();
+		const footer = document.querySelector("footer");
+		expect(footer).toBeTruthy();
 
-		expect(screen.getByRole("contentinfo")).toBeInTheDocument();
-		expect(
-			screen.getByRole("heading", { level: 3, name: "???" }),
-		).toBeInTheDocument();
+		const heading = footer?.querySelector("h3");
+		expect(heading?.textContent).toBe("???");
 
 		const currentYear = new Date().getFullYear();
-		const copyright = screen.getByText((content) =>
-			content.includes("All rights reserved."),
+		const paragraphs = footer ? Array.from(footer.querySelectorAll("p")) : [];
+		const copyright = paragraphs.find((paragraph) =>
+			paragraph.textContent?.includes("All rights reserved."),
 		);
+		expect(copyright).toBeTruthy();
+		if (!copyright) {
+			return;
+		}
 
-		expect(copyright).toHaveTextContent(
+		expect(copyright.textContent).toContain(
 			`© ${currentYear} Umaxica. All rights reserved.`,
 		);
 	});
 
 	it("renders provided codeName in branding and copyright notice", () => {
 		const codeName = "Stardust";
-
-		renderFooter({ codeName });
-
-		expect(
-			screen.getByRole("heading", { level: 3, name: codeName }),
-		).toBeInTheDocument();
+		const document = renderFooter({ codeName });
+		const heading = document.querySelector("footer h3");
+		expect(heading?.textContent).toBe(codeName);
 
 		const currentYear = new Date().getFullYear();
-		expect(
-			screen.getByText(`© ${currentYear} ${codeName}. All rights reserved.`),
-		).toBeInTheDocument();
+		const copyright = Array.from(document.querySelectorAll("footer p")).find(
+			(paragraph) => paragraph.textContent?.includes("All rights reserved."),
+		);
+		expect(copyright).toBeTruthy();
+		if (!copyright) {
+			return;
+		}
+		expect(copyright.textContent).toContain(
+			`© ${currentYear} ${codeName}. All rights reserved.`,
+		);
 	});
 
 	it("renders quick links with expected routes", () => {
-		renderFooter();
+		const document = renderFooter();
+		const links = Array.from(document.querySelectorAll("footer nav a")).map(
+			(link) => ({
+				name: link.textContent?.trim(),
+				href: link.getAttribute("href"),
+			}),
+		);
 
-		const nav = screen.getByRole("navigation");
-		const quickLinks = within(nav).getAllByRole("link");
-		expect(quickLinks).toHaveLength(3);
-
-		expect(screen.getByRole("link", { name: "ホーム" })).toHaveAttribute(
-			"href",
-			"/",
-		);
-		expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
-			"href",
-			"/about",
-		);
-		expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute(
-			"href",
-			"/contact",
-		);
+		expect(links).toEqual([
+			{ name: "ホーム", href: "/" },
+			{ name: "About", href: "/about" },
+			{ name: "お問い合わせ", href: "/contact" },
+		]);
 	});
 
 	it("renders social links that open externally with descriptive labels", () => {
-		renderFooter();
+		const document = renderFooter();
+		const socialLinks = Array.from(
+			document.querySelectorAll("footer a[aria-label]"),
+		);
 
-		const socialLinks: Array<[string, string]> = [
-			["GitHub", "https://github.com/seahal/umaxica-app-edge"],
-			["Twitter", "https://twitter.com"],
-		];
+		const assertions = socialLinks.map((link) => [
+			link.getAttribute("aria-label"),
+			link.getAttribute("href"),
+			link.getAttribute("target"),
+			link.getAttribute("rel"),
+		]);
 
-		for (const [name, href] of socialLinks) {
-			const link = screen.getByRole("link", { name });
-			expect(link).toHaveAttribute("href", href);
-			expect(link).toHaveAttribute("target", "_blank");
-			expect(link).toHaveAttribute("rel", "noopener noreferrer");
-		}
+		expect(assertions).toContainEqual([
+			"GitHub",
+			"https://github.com/seahal/umaxica-app-edge",
+			"_blank",
+			"noopener noreferrer",
+		]);
+		expect(assertions).toContainEqual([
+			"Twitter",
+			"https://twitter.com",
+			"_blank",
+			"noopener noreferrer",
+		]);
 	});
 
 	it("includes privacy and terms legal links", () => {
-		renderFooter();
+		const document = renderFooter();
+		const privacy = document.querySelector('footer a[href="/privacy"]');
+		const terms = document.querySelector('footer a[href="/terms"]');
 
-		expect(
-			screen.getByRole("link", { name: "プライバシーポリシー" }),
-		).toHaveAttribute("href", "/privacy");
-		expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute(
-			"href",
-			"/terms",
-		);
+		expect(privacy?.textContent).toBe("プライバシーポリシー");
+		expect(terms?.textContent).toBe("利用規約");
 	});
 });

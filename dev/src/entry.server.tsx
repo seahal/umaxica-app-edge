@@ -3,13 +3,14 @@ import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 
-declare module "react-router" {
-	interface AppLoadContext {
-		security?: {
-			nonce?: string;
-		};
-	}
-}
+type ExtendedAppLoadContext = AppLoadContext & {
+	security?: {
+		nonce?: string;
+	};
+	cloudflare?: {
+		env?: Record<string, string>;
+	};
+};
 
 export default async function handleRequest(
 	request: Request,
@@ -20,7 +21,8 @@ export default async function handleRequest(
 ) {
 	let shellRendered = false;
 	const userAgent = request.headers.get("user-agent");
-	const nonce = loadContext?.security?.nonce ?? "";
+	const { security } = (loadContext ?? {}) as ExtendedAppLoadContext;
+	const nonce = security?.nonce ?? "";
 
 	const body = await renderToReadableStream(
 		<ServerRouter context={routerContext} url={request.url} />,

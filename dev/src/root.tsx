@@ -54,6 +54,13 @@ export default function App() {
 	return <Outlet />;
 }
 
+const FALLBACK_SETTINGS = {
+	codeName: "Umaxica Developers",
+	helpServiceUrl: "",
+	docsServiceUrl: "",
+	newsServiceUrl: "",
+} as const;
+
 function generateNonce(): string {
 	const array = new Uint8Array(16);
 	crypto.getRandomValues(array);
@@ -64,6 +71,42 @@ export function loader({ context }: Route.LoaderArgs) {
 	// Generate nonce if not provided by context
 	const cspNonce = context?.security?.nonce ?? generateNonce();
 
+	const contextEnv = context?.cloudflare?.env ?? {};
+	const importEnv =
+		(
+			import.meta as ImportMeta & {
+				env?: Record<string, string | undefined>;
+			}
+		).env ?? {};
+
+	const readEnv = (key: string, fallback = ""): string => {
+		const fromContext = contextEnv[key];
+		if (fromContext !== undefined) {
+			return fromContext.trim();
+		}
+
+		const fromImport = importEnv[key] ?? importEnv[`VITE_${key}`];
+		if (fromImport !== undefined) {
+			return fromImport.trim();
+		}
+
+		return fallback.trim();
+	};
+
+	const codeName = readEnv("BRAND_NAME", FALLBACK_SETTINGS.codeName);
+	const helpServiceUrl = readEnv(
+		"HELP_SERVICE_URL",
+		FALLBACK_SETTINGS.helpServiceUrl,
+	);
+	const docsServiceUrl = readEnv(
+		"DOCS_SERVICE_URL",
+		FALLBACK_SETTINGS.docsServiceUrl,
+	);
+	const newsServiceUrl = readEnv(
+		"NEWS_SERVICE_URL",
+		FALLBACK_SETTINGS.newsServiceUrl,
+	);
+
 	// Store nonce in context for entry.server.tsx to use
 	if (context && !context.security) {
 		Object.assign(context, { security: { nonce: cspNonce } });
@@ -71,7 +114,7 @@ export function loader({ context }: Route.LoaderArgs) {
 		Object.assign(context.security, { nonce: cspNonce });
 	}
 
-	return { cspNonce };
+	return { cspNonce, codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl };
 }
 
 export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {

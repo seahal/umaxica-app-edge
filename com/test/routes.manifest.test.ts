@@ -35,7 +35,6 @@ describe("com route manifest", () => {
 				path: "configure",
 				file: "routes/configure.tsx",
 			}),
-			expect.objectContaining({ path: "*", file: "routes/catch-all.tsx" }),
 		]);
 	});
 
@@ -46,14 +45,18 @@ describe("com route manifest", () => {
 		});
 	});
 
-	it("registers the configure and catch-all routes", () => {
+	it("registers the configure route", () => {
 		expect(findByPath("configure")).toMatchObject({
 			path: "configure",
 			file: "routes/configure.tsx",
 		});
-		expect(findByPath("*")).toMatchObject({
-			path: "*",
-			file: "routes/catch-all.tsx",
+	});
+
+	it("exposes the explore index route", () => {
+		expect(findByPath("explore")).toMatchObject({
+			path: "explore",
+			file: "routes/explore/_index.tsx",
+			index: true,
 		});
 	});
 

@@ -15,8 +15,12 @@ describe("Route: Home (com)", () => {
 		it("should return localized title and description", () => {
 			const result = meta({} as never);
 			expect(result).toEqual([
-				{ title: "Umaxica Commerce - 商品カタログ" },
-				{ name: "description", content: "最適なプランを見つけましょう" },
+				{ title: "Umaxica Commerce - Abstract Experience Sample" },
+				{
+					name: "description",
+					content:
+						"抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。",
+				},
 			]);
 		});
 	});
@@ -68,22 +72,25 @@ describe("Route: Home (com)", () => {
 	});
 
 	describe("Component", () => {
-		it("should render the product catalog shell", () => {
+		it("should render the abstract corporate hero", () => {
 			const markup = renderToStaticMarkup(
-				<Home loaderData={{ message: "unused" }} />,
+				<Home loaderData={{ message: "Edge Blueprint" }} />,
 			);
 
-			expect(markup).toContain("商品カタログ");
+			expect(markup).toContain("Abstract Corporate Sample");
+			expect(markup).toContain("Edge Blueprint");
+			expect(markup).toContain("プロジェクトを描写する");
 		});
 
-		it("should render product offerings", () => {
+		it("should render focus areas and perspectives", () => {
 			const markup = renderToStaticMarkup(
 				<Home loaderData={{ message: "Hello" }} />,
 			);
 
-			expect(markup).toContain("プレミアムプラン");
-			expect(markup).toContain("スタンダードプラン");
-			expect(markup).toContain("ベーシックプラン");
+			expect(markup).toContain("Modular Platform");
+			expect(markup).toContain("Experience Studio");
+			expect(markup).toContain("Vision");
+			expect(markup).toContain("静かな変革を、そっと始めませんか。");
 		});
 
 		it("should handle empty message", () => {
@@ -93,6 +100,7 @@ describe("Route: Home (com)", () => {
 
 			expect(markup).toBeDefined();
 			expect(markup.length).toBeGreaterThan(0);
+			expect(markup).toContain("Sculpting Calm &amp; Capable Experiences");
 		});
 	});
 });
