@@ -15,7 +15,6 @@ import type { ReactNode } from "react";
 type RouteErrorBoundaryProps = {
 	error: unknown;
 };
-
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
 	{

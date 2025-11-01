@@ -223,7 +223,7 @@ function StatusBadge({ level }: { level: StatusLevel }) {
 
 export default function Index() {
 	const { overall, updatedAt, services, history, notice } =
-		useLoaderData<typeof loader>();
+		useLoaderData<LoaderData>();
 
 	return (
 		<main className="min-h-screen bg-gray-50 dark:bg-gray-950">
