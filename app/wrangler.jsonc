@@ -33,7 +33,7 @@
 		"HELP_CORPORATE_URL": "jp.help.umaxica.com",
 		"HELP_SERVICE_URL": "jp.help.umaxica.app",
 		"HELP_STAFF_URL": "jp.help.umaxica.org",
-		"VALUE_FROM_CLOUDFLARE": "Umaxica App (local via wrangler.jsonc)" // TODO: DELETE
+		"JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0tfSUTdHHauNW9EVYrPxVg6jvlXjFgmJ\n4RZVGkIgzmW9lHE/IlLosDlBa5r2HI0tZKDHlSAaRxTfLD65FMrUNYRQBnvo3te1\n/u6YkHzsI0pcDYGsGtytmX2GR3LIdxq6\n-----END PUBLIC KEY-----\n"
 	},
 	"env": {
 		"production": {
@@ -59,7 +59,7 @@
 				"HELP_SERVICE_URL": "jp.help.umaxica.app",
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"BRAND_NAME": "UMAXICA",
-				"VALUE_FROM_CLOUDFLARE": "Umaxica App (production via wrangler.jsonc)" // TODO: DELETE
+				"JWT_PUBLIC_KEY": ""
 			}
 		}
 	},
