@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	mock,
+} from "bun:test";
 
 const actualDomServer = await import("react-dom/server");
 
@@ -26,12 +34,13 @@ function createStream() {
 	return stream as ReadableStream & { allReady: Promise<void> };
 }
 
-let renderImplementation: (...args: unknown[]) => ReturnType<typeof createStream> =
-	(...args) => {
-		renderCalls.push(args);
-		lastOptions = args[1] as RenderOptions;
-		return createStream();
-	};
+let renderImplementation: (
+	...args: unknown[]
+) => ReturnType<typeof createStream> = (...args) => {
+	renderCalls.push(args);
+	lastOptions = args[1] as RenderOptions;
+	return createStream();
+};
 
 mock.module("react-dom/server", () => ({
 	renderToReadableStream: (...args: unknown[]) => renderImplementation(...args),
@@ -74,7 +83,9 @@ describe("entry.client handleRequest", () => {
 		const request = new Request("https://example.com/home", {
 			headers: { "user-agent": "TestBot" },
 		});
-		const routerContext = { isSpaMode: false } as unknown as import("react-router").EntryContext;
+		const routerContext = {
+			isSpaMode: false,
+		} as unknown as import("react-router").EntryContext;
 
 		const response = await handleRequest(
 			request,
@@ -94,7 +105,9 @@ describe("entry.client handleRequest", () => {
 	it("waits for SPA mode clients", async () => {
 		isBot = false;
 		const request = new Request("https://example.com/app");
-		const routerContext = { isSpaMode: true } as unknown as import("react-router").EntryContext;
+		const routerContext = {
+			isSpaMode: true,
+		} as unknown as import("react-router").EntryContext;
 
 		await handleRequest(request, 200, headers, routerContext, {});
 

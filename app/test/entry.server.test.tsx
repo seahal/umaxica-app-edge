@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	mock,
+} from "bun:test";
 
 const actualDomServer = await import("react-dom/server");
 
@@ -25,12 +33,13 @@ function createStream() {
 	return stream as ReadableStream & { allReady: Promise<void> };
 }
 
-let renderImplementation: (...args: unknown[]) => ReturnType<typeof createStream> =
-	(...args) => {
-		renderCalls.push(args);
-		lastOptions = args[1] as RenderOptions;
-		return createStream();
-	};
+let renderImplementation: (
+	...args: unknown[]
+) => ReturnType<typeof createStream> = (...args) => {
+	renderCalls.push(args);
+	lastOptions = args[1] as RenderOptions;
+	return createStream();
+};
 
 mock.module("react-dom/server", () => ({
 	renderToReadableStream: (...args: unknown[]) => renderImplementation(...args),
@@ -96,7 +105,9 @@ describe("entry.server handleRequest", () => {
 		expect(response.headers.get("Content-Security-Policy")).toContain(
 			"nonce-nonce-123",
 		);
-		expect(response.headers.get("Permissions-Policy")).toContain("microphone=()");
+		expect(response.headers.get("Permissions-Policy")).toContain(
+			"microphone=()",
+		);
 	});
 
 	it("waits for all content in SPA mode even for non-bot agents", async () => {
@@ -119,19 +130,29 @@ describe("entry.server handleRequest", () => {
 		const routerContext = {
 			isSpaMode: false,
 		} as unknown as import("react-router").EntryContext;
-		const onErrorSpy = mock.spy(console, "error");
+		const originalConsoleError = console.error;
+		const errorCalls: unknown[][] = [];
+		console.error = (...args: unknown[]) => {
+			errorCalls.push(args);
+		};
 
 		renderImplementation = (...args) => {
 			renderCalls.push(args);
 			const options = args[1] as RenderOptions | undefined;
 			const stream = createStream();
-			options?.onError?.(new Error("stream failure"));
+			setTimeout(() => {
+				options?.onError?.(new Error("stream failure"));
+			}, 0);
 			return stream;
 		};
 
-		await handleRequest(request, 200, headers, routerContext, {});
-
-		expect(onErrorSpy).toHaveBeenCalledWith(expect.any(Error));
-		onErrorSpy.mockRestore();
+		try {
+			await handleRequest(request, 200, headers, routerContext, {});
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(errorCalls.length).toBeGreaterThan(0);
+			expect(errorCalls[0][0]).toBeInstanceOf(Error);
+		} finally {
+			console.error = originalConsoleError;
+		}
 	});
 });

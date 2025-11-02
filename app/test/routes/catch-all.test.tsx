@@ -1,7 +1,8 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
-import { render } from "@testing-library/react";
+import "../../test-setup.ts";
 
-await import("../../test-setup.ts");
+import { afterAll, describe, expect, it, mock } from "bun:test";
+
+const { render } = await import("@testing-library/react");
 
 const actualNotFoundModule = await import("../../src/routes/NotFoundPage");
 let renderCount = 0;

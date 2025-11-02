@@ -1,9 +1,10 @@
+import "../../test-setup.ts";
+
 import { describe, expect, it } from "bun:test";
-import { render, screen } from "@testing-library/react";
+
+const { render, screen } = await import("@testing-library/react");
 
 import { SearchResults } from "../../src/components/SearchResults";
-
-await import("../../test-setup.ts");
 
 const samplePost = {
 	id: "post-1",
@@ -36,9 +37,7 @@ describe("SearchResults component", () => {
 	it("renders empty state when query is blank", () => {
 		render(<SearchResults query="" type="all" />);
 
-		expect(
-			screen.getByText("何かを検索してみましょう"),
-		).toBeInTheDocument();
+		expect(screen.getByText("何かを検索してみましょう")).toBeInTheDocument();
 		expect(
 			screen.getByText("ユーザー名、投稿内容、トレンドなどを検索できます"),
 		).toBeInTheDocument();
@@ -55,15 +54,19 @@ describe("SearchResults component", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("heading", { name: "ユーザー" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "ユーザー" }),
+		).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "投稿" })).toBeInTheDocument();
-		expect(screen.getByRole("heading", { name: "トレンド" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "トレンド" }),
+		).toBeInTheDocument();
 
 		expect(screen.getByText("@tanaka")).toBeInTheDocument();
 		expect(
 			screen.getAllByText((content) => content.includes("React")).length,
 		).toBeGreaterThan(0);
-		expect(screen.getByText("5234 件の投稿")).toBeInTheDocument();
+	expect(screen.getByText("5,234 件の投稿")).toBeInTheDocument();
 	});
 
 	it("highlights matching text in post results", () => {

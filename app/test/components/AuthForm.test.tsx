@@ -1,28 +1,36 @@
-import { describe, expect, it, mock } from "bun:test";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import "../../test-setup.ts";
 
-import { AuthForm } from "../../src/components/AuthForm";
+import { describe, expect, it } from "bun:test";
+const { render, screen } = await import("@testing-library/react");
+const userEvent = (await import("@testing-library/user-event")).default;
 
-await import("../../test-setup.ts");
+import { AuthForm, SocialLoginButton } from "../../src/components/AuthForm";
 
 describe("AuthForm component", () => {
 	it("submits login credentials when form is valid", async () => {
 		const user = userEvent.setup();
-		const handlers = { submit: (_data: Record<string, string>) => {} };
-		const handleSubmit = mock.method(handlers, "submit");
+		const submissions: Record<string, string>[] = [];
 
-		render(<AuthForm type="login" onSubmit={handlers.submit} />);
+		render(
+			<AuthForm
+				type="login"
+				onSubmit={(data) => {
+					submissions.push(data);
+				}}
+			/>,
+		);
 
-		await user.type(screen.getByLabelText("メールアドレス"), "user@example.com");
+		await user.type(
+			screen.getByLabelText("メールアドレス"),
+			"user@example.com",
+		);
 		await user.type(screen.getByLabelText("パスワード"), "Passw0rd!");
 
 		await user.click(screen.getByRole("button", { name: "ログイン" }));
 
-		expect(handleSubmit).toHaveBeenCalledWith({
-			email: "user@example.com",
-			password: "Passw0rd!",
-		});
+		expect(submissions).toEqual([
+			{ email: "user@example.com", password: "Passw0rd!" },
+		]);
 		expect(
 			screen.getByRole("link", { name: "パスワードをお忘れですか？" }),
 		).toBeInTheDocument();
@@ -30,12 +38,20 @@ describe("AuthForm component", () => {
 
 	it("requires terms agreement for signup before enabling submit", async () => {
 		const user = userEvent.setup();
-		const handlers = { submit: (_data: Record<string, string>) => {} };
-		const handleSubmit = mock.method(handlers, "submit");
+		const submissions: Record<string, string>[] = [];
 
-		render(<AuthForm type="signup" onSubmit={handlers.submit} />);
+		render(
+			<AuthForm
+				type="signup"
+				onSubmit={(data) => {
+					submissions.push(data);
+				}}
+			/>,
+		);
 
-		const submitButton = screen.getByRole("button", { name: "アカウントを作成" });
+		const submitButton = screen.getByRole("button", {
+			name: "アカウントを作成",
+		});
 		expect(submitButton).toBeDisabled();
 
 		await user.type(screen.getByLabelText("名前"), "テスト 太郎");
@@ -50,11 +66,13 @@ describe("AuthForm component", () => {
 		expect(submitButton).toBeEnabled();
 
 		await user.click(submitButton);
-		expect(handleSubmit).toHaveBeenCalledWith({
-			email: "new@example.com",
-			password: "Passw0rd!",
-			name: "テスト 太郎",
-		});
+		expect(submissions).toEqual([
+			{
+				email: "new@example.com",
+				password: "Passw0rd!",
+				name: "テスト 太郎",
+			},
+		]);
 	});
 
 	it("toggles password visibility", async () => {
@@ -70,5 +88,67 @@ describe("AuthForm component", () => {
 
 		await user.click(screen.getByRole("button", { name: "非表示" }));
 		expect(password.type).toBe("password");
+	});
+});
+
+describe("SocialLoginButton component", () => {
+	it("renders Google login button with correct text and icon", () => {
+		render(<SocialLoginButton provider="google" />);
+
+		expect(screen.getByRole("button", { name: /Googleでログイン/ })).toBeInTheDocument();
+		expect(screen.getByTitle("Google")).toBeInTheDocument();
+	});
+
+	it("renders Twitter login button with correct text and icon", () => {
+		render(<SocialLoginButton provider="twitter" />);
+
+		expect(screen.getByRole("button", { name: /Twitterでログイン/ })).toBeInTheDocument();
+		expect(screen.getByTitle("Twitter")).toBeInTheDocument();
+	});
+
+	it("renders GitHub login button with correct text and icon", () => {
+		render(<SocialLoginButton provider="github" />);
+
+		expect(screen.getByRole("button", { name: /GitHubでログイン/ })).toBeInTheDocument();
+		expect(screen.getByTitle("GitHub")).toBeInTheDocument();
+	});
+
+	it("calls onClick handler when Google button is clicked", async () => {
+		const user = userEvent.setup();
+		const clicks: string[] = [];
+
+		render(<SocialLoginButton provider="google" onClick={() => clicks.push("google")} />);
+
+		await user.click(screen.getByRole("button", { name: /Googleでログイン/ }));
+		expect(clicks).toEqual(["google"]);
+	});
+
+	it("calls onClick handler when Twitter button is clicked", async () => {
+		const user = userEvent.setup();
+		const clicks: string[] = [];
+
+		render(<SocialLoginButton provider="twitter" onClick={() => clicks.push("twitter")} />);
+
+		await user.click(screen.getByRole("button", { name: /Twitterでログイン/ }));
+		expect(clicks).toEqual(["twitter"]);
+	});
+
+	it("calls onClick handler when GitHub button is clicked", async () => {
+		const user = userEvent.setup();
+		const clicks: string[] = [];
+
+		render(<SocialLoginButton provider="github" onClick={() => clicks.push("github")} />);
+
+		await user.click(screen.getByRole("button", { name: /GitHubでログイン/ }));
+		expect(clicks).toEqual(["github"]);
+	});
+
+	it("works without onClick handler", async () => {
+		const user = userEvent.setup();
+
+		render(<SocialLoginButton provider="google" />);
+
+		// Should not throw when clicking without onClick handler
+		await user.click(screen.getByRole("button", { name: /Googleでログイン/ }));
 	});
 });

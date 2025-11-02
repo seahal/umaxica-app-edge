@@ -1,7 +1,8 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
-import { render } from "@testing-library/react";
+import "../../test-setup.ts";
 
-await import("../../test-setup.ts");
+import { afterAll, describe, expect, it, mock } from "bun:test";
+
+const { render } = await import("@testing-library/react");
 
 const actualErrorComponent = await import("../../src/components/ErrorPage");
 
@@ -43,7 +44,9 @@ describe("error route wrappers", () => {
 		lastProps = undefined;
 		const { getByTestId } = render(<NotFoundPage />);
 
-		expect(getByTestId("error-page")).toHaveTextContent("ページが見つかりません");
+		expect(getByTestId("error-page")).toHaveTextContent(
+			"ページが見つかりません",
+		);
 		expect(lastProps?.status).toBe(404);
 		expect(lastProps?.showNavigation).toBe(true);
 	});

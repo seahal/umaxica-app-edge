@@ -90,7 +90,7 @@ RUN mkdir -p "${BUN_INSTALL}" \
 
 WORKDIR ${HOME}/workspace
 
-USER ${DOCKER_UID}:${DOCKER_GID}
+USER ${DOCKER_USER}:${DOCKER_GROUP}
 
 # Set up bun for the user
 RUN bun --version

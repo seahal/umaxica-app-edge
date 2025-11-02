@@ -33,7 +33,7 @@ services:
     tty: true
     stdin_open: true
     init: true
-    user: "${UID:-1000}:${GID:-1000}"
+    user: edge:group
     environment:
       - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped

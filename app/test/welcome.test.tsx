@@ -1,9 +1,10 @@
+import "../test-setup.ts";
+
 import { describe, expect, it } from "bun:test";
-import { render, screen } from "@testing-library/react";
+
+const { render, screen } = await import("@testing-library/react");
 
 import { Welcome } from "../src/welcome/welcome";
-
-await import("../test-setup.ts");
 
 describe("Welcome component", () => {
 	it("renders provided message and resource links", () => {
