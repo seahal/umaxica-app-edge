@@ -1,0 +1,158 @@
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	mock,
+} from "bun:test";
+
+const actualDomServer = await import("react-dom/server");
+
+type RenderOptions = Parameters<
+	typeof actualDomServer.renderToReadableStream
+>[1];
+
+let awaitedAllReady = false;
+let lastOptions: RenderOptions | undefined;
+let renderCalls: unknown[][] = [];
+
+function createStream() {
+	awaitedAllReady = false;
+	const stream = new ReadableStream({
+		start(controller) {
+			controller.close();
+		},
+	});
+	Object.assign(stream, {
+		allReady: Promise.resolve().then(() => {
+			awaitedAllReady = true;
+		}),
+	});
+	return stream as ReadableStream & { allReady: Promise<void> };
+}
+
+let renderImplementation: (
+	...args: unknown[]
+) => ReturnType<typeof createStream> = (...args) => {
+	renderCalls.push(args);
+	lastOptions = args[1] as RenderOptions;
+	return createStream();
+};
+
+mock.module("react-dom/server", () => ({
+	renderToReadableStream: (...args: unknown[]) => renderImplementation(...args),
+}));
+
+let isBot = false;
+mock.module("isbot", () => ({
+	isbot: () => isBot,
+}));
+
+const handleRequest = (
+	await import(new URL("../src/entry.server.tsx", import.meta.url).href)
+).default;
+
+afterEach(() => {
+	renderCalls = [];
+	lastOptions = undefined;
+	renderImplementation = (...args) => {
+		renderCalls.push(args);
+		lastOptions = args[1] as RenderOptions;
+		return createStream();
+	};
+});
+
+afterAll(async () => {
+	const actualIsBot = await import("isbot");
+	mock.module("react-dom/server", () => actualDomServer);
+	mock.module("isbot", () => actualIsBot);
+});
+
+describe("entry.server handleRequest", () => {
+	let headers: Headers;
+
+	beforeEach(() => {
+		headers = new Headers();
+	});
+
+	it("renders html for bots and sets security headers", async () => {
+		isBot = true;
+		const request = new Request("https://example.com", {
+			headers: { "user-agent": "Googlebot" },
+		});
+		const routerContext = {
+			isSpaMode: false,
+		} as unknown as import("react-router").EntryContext;
+		const loadContext = { security: { nonce: "nonce-123" } };
+
+		const response = await handleRequest(
+			request,
+			200,
+			headers,
+			routerContext,
+			loadContext,
+		);
+
+		expect(renderCalls.length).toBe(1);
+		expect(awaitedAllReady).toBe(true);
+		expect(lastOptions?.nonce).toBe("nonce-123");
+		expect(response.headers.get("Content-Type")).toBe("text/html");
+		expect(response.headers.get("Strict-Transport-Security")).toContain(
+			"max-age=31536000",
+		);
+		expect(response.headers.get("Content-Security-Policy")).toContain(
+			"nonce-nonce-123",
+		);
+		expect(response.headers.get("Permissions-Policy")).toContain(
+			"microphone=()",
+		);
+	});
+
+	it("waits for all content in SPA mode even for non-bot agents", async () => {
+		isBot = false;
+		const request = new Request("https://example.com/app", {
+			headers: { "user-agent": "Mozilla/5.0" },
+		});
+		const routerContext = {
+			isSpaMode: true,
+		} as unknown as import("react-router").EntryContext;
+
+		await handleRequest(request, 200, headers, routerContext, {});
+
+		expect(awaitedAllReady).toBe(true);
+	});
+
+	it("escalates to 500 when onError is called after shell render", async () => {
+		isBot = false;
+		const request = new Request("https://example.com/error");
+		const routerContext = {
+			isSpaMode: false,
+		} as unknown as import("react-router").EntryContext;
+		const originalConsoleError = console.error;
+		const errorCalls: unknown[][] = [];
+		console.error = (...args: unknown[]) => {
+			errorCalls.push(args);
+		};
+
+		renderImplementation = (...args) => {
+			renderCalls.push(args);
+			const options = args[1] as RenderOptions | undefined;
+			const stream = createStream();
+			setTimeout(() => {
+				options?.onError?.(new Error("stream failure"));
+			}, 0);
+			return stream;
+		};
+
+		try {
+			await handleRequest(request, 200, headers, routerContext, {});
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(errorCalls.length).toBeGreaterThan(0);
+			expect(errorCalls[0][0]).toBeInstanceOf(Error);
+		} finally {
+			console.error = originalConsoleError;
+		}
+	});
+});

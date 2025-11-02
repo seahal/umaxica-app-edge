@@ -4,8 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { Footer } from "../../src/components/Footer";
 
-await import(new URL("../../../test/setup-happy-dom.ts", import.meta.url).href);
-
 type FooterProps = Parameters<typeof Footer>[0];
 
 function renderFooter(props?: Partial<FooterProps>) {
