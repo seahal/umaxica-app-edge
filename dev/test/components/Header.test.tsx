@@ -5,13 +5,8 @@ import { createElement } from "react";
 const actualRouter = await import("react-router");
 mock.module("react-router", () => ({
 	...actualRouter,
-	Link: ({
-		to,
-		children,
-	}: {
-		to: string;
-		children: React.ReactNode;
-	}) => createElement("a", { href: to }, children),
+	Link: ({ to, children }: { to: string; children: React.ReactNode }) =>
+		createElement("a", { href: to }, children),
 	NavLink: ({
 		to,
 		children,
@@ -19,9 +14,7 @@ mock.module("react-router", () => ({
 	}: {
 		to: string;
 		children: React.ReactNode;
-		className?:
-			| string
-			| ((args: { isActive: boolean }) => string | undefined);
+		className?: string | ((args: { isActive: boolean }) => string | undefined);
 	}) => {
 		const resolvedClassName =
 			typeof className === "function"

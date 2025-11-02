@@ -3,9 +3,12 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
 let transitionCalls = 0;
 let hydrateCalls = 0;
 let lastHydrateArgs: unknown[] = [];
-let lastOnError:
-	| ((error: unknown, errorInfo: unknown) => void)
-	| undefined;
+
+type OnErrorHandler = (error: unknown, errorInfo: unknown) => void;
+const isOnErrorHandler = (value: unknown): value is OnErrorHandler =>
+	typeof value === "function";
+
+let lastOnError: OnErrorHandler | undefined;
 
 const actualReact = await import("react");
 const mockStrictMode = actualReact.StrictMode;
@@ -53,7 +56,7 @@ mock.module("react-dom/client", () => ({
 		) {
 			const candidate = (routerElement as { props: Record<string, unknown> })
 				.props.unstable_onError;
-			if (typeof candidate === "function") {
+			if (isOnErrorHandler(candidate)) {
 				lastOnError = candidate;
 			}
 		}
@@ -63,17 +66,17 @@ mock.module("react-dom/client", () => ({
 
 mock.module("react-router/dom", () => ({
 	HydratedRouter: (props: Record<string, unknown>) => {
-		lastOnError =
-			(typeof props.unstable_onError === "function"
-				? (props.unstable_onError as typeof lastOnError)
-				: undefined) ?? lastOnError;
+		const candidate = props.unstable_onError;
+		if (isOnErrorHandler(candidate)) {
+			lastOnError = candidate;
+		}
 		return actualReact.createElement("mock-router", props);
 	},
 }));
 
 beforeAll(async () => {
 	globalThis.document = { nodeType: 9 } as unknown as Document;
-	await import("../src/entry.client.tsx");
+	await import("../src/entry.client");
 });
 
 afterAll(async () => {

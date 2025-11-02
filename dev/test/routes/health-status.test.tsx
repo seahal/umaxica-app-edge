@@ -1,11 +1,4 @@
-import {
-	afterAll,
-	afterEach,
-	describe,
-	expect,
-	it,
-	mock,
-} from "bun:test";
+import { afterAll, afterEach, describe, expect, it, mock } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 

@@ -6,10 +6,8 @@ const actualRouter = await import("react-router");
 
 mock.module("react-router", () => ({
 	...actualRouter,
-	Links: (props: Record<string, unknown>) =>
-		createElement("mock-links", props),
-	Meta: (props: Record<string, unknown>) =>
-		createElement("mock-meta", props),
+	Links: (props: Record<string, unknown>) => createElement("mock-links", props),
+	Meta: (props: Record<string, unknown>) => createElement("mock-meta", props),
 	ScrollRestoration: (props: Record<string, unknown>) =>
 		createElement("mock-scroll", props),
 	Scripts: (props: Record<string, unknown>) =>

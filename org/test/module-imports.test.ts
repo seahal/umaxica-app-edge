@@ -10,54 +10,54 @@ const skipFileNames = new Set(["entry.client.tsx", "entry.server.tsx"]);
 const allowedExtensions = new Set([".ts", ".tsx"]);
 
 function collectModules(currentDir: string): string[] {
-  const entries = readdirSync(currentDir, { withFileTypes: true });
-  const files: string[] = [];
+	const entries = readdirSync(currentDir, { withFileTypes: true });
+	const files: string[] = [];
 
-  for (const entry of entries) {
-    const fullPath = join(currentDir, entry.name);
+	for (const entry of entries) {
+		const fullPath = join(currentDir, entry.name);
 
-    if (entry.isDirectory()) {
-      if (entry.name.startsWith('+')) {
-        continue;
-      }
-      files.push(...collectModules(fullPath));
-      continue;
-    }
+		if (entry.isDirectory()) {
+			if (entry.name.startsWith("+")) {
+				continue;
+			}
+			files.push(...collectModules(fullPath));
+			continue;
+		}
 
-    const extension = extname(entry.name);
-    if (!allowedExtensions.has(extension)) {
-      continue;
-    }
+		const extension = extname(entry.name);
+		if (!allowedExtensions.has(extension)) {
+			continue;
+		}
 
-    if (entry.name.endsWith('.d.ts')) {
-      continue;
-    }
+		if (entry.name.endsWith(".d.ts")) {
+			continue;
+		}
 
-    if (skipFileNames.has(entry.name)) {
-      continue;
-    }
+		if (skipFileNames.has(entry.name)) {
+			continue;
+		}
 
-    files.push(fullPath);
-  }
+		files.push(fullPath);
+	}
 
-  return files;
+	return files;
 }
 
 const moduleFilePaths = collectModules(srcDirPath).sort((a, b) =>
-  a.localeCompare(b),
+	a.localeCompare(b),
 );
 
 describe("org src module imports", () => {
-  it("found executable source files to import", () => {
-    expect(moduleFilePaths.length).toBeGreaterThan(0);
-  });
+	it("found executable source files to import", () => {
+		expect(moduleFilePaths.length).toBeGreaterThan(0);
+	});
 
-  for (const modulePath of moduleFilePaths) {
-    const displayPath = relative(srcDirPath, modulePath);
+	for (const modulePath of moduleFilePaths) {
+		const displayPath = relative(srcDirPath, modulePath);
 
-    it(`imports ${displayPath}`, async () => {
-      const moduleExports = await import(pathToFileURL(modulePath).href);
-      expect(moduleExports).toBeDefined();
-    });
-  }
+		it(`imports ${displayPath}`, async () => {
+			const moduleExports = await import(pathToFileURL(modulePath).href);
+			expect(moduleExports).toBeDefined();
+		});
+	}
 });

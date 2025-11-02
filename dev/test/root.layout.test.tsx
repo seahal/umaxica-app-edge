@@ -1,10 +1,4 @@
-import {
-	afterAll,
-	describe,
-	expect,
-	it,
-	mock,
-} from "bun:test";
+import { afterAll, describe, expect, it, mock } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 
@@ -18,10 +12,8 @@ let errorResponsePredicate: ((error: unknown) => boolean) | undefined;
 
 mock.module("react-router", () => ({
 	...actualRouter,
-	Links: (props: Record<string, unknown>) =>
-		createElement("mock-links", props),
-	Meta: (props: Record<string, unknown>) =>
-		createElement("mock-meta", props),
+	Links: (props: Record<string, unknown>) => createElement("mock-links", props),
+	Meta: (props: Record<string, unknown>) => createElement("mock-meta", props),
 	ScrollRestoration: (props: Record<string, unknown>) =>
 		createElement("mock-scroll", props),
 	Scripts: (props: Record<string, unknown>) =>
@@ -106,7 +98,8 @@ describe("dev root route component", () => {
 
 describe("dev root error boundary", () => {
 	it("renders 404 friendly message for missing pages", () => {
-		errorResponsePredicate = (error) => (error as { status?: number })?.status === 404;
+		errorResponsePredicate = (error) =>
+			(error as { status?: number })?.status === 404;
 		const markup = renderToStaticMarkup(
 			<ErrorBoundary error={{ status: 404, statusText: "Not Found" }} />,
 		);
@@ -117,7 +110,8 @@ describe("dev root error boundary", () => {
 	});
 
 	it("falls back to generic status text for other route errors", () => {
-		errorResponsePredicate = (error) => Boolean((error as { status?: number })?.status);
+		errorResponsePredicate = (error) =>
+			Boolean((error as { status?: number })?.status);
 		const markup = renderToStaticMarkup(
 			<ErrorBoundary error={{ status: 500, statusText: "Server Error" }} />,
 		);

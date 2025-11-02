@@ -17,7 +17,7 @@ afterAll(async () => {
 
 describe("dev home route", () => {
 	it("declares expected metadata", () => {
-		expect(meta()).toEqual([
+		expect(meta({})).toEqual([
 			{ title: "Umaxica Developers - ドキュメント" },
 			{
 				name: "description",

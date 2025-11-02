@@ -141,7 +141,9 @@ describe("dev entry server handleRequest", () => {
 			const options = args[1] as RenderOptions | undefined;
 			const stream = createStream();
 			setTimeout(() => {
-				options?.onError?.(new Error("stream failure"));
+				options?.onError?.(new Error("stream failure"), {
+					componentStack: "",
+				});
 			}, 0);
 			return stream;
 		};
@@ -150,7 +152,9 @@ describe("dev entry server handleRequest", () => {
 			await handleRequest(request, 200, headers, routerContext, {});
 			await new Promise((resolve) => setTimeout(resolve, 0));
 			expect(errorCalls.length).toBeGreaterThan(0);
-			expect(errorCalls[0][0]).toBeInstanceOf(Error);
+			const [firstCall] = errorCalls;
+			expect(firstCall).toBeDefined();
+			expect(firstCall?.[0]).toBeInstanceOf(Error);
 		} finally {
 			console.error = originalConsoleError;
 		}
