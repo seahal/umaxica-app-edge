@@ -66,7 +66,7 @@ describe("SearchResults component", () => {
 		expect(
 			screen.getAllByText((content) => content.includes("React")).length,
 		).toBeGreaterThan(0);
-	expect(screen.getByText("5,234 件の投稿")).toBeInTheDocument();
+		expect(screen.getByText("5,234 件の投稿")).toBeInTheDocument();
 	});
 
 	it("highlights matching text in post results", () => {

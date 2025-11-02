@@ -22,7 +22,9 @@ describe("Header component", () => {
 	it("renders branding with fallback code name", () => {
 		renderHeader();
 
-		expect(screen.getByText("Umaxica", { selector: "span" })).toBeInTheDocument();
+		expect(
+			screen.getByText("Umaxica", { selector: "span" }),
+		).toBeInTheDocument();
 		expect(screen.getByTitle("Umaxica")).toBeInTheDocument();
 	});
 
@@ -122,11 +124,26 @@ describe("Header component", () => {
 	it("renders all internal navigation links with correct paths", () => {
 		renderHeader();
 
-		expect(screen.getByRole("link", { name: "💬" })).toHaveAttribute("href", "/message");
-		expect(screen.getByRole("link", { name: "🔔" })).toHaveAttribute("href", "/notification");
-		expect(screen.getByRole("link", { name: "⚙️" })).toHaveAttribute("href", "/configuration");
-		expect(screen.getByRole("link", { name: /Explore/ })).toHaveAttribute("href", "/explore");
-		expect(screen.getByRole("link", { name: /Login/ })).toHaveAttribute("href", "/authentication");
+		expect(screen.getByRole("link", { name: "💬" })).toHaveAttribute(
+			"href",
+			"/message",
+		);
+		expect(screen.getByRole("link", { name: "🔔" })).toHaveAttribute(
+			"href",
+			"/notification",
+		);
+		expect(screen.getByRole("link", { name: "⚙️" })).toHaveAttribute(
+			"href",
+			"/configuration",
+		);
+		expect(screen.getByRole("link", { name: /Explore/ })).toHaveAttribute(
+			"href",
+			"/explore",
+		);
+		expect(screen.getByRole("link", { name: /Login/ })).toHaveAttribute(
+			"href",
+			"/authentication",
+		);
 	});
 
 	it("renders external links with target blank and noopener", () => {

@@ -48,8 +48,8 @@ describe("ErrorPage component", () => {
 		expect(screen.getByText("404")).toBeInTheDocument();
 		expect(screen.getByText("ページが見つかりません")).toBeInTheDocument();
 		expect(screen.getByText("メッセージ")).toBeInTheDocument();
-	const suggestions = screen.getAllByText(/提案/);
-	expect(suggestions.length).toBeGreaterThan(0);
+		const suggestions = screen.getAllByText(/提案/);
+		expect(suggestions.length).toBeGreaterThan(0);
 		expect(
 			screen.getByRole("link", { name: "🏠 ホームに戻る" }),
 		).toHaveAttribute("href", "/");
@@ -78,11 +78,7 @@ describe("ErrorPage component", () => {
 	it("renders 404 error with search icon", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={404}
-					title="Not Found"
-					message="Page not found"
-				/>
+				<ErrorPage status={404} title="Not Found" message="Page not found" />
 			</MemoryRouter>,
 		);
 
@@ -123,11 +119,7 @@ describe("ErrorPage component", () => {
 	it("renders unknown error with X icon", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={418}
-					title="I'm a teapot"
-					message="Error message"
-				/>
+				<ErrorPage status={418} title="I'm a teapot" message="Error message" />
 			</MemoryRouter>,
 		);
 
@@ -138,25 +130,19 @@ describe("ErrorPage component", () => {
 	it("shows server error message for 500+ status codes", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={500}
-					title="Server Error"
-					message="Error message"
-				/>
+				<ErrorPage status={500} title="Server Error" message="Error message" />
 			</MemoryRouter>,
 		);
 
-		expect(screen.getByText(/サーバーで問題が発生しています/)).toBeInTheDocument();
+		expect(
+			screen.getByText(/サーバーで問題が発生しています/),
+		).toBeInTheDocument();
 	});
 
 	it("shows client error message for 404 status", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={404}
-					title="Not Found"
-					message="Error message"
-				/>
+				<ErrorPage status={404} title="Not Found" message="Error message" />
 			</MemoryRouter>,
 		);
 
@@ -166,11 +152,7 @@ describe("ErrorPage component", () => {
 	it("renders without suggestion when not provided", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={404}
-					title="Not Found"
-					message="Error message"
-				/>
+				<ErrorPage status={404} title="Not Found" message="Error message" />
 			</MemoryRouter>,
 		);
 
@@ -209,9 +191,18 @@ describe("ErrorPage component", () => {
 		);
 
 		expect(screen.getByText("よく見られるページ")).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "About" })).toHaveAttribute("href", "/about");
-		expect(screen.getByRole("link", { name: "Sample" })).toHaveAttribute("href", "/sample");
-		expect(screen.getByRole("link", { name: "Configure" })).toHaveAttribute("href", "/configure");
+		expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+			"href",
+			"/about",
+		);
+		expect(screen.getByRole("link", { name: "Sample" })).toHaveAttribute(
+			"href",
+			"/sample",
+		);
+		expect(screen.getByRole("link", { name: "Configure" })).toHaveAttribute(
+			"href",
+			"/configure",
+		);
 	});
 
 	it("does not render common page links when showNavigation is false", () => {
@@ -227,7 +218,9 @@ describe("ErrorPage component", () => {
 		);
 
 		expect(screen.queryByText("よく見られるページ")).not.toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: "About" })).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("link", { name: "About" }),
+		).not.toBeInTheDocument();
 	});
 
 	it("renders only stack trace when details is not provided", () => {
@@ -267,14 +260,12 @@ describe("ErrorPage component", () => {
 	it("renders contact message", () => {
 		render(
 			<MemoryRouter>
-				<ErrorPage
-					status={404}
-					title="Not Found"
-					message="Error message"
-				/>
+				<ErrorPage status={404} title="Not Found" message="Error message" />
 			</MemoryRouter>,
 		);
 
-		expect(screen.getByText(/何度もこのエラーが発生する場合は/)).toBeInTheDocument();
+		expect(
+			screen.getByText(/何度もこのエラーが発生する場合は/),
+		).toBeInTheDocument();
 	});
 });

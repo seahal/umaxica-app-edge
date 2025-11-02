@@ -95,21 +95,27 @@ describe("SocialLoginButton component", () => {
 	it("renders Google login button with correct text and icon", () => {
 		render(<SocialLoginButton provider="google" />);
 
-		expect(screen.getByRole("button", { name: /Googleでログイン/ })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /Googleでログイン/ }),
+		).toBeInTheDocument();
 		expect(screen.getByTitle("Google")).toBeInTheDocument();
 	});
 
 	it("renders Twitter login button with correct text and icon", () => {
 		render(<SocialLoginButton provider="twitter" />);
 
-		expect(screen.getByRole("button", { name: /Twitterでログイン/ })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /Twitterでログイン/ }),
+		).toBeInTheDocument();
 		expect(screen.getByTitle("Twitter")).toBeInTheDocument();
 	});
 
 	it("renders GitHub login button with correct text and icon", () => {
 		render(<SocialLoginButton provider="github" />);
 
-		expect(screen.getByRole("button", { name: /GitHubでログイン/ })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /GitHubでログイン/ }),
+		).toBeInTheDocument();
 		expect(screen.getByTitle("GitHub")).toBeInTheDocument();
 	});
 
@@ -117,7 +123,12 @@ describe("SocialLoginButton component", () => {
 		const user = userEvent.setup();
 		const clicks: string[] = [];
 
-		render(<SocialLoginButton provider="google" onClick={() => clicks.push("google")} />);
+		render(
+			<SocialLoginButton
+				provider="google"
+				onClick={() => clicks.push("google")}
+			/>,
+		);
 
 		await user.click(screen.getByRole("button", { name: /Googleでログイン/ }));
 		expect(clicks).toEqual(["google"]);
@@ -127,7 +138,12 @@ describe("SocialLoginButton component", () => {
 		const user = userEvent.setup();
 		const clicks: string[] = [];
 
-		render(<SocialLoginButton provider="twitter" onClick={() => clicks.push("twitter")} />);
+		render(
+			<SocialLoginButton
+				provider="twitter"
+				onClick={() => clicks.push("twitter")}
+			/>,
+		);
 
 		await user.click(screen.getByRole("button", { name: /Twitterでログイン/ }));
 		expect(clicks).toEqual(["twitter"]);
@@ -137,7 +153,12 @@ describe("SocialLoginButton component", () => {
 		const user = userEvent.setup();
 		const clicks: string[] = [];
 
-		render(<SocialLoginButton provider="github" onClick={() => clicks.push("github")} />);
+		render(
+			<SocialLoginButton
+				provider="github"
+				onClick={() => clicks.push("github")}
+			/>,
+		);
 
 		await user.click(screen.getByRole("button", { name: /GitHubでログイン/ }));
 		expect(clicks).toEqual(["github"]);

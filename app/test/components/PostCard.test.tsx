@@ -50,9 +50,9 @@ describe("PostCard component", () => {
 		);
 
 		const article = screen.getByRole("article");
-	await user.click(within(article).getByRole("button", { name: /返信/ }));
-	await user.click(within(article).getByRole("button", { name: /リポスト/ }));
-	await user.click(within(article).getByRole("button", { name: /いいね/ }));
+		await user.click(within(article).getByRole("button", { name: /返信/ }));
+		await user.click(within(article).getByRole("button", { name: /リポスト/ }));
+		await user.click(within(article).getByRole("button", { name: /いいね/ }));
 
 		expect(replyCalls).toEqual(["post-1"]);
 		expect(repostCalls).toEqual(["post-1"]);
@@ -129,7 +129,9 @@ describe("PostCard component", () => {
 
 		// All three action buttons should be present
 		expect(screen.getByRole("button", { name: /返信/ })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /リポスト/ })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /リポスト/ }),
+		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: /いいね/ })).toBeInTheDocument();
 	});
 });

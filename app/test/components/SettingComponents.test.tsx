@@ -53,7 +53,9 @@ describe("SettingComponents", () => {
 			</SettingSection>,
 		);
 
-		expect(screen.getByRole("heading", { name: "セクション" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "セクション" }),
+		).toBeInTheDocument();
 		expect(screen.getByText("Content")).toBeInTheDocument();
 	});
 
@@ -80,7 +82,9 @@ describe("SettingComponents", () => {
 			</SettingLayout>,
 		);
 
-		expect(screen.getByRole("heading", { name: "プライバシー" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "プライバシー" }),
+		).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "通知" })).toBeInTheDocument();
 		expect(screen.getByText("Privacy content")).toBeInTheDocument();
 		expect(screen.getByText("Notification content")).toBeInTheDocument();
@@ -100,12 +104,17 @@ describe("SettingComponents", () => {
 
 		expect(screen.getByText("メール通知")).toBeInTheDocument();
 		expect(screen.getByText("プッシュ通知")).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Toggle 1" })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Toggle 2" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Toggle 1" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Toggle 2" }),
+		).toBeInTheDocument();
 	});
 
 	it("renders SettingItem with long description", () => {
-		const longDescription = "This is a very long description that explains the setting in detail. It should wrap properly and display correctly.";
+		const longDescription =
+			"This is a very long description that explains the setting in detail. It should wrap properly and display correctly.";
 
 		render(
 			<SettingItem label="詳細設定" description={longDescription}>
@@ -119,17 +128,29 @@ describe("SettingComponents", () => {
 
 	it("renders nested structure with all components", () => {
 		render(
-			<SettingLayout title="アカウント設定" description="アカウントに関する設定を管理します">
+			<SettingLayout
+				title="アカウント設定"
+				description="アカウントに関する設定を管理します"
+			>
 				<SettingSection title="基本設定" description="基本的な設定項目">
 					<SettingItem label="ユーザー名" description="表示名を変更できます">
 						<input type="text" defaultValue="user123" />
 					</SettingItem>
-					<SettingItem label="メールアドレス" description="連絡先メールアドレス">
+					<SettingItem
+						label="メールアドレス"
+						description="連絡先メールアドレス"
+					>
 						<input type="email" defaultValue="user@example.com" />
 					</SettingItem>
 				</SettingSection>
-				<SettingSection title="セキュリティ" description="セキュリティに関する設定">
-					<SettingItem label="二段階認証" description="アカウントの安全性を高めます">
+				<SettingSection
+					title="セキュリティ"
+					description="セキュリティに関する設定"
+				>
+					<SettingItem
+						label="二段階認証"
+						description="アカウントの安全性を高めます"
+					>
 						<button type="button">有効化</button>
 					</SettingItem>
 				</SettingSection>
@@ -137,17 +158,25 @@ describe("SettingComponents", () => {
 		);
 
 		// Layout
-		expect(screen.getByRole("heading", { name: "アカウント設定" })).toBeInTheDocument();
-		expect(screen.getByText("アカウントに関する設定を管理します")).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "アカウント設定" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("アカウントに関する設定を管理します"),
+		).toBeInTheDocument();
 
 		// First section
-		expect(screen.getByRole("heading", { name: "基本設定" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "基本設定" }),
+		).toBeInTheDocument();
 		expect(screen.getByText("基本的な設定項目")).toBeInTheDocument();
 		expect(screen.getByText("ユーザー名")).toBeInTheDocument();
 		expect(screen.getByText("メールアドレス")).toBeInTheDocument();
 
 		// Second section
-		expect(screen.getByRole("heading", { name: "セキュリティ" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "セキュリティ" }),
+		).toBeInTheDocument();
 		expect(screen.getByText("セキュリティに関する設定")).toBeInTheDocument();
 		expect(screen.getByText("二段階認証")).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "有効化" })).toBeInTheDocument();

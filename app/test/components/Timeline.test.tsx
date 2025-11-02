@@ -51,7 +51,7 @@ describe("Timeline component", () => {
 		expect(within(firstPost).getByText("田中太郎")).toBeInTheDocument();
 		expect(within(firstPost).getByText("42")).toBeInTheDocument();
 
-	await user.click(within(firstPost).getByRole("button", { name: /いいね/ }));
+		await user.click(within(firstPost).getByRole("button", { name: /いいね/ }));
 
 		expect(within(firstPost).getByText("43")).toBeInTheDocument();
 	});
@@ -81,7 +81,9 @@ describe("Timeline component", () => {
 		// Initial repost count is 8
 		expect(within(firstPost).getByText("8")).toBeInTheDocument();
 
-		await user.click(within(firstPost).getByRole("button", { name: /リポスト/ }));
+		await user.click(
+			within(firstPost).getByRole("button", { name: /リポスト/ }),
+		);
 
 		// Repost count should increment to 9
 		expect(within(firstPost).getByText("9")).toBeInTheDocument();
@@ -110,7 +112,9 @@ describe("Timeline component", () => {
 		await user.click(screen.getByRole("tab", { name: "フォロー中" }));
 
 		// Should show the empty state message
-		expect(screen.getByText("フォロー中のユーザーの投稿がここに表示されます")).toBeInTheDocument();
+		expect(
+			screen.getByText("フォロー中のユーザーの投稿がここに表示されます"),
+		).toBeInTheDocument();
 
 		// Switch back to "おすすめ" tab
 		await user.click(screen.getByRole("tab", { name: "おすすめ" }));
@@ -122,7 +126,9 @@ describe("Timeline component", () => {
 	it("renders 'もっと見る' button", () => {
 		render(<Timeline />);
 
-		expect(screen.getByRole("button", { name: "もっと見る" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "もっと見る" }),
+		).toBeInTheDocument();
 	});
 
 	it("renders the header with title", () => {

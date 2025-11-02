@@ -98,7 +98,9 @@ describe("NewPostDialog component", () => {
 
 		await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-		const cancelButton = await screen.findByRole("button", { name: "キャンセル" });
+		const cancelButton = await screen.findByRole("button", {
+			name: "キャンセル",
+		});
 		await user.click(cancelButton);
 
 		// Dialog should be closed

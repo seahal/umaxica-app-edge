@@ -23,8 +23,8 @@ const ensureDomGlobals = () => {
 	globalThis.Event = happyWindow.Event;
 	globalThis.CustomEvent = happyWindow.CustomEvent;
 	globalThis.MutationObserver = happyWindow.MutationObserver;
-globalThis.Element = happyWindow.Element;
-globalThis.NodeFilter = happyWindow.NodeFilter;
+	globalThis.Element = happyWindow.Element;
+	globalThis.NodeFilter = happyWindow.NodeFilter;
 
 	return happyWindow;
 };
@@ -36,7 +36,9 @@ activeWindow.requestAnimationFrame ??= (cb: FrameRequestCallback) =>
 	setTimeout(() => cb(Date.now()), 16) as unknown as number;
 activeWindow.cancelAnimationFrame ??= (id: number) => clearTimeout(id);
 
-globalThis.requestAnimationFrame ??= activeWindow.requestAnimationFrame.bind(activeWindow);
-globalThis.cancelAnimationFrame ??= activeWindow.cancelAnimationFrame.bind(activeWindow);
+globalThis.requestAnimationFrame ??=
+	activeWindow.requestAnimationFrame.bind(activeWindow);
+globalThis.cancelAnimationFrame ??=
+	activeWindow.cancelAnimationFrame.bind(activeWindow);
 
 await import("@testing-library/jest-dom");
