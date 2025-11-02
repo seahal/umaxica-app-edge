@@ -19,10 +19,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -51,10 +47,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -69,10 +61,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -87,10 +75,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
