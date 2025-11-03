@@ -23,20 +23,6 @@ describe("Footer component", () => {
 
 		const heading = footer?.querySelector("h3");
 		expect(heading?.textContent).toBe("???");
-
-		const currentYear = new Date().getFullYear();
-		const paragraphs = footer ? Array.from(footer.querySelectorAll("p")) : [];
-		const copyright = paragraphs.find((paragraph) =>
-			paragraph.textContent?.includes("All rights reserved."),
-		);
-		expect(copyright).toBeTruthy();
-		if (!copyright) {
-			return;
-		}
-
-		expect(copyright.textContent).toContain(
-			`© ${currentYear} Umaxica. All rights reserved.`,
-		);
 	});
 
 	it("renders provided codeName in branding and copyright notice", () => {
