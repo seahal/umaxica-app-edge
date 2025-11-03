@@ -17,44 +17,47 @@ function renderHeader(
 	);
 }
 
-describe("Header component (com)", () => {
-	it("renders fallback branding when no code name is provided", () => {
+describe("Header component (org)", () => {
+	it("displays fallback branding when no code name is supplied", () => {
 		renderHeader();
 
-		const brand = screen.getByText("Umaxica", { selector: "span" });
-		expect(brand).toBeInTheDocument();
+		expect(
+			screen.getByText("Umaxica", { selector: "span" }),
+		).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: /Umaxica/ })).toHaveAttribute(
 			"href",
 			"/",
 		);
 	});
 
-	it("renders supplied code name and svg title", () => {
-		renderHeader({ codeName: "Commerce Hub" });
+	it("renders provided code name and updates the logo title", () => {
+		renderHeader({ codeName: "Org Hub" });
 
 		expect(
-			screen.getByText("Commerce Hub", { selector: "span" }),
+			screen.getByText("Org Hub", { selector: "span" }),
 		).toBeInTheDocument();
-		const logoTitle = screen.getByTitle("Commerce Hub").closest("svg");
-		expect(logoTitle).not.toBeNull();
+		expect(screen.getByTitle("Org Hub").closest("svg")).not.toBeNull();
 	});
 
-	it("highlights the active internal navigation link", () => {
+	it("highlights the active message route", () => {
 		renderHeader({}, "/message");
 
 		const messageLink = screen.getByRole("link", { name: "💬" });
 		expect(messageLink.className).toContain("scale-110");
 	});
 
-	it("renders the explore link and applies the active style when selected", () => {
-		renderHeader({}, "/explore");
+	it("renders explore and login actions with active styles", () => {
+		renderHeader({}, "/authentication");
 
 		const exploreLink = screen.getByRole("link", { name: /Explore/ });
 		expect(exploreLink).toHaveAttribute("href", "/explore");
-		expect(exploreLink.className).toContain("bg-blue-600");
+
+		const loginLink = screen.getByRole("link", { name: /Login/ });
+		expect(loginLink).toHaveAttribute("href", "/authentication");
+		expect(loginLink.className).toContain("bg-blue-600");
 	});
 
-	it("exposes all internal navigation destinations", () => {
+	it("exposes all internal navigation paths", () => {
 		renderHeader();
 
 		expect(screen.getByRole("link", { name: "💬" })).toHaveAttribute(
@@ -69,30 +72,38 @@ describe("Header component (com)", () => {
 			"href",
 			"/configuration",
 		);
+		expect(screen.getByRole("link", { name: /Explore/ })).toHaveAttribute(
+			"href",
+			"/explore",
+		);
+		expect(screen.getByRole("link", { name: /Login/ })).toHaveAttribute(
+			"href",
+			"/authentication",
+		);
 	});
 
-	it("renders external service links with security attributes", () => {
+	it("renders external service links with safe attributes", () => {
 		renderHeader({
-			newsServiceUrl: "news.example.com",
-			docsServiceUrl: "docs.example.com",
-			helpServiceUrl: "help.example.com",
+			newsServiceUrl: "news.example.org",
+			docsServiceUrl: "docs.example.org",
+			helpServiceUrl: "help.example.org",
 		});
 
 		const newsLink = screen.getByRole("link", { name: "📰" });
-		expect(newsLink).toHaveAttribute("href", "https://news.example.com");
+		expect(newsLink).toHaveAttribute("href", "https://news.example.org");
 		expect(newsLink).toHaveAttribute("target", "_blank");
 		expect(newsLink).toHaveAttribute("rel", "noopener noreferrer");
 		expect(screen.getByRole("link", { name: "📚" })).toHaveAttribute(
 			"href",
-			"https://docs.example.com",
+			"https://docs.example.org",
 		);
 		expect(screen.getByRole("link", { name: "❓" })).toHaveAttribute(
 			"href",
-			"https://help.example.com",
+			"https://help.example.org",
 		);
 	});
 
-	it("does not render optional external links when URLs are missing", () => {
+	it("omits optional external links when URLs are absent", () => {
 		renderHeader();
 
 		expect(screen.queryByRole("link", { name: "📰" })).toBeNull();

@@ -27,7 +27,7 @@ jobs:
         run: bun install
       - name: Audit
         run: bun audit
- 
+
   outdated:
     runs-on: ubuntu-slim
     timeout-minutes: 10
