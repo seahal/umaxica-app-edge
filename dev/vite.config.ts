@@ -22,6 +22,10 @@ export default defineConfig(() => {
 			}),
 			tsconfigPaths(),
 		],
+		optimizeDeps: {
+			// Suppress deprecated esbuildOptions warning for Rolldown
+			esbuildOptions: undefined,
+		},
 		server: {
 			host: true,
 			port: 5173,

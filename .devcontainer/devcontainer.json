@@ -1,5 +1,5 @@
 {
-	"name": "umaxica-app-edge-vscode",
+	"name": "umaxica-app-edge",
 	"dockerComposeFile": ["../compose.yml", "./compose.override.yml"],
 	"service": "core",
 	"remoteUser": "edge",
