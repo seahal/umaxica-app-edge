@@ -11,6 +11,7 @@ import {
 import "./app.css";
 import type { Route } from "./+types/root";
 import type { ReactNode } from "react";
+import { CloudflareContext } from "./context";
 
 type RouteErrorBoundaryProps = {
 	error: unknown;
@@ -66,11 +67,22 @@ function generateNonce(): string {
 	return btoa(String.fromCharCode(...array));
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-	// Generate nonce if not provided by context
-	const cspNonce = context?.security?.nonce ?? generateNonce();
+export const middleware: Route.Middleware[] = [
+	({ context }) => {
+		const nonce = generateNonce();
 
-	const contextEnv = context?.cloudflare?.env ?? {};
+		context.set(CloudflareContext, {
+			security: { nonce },
+		});
+	},
+];
+
+export function loader({ context }: Route.LoaderArgs) {
+	// Get nonce from CloudflareContext set by middleware
+	const cloudflareContext = context.get(CloudflareContext);
+	const cspNonce = cloudflareContext?.security?.nonce ?? generateNonce();
+
+	const contextEnv = cloudflareContext?.cloudflare?.env ?? {};
 	const importEnv =
 		(
 			import.meta as ImportMeta & {
@@ -105,13 +117,6 @@ export function loader({ context }: Route.LoaderArgs) {
 		"NEWS_SERVICE_URL",
 		FALLBACK_SETTINGS.newsServiceUrl,
 	);
-
-	// Store nonce in context for entry.server.tsx to use
-	if (context && !context.security) {
-		Object.assign(context, { security: { nonce: cspNonce } });
-	} else if (context?.security && !context.security.nonce) {
-		Object.assign(context.security, { nonce: cspNonce });
-	}
 
 	return { cspNonce, codeName, helpServiceUrl, docsServiceUrl, newsServiceUrl };
 }

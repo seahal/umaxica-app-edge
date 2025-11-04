@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { CloudflareContext } from "./context";
 
 import type { ReactNode } from "react";
 
@@ -18,9 +19,6 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
-	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
-	const nonce = cspNonce || undefined;
-
 	return (
 		<html lang="ja">
 			<head>
@@ -31,25 +29,26 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration nonce={nonce} />
-				<Scripts nonce={nonce} />
+				<ScrollRestoration />
+				<Scripts />
 			</body>
 		</html>
 	);
 }
 
 export default function App() {
+	const data = useLoaderData<typeof loader>();
+	// Layoutにnonceを渡すため、data.cspNonceを環境変数として設定
+	// ただし、Layoutコンポーネントはこの値を直接使えないため、
+	// entry.server.tsxでnonceを処理
 	return <Outlet />;
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const { cloudflare, security } =
-		(context as unknown as {
-			cloudflare?: { env?: Record<string, string> };
-			security?: { nonce?: string };
-		}) ?? {};
-	const env = cloudflare?.env ?? {};
-	const cspNonce = security?.nonce ?? "";
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cspNonce = cloudflareContext?.security?.nonce ?? "";
+
 	return {
 		codeName: env.BRAND_NAME ?? "",
 		helpServiceUrl: env.HELP_SERVICE_URL ?? "",

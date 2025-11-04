@@ -5,5 +5,6 @@ export default {
 	ssr: true,
 	future: {
 		unstable_viteEnvironmentApi: true,
-	} as Config["future"],
+		v8_middleware: true,
+	},
 } satisfies Config;

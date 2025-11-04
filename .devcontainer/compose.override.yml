@@ -1,6 +1,7 @@
+name: 'edge-devcontainer'
 services:
   core:
-    ports: []  # ← base compose.yml の ports: [ "5170:5170", ... ] を打ち消す
+    ports: [] # ← base compose.yml の ports: [ "5170:5170", ... ] を打ち消す
     environment:
       - DEVCONTAINER=1
     restart: unless-stopped

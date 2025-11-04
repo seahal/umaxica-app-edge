@@ -1,18 +1,15 @@
 import type { Route } from "../+types/home";
+import { CloudflareContext } from "../../context";
 
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "status page" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const env =
-		(
-			context as unknown as {
-				cloudflare?: { env?: Record<string, string> };
-			}
-		)?.cloudflare?.env ?? {};
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
 	return {
-		message: env.VALUE_FROM_CLOUDFLARE,
+		message: env.VALUE_FROM_CLOUDFLARE ?? "",
 	};
 }
 
