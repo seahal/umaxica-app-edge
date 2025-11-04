@@ -4,7 +4,7 @@
 	"service": "core",
 	"remoteUser": "edge",
 	"workspaceFolder": "/home/edge/workspace",
-
+	"shutdownAction": "none",
 	"runServices": ["core"],
 	"overrideCommand": false,
 

@@ -11,6 +11,7 @@ import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
 import "./app.css";
+import { CloudflareContext } from "./context";
 
 import type { JSX, ReactNode } from "react";
 import type { Route } from "./+types/root";
@@ -96,13 +97,10 @@ export function ErrorBoundary({
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const { cloudflare, security } =
-		(context as unknown as {
-			cloudflare?: { env?: Record<string, string> };
-			security?: { nonce?: string };
-		}) ?? {};
-	const env = cloudflare?.env ?? {};
-	const cspNonce = security?.nonce ?? "";
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cspNonce = cloudflareContext?.security?.nonce ?? "";
+
 	return {
 		codeName: env.BRAND_NAME ?? "",
 		newsUrl: env.NEWS_STAFF_URL ?? "",

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Route } from "../+types/home";
 import { SettingLayout } from "../../components/SettingComponents";
+import { CloudflareContext } from "../../context";
 
 export function meta(_: Route.MetaArgs) {
 	return [
@@ -10,8 +11,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const env = context.cloudflare.env as Env;
-	return { message: env.SECRET_SAMPLE };
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	return { message: env.SECRET_SAMPLE ?? "" };
 }
 
 // 設定メニューアイテムのコンポーネント

@@ -2,6 +2,7 @@ import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
+import { CloudflareContext } from "./context";
 
 export default async function handleRequest(
 	request: Request,
@@ -12,7 +13,10 @@ export default async function handleRequest(
 ) {
 	let shellRendered = false;
 	const userAgent = request.headers.get("user-agent");
-	const nonce = loadContext?.security?.nonce ?? "";
+
+	// middlewareのcontextからnonceを取得
+	const cloudflareContext = loadContext.get(CloudflareContext);
+	const nonce = cloudflareContext?.security?.nonce ?? "";
 
 	const body = await renderToReadableStream(
 		<ServerRouter context={routerContext} url={request.url} />,

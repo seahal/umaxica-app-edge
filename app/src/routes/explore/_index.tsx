@@ -16,6 +16,7 @@ import {
 	type User,
 } from "../../components/SearchResults";
 import type { Post } from "../../components/PostCard";
+import { CloudflareContext } from "../../context";
 
 export const handle = {
 	titleName: "Explore",
@@ -30,9 +31,12 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
 	return {
-		message: (context.cloudflare.env as Env & { VALUE_FROM_CLOUDFLARE: string })
-			.VALUE_FROM_CLOUDFLARE,
+		message:
+			(env as Env & { VALUE_FROM_CLOUDFLARE: string }).VALUE_FROM_CLOUDFLARE ??
+			"",
 	};
 }
 

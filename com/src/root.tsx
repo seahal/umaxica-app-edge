@@ -13,6 +13,7 @@ import "./app.css";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
+import { CloudflareContext } from "./context";
 
 import type { JSX, ReactNode } from "react";
 
@@ -23,9 +24,6 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
-	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
-	const nonce = cspNonce || undefined;
-
 	return (
 		<html lang="en">
 			<head>
@@ -36,8 +34,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration nonce={nonce} />
-				<Scripts nonce={nonce} />
+				<ScrollRestoration />
+				<Scripts />
 			</body>
 		</html>
 	);
@@ -102,13 +100,10 @@ export function ErrorBoundary({
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const { cloudflare, security } =
-		(context as unknown as {
-			cloudflare?: { env?: Record<string, string> };
-			security?: { nonce?: string };
-		}) ?? {};
-	const env = cloudflare?.env ?? {};
-	const cspNonce = security?.nonce ?? "";
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cspNonce = cloudflareContext?.security?.nonce ?? "";
+
 	return {
 		codeName: env.BRAND_NAME ?? "",
 		newsUrl: env.NEWS_CORPORATE_URL ?? "",

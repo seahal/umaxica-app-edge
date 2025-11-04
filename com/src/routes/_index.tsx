@@ -11,6 +11,7 @@ import {
 } from "react-aria-components";
 
 import type { Route } from "./+types/_index";
+import { CloudflareContext } from "../context";
 
 const focusAreas = [
 	{
@@ -69,10 +70,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const env =
-		(context as unknown as { cloudflare?: { env?: Record<string, string> } })
-			?.cloudflare?.env ?? {};
-	return { message: env.VALUE_FROM_CLOUDFLARE };
+	const cloudflareContext = context.get(CloudflareContext);
+	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	return { message: env.VALUE_FROM_CLOUDFLARE ?? "" };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
