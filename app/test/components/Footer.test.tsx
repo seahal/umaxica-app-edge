@@ -55,7 +55,6 @@ describe("Footer component", () => {
 
 		expect(links).toEqual([
 			{ name: "ホーム", href: "/" },
-			{ name: "About", href: "/about" },
 			{ name: "お問い合わせ", href: "/contact" },
 		]);
 	});

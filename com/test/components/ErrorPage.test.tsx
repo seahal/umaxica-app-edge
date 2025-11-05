@@ -50,9 +50,9 @@ describe("ErrorPage component (com)", () => {
 		);
 
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/about"');
 		expect(markup).toContain('href="/sample"');
 		expect(markup).toContain('href="/configure"');
+		expect(markup).not.toContain('href="/about"');
 	});
 
 	it("respects showNavigation and renders diagnostic details when requested", () => {

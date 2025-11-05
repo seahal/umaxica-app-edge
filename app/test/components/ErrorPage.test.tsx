@@ -191,10 +191,9 @@ describe("ErrorPage component", () => {
 		);
 
 		expect(screen.getByText("よく見られるページ")).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
-			"href",
-			"/about",
-		);
+		expect(
+			screen.queryByRole("link", { name: "About" }),
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "Sample" })).toHaveAttribute(
 			"href",
 			"/sample",
