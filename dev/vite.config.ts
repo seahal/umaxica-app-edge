@@ -8,8 +8,15 @@ const ReactCompilerConfig = {
 	target: "19",
 };
 
-export default defineConfig(() => {
+export default defineConfig(({ isSsrBuild }) => {
 	return {
+		build: {
+			rollupOptions: isSsrBuild
+				? {
+						input: "./server.ts",
+					}
+				: undefined,
+		},
 		plugins: [
 			tailwindcss(),
 			reactRouter(),

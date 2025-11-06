@@ -19,7 +19,9 @@ function createMockContext(data: LoaderContext) {
 
 async function runLoader(context: LoaderContext) {
 	const mockContext = createMockContext(context);
-	return loader({ context: mockContext } as unknown as Parameters<typeof loader>[0]);
+	return loader({ context: mockContext } as unknown as Parameters<
+		typeof loader
+	>[0]);
 }
 
 describe("root loader", () => {
