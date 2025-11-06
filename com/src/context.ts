@@ -1,12 +1,13 @@
-import { createContext } from "react-router";
-
 // Cloudflare Worker環境のcontext
-export const CloudflareContext = createContext<{
-	cloudflare: {
-		env: Env;
-		ctx: ExecutionContext;
+// React Router v7では Symbol をcontext keyとして使用
+export const CloudflareContext = Symbol("CloudflareContext") as symbol & {
+	__type?: {
+		cloudflare?: {
+			env?: Env;
+			ctx?: ExecutionContext;
+		};
+		security?: {
+			nonce?: string;
+		};
 	};
-	security: {
-		nonce: string;
-	};
-}>();
+};

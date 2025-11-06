@@ -11,8 +11,8 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = context.get(CloudflareContext);
-	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	return { message: env.SECRET_SAMPLE ?? "" };
 }
 

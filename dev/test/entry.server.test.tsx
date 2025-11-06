@@ -8,6 +8,8 @@ import {
 	mock,
 } from "bun:test";
 
+import { CloudflareContext } from "../src/context";
+
 const actualDomServer = await import("react-dom/server");
 
 type RenderOptions = Parameters<
@@ -85,7 +87,14 @@ describe("dev entry server handleRequest", () => {
 		const routerContext = {
 			isSpaMode: false,
 		} as unknown as import("react-router").EntryContext;
-		const loadContext = { security: { nonce: "nonce-456" } };
+
+		const contextMap = new Map();
+		contextMap.set(CloudflareContext, {
+			security: { nonce: "nonce-456" },
+		});
+		const loadContext = {
+			get: (key: symbol) => contextMap.get(key),
+		};
 
 		const response = await handleRequest(
 			request,
@@ -119,7 +128,12 @@ describe("dev entry server handleRequest", () => {
 			isSpaMode: true,
 		} as unknown as import("react-router").EntryContext;
 
-		await handleRequest(request, 200, headers, routerContext, {});
+		const contextMap = new Map();
+		const loadContext = {
+			get: (key: symbol) => contextMap.get(key),
+		};
+
+		await handleRequest(request, 200, headers, routerContext, loadContext);
 
 		expect(awaitedAllReady).toBe(true);
 	});
@@ -149,7 +163,11 @@ describe("dev entry server handleRequest", () => {
 		};
 
 		try {
-			await handleRequest(request, 200, headers, routerContext, {});
+			const contextMap = new Map();
+			const loadContext = {
+				get: (key: symbol) => contextMap.get(key),
+			};
+			await handleRequest(request, 200, headers, routerContext, loadContext);
 			await new Promise((resolve) => setTimeout(resolve, 0));
 			expect(errorCalls.length).toBeGreaterThan(0);
 			const [firstCall] = errorCalls;

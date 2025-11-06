@@ -7,8 +7,20 @@
 
 import { describe, expect, it } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { CloudflareContext } from "../../src/context";
 
 const { loader, meta, default: Home } = await import("../../src/routes/_index");
+
+function createMockContext(data: {
+	cloudflare?: { env?: Record<string, unknown> };
+}) {
+	const contextMap = new Map();
+	contextMap.set(CloudflareContext, data);
+
+	return {
+		get: (key: symbol) => contextMap.get(key),
+	};
+}
 
 describe("Route: Home (com)", () => {
 	describe("Meta", () => {
@@ -27,47 +39,59 @@ describe("Route: Home (com)", () => {
 
 	describe("Loader", () => {
 		it("should return message from Cloudflare env", () => {
-			const result = loader({
-				context: {
-					cloudflare: {
-						env: {
-							VALUE_FROM_CLOUDFLARE: "Test Message",
-						},
+			const mockContext = createMockContext({
+				cloudflare: {
+					env: {
+						VALUE_FROM_CLOUDFLARE: "Test Message",
 					},
 				},
+			});
+
+			const result = loader({
+				context: mockContext,
 			} as never);
 
 			expect(result).toEqual({ message: "Test Message" });
 		});
 
 		it("should handle missing Cloudflare context", () => {
+			// Don't set CloudflareContext at all
+			const contextMap = new Map();
+			const mockContext = {
+				get: (key: symbol) => contextMap.get(key),
+			};
+
 			const result = loader({
-				context: {},
+				context: mockContext,
 			} as never);
 
-			expect(result).toEqual({ message: undefined });
+			expect(result).toEqual({ message: "" });
 		});
 
 		it("should handle missing env variables", () => {
-			const result = loader({
-				context: {
-					cloudflare: {
-						env: {},
-					},
+			const mockContext = createMockContext({
+				cloudflare: {
+					env: {},
 				},
+			});
+
+			const result = loader({
+				context: mockContext,
 			} as never);
 
-			expect(result).toEqual({ message: undefined });
+			expect(result).toEqual({ message: "" });
 		});
 
 		it("should handle undefined cloudflare object", () => {
+			const mockContext = createMockContext({
+				cloudflare: undefined,
+			});
+
 			const result = loader({
-				context: {
-					cloudflare: undefined,
-				},
+				context: mockContext,
 			} as never);
 
-			expect(result).toEqual({ message: undefined });
+			expect(result).toEqual({ message: "" });
 		});
 	});
 

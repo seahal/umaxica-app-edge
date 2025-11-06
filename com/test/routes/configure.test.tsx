@@ -1,12 +1,25 @@
 import { describe, expect, it } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { CloudflareContext } from "../../src/context";
 
 const routeModule = await import("../../src/routes/configure");
 const { loader, meta, default: ConfigureRoute } = routeModule;
 
+function createMockContext(env: Record<string, unknown>) {
+	const contextMap = new Map();
+	contextMap.set(CloudflareContext, {
+		cloudflare: { env },
+	});
+
+	return {
+		get: (key: symbol) => contextMap.get(key),
+	};
+}
+
 function runLoader(env: Record<string, unknown>) {
+	const mockContext = createMockContext(env);
 	return loader({
-		context: { cloudflare: { env } },
+		context: mockContext,
 	} as never);
 }
 

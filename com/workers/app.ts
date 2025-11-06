@@ -1,4 +1,4 @@
-import { createRequestHandler, RouterContextProvider } from "react-router";
+import { createRequestHandler } from "react-router";
 import { CloudflareContext } from "../src/context";
 
 function generateNonce(): string {
@@ -15,12 +15,18 @@ const requestHandler = createRequestHandler(
 export default {
 	async fetch(request, env, ctx) {
 		const nonce = generateNonce();
-		const context = new RouterContextProvider();
 
-		context.set(CloudflareContext, {
+		// Create context as a Map-like object with get/set methods
+		const contextMap = new Map();
+		contextMap.set(CloudflareContext, {
 			cloudflare: { env, ctx },
 			security: { nonce },
 		});
+
+		const context = {
+			get: (key: symbol) => contextMap.get(key),
+			set: (key: symbol, value: any) => contextMap.set(key, value),
+		};
 
 		return requestHandler(request, context);
 	},

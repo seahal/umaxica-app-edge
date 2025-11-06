@@ -17,13 +17,26 @@ import { loader as healthLoader } from "../src/routes/healths/_index";
 import { loader as homeLoader, meta as homeMeta } from "../src/routes/_index";
 import { loader as messagesLoader } from "../src/routes/messages/_index";
 import { loader as notificationsLoader } from "../src/routes/notifications/_index";
+import { CloudflareContext } from "../src/context";
+
+function createMockContext(env: Record<string, unknown>) {
+	const contextMap = new Map();
+	contextMap.set(CloudflareContext, {
+		cloudflare: { env },
+	});
+
+	return {
+		get: (key: symbol) => contextMap.get(key),
+	};
+}
 
 async function runLoader<T extends (...args: unknown[]) => unknown>(
 	loader: T,
 	env: Record<string, unknown>,
 ) {
+	const mockContext = createMockContext(env);
 	const result = loader({
-		context: { cloudflare: { env } },
+		context: mockContext,
 		params: {},
 		request: new Request("https://example.com"),
 	} as Parameters<T>[0]);
@@ -117,8 +130,9 @@ describe("catch-all loader", () => {
 		expect.assertions(3);
 
 		try {
+			const mockContext = createMockContext({});
 			catchAllLoader({
-				context: { cloudflare: { env: {} } },
+				context: mockContext,
 				params: {},
 				request: new Request("https://example.com/not-found"),
 			} as Parameters<typeof catchAllLoader>[0]);

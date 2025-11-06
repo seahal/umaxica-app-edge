@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
+import { CloudflareContext } from "../src/context";
 import { loader } from "../src/root";
 
 type LoaderContext = {
@@ -7,8 +8,18 @@ type LoaderContext = {
 	security?: { nonce?: string };
 };
 
+function createMockContext(data: LoaderContext) {
+	const contextMap = new Map();
+	contextMap.set(CloudflareContext, data);
+
+	return {
+		get: (key: symbol) => contextMap.get(key),
+	};
+}
+
 async function runLoader(context: LoaderContext) {
-	return loader({ context } as unknown as Parameters<typeof loader>[0]);
+	const mockContext = createMockContext(context);
+	return loader({ context: mockContext } as unknown as Parameters<typeof loader>[0]);
 }
 
 describe("root loader", () => {

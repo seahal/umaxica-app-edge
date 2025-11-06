@@ -100,8 +100,8 @@ export function ErrorBoundary({
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = context.get(CloudflareContext);
-	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	const cspNonce = cloudflareContext?.security?.nonce ?? "";
 
 	return {
