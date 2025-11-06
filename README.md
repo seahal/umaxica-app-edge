@@ -92,6 +92,10 @@ bun run --cwd org deploy
 - `dev`: https://jp.umaxica.dev, https://us.umaxica.dev
 
 
+# tools
+- Sentry ... ?
+
+
 ## Known Issues & Limitations
 - This is a work in progress.
 - The public availability of this repository is not guaranteed permanently.
