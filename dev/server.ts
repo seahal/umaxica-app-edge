@@ -8,7 +8,6 @@ function generateNonce(): string {
 }
 
 const requestHandler = createRequestHandler(
-	// @ts-expect-error - virtual module
 	() => import("virtual:react-router/server-build"),
 	import.meta.env.MODE,
 );
