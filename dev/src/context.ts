@@ -1,7 +1,4 @@
-// createContext implementation for React Router v7 context API
-function createContext<T>(): symbol & { __type?: T } {
-	return Symbol() as symbol & { __type?: T };
-}
+import { createContext } from "react-router";
 
 // Cloudflare Worker環境のcontext
 export const CloudflareContext = createContext<{

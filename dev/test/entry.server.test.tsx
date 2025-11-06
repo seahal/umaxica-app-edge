@@ -7,10 +7,6 @@ import {
 	it,
 	mock,
 } from "bun:test";
-import { RouterContextProvider } from "react-router";
-
-import { CloudflareContext } from "../src/context";
-import { SECURITY_NONCE_HEADER } from "../src/constants";
 
 const actualDomServer = await import("react-dom/server");
 
@@ -54,11 +50,9 @@ mock.module("isbot", () => ({
 	isbot: () => isBot,
 }));
 
-const entryServerModule = await import(
-	new URL("../src/entry.server.tsx", import.meta.url).href
-);
-const handleRequest = entryServerModule.default;
-const { getLoadContext } = entryServerModule;
+const handleRequest = (
+	await import(new URL("../src/entry.server.tsx", import.meta.url).href)
+).default;
 
 afterEach(() => {
 	renderCalls = [];
@@ -91,14 +85,7 @@ describe("dev entry server handleRequest", () => {
 		const routerContext = {
 			isSpaMode: false,
 		} as unknown as import("react-router").EntryContext;
-
-		const contextMap = new Map();
-		contextMap.set(CloudflareContext, {
-			security: { nonce: "nonce-456" },
-		});
-		const loadContext = {
-			get: (key: symbol) => contextMap.get(key),
-		};
+		const loadContext = { security: { nonce: "nonce-456" } };
 
 		const response = await handleRequest(
 			request,
@@ -132,12 +119,7 @@ describe("dev entry server handleRequest", () => {
 			isSpaMode: true,
 		} as unknown as import("react-router").EntryContext;
 
-		const contextMap = new Map();
-		const loadContext = {
-			get: (key: symbol) => contextMap.get(key),
-		};
-
-		await handleRequest(request, 200, headers, routerContext, loadContext);
+		await handleRequest(request, 200, headers, routerContext, {});
 
 		expect(awaitedAllReady).toBe(true);
 	});
@@ -167,11 +149,7 @@ describe("dev entry server handleRequest", () => {
 		};
 
 		try {
-			const contextMap = new Map();
-			const loadContext = {
-				get: (key: symbol) => contextMap.get(key),
-			};
-			await handleRequest(request, 200, headers, routerContext, loadContext);
+			await handleRequest(request, 200, headers, routerContext, {});
 			await new Promise((resolve) => setTimeout(resolve, 0));
 			expect(errorCalls.length).toBeGreaterThan(0);
 			const [firstCall] = errorCalls;
@@ -180,42 +158,5 @@ describe("dev entry server handleRequest", () => {
 		} finally {
 			console.error = originalConsoleError;
 		}
-	});
-});
-
-describe("dev entry server getLoadContext", () => {
-	it("creates a RouterContextProvider with nonce from the forwarded header", () => {
-		const request = new Request("https://dev.example.com", {
-			headers: {
-				[SECURITY_NONCE_HEADER]: "nonce-from-header",
-			},
-		});
-
-		const context = getLoadContext({ request });
-		const stored = context.get(CloudflareContext);
-
-		expect(context).toBeInstanceOf(RouterContextProvider);
-		expect(stored?.security?.nonce).toBe("nonce-from-header");
-	});
-
-	it("reuses the incoming RouterContextProvider instance", () => {
-		const existingContext = new RouterContextProvider();
-		existingContext.set(CloudflareContext, {
-			security: { nonce: "old" },
-		});
-
-		const request = new Request("https://dev.example.com/path", {
-			headers: {
-				[SECURITY_NONCE_HEADER]: "fresh",
-			},
-		});
-
-		const context = getLoadContext({
-			context: existingContext,
-			request,
-		});
-
-		expect(context).toBe(existingContext);
-		expect(context.get(CloudflareContext)?.security?.nonce).toBe("fresh");
 	});
 });

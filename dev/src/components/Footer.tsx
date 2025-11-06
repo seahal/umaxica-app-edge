@@ -44,6 +44,20 @@ export function Footer({ codeName = "" }: FooterProps) {
 							</TooltipTrigger>
 							<TooltipTrigger delay={200}>
 								<Link
+									href="/about"
+									className="group inline-flex w-fit items-center text-sm text-gray-600 transition-all duration-300 hover:translate-x-1 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+								>
+									<span className="relative">
+										About
+										<span className="absolute bottom-0 left-0 h-px w-0 bg-current transition-all duration-300 group-hover:w-full" />
+									</span>
+								</Link>
+								<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
+									私たちについて
+								</Tooltip>
+							</TooltipTrigger>
+							<TooltipTrigger delay={200}>
+								<Link
 									href="/contact"
 									className="group inline-flex w-fit items-center text-sm text-gray-600 transition-all duration-300 hover:translate-x-1 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 								>
