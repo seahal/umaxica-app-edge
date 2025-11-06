@@ -1,13 +1,15 @@
+// createContext implementation for React Router v7 context API
+function createContext<T>(): symbol & { __type?: T } {
+	return Symbol() as symbol & { __type?: T };
+}
+
 // Cloudflare Worker環境のcontext
-// React Router v7では Symbol をcontext keyとして使用
-export const CloudflareContext = Symbol("CloudflareContext") as symbol & {
-	__type?: {
-		cloudflare?: {
-			env?: Record<string, string>;
-			ctx?: ExecutionContext;
-		};
-		security?: {
-			nonce?: string;
-		};
+export const CloudflareContext = createContext<{
+	cloudflare?: {
+		env?: Record<string, string>;
+		ctx?: ExecutionContext;
 	};
-};
+	security: {
+		nonce: string;
+	};
+}>();

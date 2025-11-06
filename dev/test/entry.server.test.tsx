@@ -7,8 +7,10 @@ import {
 	it,
 	mock,
 } from "bun:test";
+import { RouterContextProvider } from "react-router";
 
 import { CloudflareContext } from "../src/context";
+import { SECURITY_NONCE_HEADER } from "../src/constants";
 
 const actualDomServer = await import("react-dom/server");
 
@@ -52,9 +54,11 @@ mock.module("isbot", () => ({
 	isbot: () => isBot,
 }));
 
-const handleRequest = (
-	await import(new URL("../src/entry.server.tsx", import.meta.url).href)
-).default;
+const entryServerModule = await import(
+	new URL("../src/entry.server.tsx", import.meta.url).href
+);
+const handleRequest = entryServerModule.default;
+const { getLoadContext } = entryServerModule;
 
 afterEach(() => {
 	renderCalls = [];
@@ -176,5 +180,42 @@ describe("dev entry server handleRequest", () => {
 		} finally {
 			console.error = originalConsoleError;
 		}
+	});
+});
+
+describe("dev entry server getLoadContext", () => {
+	it("creates a RouterContextProvider with nonce from the forwarded header", () => {
+		const request = new Request("https://dev.example.com", {
+			headers: {
+				[SECURITY_NONCE_HEADER]: "nonce-from-header",
+			},
+		});
+
+		const context = getLoadContext({ request });
+		const stored = context.get(CloudflareContext);
+
+		expect(context).toBeInstanceOf(RouterContextProvider);
+		expect(stored?.security?.nonce).toBe("nonce-from-header");
+	});
+
+	it("reuses the incoming RouterContextProvider instance", () => {
+		const existingContext = new RouterContextProvider();
+		existingContext.set(CloudflareContext, {
+			security: { nonce: "old" },
+		});
+
+		const request = new Request("https://dev.example.com/path", {
+			headers: {
+				[SECURITY_NONCE_HEADER]: "fresh",
+			},
+		});
+
+		const context = getLoadContext({
+			context: existingContext,
+			request,
+		});
+
+		expect(context).toBe(existingContext);
+		expect(context.get(CloudflareContext)?.security?.nonce).toBe("fresh");
 	});
 });
