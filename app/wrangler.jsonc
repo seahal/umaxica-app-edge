@@ -59,7 +59,8 @@
 				"HELP_SERVICE_URL": "jp.help.umaxica.app",
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"BRAND_NAME": "UMAXICA",
-				"JWT_PUBLIC_KEY": ""
+				"JWT_PUBLIC_KEY": "",
+        "SENTRY_DNC": ""
 			}
 		}
 	},
@@ -72,7 +73,6 @@
 	],
 	/**
 	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
 	"placement": { "mode": "smart" },
 	/**
@@ -92,7 +92,6 @@
 	 */
 	/**
 	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
 	"assets": { "directory": "./public/", "binding": "ASSETS" }
 	/**

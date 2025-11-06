@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { CloudflareContext } from "./context";
+import { readCloudflareContext } from "./context";
 
 import type { ReactNode } from "react";
 
@@ -40,15 +40,13 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-	const data = useLoaderData<typeof loader>();
-	// Layoutにnonceを渡すため、data.cspNonceを環境変数として設定
-	// ただし、Layoutコンポーネントはこの値を直接使えないため、
-	// entry.server.tsxでnonceを処理
+	// Loaderのデータを取得して各レイアウトへ伝播させる
+	useLoaderData<typeof loader>();
 	return <Outlet />;
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	const cspNonce = cloudflareContext?.security?.nonce ?? "";
 

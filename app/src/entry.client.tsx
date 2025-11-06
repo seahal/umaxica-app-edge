@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-router";
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
