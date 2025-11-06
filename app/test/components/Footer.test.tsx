@@ -39,9 +39,7 @@ describe("Footer component", () => {
 		if (!copyright) {
 			return;
 		}
-		expect(copyright.textContent).toContain(
-			`© ${currentYear} ${codeName}.`,
-		);
+		expect(copyright.textContent).toContain(`© ${currentYear} ${codeName}.`);
 	});
 
 	it("renders quick links with expected routes", () => {
