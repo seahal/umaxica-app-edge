@@ -1,4 +1,5 @@
-import { createRequestHandler, RouterContextProvider } from "react-router";
+import { createRequestHandler } from "react-router";
+import type { AppLoadContext } from "react-router";
 import { CloudflareContext } from "../src/context";
 
 function generateNonce(): string {
@@ -10,22 +11,18 @@ function generateNonce(): string {
 const requestHandler = createRequestHandler(
 	() => import("virtual:react-router/server-build"),
 	import.meta.env.MODE,
-	() => {
-		const contextProvider = new RouterContextProvider();
-		return contextProvider;
-	},
 );
 
 export default {
 	async fetch(request, env, ctx) {
 		const nonce = generateNonce();
 
-		const contextProvider = new RouterContextProvider();
-		contextProvider.set(CloudflareContext, {
+		const loadContext = new Map() as AppLoadContext;
+		loadContext.set(CloudflareContext, {
 			cloudflare: { env, ctx },
 			security: { nonce },
 		});
 
-		return requestHandler(request, contextProvider);
+		return requestHandler(request, loadContext);
 	},
 } satisfies ExportedHandler<Env>;
