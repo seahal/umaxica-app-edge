@@ -8,15 +8,8 @@ const ReactCompilerConfig = {
 	target: "19",
 };
 
-export default defineConfig(({ isSsrBuild }) => {
+export default defineConfig(() => {
 	return {
-		build: {
-			rollupOptions: isSsrBuild
-				? {
-						input: "./server.ts",
-					}
-				: undefined,
-		},
 		plugins: [
 			tailwindcss(),
 			reactRouter(),
@@ -29,10 +22,6 @@ export default defineConfig(({ isSsrBuild }) => {
 			}),
 			tsconfigPaths(),
 		],
-		optimizeDeps: {
-			// Suppress deprecated esbuildOptions warning for Rolldown
-			esbuildOptions: undefined,
-		},
 		server: {
 			host: true,
 			port: 5173,
