@@ -2,7 +2,15 @@ import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
-import { CloudflareContext } from "./context";
+
+type ExtendedAppLoadContext = AppLoadContext & {
+	security?: {
+		nonce?: string;
+	};
+	cloudflare?: {
+		env?: Record<string, string>;
+	};
+};
 
 export default async function handleRequest(
 	request: Request,
@@ -13,10 +21,8 @@ export default async function handleRequest(
 ) {
 	let shellRendered = false;
 	const userAgent = request.headers.get("user-agent");
-
-	// middlewareのcontextからnonceを取得
-	const cloudflareContext = loadContext.get(CloudflareContext);
-	const nonce = cloudflareContext?.security?.nonce ?? "";
+	const { security } = (loadContext ?? {}) as ExtendedAppLoadContext;
+	const nonce = security?.nonce ?? "";
 
 	const body = await renderToReadableStream(
 		<ServerRouter context={routerContext} url={request.url} />,
