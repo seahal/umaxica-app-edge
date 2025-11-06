@@ -1,8 +1,48 @@
 import type { AppLoadContext, EntryContext } from "react-router";
-import { ServerRouter } from "react-router";
+import { RouterContextProvider, ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import { CloudflareContext } from "./context";
+import { SECURITY_NONCE_HEADER } from "./constants";
+
+type CloudflareSecurityContext = {
+	security?: {
+		nonce?: string;
+	};
+};
+
+type LoadContextArgs = {
+	context?: unknown;
+	request: Request;
+};
+
+export function getLoadContext({
+	request,
+	context,
+}: LoadContextArgs): RouterContextProvider {
+	const loadContext =
+		context instanceof RouterContextProvider
+			? context
+			: new RouterContextProvider();
+
+	const existing =
+		(loadContext.get(CloudflareContext) as CloudflareSecurityContext | undefined) ??
+		{};
+	const nonceFromHeader =
+		request.headers.get(SECURITY_NONCE_HEADER) ??
+		existing?.security?.nonce ??
+		"";
+
+	loadContext.set(CloudflareContext, {
+		...existing,
+		security: {
+			...existing.security,
+			nonce: nonceFromHeader,
+		},
+	});
+
+	return loadContext;
+}
 
 export default async function handleRequest(
 	request: Request,
@@ -14,7 +54,6 @@ export default async function handleRequest(
 	let shellRendered = false;
 	const userAgent = request.headers.get("user-agent");
 
-	// middlewareのcontextからnonceを取得
 	const cloudflareContext = (loadContext as any).get?.(CloudflareContext);
 	const nonce = cloudflareContext?.security?.nonce ?? "";
 
