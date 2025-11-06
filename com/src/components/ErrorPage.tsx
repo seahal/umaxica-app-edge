@@ -82,13 +82,6 @@ export function ErrorPage({
 							</h3>
 							<div className="flex flex-wrap gap-2 justify-center">
 								<Link
-									to="/about"
-									className="text-sm text-blue-600 hover:text-blue-800 underline"
-								>
-									About
-								</Link>
-								<span className="text-gray-400">•</span>
-								<Link
 									to="/sample"
 									className="text-sm text-blue-600 hover:text-blue-800 underline"
 								>

@@ -67,19 +67,12 @@ function generateNonce(): string {
 	return btoa(String.fromCharCode(...array));
 }
 
-export const middleware: Route.Middleware[] = [
-	({ context }) => {
-		const nonce = generateNonce();
-
-		context.set(CloudflareContext, {
-			security: { nonce },
-		});
-	},
-];
+// Note: middleware is not available in React Router v7
+// Nonce generation is handled directly in the loader
 
 export function loader({ context }: Route.LoaderArgs) {
-	// Get nonce from CloudflareContext set by middleware
-	const cloudflareContext = context.get(CloudflareContext);
+	// Get nonce from CloudflareContext set by entry.server.tsx middleware
+	const cloudflareContext = (context as any).get?.(CloudflareContext);
 	const cspNonce = cloudflareContext?.security?.nonce ?? generateNonce();
 
 	const contextEnv = cloudflareContext?.cloudflare?.env ?? {};

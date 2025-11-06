@@ -1,6 +1,7 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 
 import { afterAll, expect, it, mock } from "bun:test";
+import { CloudflareContext } from "../src/context";
 
 const renderCalls: unknown[][] = [];
 const actualReactDomServer = await import("react-dom/server");
@@ -32,8 +33,14 @@ it("handles org server entry requests", async () => {
 	});
 	const responseHeaders = new Headers();
 	const routerContext = { isSpaMode: false } as unknown as EntryContext;
-	const loadContext = {
+
+	const contextMap = new Map();
+	contextMap.set(CloudflareContext, {
 		security: { nonce: "abc123" },
+	});
+
+	const loadContext = {
+		get: (key: symbol) => contextMap.get(key),
 	} as unknown as AppLoadContext;
 
 	const response = await handleRequest(

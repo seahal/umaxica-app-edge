@@ -19,8 +19,8 @@ describe("dev Footer component", () => {
 	it("renders quick links with expected hrefs", () => {
 		const markup = render(<Footer />);
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/about"');
 		expect(markup).toContain('href="/contact"');
+		expect(markup).not.toContain('href="/about"');
 	});
 
 	it("includes social github link with security attributes", () => {

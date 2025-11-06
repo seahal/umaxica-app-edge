@@ -47,8 +47,8 @@ describe("Footer component (org)", () => {
 
 		expect(markup).toContain("Org Hub");
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/about"');
 		expect(markup).toContain('href="/contact"');
+		expect(markup).not.toContain('href="/about"');
 	});
 
 	it("exposes the GitHub link with safe target attributes", () => {

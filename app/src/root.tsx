@@ -19,6 +19,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const nonce = cspNonce || undefined;
+
 	return (
 		<html lang="ja">
 			<head>
@@ -29,8 +32,8 @@ export function Layout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				{children}
-				<ScrollRestoration />
-				<Scripts />
+				<ScrollRestoration nonce={nonce} />
+				<Scripts nonce={nonce} />
 			</body>
 		</html>
 	);
@@ -45,8 +48,8 @@ export default function App() {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = context.get(CloudflareContext);
-	const env = cloudflareContext?.cloudflare.env ?? ({} as Env);
+	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	const cspNonce = cloudflareContext?.security?.nonce ?? "";
 
 	return {

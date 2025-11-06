@@ -33,14 +33,14 @@ describe("Footer component", () => {
 
 		const currentYear = new Date().getFullYear();
 		const copyright = Array.from(document.querySelectorAll("footer p")).find(
-			(paragraph) => paragraph.textContent?.includes("All rights reserved."),
+			(paragraph) => paragraph.textContent?.includes(`© ${currentYear}`),
 		);
 		expect(copyright).toBeTruthy();
 		if (!copyright) {
 			return;
 		}
 		expect(copyright.textContent).toContain(
-			`© ${currentYear} ${codeName}. All rights reserved.`,
+			`© ${currentYear} ${codeName}.`,
 		);
 	});
 
@@ -55,7 +55,6 @@ describe("Footer component", () => {
 
 		expect(links).toEqual([
 			{ name: "ホーム", href: "/" },
-			{ name: "About", href: "/about" },
 			{ name: "お問い合わせ", href: "/contact" },
 		]);
 	});

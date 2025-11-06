@@ -15,7 +15,7 @@ export default async function handleRequest(
 	const userAgent = request.headers.get("user-agent");
 
 	// middlewareのcontextからnonceを取得
-	const cloudflareContext = loadContext.get(CloudflareContext);
+	const cloudflareContext = (loadContext as any).get?.(CloudflareContext);
 	const nonce = cloudflareContext?.security?.nonce ?? "";
 
 	const body = await renderToReadableStream(

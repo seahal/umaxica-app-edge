@@ -2,7 +2,8 @@ import "../../test-setup.ts";
 
 import { describe, expect, it } from "bun:test";
 const { render, screen } = await import("@testing-library/react");
-import { MemoryRouter } from "react-router-dom";
+// @ts-expect-error - MemoryRouter may not be exported in all versions
+import { MemoryRouter } from "react-router";
 
 import { Header } from "../../src/components/Header";
 

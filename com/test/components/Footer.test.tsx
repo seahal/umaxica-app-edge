@@ -47,8 +47,8 @@ describe("Footer component (com)", () => {
 
 		expect(markup).toContain("Commerce Hub");
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/about"');
 		expect(markup).toContain('href="/contact"');
+		expect(markup).not.toContain('href="/about"');
 	});
 
 	it("exposes social links with security attributes", () => {

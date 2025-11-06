@@ -79,7 +79,9 @@ describe("root layout shell", () => {
 
 describe("root route component", () => {
 	it("renders an outlet placeholder for nested routes", () => {
+		loaderDataOverride = baseLoaderData;
 		const element = App();
+		loaderDataOverride = undefined;
 
 		expect(element.type).toBe(actualRouter.Outlet);
 	});
