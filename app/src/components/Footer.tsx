@@ -93,7 +93,7 @@ export function Footer({ codeName = "" }: FooterProps) {
 							</TooltipTrigger>
 							<TooltipTrigger delay={0}>
 								<Link
-									href="https://twitter.com"
+									href="https://x.com/umaxica"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="group flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-all duration-300 hover:scale-110 hover:rotate-6 hover:bg-blue-500 hover:text-white dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-blue-500"
@@ -126,7 +126,7 @@ export function Footer({ codeName = "" }: FooterProps) {
 						<div className="flex flex-wrap justify-center gap-6">
 							<TooltipTrigger delay={200}>
 								<Link
-									href="/privacy"
+									href="https://jp.docs.umaxica.app/privacy"
 									className="text-sm text-gray-600 transition-all duration-200 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 								>
 									プライバシーポリシー
@@ -137,7 +137,7 @@ export function Footer({ codeName = "" }: FooterProps) {
 							</TooltipTrigger>
 							<TooltipTrigger delay={200}>
 								<Link
-									href="/terms"
+									href="https://jp.docs.umaxica.app/privacy"
 									className="text-sm text-gray-600 transition-all duration-200 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 								>
 									利用規約
@@ -148,7 +148,7 @@ export function Footer({ codeName = "" }: FooterProps) {
 							</TooltipTrigger>
 							<TooltipTrigger delay={200}>
 								<Link
-									href="https://jp.umaxica.dev/status"
+									href="https://status.umaxica.dev/jp"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-sm text-gray-600 transition-all duration-200 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"

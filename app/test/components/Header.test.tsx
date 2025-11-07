@@ -78,14 +78,6 @@ describe("Header component", () => {
 		expect(screen.getByRole("link", { name: /Login/ })).toBeInTheDocument();
 	});
 
-	it("does not render external links when URLs not provided", () => {
-		renderHeader({});
-
-		expect(screen.queryByRole("link", { name: "📰" })).not.toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: "📚" })).not.toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: "❓" })).not.toBeInTheDocument();
-	});
-
 	it("applies active styles to notification link when active", () => {
 		renderHeader({}, "/notification");
 

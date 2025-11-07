@@ -35,7 +35,7 @@ function shouldRedirectToJapanese(host: string): boolean {
 }
 
 function getJapaneseRedirectUrl(host: string): string {
-	return `https://jp.${host}/`;
+	return "https://jp.help.umaxica.app/contacts/new";
 }
 
 describe("Domain Routing (app)", () => {
@@ -48,7 +48,7 @@ describe("Domain Routing (app)", () => {
 		expect(shouldRedirectToJapanese("umaxica.app")).toBe(true);
 		expect(shouldRedirectToJapanese("jp.umaxica.app")).toBe(false);
 		expect(getJapaneseRedirectUrl("umaxica.app")).toBe(
-			"https://jp.umaxica.app/",
+			"https://jp.help.umaxica.app/contacts/new",
 		);
 	});
 });

@@ -11,3 +11,17 @@ export const CloudflareContext = Symbol("CloudflareContext") as symbol & {
 		};
 	};
 };
+
+type SymbolReader = {
+	get?: <Result>(key: symbol & { __type?: Result }) => Result | undefined;
+};
+
+export type CloudflareContextValue = NonNullable<
+	(typeof CloudflareContext)["__type"]
+>;
+
+export function readCloudflareContext(
+	source?: SymbolReader | null,
+): CloudflareContextValue | undefined {
+	return source?.get?.(CloudflareContext);
+}

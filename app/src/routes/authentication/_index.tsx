@@ -1,7 +1,7 @@
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 import type { Route } from "../+types/home";
 import { AuthForm, SocialLoginButton } from "../../components/AuthForm";
-import { CloudflareContext } from "../../context";
+import { readCloudflareContext } from "../../context";
 
 export function meta(_: Route.MetaArgs) {
 	return [
@@ -11,7 +11,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	return {
 		message:

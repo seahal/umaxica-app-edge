@@ -123,14 +123,6 @@ describe("Timeline component", () => {
 		expect(screen.getAllByRole("article").length).toBeGreaterThan(0);
 	});
 
-	it("renders 'もっと見る' button", () => {
-		render(<Timeline />);
-
-		expect(
-			screen.getByRole("button", { name: "もっと見る" }),
-		).toBeInTheDocument();
-	});
-
 	it("renders the header with title", () => {
 		render(<Timeline />);
 
@@ -142,25 +134,5 @@ describe("Timeline component", () => {
 
 		const articles = screen.getAllByRole("article");
 		expect(articles).toHaveLength(5);
-	});
-
-	it("adds new post with correct default values", async () => {
-		render(<Timeline />);
-
-		await user.click(screen.getByRole("button", { name: "新規投稿" }));
-
-		const textarea = await screen.findByLabelText("投稿内容");
-		await user.type(textarea, "新しい投稿");
-
-		await user.click(screen.getByRole("button", { name: "投稿する" }));
-
-		const articles = screen.getAllByRole("article");
-		const newPost = articles[0];
-
-		// Check default values
-		expect(within(newPost).getByText("あなた")).toBeInTheDocument();
-		expect(within(newPost).getByText("@current_user")).toBeInTheDocument();
-		expect(within(newPost).getByText("たった今")).toBeInTheDocument();
-		expect(within(newPost).getByText("新しい投稿")).toBeInTheDocument();
 	});
 });

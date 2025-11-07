@@ -16,7 +16,7 @@ import {
 	type User,
 } from "../../components/SearchResults";
 import type { Post } from "../../components/PostCard";
-import { CloudflareContext } from "../../context";
+import { readCloudflareContext } from "../../context";
 
 export const handle = {
 	titleName: "Explore",
@@ -31,7 +31,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	return {
 		message:

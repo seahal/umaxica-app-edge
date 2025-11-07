@@ -9,7 +9,6 @@ import {
 export default [
 	layout("../src/layouts/decorated.tsx", [
 		index("routes/_index.tsx"),
-		route("configure", "routes/configure.tsx"),
 	]),
 	...prefix("explore", [index("routes/explore/_index.tsx")]),
 	layout("../src/layouts/baremetal.tsx", [

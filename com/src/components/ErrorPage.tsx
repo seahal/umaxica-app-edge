@@ -89,10 +89,10 @@ export function ErrorPage({
 								</Link>
 								<span className="text-gray-400">•</span>
 								<Link
-									to="/configure"
+									to="/explore"
 									className="text-sm text-blue-600 hover:text-blue-800 underline"
 								>
-									Configure
+									Explore
 								</Link>
 							</div>
 						</div>

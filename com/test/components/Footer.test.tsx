@@ -47,7 +47,9 @@ describe("Footer component (com)", () => {
 
 		expect(markup).toContain("Commerce Hub");
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/contact"');
+		expect(markup).toContain(
+			'href="https://jp.help.umaxica.com/contacts/new"',
+		);
 		expect(markup).not.toContain('href="/about"');
 	});
 
@@ -57,6 +59,7 @@ describe("Footer component (com)", () => {
 		expect(markup).toContain(
 			'href="https://github.com/seahal/umaxica-app-edge"',
 		);
+		expect(markup).toContain('href="https://x.com/umaxica"');
 		expect(markup).toContain('target="_blank"');
 		expect(markup).toContain('rel="noopener noreferrer"');
 	});
