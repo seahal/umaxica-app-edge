@@ -33,7 +33,8 @@
 		"HELP_CORPORATE_URL": "jp.help.umaxica.com",
 		"HELP_SERVICE_URL": "jp.help.umaxica.app",
 		"HELP_STAFF_URL": "jp.help.umaxica.org",
-		"JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0tfSUTdHHauNW9EVYrPxVg6jvlXjFgmJ\n4RZVGkIgzmW9lHE/IlLosDlBa5r2HI0tZKDHlSAaRxTfLD65FMrUNYRQBnvo3te1\n/u6YkHzsI0pcDYGsGtytmX2GR3LIdxq6\n-----END PUBLIC KEY-----\n"
+		"JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0tfSUTdHHauNW9EVYrPxVg6jvlXjFgmJ\n4RZVGkIgzmW9lHE/IlLosDlBa5r2HI0tZKDHlSAaRxTfLD65FMrUNYRQBnvo3te1\n/u6YkHzsI0pcDYGsGtytmX2GR3LIdxq6\n-----END PUBLIC KEY-----\n",
+		"SENTRY_DNC": "https://8a6246e4549a95ae3481bfc40656da87@o4510319686057984.ingest.us.sentry.io/4510319874015242"
 	},
 	"env": {
 		"production": {
@@ -60,7 +61,7 @@
 				"HELP_STAFF_URL": "jp.help.umaxica.org",
 				"BRAND_NAME": "UMAXICA",
 				"JWT_PUBLIC_KEY": "",
-        "SENTRY_DNC": ""
+				"SENTRY_DNC": ""
 			}
 		}
 	},
@@ -93,10 +94,16 @@
 	/**
 	 * Static Assets
 	 */
-	"assets": { "directory": "./public/", "binding": "ASSETS" }
+	"assets": { "directory": "./public/", "binding": "ASSETS" },
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+	"kv_namespaces": [
+		{
+			"binding": "BINDING_NAME",
+			"id": "5a9428637f2545c3971a1d13bcf5ba5a"
+		}
+	]
 }

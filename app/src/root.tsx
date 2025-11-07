@@ -19,7 +19,8 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
-	const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const loaderData = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+	const { cspNonce, sentryDsn } = loaderData;
 	const nonce = cspNonce || undefined;
 
 	return (
@@ -59,5 +60,6 @@ export async function loader({ context }: Route.LoaderArgs) {
 		apexServiceUrl: env.APEX_SERVICE_URL ?? "",
 		edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
 		cspNonce,
+		sentryDsn: env.SENTRY_DSN ?? "",
 	};
 }

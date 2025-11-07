@@ -11,6 +11,8 @@
 		"type": "bunx tsgo --noEmit"
 	},
 	"dependencies": {
+		"@aws-sdk/lib-dynamodb": "^3.926.0",
+		"@aws-sdk/lib-storage": "^3.926.0",
 		"@vercel/speed-insights": "^1.2.0"
 	}
 }
