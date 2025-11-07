@@ -51,7 +51,7 @@ describe("ErrorPage component (com)", () => {
 
 		expect(markup).toContain('href="/"');
 		expect(markup).toContain('href="/sample"');
-		expect(markup).toContain('href="/configure"');
+		expect(markup).toContain('href="/explore"');
 		expect(markup).not.toContain('href="/about"');
 	});
 

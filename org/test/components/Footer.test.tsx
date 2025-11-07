@@ -47,7 +47,10 @@ describe("Footer component (org)", () => {
 
 		expect(markup).toContain("Org Hub");
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain('href="/contact"');
+		expect(markup).toContain(
+			'href="https://jp.help.umaxica.org/contacts/new"',
+		);
+		expect(markup).toContain('href="https://jp.docs.umaxica.org/privacy"');
 		expect(markup).not.toContain('href="/about"');
 	});
 

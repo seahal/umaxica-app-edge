@@ -31,10 +31,6 @@ describe("com route manifest", () => {
 		expect(decorated).toMatchObject({ file: "../src/layouts/decorated.tsx" });
 		expect(decorated?.children ?? []).toEqual([
 			expect.objectContaining({ index: true, file: "routes/_index.tsx" }),
-			expect.objectContaining({
-				path: "configure",
-				file: "routes/configure.tsx",
-			}),
 		]);
 	});
 
@@ -42,13 +38,6 @@ describe("com route manifest", () => {
 		expect(findByFile("routes/_index.tsx")).toMatchObject({
 			file: "routes/_index.tsx",
 			index: true,
-		});
-	});
-
-	it("registers the configure route", () => {
-		expect(findByPath("configure")).toMatchObject({
-			path: "configure",
-			file: "routes/configure.tsx",
 		});
 	});
 

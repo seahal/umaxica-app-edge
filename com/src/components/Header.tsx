@@ -46,63 +46,8 @@ export function Header({
 						</span>
 					</Link>
 
-					{/* Navigation Links */}
+					{/* External Links */}
 					<nav className="flex flex-wrap items-center gap-1">
-						<TooltipTrigger delay={0}>
-							<NavLink
-								to="/message"
-								className={({ isActive }: { isActive: boolean }) =>
-									`group relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
-										isActive
-											? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 scale-110"
-											: "text-gray-700 hover:bg-gray-100 hover:scale-105 dark:text-gray-300 dark:hover:bg-gray-800"
-									}`
-								}
-							>
-								💬
-							</NavLink>
-							<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
-								メッセージ
-							</Tooltip>
-						</TooltipTrigger>
-
-						<TooltipTrigger delay={0}>
-							<NavLink
-								to="/notification"
-								className={({ isActive }: { isActive: boolean }) =>
-									`group relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
-										isActive
-											? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 scale-110"
-											: "text-gray-700 hover:bg-gray-100 hover:scale-105 dark:text-gray-300 dark:hover:bg-gray-800"
-									}`
-								}
-							>
-								🔔
-							</NavLink>
-							<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
-								通知
-							</Tooltip>
-						</TooltipTrigger>
-
-						<TooltipTrigger delay={0}>
-							<NavLink
-								to="/configuration"
-								className={({ isActive }: { isActive: boolean }) =>
-									`group relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
-										isActive
-											? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 scale-110"
-											: "text-gray-700 hover:bg-gray-100 hover:scale-105 dark:text-gray-300 dark:hover:bg-gray-800"
-									}`
-								}
-							>
-								⚙️
-							</NavLink>
-							<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
-								設定
-							</Tooltip>
-						</TooltipTrigger>
-
-						{/* External Links */}
 						{newsServiceUrl && (
 							<TooltipTrigger delay={0}>
 								<a

@@ -67,18 +67,14 @@ export function Header({
 						</TooltipTrigger>
 
 						<TooltipTrigger delay={0}>
-							<NavLink
-								to="/notification"
-								className={({ isActive }: { isActive: boolean }) =>
-									`group relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm ${
-										isActive
-											? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 scale-110"
-											: "text-gray-700 hover:bg-gray-100 hover:scale-105 dark:text-gray-300 dark:hover:bg-gray-800"
-									}`
-								}
+							<a
+								href="https://jp.help.umaxica.org/notifications"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="group relative rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-200 outline-none hover:scale-105 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-800 sm:text-sm"
 							>
 								🔔
-							</NavLink>
+							</a>
 							<Tooltip className="animate-in fade-in zoom-in-95 rounded-lg bg-gray-900 px-3 py-1.5 text-xs text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
 								通知
 							</Tooltip>

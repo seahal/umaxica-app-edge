@@ -78,7 +78,7 @@ describe("Footer component", () => {
 		]);
 		expect(assertions).toContainEqual([
 			"Twitter",
-			"https://twitter.com",
+			"https://x.com/umaxica",
 			"_blank",
 			"noopener noreferrer",
 		]);
@@ -86,10 +86,19 @@ describe("Footer component", () => {
 
 	it("includes privacy and terms legal links", () => {
 		const document = renderFooter();
-		const privacy = document.querySelector('footer a[href="/privacy"]');
-		const terms = document.querySelector('footer a[href="/terms"]');
+		const links = Array.from(document.querySelectorAll("footer a"));
+		const privacy = links.find(
+			(link) => link.textContent?.trim() === "プライバシーポリシー",
+		);
+		const terms = links.find(
+			(link) => link.textContent?.trim() === "利用規約",
+		);
 
-		expect(privacy?.textContent).toBe("プライバシーポリシー");
-		expect(terms?.textContent).toBe("利用規約");
+		expect(privacy?.getAttribute("href")).toBe(
+			"https://jp.docs.umaxica.app/privacy",
+		);
+		expect(terms?.getAttribute("href")).toBe(
+			"https://jp.docs.umaxica.app/privacy",
+		);
 	});
 });
