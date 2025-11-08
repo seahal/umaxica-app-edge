@@ -34,7 +34,7 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@1.3.1" \
+RUN npm install -g "bun@1.3.2" \
   && npm cache clean --force \
   && corepack enable
 

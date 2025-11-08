@@ -47,9 +47,7 @@ describe("Footer component (com)", () => {
 
 		expect(markup).toContain("Commerce Hub");
 		expect(markup).toContain('href="/"');
-		expect(markup).toContain(
-			'href="https://jp.help.umaxica.com/contacts/new"',
-		);
+		expect(markup).toContain('href="https://jp.help.umaxica.com/contacts/new"');
 		expect(markup).not.toContain('href="/about"');
 	});
 
