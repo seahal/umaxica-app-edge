@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-
+import { CloudflareContext } from "../src/context";
+import { loader as homeLoader, meta as homeMeta } from "../src/routes/_index";
 import {
 	loader as authenticationLoader,
 	meta as authenticationMeta,
@@ -14,10 +15,8 @@ import {
 } from "../src/routes/configurations/_index";
 import { loader as exploreLoader } from "../src/routes/explore/_index";
 import { loader as healthLoader } from "../src/routes/healths/_index";
-import { loader as homeLoader, meta as homeMeta } from "../src/routes/_index";
 import { loader as messagesLoader } from "../src/routes/messages/_index";
 import { loader as notificationsLoader } from "../src/routes/notifications/_index";
-import { CloudflareContext } from "../src/context";
 
 function createMockContext(env: Record<string, unknown>) {
 	const contextMap = new Map();

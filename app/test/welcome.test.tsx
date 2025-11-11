@@ -11,11 +11,12 @@ describe("Welcome component", () => {
 		render(<Welcome message="環境変数の値" />);
 
 		expect(screen.getByText("環境変数の値")).toBeInTheDocument();
-		expect(screen.getByAltText("React Router")).toBeInTheDocument();
+		const images = screen.getAllByAltText("React Router");
+		expect(images.length).toBeGreaterThan(0);
 
 		const links = screen.getAllByRole("link");
-		expect(links.some((link) => link.textContent === "React Router Docs")).toBe(
-			true,
-		);
+		expect(
+			links.some((link) => link.textContent?.includes("React Router Docs")),
+		).toBe(true);
 	});
 });

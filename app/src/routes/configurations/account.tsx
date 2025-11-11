@@ -12,11 +12,11 @@ import {
 	RadioGroup,
 	TextField,
 } from "react-aria-components";
-import type { Route } from "../+types/about";
 import {
 	SettingLayout,
 	SettingSection,
 } from "../../components/SettingComponents";
+import type { Route } from "../+types/about";
 
 export function meta(_: Route.MetaArgs) {
 	return [

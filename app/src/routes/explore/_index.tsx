@@ -9,14 +9,14 @@ import {
 	TabPanel,
 	Tabs,
 } from "react-aria-components";
-import type { Route } from "../+types/home";
+import type { Post } from "../../components/PostCard";
 import {
 	SearchResults,
 	type Trend,
 	type User,
 } from "../../components/SearchResults";
-import type { Post } from "../../components/PostCard";
 import { readCloudflareContext } from "../../context";
+import type { Route } from "../+types/home";
 
 export const handle = {
 	titleName: "Explore",

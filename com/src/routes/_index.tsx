@@ -9,9 +9,8 @@ import {
 	Tabs,
 	TextField,
 } from "react-aria-components";
-
+import { readCloudflareContext } from "../context";
 import type { Route } from "./+types/_index";
-import { CloudflareContext } from "../context";
 
 const focusAreas = [
 	{
@@ -70,7 +69,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	return { message: env.VALUE_FROM_CLOUDFLARE ?? "" };
 }

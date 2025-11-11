@@ -1,9 +1,9 @@
 import {
 	index,
 	layout,
+	prefix,
 	type RouteConfig,
 	route,
-	prefix,
 } from "@react-router/dev/routes";
 
 export default [

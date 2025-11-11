@@ -6,13 +6,12 @@ import {
 	ListBox,
 	ListBoxItem,
 	SearchField,
+	type Selection,
 	Tag,
 	TagGroup,
-	type Selection,
 } from "react-aria-components";
-
-import type { Route } from "../+types/home";
 import { readCloudflareContext } from "../../context";
+import type { Route } from "../+types/home";
 
 type ExploreCategory = "products" | "people" | "signals" | "playbooks";
 

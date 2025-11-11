@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button, Tabs, TabList, Tab, TabPanel } from "react-aria-components";
-import { PostCard, type Post } from "./PostCard";
+import { Button, Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 import { NewPostDialog } from "./NewPostDialog";
+import { type Post, PostCard } from "./PostCard";
 
 // サンプルデータ
 const initialPosts: Post[] = [

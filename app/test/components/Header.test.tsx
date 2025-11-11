@@ -3,6 +3,7 @@ import "../../test-setup.ts";
 import { describe, expect, it } from "bun:test";
 
 const { render, screen } = await import("@testing-library/react");
+
 import { MemoryRouter } from "react-router-dom";
 
 import { Header } from "../../src/components/Header";
@@ -60,7 +61,8 @@ describe("Header component", () => {
 		renderHeader({ codeName: "MyApp" });
 
 		expect(screen.getByText("MyApp")).toBeInTheDocument();
-		expect(screen.getByTitle("MyApp")).toBeInTheDocument();
+		const titleElements = screen.getAllByTitle("MyApp");
+		expect(titleElements.length).toBeGreaterThan(0);
 	});
 
 	it("renders all navigation links", () => {

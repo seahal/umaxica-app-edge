@@ -8,12 +8,12 @@ import {
 	SelectValue,
 	Switch,
 } from "react-aria-components";
-import type { Route } from "../+types/about";
 import {
 	SettingItem,
 	SettingLayout,
 	SettingSection,
 } from "../../components/SettingComponents";
+import type { Route } from "../+types/about";
 
 export function meta(_: Route.MetaArgs) {
 	return [

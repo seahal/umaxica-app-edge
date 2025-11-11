@@ -42,3 +42,12 @@ globalThis.cancelAnimationFrame ??=
 	activeWindow.cancelAnimationFrame.bind(activeWindow);
 
 await import("@testing-library/jest-dom");
+
+// Mock @sentry/react-router for tests
+import { mock } from "bun:test";
+
+mock.module("@sentry/react-router", () => ({
+	init: () => {},
+	captureException: () => {},
+	captureMessage: () => {},
+}));

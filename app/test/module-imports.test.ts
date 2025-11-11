@@ -1,8 +1,7 @@
-import { readdirSync } from "node:fs";
-import { join, extname, relative } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-
 import { describe, expect, it } from "bun:test";
+import { readdirSync } from "node:fs";
+import { extname, join, relative } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const srcDirPath = fileURLToPath(new URL("../src", import.meta.url));
 const skipFileNames = new Set(["entry.client.tsx", "entry.server.tsx"]);
