@@ -90,9 +90,7 @@ describe("Footer component", () => {
 		const privacy = links.find(
 			(link) => link.textContent?.trim() === "プライバシーポリシー",
 		);
-		const terms = links.find(
-			(link) => link.textContent?.trim() === "利用規約",
-		);
+		const terms = links.find((link) => link.textContent?.trim() === "利用規約");
 
 		expect(privacy?.getAttribute("href")).toBe(
 			"https://jp.docs.umaxica.app/privacy",

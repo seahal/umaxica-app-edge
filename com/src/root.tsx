@@ -5,17 +5,16 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+
+import type { JSX, ReactNode } from "react";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { CloudflareContext } from "./context";
-
-import type { JSX, ReactNode } from "react";
+import { readCloudflareContext } from "./context";
 
 export function meta() {
 	return [{ title: "Umaxica" }];
@@ -100,7 +99,7 @@ export function ErrorBoundary({
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	const cspNonce = cloudflareContext?.security?.nonce ?? "";
 

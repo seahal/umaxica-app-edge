@@ -63,7 +63,7 @@ describe("PostCard component", () => {
 		render(<PostCard post={basePost} />);
 
 		// Avatar should contain the first character of author name
-		const avatar = screen.getByText("T");
+		const avatar = screen.getByText("テ");
 		expect(avatar).toBeInTheDocument();
 	});
 
@@ -77,7 +77,8 @@ describe("PostCard component", () => {
 
 		render(<PostCard post={postWithZeros} />);
 
-		expect(screen.getByText("0")).toBeInTheDocument();
+		const zeros = screen.getAllByText("0");
+		expect(zeros.length).toBe(3); // replies, reposts, likes
 	});
 
 	it("renders post with large numbers", () => {
@@ -103,7 +104,7 @@ describe("PostCard component", () => {
 
 		render(<PostCard post={multilinePost} />);
 
-		expect(screen.getByText("行1\n行2\n行3")).toBeInTheDocument();
+		expect(screen.getByText(/行1.*行2.*行3/)).toBeInTheDocument();
 	});
 
 	it("works without callbacks", async () => {

@@ -1,6 +1,5 @@
-import type { AppLoadContext, EntryContext } from "react-router";
-
 import { afterAll, expect, it, mock } from "bun:test";
+import type { AppLoadContext, EntryContext } from "react-router";
 import { CloudflareContext } from "../src/context";
 
 const renderCalls: unknown[][] = [];

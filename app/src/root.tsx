@@ -9,9 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { readCloudflareContext } from "./context";
 
 import type { ReactNode } from "react";
+import { readCloudflareContext } from "./context";
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta(_: Route.MetaArgs) {
@@ -20,7 +20,7 @@ export function meta(_: Route.MetaArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
 	const loaderData = useLoaderData<Awaited<ReturnType<typeof loader>>>();
-	const { cspNonce, sentryDsn } = loaderData;
+	const { cspNonce } = loaderData;
 	const nonce = cspNonce || undefined;
 
 	return (

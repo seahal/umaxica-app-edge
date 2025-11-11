@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, mock } from "bun:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 const actualRouter = await import("react-router");
 

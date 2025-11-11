@@ -1,12 +1,12 @@
-import type { Route } from "../+types/home";
-import { CloudflareContext } from "../../context";
+import type { Route } from "../../+types/healths/_index";
+import { readCloudflareContext } from "../../context";
 
 export function meta(_: Route.MetaArgs) {
 	return [{ name: "description", content: "status page" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-	const cloudflareContext = (context as any).get?.(CloudflareContext);
+	const cloudflareContext = readCloudflareContext(context);
 	const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
 	return {
 		message: env.VALUE_FROM_CLOUDFLARE ?? "",

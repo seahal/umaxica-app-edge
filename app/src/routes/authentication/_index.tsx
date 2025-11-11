@@ -1,7 +1,7 @@
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
-import type { Route } from "../+types/home";
 import { AuthForm, SocialLoginButton } from "../../components/AuthForm";
 import { readCloudflareContext } from "../../context";
+import type { Route } from "../+types/home";
 
 export function meta(_: Route.MetaArgs) {
 	return [

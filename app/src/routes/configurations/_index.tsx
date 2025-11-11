@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import type { Route } from "../+types/home";
 import { SettingLayout } from "../../components/SettingComponents";
 import { readCloudflareContext } from "../../context";
+import type { Route } from "../+types/home";
 
 export function meta(_: Route.MetaArgs) {
 	return [

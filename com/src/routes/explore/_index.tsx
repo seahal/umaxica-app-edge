@@ -6,13 +6,12 @@ import {
 	ListBox,
 	ListBoxItem,
 	SearchField,
+	type Selection,
 	Tag,
 	TagGroup,
-	type Selection,
 } from "react-aria-components";
-
-import type { Route } from "../+types/home";
 import { readCloudflareContext } from "../../context";
+import type { Route } from "../+types/home";
 
 type ExploreCategory = "products" | "people" | "signals" | "playbooks";
 
@@ -37,7 +36,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "edge-discovery",
 		title: "Edge Discovery Kit",
-		summary: "エッジで完結する顧客データ収集テンプレート。即時に信号化して施策へ転換できます。",
+		summary:
+			"エッジで完結する顧客データ収集テンプレート。即時に信号化して施策へ転換できます。",
 		category: "products",
 		tags: ["Workers", "AI", "Realtime"],
 		signal: "推奨度 92",
@@ -45,7 +45,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "atlas-console",
 		title: "Atlas Console",
-		summary: "複数ブランドの施策状況を1画面で監視。権限や地域ラベルを跨いだ横断検索が可能です。",
+		summary:
+			"複数ブランドの施策状況を1画面で監視。権限や地域ラベルを跨いだ横断検索が可能です。",
 		category: "products",
 		tags: ["Observability", "Access"],
 		signal: "アクティブ",
@@ -53,7 +54,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "team-liaison",
 		title: "Client Liaison Squad",
-		summary: "顧客伴走に特化したコンシェルジュチーム。成功ナレッジをテンプレ化し、再現度を高めます。",
+		summary:
+			"顧客伴走に特化したコンシェルジュチーム。成功ナレッジをテンプレ化し、再現度を高めます。",
 		category: "people",
 		tags: ["Account", "Enablement"],
 		signal: "応答 < 4h",
@@ -61,7 +63,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "signal-hygiene",
 		title: "Signal Hygiene Protocol",
-		summary: "取得したデータをノイズレスに保つための日次チェックリスト。自動化タスク例も付属。",
+		summary:
+			"取得したデータをノイズレスに保つための日次チェックリスト。自動化タスク例も付属。",
 		category: "playbooks",
 		tags: ["Ops", "Checklist"],
 		signal: "週次更新",
@@ -69,7 +72,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "latency-graph",
 		title: "Latency Pulse",
-		summary: "地域別の応答時間をリアルタイムで可視化し、逸脱を検知するとSlackに通知します。",
+		summary:
+			"地域別の応答時間をリアルタイムで可視化し、逸脱を検知するとSlackに通知します。",
 		category: "signals",
 		tags: ["Monitoring", "Alert"],
 		signal: "83ms / JP",
@@ -77,7 +81,8 @@ const exploreLibrary: ExploreResult[] = [
 	{
 		id: "handoff-kit",
 		title: "Handoff Narrative Kit",
-		summary: "営業から成功支援チームへの引き継ぎテンプレ。背景・チャネル・KPIの抽象度を合わせます。",
+		summary:
+			"営業から成功支援チームへの引き継ぎテンプレ。背景・チャネル・KPIの抽象度を合わせます。",
 		category: "playbooks",
 		tags: ["Template", "Alignment"],
 		signal: "v2.4",
@@ -88,7 +93,8 @@ const savedViews = [
 	{
 		id: "latency",
 		title: "Latency under 90ms",
-		description: "アジア・北米リージョンでレイテンシが基準内のエッジだけを抽出します。",
+		description:
+			"アジア・北米リージョンでレイテンシが基準内のエッジだけを抽出します。",
 	},
 	{
 		id: "launch-ready",
@@ -105,7 +111,12 @@ const savedViews = [
 const liveSignals = [
 	{ id: "experience", label: "体験安定度", value: "97%", status: "stable" },
 	{ id: "handoff", label: "ハンドオフ完了率", value: "82%", status: "at-risk" },
-	{ id: "insight", label: "インサイト更新", value: "12件 / 24h", status: "stable" },
+	{
+		id: "insight",
+		label: "インサイト更新",
+		value: "12件 / 24h",
+		status: "stable",
+	},
 ];
 
 const categoryStyles: Record<
@@ -373,9 +384,7 @@ export default function Explore({
 												{signal.label}
 											</p>
 											<p className="text-xs text-slate-500 dark:text-slate-400">
-												{signal.status === "stable"
-													? "安定"
-													: "注視が必要"}
+												{signal.status === "stable" ? "安定" : "注視が必要"}
 											</p>
 										</div>
 										<span

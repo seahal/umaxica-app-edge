@@ -34,7 +34,7 @@ function shouldRedirectToJapanese(host: string): boolean {
 	return /^umaxica\.(com|org|app)$/.test(host);
 }
 
-function getJapaneseRedirectUrl(host: string): string {
+function getJapaneseRedirectUrl(_host: string): string {
 	return "https://jp.help.umaxica.app/contacts/new";
 }
 

@@ -1,6 +1,6 @@
 import { Timeline } from "../components/Timeline";
-import type { Route } from "./+types/_index";
 import { readCloudflareContext } from "../context";
+import type { Route } from "./+types/_index";
 
 export function meta(_: Route.MetaArgs) {
 	return [

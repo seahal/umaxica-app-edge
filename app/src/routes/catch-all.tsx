@@ -1,5 +1,5 @@
-import { NotFoundPage } from "./NotFoundPage";
 import type { Route } from "./+types/catch-all";
+import { NotFoundPage } from "./NotFoundPage";
 
 export const handle = {
 	titleName: "404 - ページが見つかりません",
