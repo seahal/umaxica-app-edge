@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=24-trixie
+ARG BUN_VERSION=1.3.3
 ARG DOCKER_UID=1000
 ARG DOCKER_USER=edge
 ARG DOCKER_GID=1000
@@ -34,7 +35,7 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@1.3.2" \
+RUN npm install -g "bun@${BUN_VERSION}" \
   && npm cache clean --force \
   && corepack enable
 
