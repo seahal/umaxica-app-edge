@@ -1,0 +1,16 @@
+{
+  "name": "umaxica-app-edge-dev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "code for xx.umaxica.com",
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "cf-typegen": "pnpm exec wrangler types",
+    "typegen": "react-router typegen",
+    "deploy": "pnpm run build && pnpm exec wrangler deploy",
+    "server": "react-router dev",
+    "postinstall": "pnpm run cf-typegen || true",
+    "type": "pnpm exec tsgo --noEmit"
+  }
+}

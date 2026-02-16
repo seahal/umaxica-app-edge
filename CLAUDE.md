@@ -8,41 +8,43 @@ This is a Cloudflare Workers edge application that serves multiple domain varian
 
 ## Development Commands
 
-This project uses Bun as the package manager. Each domain directory (com/, org/) has its own React Router application with independent development commands.
+This project uses pnpm as the package manager. Each domain directory (com/, org/) has its own React Router application with independent development commands.
 
 ### Root Level Commands
+
 ```bash
 # Install dependencies for all domains
-bun install
+pnpm install
 
-# Testing (Vitest via Bun scripts)
-bun run test
+# Testing (Vitest)
+pnpm test
 
 # Code quality (affects all domains)
-bun run format         # Format with Biome
-bun run lint           # Lint with Biome (auto-fix)
-bun run typecheck      # TypeScript type checking
+pnpm run format         # Format with Biome
+pnpm run lint           # Lint with oxlint
+pnpm run typecheck      # TypeScript type checking
 
 # Generate Cloudflare types
-bun run cf-typegen
+pnpm run cf-typegen
 ```
 
 ### Per-Domain Commands (com/, org/)
+
 ```bash
 # Development server (React Router dev server on port 5173)
-bun run dev
+pnpm run server
 
 # Build for production
-bun run build
+pnpm run build
 
 # Preview production build locally
-bun run preview
+pnpm run preview
 
 # Deploy to Cloudflare Workers
-bun run deploy
+pnpm run deploy
 
 # TypeScript type checking for domain
-bun run typecheck      # Includes cf-typegen, react-router typegen, and tsc
+pnpm run type
 ```
 
 ## Architecture
@@ -81,8 +83,9 @@ Each domain directory contains:
 - **Framework**: React Router v7 with server-side rendering
 - **React Version**: React 19 with React Compiler integration
 - **Build System**: React Router dev tools + Vite
-- **Testing**: Vitest (run through Bun scripts)
-- **Code Quality**: Biome (formatting + linting)
+- **Package Manager**: pnpm (workspace)
+- **Testing**: Vitest
+- **Code Quality**: oxlint (linting) + Biome (formatting)
 - **TypeScript**: Strict mode with comprehensive type generation
 
 ### Domain Routing Strategy
@@ -90,12 +93,14 @@ Each domain directory contains:
 The application implements domain-based routing:
 
 **Domain Mapping:**
+
 - `*.umaxica.com` / `com.localdomain` → Commercial domain
 - `*.umaxica.org` / `org.localdomain` → Organization domain
 - `*.umaxica.app` / `app.localdomain` → Application domain
 - Root domains (`umaxica.{com,org,app}`) → Redirect to `jp.*` Japanese variants
 
 **Development Domains:**
+
 - `com.localdomain:5173` for com/ domain development
 - `org.localdomain:5173` for org/ domain development
 
@@ -106,7 +111,7 @@ Both domains include **React Compiler** for React 19:
 ```typescript
 // vite.config.ts
 const ReactCompilerConfig = {
-  target: "19"  // React 19 target
+  target: "19", // React 19 target
 };
 
 plugins: [
@@ -117,7 +122,7 @@ plugins: [
       plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
     },
   }),
-]
+];
 ```
 
 ### Shared Configuration
@@ -146,7 +151,7 @@ export default {
 
 1. Navigate to the specific domain directory (`com/` or `org/`)
 2. Each domain has independent package.json and can be developed separately
-3. Use `bun run dev` within the domain directory to start the development server
+3. Use `pnpm run server` within the domain directory to start the development server
 4. Access via `localhost:5173` or configured local domains
 
 ### Adding New Domains
@@ -159,6 +164,7 @@ To add a new domain (like `app/`):
 4. Add Babel preset and React Compiler plugin dependencies
 5. Create Cloudflare Worker entry in `workers/app.ts`
 6. Configure domain routing in tests
+7. Add domain to `pnpm-workspace.yaml`
 
 ### Environment Variables
 
@@ -176,6 +182,7 @@ export async function loader({ context }) {
 ### Deployment
 
 Each domain deploys independently to Cloudflare Workers:
-- Use `bun run deploy` within the domain directory
+
+- Use `pnpm run deploy` within the domain directory
 - Configure environment variables in Cloudflare dashboard or via `wrangler secret put`
 - Each domain has its own `wrangler.jsonc` configuration

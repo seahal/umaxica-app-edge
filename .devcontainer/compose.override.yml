@@ -1,7 +1,10 @@
-name: 'edge-devcontainer'
+name: "edge-devcontainer"
 services:
   core:
     ports: [] # ← base compose.yml の ports: [ "5170:5170", ... ] を打ち消す
     environment:
       - DEVCONTAINER=1
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1

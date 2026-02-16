@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    ".react-router/types/**/*",
+    "src/**/*",
+    "workers/**/*",
+    "./edge-runtime.ts",
+    "worker-configuration.d.ts",
+    "virtual-modules.d.ts",
+    "react-router-types.d.ts",
+    "test-setup.ts"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "strict": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client", "./worker-configuration.d.ts"],
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      "*": ["./*"],
+      "~/*": ["./src/*"],
+      "@com/*": ["./src/*"],
+      "@com/test/*": ["./test/*"],
+      "@app/*": ["../app/src/*"],
+      "@app/test/*": ["../app/test/*"],
+      "@org/*": ["../org/src/*"],
+      "@org/test/*": ["../org/test/*"]
+    },
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
+}

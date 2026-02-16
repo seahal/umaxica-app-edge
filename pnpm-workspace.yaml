@@ -1,0 +1,6 @@
+packages:
+  - "app"
+  - "com"
+  - "org"
+  - "net"
+  - "info"

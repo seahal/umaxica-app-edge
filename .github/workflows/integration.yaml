@@ -15,89 +15,115 @@ permissions:
   pull-requests: write
 jobs:
   audit:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: '1.3.1'
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
+        run: pnpm install
       - name: Audit
-        run: bun audit
+        run: pnpm audit
 
   outdated:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: '1.3.1'
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
-      - name: Audit
-        run: bun outdated
+        run: pnpm install
+      - name: Outdated
+        run: pnpm outdated || true
 
   format:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: '1.3.1'
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
+        run: pnpm install
       - name: Format (Biome)
-        run: bun run format
+        run: pnpm run format
 
   lint:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: '1.3.1'
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
-      - name: Lint (Biome)
-        run: bun run lint
+        run: pnpm install
+      - name: Lint (oxlint)
+        run: pnpm run lint
 
   typecheck:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: '1.3.1'
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
+        run: pnpm install
       - name: Typecheck
-        run: bun run type
+        run: pnpm run typecheck
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Use Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24.x'
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1.3.1'
+          node-version: "24.x"
+          cache: "pnpm"
       - name: Install deps
-        run: bun install
+        run: pnpm install
       - name: Test
-        run: bun test
+        run: pnpm test

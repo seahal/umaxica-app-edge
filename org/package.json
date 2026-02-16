@@ -1,16 +1,13 @@
 {
-	"name": "umaxica-app-edge-dev",
-	"version": "0.1.0",
-	"description": "code for xx.umaxica.com",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "react-router build",
-		"cf-typegen": "bunx wrangler types",
-		"typegen": "react-router typegen",
-		"deploy": "bun run build && bunx wrangler deploy",
-		"server": "react-router dev",
-		"postinstall": "bun run cf-typegen || true",
-		"type": "bunx tsgo --noEmit"
-	}
+  "name": "umaxica-app-apex-staging-org",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "server": "wrangler dev --ip 0.0.0.0 --port 8782",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.11.9"
+  }
 }

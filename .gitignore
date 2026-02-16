@@ -159,3 +159,4 @@ package-lock.json
 .vercel
 .idea
 .claude/
+.pnpm-store/

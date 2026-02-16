@@ -1,0 +1,98 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "umaxica-app-edge-staging-com",
+  "compatibility_date": "2025-09-15",
+  "main": "./workers/app.ts",
+  // Ensure the server/client bundles exist before Wrangler runs (react-router)
+  "build": { "command": "bun run build" },
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "BRAND_NAME": "UMAXICA",
+    "EDGE_CORPORATE_URL": "com.localhost",
+    "EDGE_SERVICE_URL": "app.localhost",
+    "EDGE_STAFF_URL": "org.localhost",
+    "API_CORPORATE_URL": "api.com.localhost:3300",
+    "API_SERVICE_URL": "api.app.localhost:3300",
+    "API_STAFF_URL": "api.org.localhost:3300",
+    "APEX_CORPORATE_URL": "com.localhost:3300",
+    "APEX_SERVICE_URL": "app.localhost:3300",
+    "APEX_STAFF_URL": "org.localhost:3300",
+    "AUTH_SERVICE_URL": "auth.app.localhost:3300",
+    "AUTH_STAFF_URL": "auth.org.localhost:3300",
+    "NEWS_CORPORATE_URL": "jp.news.umaxica.com",
+    "NEWS_SERVICE_URL": "jp.news.umaxica.app",
+    "NEWS_STAFF_URL": "jp.news.umaxica.org",
+    "DOCS_CORPORATE_URL": "jp.docs.umaxica.com",
+    "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
+    "DOCS_STAFF_URL": "jp.docs.umaxica.org",
+    "HELP_CORPORATE_URL": "jp.help.umaxica.com",
+    "HELP_SERVICE_URL": "jp.help.umaxica.app",
+    "HELP_STAFF_URL": "jp.help.umaxica.org",
+    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n",
+  },
+  "env": {
+    "production": {
+      "vars": {
+        "BRAND_NAME": "UMAXICA",
+        "APEX_CORPORATE_URL": "umaxica.com",
+        "APEX_SERVICE_URL": "umaxica.app",
+        "APEX_STAFF_URL": "umaxica.org",
+        "EDGE_CORPORATE_URL": "jp.umaxica.com",
+        "EDGE_SERVICE_URL": "jp.umaxica.app",
+        "EDGE_STAFF_URL": "jp.umaxica.org",
+        "API_CORPORATE_URL": "api.umaxica.com",
+        "API_SERVICE_URL": "jp.api.umaxica.app",
+        "API_STAFF_URL": "jp.api.umaxica.org",
+        "AUTH_SERVICE_URL": "auth.umaxica.app",
+        "AUTH_STAFF_URL": "auth.umaxica.org",
+        "NEWS_CORPORATE_URL": "news.umaxica.com",
+        "NEWS_SERVICE_URL": "jp.news.umaxica.app",
+        "NEWS_STAFF_URL": "jp.news.umaxica.org",
+        "DOCS_CORPORATE_URL": "docs.umaxica.com",
+        "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
+        "DOCS_STAFF_URL": "jp.docs.umaxica.org",
+        "HELP_CORPORATE_URL": "help.umaxica.com",
+        "HELP_SERVICE_URL": "jp.help.umaxica.app",
+        "HELP_STAFF_URL": "jp.help.umaxica.org",
+        "JWT_PUBLIC_KEY": "",
+      },
+    },
+  },
+  /**
+   * Smart Placement
+   * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+   */
+  "placement": { "mode": "smart" },
+  /**
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
+  /**
+   * Note: Use secrets to store sensitive data.
+   * https://developers.cloudflare.com/workers/configuration/secrets/
+   */
+  /**
+   * Static Assets
+   * https://developers.cloudflare.com/workers/static-assets/binding/
+   */
+  "assets": { "directory": "./public/", "binding": "ASSETS" },
+  "kv_namespaces": [
+    {
+      "binding": "BINDING_NAME",
+      "id": "5a9428637f2545c3971a1d13bcf5ba5a",
+    },
+  ],
+  /**
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
+  // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }],
+}

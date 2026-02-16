@@ -1,0 +1,109 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "umaxica-app-edge-staging-app",
+  "compatibility_date": "2025-09-15",
+  "main": "./workers/app.ts",
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "BRAND_NAME": "UMAXICA",
+    "SECRET_SAMPLE": "SAMPLE_VALUE",
+    "EDGE_CORPORATE_URL": "com.localhost",
+    "EDGE_SERVICE_URL": "app.localhost",
+    "EDGE_STAFF_URL": "org.localhost",
+    "API_CORPORATE_URL": "api.com.localhost:3333",
+    "API_SERVICE_URL": "api.app.localhost:3333",
+    "API_STAFF_URL": "api.org.localhost:3333",
+    "APEX_CORPORATE_URL": "com.localhost:3333",
+    "APEX_SERVICE_URL": "app.localhost:3333",
+    "APEX_STAFF_URL": "org.localhost:3333",
+    "AUTH_SERVICE_URL": "auth.app.localhost:3333",
+    "AUTH_STAFF_URL": "auth.org.localhost:3333",
+    "NEWS_CORPORATE_URL": "jp.news.umaxica.com",
+    "NEWS_SERVICE_URL": "jp.news.umaxica.app",
+    "NEWS_STAFF_URL": "jp.news.umaxica.org",
+    "DOCS_CORPORATE_URL": "jp.docs.umaxica.com",
+    "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
+    "DOCS_STAFF_URL": "jp.docs.umaxica.org",
+    "HELP_CORPORATE_URL": "jp.help.umaxica.com",
+    "HELP_SERVICE_URL": "jp.help.umaxica.app",
+    "HELP_STAFF_URL": "jp.help.umaxica.org",
+    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0tfSUTdHHauNW9EVYrPxVg6jvlXjFgmJ\n4RZVGkIgzmW9lHE/IlLosDlBa5r2HI0tZKDHlSAaRxTfLD65FMrUNYRQBnvo3te1\n/u6YkHzsI0pcDYGsGtytmX2GR3LIdxq6\n-----END PUBLIC KEY-----\n",
+    "SENTRY_DNC": "https://8a6246e4549a95ae3481bfc40656da87@o4510319686057984.ingest.us.sentry.io/4510319874015242",
+  },
+  "env": {
+    "production": {
+      "vars": {
+        "APEX_CORPORATE_URL": "umaxica.com",
+        "APEX_SERVICE_URL": "umaxica.app",
+        "APEX_STAFF_URL": "umaxica.org",
+        "EDGE_CORPORATE_URL": "jp.umaxica.com",
+        "EDGE_SERVICE_URL": "jp.umaxica.app",
+        "EDGE_STAFF_URL": "jp.umaxica.org",
+        "API_CORPORATE_URL": "api.umaxica.com",
+        "API_SERVICE_URL": "jp.api.umaxica.app",
+        "API_STAFF_URL": "jp.api.umaxica.org",
+        "AUTH_SERVICE_URL": "auth.umaxica.app",
+        "AUTH_STAFF_URL": "auth.umaxica.org",
+        "NEWS_CORPORATE_URL": "news.umaxica.com",
+        "NEWS_SERVICE_URL": "jp.news.umaxica.app",
+        "NEWS_STAFF_URL": "jp.news.umaxica.org",
+        "DOCS_CORPORATE_URL": "docs.umaxica.com",
+        "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
+        "DOCS_STAFF_URL": "jp.docs.umaxica.org",
+        "HELP_CORPORATE_URL": "help.umaxica.com",
+        "HELP_SERVICE_URL": "jp.help.umaxica.app",
+        "HELP_STAFF_URL": "jp.help.umaxica.org",
+        "BRAND_NAME": "UMAXICA",
+        "JWT_PUBLIC_KEY": "",
+        "SENTRY_DNC": "",
+      },
+    },
+  },
+  "secret_store_secrets": [
+    {
+      "binding": "UMAXICA_JP_APP_JWT_PUBLIC_KEY",
+      "store_id": "eb74dec1a757471281526676fb6e6509",
+      "secret_name": "JWT_PUBLIC_KEY",
+    },
+  ],
+  /**
+   * Smart Placement
+   */
+  "placement": { "mode": "smart" },
+  /**
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
+  /**
+   * Environment Variables
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+   */
+  // "vars": { "MY_VARIABLE": "production_value" }
+  /**
+   * Note: Use secrets to store sensitive data.
+   * https://developers.cloudflare.com/workers/configuration/secrets/
+   */
+  /**
+   * Static Assets
+   */
+  "assets": { "directory": "./public/", "binding": "ASSETS" },
+  /**
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
+  // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+  "kv_namespaces": [
+    {
+      "binding": "BINDING_NAME",
+      "id": "5a9428637f2545c3971a1d13bcf5ba5a",
+    },
+  ],
+}

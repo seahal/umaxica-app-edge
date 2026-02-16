@@ -1,28 +1,28 @@
 {
-	"exclude": ["app/**/*", "com/**/*", "org/**/*, dev/**/*"],
-	"compilerOptions": {
-		"target": "ESNext",
-		"paths": {
-			"@app/*": ["./app/src/*"],
-			"@app/test/*": ["./app/test/*"],
-			"@com/*": ["./com/src/*"],
-			"@com/test/*": ["./com/test/*"],
-			"@org/*": ["./org/src/*"],
-			"@org/test/*": ["./org/test/*"],
-			"@dev/*": ["./dev/src/*"],
-			"@dev/test/*": ["./dev/test/*"]
-		},
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		// Use @types/bun definitions
-		"types": ["vite/client", "bun"],
-		// Best practices
-		"strict": true,
-		"skipLibCheck": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
-		"jsx": "react-jsx"
-	}
+  "exclude": ["app/**/*", "com/**/*", "org/**/*, dev/**/*"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "paths": {
+      "@app/*": ["./app/src/*"],
+      "@app/test/*": ["./app/test/*"],
+      "@com/*": ["./com/src/*"],
+      "@com/test/*": ["./com/test/*"],
+      "@org/*": ["./org/src/*"],
+      "@org/test/*": ["./org/test/*"],
+      "@dev/*": ["./dev/src/*"],
+      "@dev/test/*": ["./dev/test/*"]
+    },
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    // Use @types/bun definitions
+    "types": ["vite/client", "bun"],
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "jsx": "react-jsx"
+  }
 }
