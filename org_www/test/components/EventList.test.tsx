@@ -1,6 +1,6 @@
 import "../../test-setup.ts";
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 const { EventList } = await import("../../src/components/EventList");

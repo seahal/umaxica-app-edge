@@ -68,10 +68,27 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    bat \
+    entr \
+    fd-find \
+    fzf \
+    htop \
+    jq \
+    yq \
+    ncdu \
+    ripgrep \
+    tig \
+    tree \
+    watch \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV HOME=/home/${DOCKER_USER} \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
-    SHELL=/bin/bash 
+    SHELL=/bin/bash
 
 # Create necessary directories with proper permissions
 RUN mkdir -p \

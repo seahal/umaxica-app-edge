@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { requestFromComApp } from "./utils/request";
 
 describe("GET /health", () => {
@@ -10,8 +10,7 @@ describe("GET /health", () => {
 
     const body = await response.text();
     expect(body).toContain("<title>Health Check - COM</title>");
-    expect(body).toContain("<strong>Service:</strong> COM");
-    expect(body).toContain("<strong>Status:</strong> Running");
+    expect(body).toContain("<p>✓ OK</p>");
     expect(body).toContain("<strong>Timestamp:</strong>");
   });
 

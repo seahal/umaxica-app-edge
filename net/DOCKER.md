@@ -80,6 +80,24 @@ docker compose down -v
 
 ## トラブルシューティング
 
+### 外部ネットワークに接続できない
+
+社内ネットワークやプロキシ環境では、ホストの proxy 環境変数を Compose に引き継ぐ必要があります。
+このリポジトリでは `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`（大文字・小文字）を
+コンテナに渡す設定を入れています。
+
+確認手順:
+
+```bash
+# ホスト側
+env | grep -Ei 'http_proxy|https_proxy|no_proxy|all_proxy'
+
+# コンテナ側
+docker compose exec dev env | grep -Ei 'http_proxy|https_proxy|no_proxy|all_proxy'
+```
+
+必要に応じて、起動前にホストで環境変数を設定してください。
+
 ### ポートが既に使用されている
 
 ポート番号を変更する場合は、docker-compose.yml の `ports` セクションを編集してください。

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { CloudflareContext } from "../src/context";
 import { loader as homeLoader, meta as homeMeta } from "../src/routes/_index";
 import {

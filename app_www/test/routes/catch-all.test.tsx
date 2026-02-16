@@ -1,25 +1,27 @@
 import "../../test-setup.ts";
 
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 const { render } = await import("@testing-library/react");
 
-const actualNotFoundModule = await import("../../src/routes/NotFoundPage");
 let renderCount = 0;
 
-mock.module("../../src/routes/NotFoundPage", () => ({
-  ...actualNotFoundModule,
-  NotFoundPage: () => {
-    renderCount += 1;
-    return <div data-testid="not-found-page" />;
-  },
-}));
+vi.mock("../../src/routes/NotFoundPage", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    NotFoundPage: () => {
+      renderCount += 1;
+      return <div data-testid="not-found-page" />;
+    },
+  };
+});
 
 const catchAllModule = await import("../../src/routes/catch-all");
 const { default: CatchAll, meta, loader, handle } = catchAllModule;
 
 afterAll(() => {
-  mock.module("../../src/routes/NotFoundPage", () => actualNotFoundModule);
+  vi.restoreAllMocks();
 });
 
 describe("catch-all route", () => {

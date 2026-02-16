@@ -5,7 +5,7 @@
  * This is a concrete example based on the route.test.template.tsx template.
  */
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CloudflareContext } from "../../src/context";
 

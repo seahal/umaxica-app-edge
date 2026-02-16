@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { buildRegionErrorPayload } from "../../src/pages/root-redirect";
 import { requestFromApp } from "../utils/request";
 

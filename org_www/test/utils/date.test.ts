@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { addDays, daysBetween, formatDate, isFutureDate, isPastDate } from "../../src/utils/date";
 
 describe("Date Utilities", () => {

@@ -1,22 +1,25 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualRouter = await import("react-router");
+vi.mock("react-router", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    Links: (props: Record<string, unknown>) => createElement("vi-links", props),
+    Meta: (props: Record<string, unknown>) => createElement("vi-meta", props),
+    ScrollRestoration: (props: Record<string, unknown>) => createElement("vi-scroll", props),
+    Scripts: (props: Record<string, unknown>) => createElement("vi-scripts", props),
+  };
+});
 
-mock.module("react-router", () => ({
-  ...actualRouter,
-  Links: (props: Record<string, unknown>) => createElement("mock-links", props),
-  Meta: (props: Record<string, unknown>) => createElement("mock-meta", props),
-  ScrollRestoration: (props: Record<string, unknown>) => createElement("mock-scroll", props),
-  Scripts: (props: Record<string, unknown>) => createElement("mock-scripts", props),
-}));
+const actualRouter = await vi.importActual<typeof import("react-router")>("react-router");
 
 const layoutModule = await import("../../src/layouts/baremetal");
 const { Layout, meta, default: App } = layoutModule;
 
 afterAll(() => {
-  mock.module("react-router", () => actualRouter);
+  vi.restoreAllMocks();
 });
 
 describe("baremetal layout", () => {
@@ -32,10 +35,10 @@ describe("baremetal layout", () => {
     );
 
     expect(html).toContain('<html lang="ja">');
-    expect(html).toContain("<mock-meta");
-    expect(html).toContain("<mock-links");
-    expect(html).toContain("<mock-scroll");
-    expect(html).toContain("<mock-scripts");
+    expect(html).toContain("<vi-meta");
+    expect(html).toContain("<vi-links");
+    expect(html).toContain("<vi-scroll");
+    expect(html).toContain("<vi-scripts");
     expect(html).toContain("content");
   });
 

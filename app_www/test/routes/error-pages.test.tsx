@@ -1,27 +1,28 @@
 import "../../test-setup.ts";
 
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 const { render } = await import("@testing-library/react");
 
-const actualErrorComponent = await import("../../src/components/ErrorPage");
-
-type CapturedProps = Parameters<typeof actualErrorComponent.ErrorPage>[0];
+type CapturedProps = Parameters<(typeof import("../../src/components/ErrorPage"))["ErrorPage"]>[0];
 let lastProps: CapturedProps | undefined;
 
-mock.module("../../src/components/ErrorPage", () => ({
-  ...actualErrorComponent,
-  ErrorPage: (props: CapturedProps) => {
-    lastProps = props;
-    return <div data-testid="error-page">{props.title}</div>;
-  },
-}));
+vi.mock("../../src/components/ErrorPage", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    ErrorPage: (props: CapturedProps) => {
+      lastProps = props;
+      return <div data-testid="error-page">{props.title}</div>;
+    },
+  };
+});
 
 const { InternalServerErrorPage } = await import("../../src/routes/InternalServerErrorPage");
 const { NotFoundPage } = await import("../../src/routes/NotFoundPage");
 
 afterAll(() => {
-  mock.module("../../src/components/ErrorPage", () => actualErrorComponent);
+  vi.restoreAllMocks();
 });
 
 describe("error route wrappers", () => {

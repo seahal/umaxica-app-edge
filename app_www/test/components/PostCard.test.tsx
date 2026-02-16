@@ -1,6 +1,6 @@
 import "../../test-setup.ts";
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 const { render, screen, within } = await import("@testing-library/react");
 const userEvent = (await import("@testing-library/user-event")).default;

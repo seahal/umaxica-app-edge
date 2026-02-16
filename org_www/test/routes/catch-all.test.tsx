@@ -1,22 +1,24 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualNotFound = await import("../../src/components/NotFoundPage");
 let renderCount = 0;
 
-mock.module("../../src/components/NotFoundPage", () => ({
-  ...actualNotFound,
-  NotFoundPage: () => {
-    renderCount += 1;
-    return <div data-testid="not-found" />;
-  },
-}));
+vi.mock("../../src/components/NotFoundPage", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    NotFoundPage: () => {
+      renderCount += 1;
+      return <div data-testid="not-found" />;
+    },
+  };
+});
 
 const routeModule = await import("../../src/routes/catch-all");
 const { loader, meta, default: CatchAll } = routeModule;
 
 afterAll(() => {
-  mock.module("../../src/components/NotFoundPage", () => actualNotFound);
+  vi.restoreAllMocks();
 });
 
 describe("Route: catch-all (org)", () => {

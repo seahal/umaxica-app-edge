@@ -25,8 +25,7 @@ export default defineConfig(() => {
       tsconfigPaths(),
     ],
     optimizeDeps: {
-      // Suppress deprecated esbuildOptions warning for Rolldown
-      esbuildOptions: undefined,
+      rolldownOptions: {},
     },
     server: {
       host: true,

@@ -1,8 +1,9 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CloudflareContext } from "../src/context";
 
-const actualDomServer = await import("react-dom/server");
+const actualDomServer =
+  await vi.importActual<typeof import("react-dom/server")>("react-dom/server");
 
 type RenderOptions = Parameters<typeof actualDomServer.renderToReadableStream>[1];
 
@@ -31,17 +32,16 @@ let renderImplementation: (...args: unknown[]) => ReturnType<typeof createStream
   return createStream();
 };
 
-mock.module("react-dom/server", () => ({
+vi.mock("react-dom/server", () => ({
   renderToReadableStream: (...args: unknown[]) => renderImplementation(...args),
 }));
 
 let isBot = false;
-mock.module("isbot", () => ({
+vi.mock("isbot", () => ({
   isbot: () => isBot,
 }));
 
-const handleRequest = (await import(new URL("../src/entry.server.tsx", import.meta.url).href))
-  .default;
+const handleRequest = (await import("../src/entry.server.tsx")).default;
 
 afterEach(() => {
   renderCalls = [];
@@ -53,10 +53,8 @@ afterEach(() => {
   };
 });
 
-afterAll(async () => {
-  const actualIsBot = await import("isbot");
-  mock.module("react-dom/server", () => actualDomServer);
-  mock.module("isbot", () => actualIsBot);
+afterAll(() => {
+  vi.restoreAllMocks();
 });
 
 describe("entry.server handleRequest", () => {

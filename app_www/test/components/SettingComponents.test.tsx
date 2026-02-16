@@ -1,6 +1,6 @@
 import "../../test-setup.ts";
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 const { render, screen } = await import("@testing-library/react");
 

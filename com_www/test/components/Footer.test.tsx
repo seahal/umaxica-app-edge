@@ -1,33 +1,34 @@
 import "../../test-setup.ts";
 
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualAriaComponents = await import("react-aria-components");
-
-mock.module("react-aria-components", () => ({
-  ...actualAriaComponents,
-  Link: ({
-    href,
-    children,
-    ...rest
-  }: {
-    href: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-}));
+vi.mock("react-aria-components", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    Link: ({
+      href,
+      children,
+      ...rest
+    }: {
+      href: string;
+      children: React.ReactNode;
+      [key: string]: unknown;
+    }) => (
+      <a href={href} {...rest}>
+        {children}
+      </a>
+    ),
+    TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  };
+});
 
 const { Footer } = await import("../../src/components/Footer");
 
 afterAll(() => {
-  mock.module("react-aria-components", () => actualAriaComponents);
+  vi.restoreAllMocks();
 });
 
 describe("Footer component (com)", () => {

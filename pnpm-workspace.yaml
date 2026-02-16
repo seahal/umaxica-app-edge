@@ -1,6 +1,14 @@
 packages:
-  - "app"
-  - "com"
-  - "org"
-  - "net"
-  - "info"
+  - app
+  - com
+  - org
+  - app_www
+  - com_www
+  - org_www
+  - dev_status
+  - net
+
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

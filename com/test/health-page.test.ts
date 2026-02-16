@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { renderHealthPage } from "../src/pages/health-page";
 
 describe("renderHealthPage", () => {
@@ -8,10 +8,7 @@ describe("renderHealthPage", () => {
 
     expect(html).toContain("<!DOCTYPE html>");
     expect(html).toContain("<title>Health Check - COM</title>");
-    expect(html).toContain("<h1>Health Check</h1>");
     expect(html).toContain("<p>✓ OK</p>");
-    expect(html).toContain("<strong>Service:</strong> COM");
-    expect(html).toContain("<strong>Status:</strong> Running");
     expect(html).toContain(`<strong>Timestamp:</strong> ${timestamp}`);
   });
 

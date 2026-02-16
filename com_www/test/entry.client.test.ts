@@ -1,4 +1,4 @@
-import { afterAll, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, vi } from "vitest";
 
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
@@ -8,22 +8,26 @@ if (!originalDocument) {
     nodeType: 9,
   } as unknown as Document;
 }
-const actualReactDomClient = await import("react-dom/client");
-const actualReactRouterDom = await import("react-router/dom");
 
-mock.module("react-dom/client", () => ({
-  ...actualReactDomClient,
-  hydrateRoot: (...args: unknown[]) => {
-    hydrateCalls.push(args);
-  },
-}));
+vi.mock("react-dom/client", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    hydrateRoot: (...args: unknown[]) => {
+      hydrateCalls.push(args);
+    },
+  };
+});
 
-mock.module("react-router/dom", () => ({
-  ...actualReactRouterDom,
-  HydratedRouter: () => null,
-}));
+vi.mock("react-router/dom", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    HydratedRouter: () => null,
+  };
+});
 
-await import(new URL("../src/entry.client.tsx", import.meta.url).href);
+await import("../src/entry.client.tsx");
 
 it("hydrates the com client entry without throwing", () => {
   expect(hydrateCalls.length).toBe(1);
@@ -31,8 +35,7 @@ it("hydrates the com client entry without throwing", () => {
 });
 
 afterAll(() => {
-  mock.module("react-dom/client", () => actualReactDomClient);
-  mock.module("react-router/dom", () => actualReactRouterDom);
+  vi.restoreAllMocks();
 
   if (originalDocument) {
     globalThis.document = originalDocument;

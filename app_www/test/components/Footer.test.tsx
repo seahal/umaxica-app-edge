@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { Window } from "happy-dom";
 import { renderToStaticMarkup } from "react-dom/server";
 

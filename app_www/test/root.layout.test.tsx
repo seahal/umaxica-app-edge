@@ -1,27 +1,30 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 type RootModule = typeof import("../src/root");
 type LoaderData = Awaited<ReturnType<RootModule["loader"]>>;
 
-const actualRouter = await import("react-router");
-
 let loaderDataOverride: LoaderData | undefined;
 
-mock.module("react-router", () => ({
-  ...actualRouter,
-  Links: (props: Record<string, unknown>) => createElement("mock-links", props),
-  Meta: (props: Record<string, unknown>) => createElement("mock-meta", props),
-  ScrollRestoration: (props: Record<string, unknown>) => createElement("mock-scroll", props),
-  Scripts: (props: Record<string, unknown>) => createElement("mock-scripts", props),
-  useLoaderData: () => {
-    if (!loaderDataOverride) {
-      throw new Error("loader data override not set");
-    }
-    return loaderDataOverride;
-  },
-}));
+vi.mock("react-router", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    Links: (props: Record<string, unknown>) => createElement("vi-links", props),
+    Meta: (props: Record<string, unknown>) => createElement("vi-meta", props),
+    ScrollRestoration: (props: Record<string, unknown>) => createElement("vi-scroll", props),
+    Scripts: (props: Record<string, unknown>) => createElement("vi-scripts", props),
+    useLoaderData: () => {
+      if (!loaderDataOverride) {
+        throw new Error("loader data override not set");
+      }
+      return loaderDataOverride;
+    },
+  };
+});
+
+const actualRouter = await vi.importActual<typeof import("react-router")>("react-router");
 
 const rootModule = await import("../src/root");
 const { default: App, Layout, meta } = rootModule;
@@ -50,7 +53,7 @@ function renderLayoutWithData(data: Partial<LoaderData> = {}) {
 
 afterAll(() => {
   loaderDataOverride = undefined;
-  mock.module("react-router", () => actualRouter);
+  vi.restoreAllMocks();
 });
 
 describe("root layout shell", () => {
@@ -61,10 +64,10 @@ describe("root layout shell", () => {
   it("renders the html shell with child content", () => {
     const markup = renderLayoutWithData({ cspNonce: "nonce-123" });
 
-    expect(markup).toContain("<mock-links");
-    expect(markup).toContain("<mock-meta");
-    expect(markup).toContain('<mock-scroll nonce="nonce-123"');
-    expect(markup).toContain('<mock-scripts nonce="nonce-123"');
+    expect(markup).toContain("<vi-links");
+    expect(markup).toContain("<vi-meta");
+    expect(markup).toContain('<vi-scroll nonce="nonce-123"');
+    expect(markup).toContain('<vi-scripts nonce="nonce-123"');
     expect(markup).toContain("child route");
   });
 

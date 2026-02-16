@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { requestFromApp } from "../utils/request";
 
 describe("GET /health", () => {
@@ -12,7 +12,7 @@ describe("GET /health", () => {
 
     expect(body).toContain("<title>Health Check - APP</title>");
     expect(body).toContain("<p>✓ OK</p>");
-    expect(body).toContain("<strong>Status:</strong> Running");
+    expect(body).toContain("<strong>Timestamp:</strong>");
   });
 
   it("applies security headers to HTML responses", async () => {

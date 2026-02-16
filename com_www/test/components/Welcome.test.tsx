@@ -4,7 +4,7 @@
  * Tests for the com domain Welcome component.
  */
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Welcome } from "../../src/welcome/welcome";
 

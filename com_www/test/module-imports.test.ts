@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+// @vitest-environment node
+import { describe, expect, it } from "vitest";
 import { readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";

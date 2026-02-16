@@ -1,18 +1,19 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualEventListModule = await import("../../src/components/EventList");
-
-mock.module("../../src/components/EventList", () => ({
-  ...actualEventListModule,
-  EventList: () => <div data-testid="event-list" />,
-}));
+vi.mock("../../src/components/EventList", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    EventList: () => <div data-testid="event-list" />,
+  };
+});
 
 const routeModule = await import("../../src/routes/_index");
 const { loader, meta, default: HomeRoute } = routeModule;
 
 afterAll(() => {
-  mock.module("../../src/components/EventList", () => actualEventListModule);
+  vi.restoreAllMocks();
 });
 
 function runLoader(env: Record<string, unknown>) {

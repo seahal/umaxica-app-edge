@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 function getDomainType(host: string): string {
   const [cleanHost = ""] = host.split(":");

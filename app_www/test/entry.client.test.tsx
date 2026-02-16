@@ -1,4 +1,4 @@
-import { afterAll, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, vi } from "vitest";
 
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
@@ -16,28 +16,31 @@ if (!originalWindow) {
   } as unknown as Window & typeof globalThis;
 }
 
-const actualReactDomClient = await import("react-dom/client");
-const actualReactRouterDom = await import("react-router/dom");
+vi.mock("react-dom/client", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    hydrateRoot: (...args: unknown[]) => {
+      hydrateCalls.push(args);
+    },
+  };
+});
 
-mock.module("react-dom/client", () => ({
-  ...actualReactDomClient,
-  hydrateRoot: (...args: unknown[]) => {
-    hydrateCalls.push(args);
-  },
+vi.mock("react-router/dom", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    HydratedRouter: () => null,
+  };
+});
+
+vi.mock("@sentry/react-router", () => ({
+  init: vi.fn(() => {}),
+  captureException: vi.fn(() => {}),
+  captureMessage: vi.fn(() => {}),
 }));
 
-mock.module("react-router/dom", () => ({
-  ...actualReactRouterDom,
-  HydratedRouter: () => null,
-}));
-
-mock.module("@sentry/react-router", () => ({
-  init: mock(() => {}),
-  captureException: mock(() => {}),
-  captureMessage: mock(() => {}),
-}));
-
-await import(new URL("../src/entry.client.tsx", import.meta.url).href);
+await import("../src/entry.client.tsx");
 
 it("hydrates the app client entry without throwing", () => {
   expect(hydrateCalls.length).toBe(1);
@@ -45,8 +48,7 @@ it("hydrates the app client entry without throwing", () => {
 });
 
 afterAll(() => {
-  mock.module("react-dom/client", () => actualReactDomClient);
-  mock.module("react-router/dom", () => actualReactRouterDom);
+  vi.restoreAllMocks();
 
   if (originalDocument) {
     globalThis.document = originalDocument;

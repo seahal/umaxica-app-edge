@@ -1,26 +1,27 @@
 import "../../test-setup.ts";
 
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualReactRouter = await import("react-router");
-
-mock.module("react-router", () => ({
-  ...actualReactRouter,
-  Link: ({
-    to,
-    children,
-    ...rest
-  }: {
-    to: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
-    <a href={to as string} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock("react-router", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    Link: ({
+      to,
+      children,
+      ...rest
+    }: {
+      to: string;
+      children: React.ReactNode;
+      [key: string]: unknown;
+    }) => (
+      <a href={to as string} {...rest}>
+        {children}
+      </a>
+    ),
+  };
+});
 
 const errorModule = await import("../../src/components/ErrorPage");
 const { ErrorPage, ServiceUnavailablePage } = errorModule;
@@ -28,7 +29,7 @@ const { InternalServerErrorPage } = await import("../../src/components/InternalS
 const { NotFoundPage } = await import("../../src/components/NotFoundPage");
 
 afterAll(() => {
-  mock.module("react-router", () => actualReactRouter);
+  vi.restoreAllMocks();
 });
 
 describe("ErrorPage component (com)", () => {

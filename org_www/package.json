@@ -12,5 +12,8 @@
     "server": "react-router dev",
     "postinstall": "pnpm run cf-typegen || true",
     "type": "pnpm exec tsgo --noEmit"
+  },
+  "dependencies": {
+    "vite": "^6.3.7"
   }
 }

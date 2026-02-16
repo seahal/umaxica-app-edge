@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { renderHealthPage } from "../src/pages/health-page";
 
 describe("renderHealthPage", () => {

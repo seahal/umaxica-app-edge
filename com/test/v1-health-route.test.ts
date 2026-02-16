@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { requestFromComApp } from "./utils/request";
 
 describe("GET /v1/health", () => {

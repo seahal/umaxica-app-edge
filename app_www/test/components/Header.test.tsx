@@ -1,6 +1,6 @@
 import "../../test-setup.ts";
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 const { render, screen } = await import("@testing-library/react");
 
@@ -55,7 +55,8 @@ describe("Header component", () => {
   it("renders custom code name when provided", () => {
     renderHeader({ codeName: "MyApp" });
 
-    expect(screen.getByText("MyApp")).toBeInTheDocument();
+    const myAppElements = screen.getAllByText("MyApp");
+    expect(myAppElements.length).toBeGreaterThan(0);
     const titleElements = screen.getAllByTitle("MyApp");
     expect(titleElements.length).toBeGreaterThan(0);
   });

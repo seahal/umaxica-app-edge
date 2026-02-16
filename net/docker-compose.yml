@@ -34,6 +34,14 @@ services:
     environment:
       - NODE_ENV=development
       - NODE_OPTIONS=--max-old-space-size=4096
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - NO_PROXY
+      - ALL_PROXY
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - all_proxy
     command: bun run server
     tty: true
     stdin_open: true
@@ -69,6 +77,14 @@ services:
           nocopy: true
     environment:
       - NODE_ENV=production
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - NO_PROXY
+      - ALL_PROXY
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - all_proxy
     command: bun run build
     user: apex:group
     profiles:
@@ -104,6 +120,14 @@ services:
       - "8787:8787"
     environment:
       - NODE_ENV=development
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - NO_PROXY
+      - ALL_PROXY
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - all_proxy
     command: bunx wrangler dev --ip 0.0.0.0 --port 8787
     tty: true
     stdin_open: true

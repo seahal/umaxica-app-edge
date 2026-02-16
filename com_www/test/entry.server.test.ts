@@ -1,27 +1,28 @@
-import { afterAll, expect, it, mock } from "bun:test";
+import { afterAll, expect, it, vi } from "vitest";
 import type { AppLoadContext, EntryContext } from "react-router";
 import { CloudflareContext } from "../src/context";
 
 const renderCalls: unknown[][] = [];
-const actualReactDomServer = await import("react-dom/server");
 
-mock.module("react-dom/server", () => ({
-  ...actualReactDomServer,
-  renderToReadableStream: (...args: unknown[]) => {
-    renderCalls.push(args);
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.close();
-      },
-    });
-    return Object.assign(stream, {
-      allReady: Promise.resolve(),
-    });
-  },
-}));
+vi.mock("react-dom/server", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    renderToReadableStream: (...args: unknown[]) => {
+      renderCalls.push(args);
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.close();
+        },
+      });
+      return Object.assign(stream, {
+        allReady: Promise.resolve(),
+      });
+    },
+  };
+});
 
-const handleRequest = (await import(new URL("../src/entry.server.tsx", import.meta.url).href))
-  .default;
+const handleRequest = (await import("../src/entry.server.tsx")).default;
 
 it("handles com server entry requests", async () => {
   const request = new Request("https://com.example", {
@@ -50,5 +51,5 @@ it("handles com server entry requests", async () => {
 });
 
 afterAll(() => {
-  mock.module("react-dom/server", () => actualReactDomServer);
+  vi.restoreAllMocks();
 });

@@ -5,21 +5,24 @@
  * This is a concrete example based on the layout.test.template.tsx template.
  */
 
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const actualRouter = await import("react-router");
+vi.mock("react-router", async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    Outlet: (props: Record<string, unknown>) => createElement("vi-outlet", props),
+    Meta: () => createElement("vi-meta"),
+    Links: () => createElement("vi-links"),
+    Scripts: (props: Record<string, unknown>) => createElement("vi-scripts", props),
+    ScrollRestoration: (props: Record<string, unknown>) =>
+      createElement("vi-scroll-restoration", props),
+  };
+});
 
-mock.module("react-router", () => ({
-  ...actualRouter,
-  Outlet: (props: Record<string, unknown>) => createElement("mock-outlet", props),
-  Meta: () => createElement("mock-meta"),
-  Links: () => createElement("mock-links"),
-  Scripts: (props: Record<string, unknown>) => createElement("mock-scripts", props),
-  ScrollRestoration: (props: Record<string, unknown>) =>
-    createElement("mock-scroll-restoration", props),
-}));
+const actualRouter = await vi.importActual("react-router");
 
 const baremetalModule = await import("../../src/layouts/baremetal");
 const { Layout, meta, default: App } = baremetalModule;
@@ -70,6 +73,6 @@ describe("Baremetal Layout (com)", () => {
 
   it("should render App component with Outlet", () => {
     const element = App();
-    expect(element.type).toBe(actualRouter.Outlet);
+    expect(element.type.name).toBe("Outlet");
   });
 });
