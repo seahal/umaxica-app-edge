@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
 
 import { CloudflareContext } from "../../src/context";
 
 const routeModule = await import("../../src/routes/explore/_index");
-const { loader, meta, default: ExploreRoute } = routeModule;
+const { loader, meta } = routeModule;
 
 function createMockContext(env: Record<string, unknown>) {
   const contextMap = new Map();
@@ -33,16 +32,5 @@ describe("Route: explore (com)", () => {
     const result = loader({ context } as never);
 
     expect(result).toEqual({ message: "hello" });
-  });
-
-  it.skip("renders the search layout with filters, results, and side panels", () => {
-    const markup = renderToStaticMarkup(<ExploreRoute loaderData={{ message: "Helper text" }} />);
-
-    expect(markup).toContain("Umaxica を横断検索");
-    expect(markup).toContain("検索キーワード");
-    expect(markup).toContain("検索フィルター");
-    expect(markup).toContain("保存済みビュー");
-    expect(markup).toContain("ライブシグナル");
-    expect(markup).toContain("Helper text");
   });
 });

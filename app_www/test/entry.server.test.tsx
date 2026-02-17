@@ -79,6 +79,11 @@ describe("entry.server handleRequest", () => {
     });
     const loadContext = {
       get: (key: symbol) => contextMap.get(key),
+      cloudflare: {
+        env: {} as Env,
+        ctx: {} as ExecutionContext,
+      },
+      set: () => {},
     };
 
     const response = await handleRequest(request, 200, headers, routerContext, loadContext);
@@ -104,6 +109,11 @@ describe("entry.server handleRequest", () => {
     const contextMap = new Map();
     const loadContext = {
       get: (key: symbol) => contextMap.get(key),
+      cloudflare: {
+        env: {} as Env,
+        ctx: {} as ExecutionContext,
+      },
+      set: () => {},
     };
 
     await handleRequest(request, 200, headers, routerContext, loadContext);
@@ -128,7 +138,7 @@ describe("entry.server handleRequest", () => {
       const options = args[1] as RenderOptions | undefined;
       const stream = createStream();
       setTimeout(() => {
-        options?.onError?.(new Error("stream failure"));
+        options?.onError?.(new Error("stream failure"), {});
       }, 0);
       return stream;
     };
@@ -137,11 +147,16 @@ describe("entry.server handleRequest", () => {
       const contextMap = new Map();
       const loadContext = {
         get: (key: symbol) => contextMap.get(key),
+        cloudflare: {
+          env: {} as Env,
+          ctx: {} as ExecutionContext,
+        },
+        set: () => {},
       };
       await handleRequest(request, 200, headers, routerContext, loadContext);
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(errorCalls.length).toBeGreaterThan(0);
-      expect(errorCalls[0][0]).toBeInstanceOf(Error);
+      expect(errorCalls[0]![0]).toBeInstanceOf(Error);
     } finally {
       console.error = originalConsoleError;
     }

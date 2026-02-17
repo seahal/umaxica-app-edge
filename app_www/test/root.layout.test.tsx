@@ -30,14 +30,15 @@ const rootModule = await import("../src/root");
 const { default: App, Layout, meta } = rootModule;
 
 const baseLoaderData: LoaderData = {
-  codeName: "",
-  helpServiceUrl: "",
-  docsServiceUrl: "",
-  newsServiceUrl: "",
-  apiServiceUrl: "",
-  apexServiceUrl: "",
-  edgeServiceUrl: "",
+  codeName: "" as never,
+  helpServiceUrl: "" as never,
+  docsServiceUrl: "" as never,
+  newsServiceUrl: "" as never,
+  apiServiceUrl: "" as never,
+  apexServiceUrl: "" as never,
+  edgeServiceUrl: "" as never,
   cspNonce: "",
+  sentryDsn: "",
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {

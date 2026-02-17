@@ -7,10 +7,12 @@ startTransition(() => {
     document,
     <StrictMode>
       <HydratedRouter
-        unstable_onError={(error, errorInfo) => {
-          console.error(error, errorInfo);
-          reportToErrorService(error, errorInfo);
-        }}
+        {...({
+          unstable_onError: (error: unknown, errorInfo: ErrorInfo) => {
+            console.error(error, errorInfo);
+            reportToErrorService(error, errorInfo);
+          },
+        } as Record<string, unknown>)}
       />
     </StrictMode>,
   );

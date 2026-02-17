@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "umaxica-app-apex-staging-dev",
+  "main": "src/index.ts",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./public",
+  },
+  "compatibility_date": "2025-11-03",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "placement": { "mode": "smart" },
+}

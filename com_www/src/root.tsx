@@ -16,6 +16,8 @@ import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
 import { readCloudflareContext } from "./context";
 
+const isDevEnvironment = import.meta.env.DEV;
+
 export function meta() {
   return [{ title: "Umaxica" }];
 }
@@ -103,9 +105,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   return {
     codeName: env.BRAND_NAME ?? "",
-    newsUrl: env.NEWS_CORPORATE_URL ?? "",
-    docsUrl: env.DOCS_CORPORATE_URL ?? "",
-    helpUrl: env.HELP_CORPORATE_URL ?? "",
+    newsServiceUrl: env.NEWS_CORPORATE_URL ?? "",
+    docsServiceUrl: env.DOCS_CORPORATE_URL ?? "",
+    helpServiceUrl: env.HELP_CORPORATE_URL ?? "",
     cspNonce,
   };
 }

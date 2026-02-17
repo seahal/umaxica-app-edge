@@ -23,6 +23,11 @@ function createMockContext(env: Record<string, unknown>) {
 
   return {
     get: (key: symbol) => contextMap.get(key),
+    cloudflare: {
+      env,
+      ctx: {} as unknown,
+    },
+    set: () => {},
   };
 }
 
@@ -41,18 +46,18 @@ async function runLoader<T extends (...args: unknown[]) => unknown>(
 
 describe("route loader coverage harness", () => {
   it("home loader returns empty message when VALUE_FROM_CLOUDFLARE is missing", async () => {
-    const result = await runLoader(homeLoader, {});
+    const result = await runLoader(homeLoader as never, {});
     expect(result).toEqual({ message: "" });
   });
 
   it.each([
-    ["home index", homeLoader, "VALUE_FROM_CLOUDFLARE"],
-    ["authentication index", authenticationLoader, "VALUE_FROM_CLOUDFLARE"],
-    ["configuration index", configurationLoader, "SECRET_SAMPLE"],
-    ["explore index", exploreLoader, "VALUE_FROM_CLOUDFLARE"],
-    ["health check", healthLoader, "VALUE_FROM_CLOUDFLARE"],
-    ["messages index", messagesLoader, "VALUE_FROM_CLOUDFLARE"],
-    ["notifications index", notificationsLoader, "VALUE_FROM_CLOUDFLARE"],
+    ["home index", homeLoader as never, "VALUE_FROM_CLOUDFLARE"],
+    ["authentication index", authenticationLoader as never, "VALUE_FROM_CLOUDFLARE"],
+    ["configuration index", configurationLoader as never, "SECRET_SAMPLE"],
+    ["explore index", exploreLoader as never, "VALUE_FROM_CLOUDFLARE"],
+    ["health check", healthLoader as never, "VALUE_FROM_CLOUDFLARE"],
+    ["messages index", messagesLoader as never, "VALUE_FROM_CLOUDFLARE"],
+    ["notifications index", notificationsLoader as never, "VALUE_FROM_CLOUDFLARE"],
   ] as const)(
     "%s loader returns the expected Cloudflare-derived message",
     async (_, loader, envKey) => {
@@ -69,7 +74,7 @@ describe("route meta implementations", () => {
       params: {},
       request: new Request("https://example.com"),
       matches: [],
-    });
+    } as never);
     expect(title).toMatchObject({ title: "Umaxica - ホーム" });
     expect(description).toMatchObject({
       name: "description",
@@ -82,7 +87,7 @@ describe("route meta implementations", () => {
       params: {},
       request: new Request("https://example.com/authentication"),
       matches: [],
-    });
+    } as never);
     expect(metaEntries).toContainEqual({
       title: "Umaxica - ログイン",
     });
@@ -97,7 +102,7 @@ describe("route meta implementations", () => {
       params: {},
       request: new Request("https://example.com/configuration"),
       matches: [],
-    });
+    } as never);
     expect(metaEntries).toContainEqual({ title: "Umaxica - 設定" });
     expect(metaEntries).toContainEqual({
       name: "description",
@@ -110,7 +115,7 @@ describe("route meta implementations", () => {
       params: {},
       request: new Request("https://example.com/missing"),
       matches: [],
-    });
+    } as never);
     expect(metaEntries).toContainEqual({
       title: "404 - ページが見つかりません",
     });

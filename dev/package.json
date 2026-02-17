@@ -1,5 +1,5 @@
 {
-  "name": "umaxica-app-apex-staging-org",
+  "name": "umaxica-app-apex-staging-dev",
   "type": "module",
   "scripts": {
     "server": "vite",

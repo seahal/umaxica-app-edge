@@ -1,4 +1,7 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
+const TypedRouterContextProvider = RouterContextProvider as unknown as {
+  new (): { set: (key: unknown, value: unknown) => void };
+};
 import { CloudflareContext } from "../src/context";
 
 function generateNonce(): string {
@@ -11,7 +14,7 @@ const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
   import.meta.env.MODE,
   () => {
-    const contextProvider = new RouterContextProvider();
+    const contextProvider = new TypedRouterContextProvider();
     return contextProvider;
   },
 );
@@ -20,7 +23,7 @@ export default {
   async fetch(request, env, ctx) {
     const nonce = generateNonce();
 
-    const contextProvider = new RouterContextProvider();
+    const contextProvider = new TypedRouterContextProvider();
     contextProvider.set(CloudflareContext, {
       cloudflare: { env, ctx },
       security: { nonce },

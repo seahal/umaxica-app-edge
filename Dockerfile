@@ -83,6 +83,9 @@ RUN apt-get update \
     tig \
     tree \
     watch \
+    bash \
+    curl \
+    wget \
   && rm -rf /var/lib/apt/lists/*
 
 ENV HOME=/home/${DOCKER_USER} \
@@ -99,6 +102,10 @@ RUN mkdir -p \
   && chmod -R 755 "${HOME}"
 
 WORKDIR ${HOME}/workspace
+
+
+RUN rm -rf "${HOME}/.cache"
+RUN rm -rf "${HOME}/.local"
 
 USER ${DOCKER_USER}:${DOCKER_GROUP}
 

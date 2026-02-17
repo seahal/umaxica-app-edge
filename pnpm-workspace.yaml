@@ -5,6 +5,7 @@ packages:
   - app_www
   - com_www
   - org_www
+  - dev
   - dev_status
   - net
 

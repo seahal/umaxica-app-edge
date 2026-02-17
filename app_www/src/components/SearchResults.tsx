@@ -167,7 +167,7 @@ function UserResult({ user }: { user: User }) {
         <div className="flex gap-3 flex-1 min-w-0">
           {/* アバター */}
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-            {user.name[0].toUpperCase()}
+            {user.name?.[0]?.toUpperCase() ?? "?"}
           </div>
 
           {/* ユーザー情報 */}
@@ -229,7 +229,7 @@ function PostResult({ post, query }: { post: Post; query: string }) {
     <div className="p-4 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
       <div className="flex gap-3">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-          {post.author[0].toUpperCase()}
+          {post.author?.[0]?.toUpperCase() ?? "?"}
         </div>
 
         <div className="flex-1 min-w-0">

@@ -1,7 +1,8 @@
 import { jsxRenderer } from "hono/jsx-renderer";
 import { Link, ViteClient } from "vite-ssr-components/hono";
 
-export const renderer = jsxRenderer(({ children, currentYear }) => {
+export const renderer = jsxRenderer((props: Record<string, unknown>) => {
+  const { children, currentYear } = props;
   return (
     <html lang="ja">
       <head>

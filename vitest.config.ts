@@ -18,6 +18,7 @@ export default defineConfig({
     include: [
       "app/**/*.test.{ts,tsx}",
       "com/**/*.test.{ts,tsx}",
+      "dev/**/*.test.{ts,tsx}",
       "org/**/*.test.{ts,tsx}",
       "app_www/**/*.test.{ts,tsx}",
       "com_www/**/*.test.{ts,tsx}",

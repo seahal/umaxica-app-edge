@@ -39,7 +39,7 @@ describe("Timeline component", () => {
     const articles = screen.getAllByRole("article");
     expect(articles.length).toBeGreaterThan(0);
 
-    const firstPost = articles[0];
+    const firstPost = articles[0]!;
     expect(within(firstPost).getByText("田中太郎")).toBeInTheDocument();
     expect(within(firstPost).getByText("42")).toBeInTheDocument();
 
@@ -59,14 +59,14 @@ describe("Timeline component", () => {
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 
     const articles = screen.getAllByRole("article");
-    expect(within(articles[0]).getByText("テスト投稿コンテンツ")).toBeInTheDocument();
+    expect(within(articles[0]!).getByText("テスト投稿コンテンツ")).toBeInTheDocument();
   });
 
   it("increments repost count when repost button is clicked", async () => {
     render(<Timeline />);
 
     const articles = screen.getAllByRole("article");
-    const firstPost = articles[0];
+    const firstPost = articles[0]!;
 
     // Initial repost count is 8
     expect(within(firstPost).getByText("8")).toBeInTheDocument();
@@ -81,13 +81,13 @@ describe("Timeline component", () => {
     render(<Timeline />);
 
     const articles = screen.getAllByRole("article");
-    const firstPost = articles[0];
+    const firstPost = articles[0]!;
 
     await user.click(within(firstPost).getByRole("button", { name: /返信/ }));
 
     // Check that console.log was called with the correct post ID
     expect(consoleCalls.length).toBeGreaterThan(0);
-    expect(consoleCalls[consoleCalls.length - 1][0]).toContain("返信: 1");
+    expect(consoleCalls[consoleCalls.length - 1]![0]).toContain("返信: 1");
   });
 
   it("switches between tabs", async () => {

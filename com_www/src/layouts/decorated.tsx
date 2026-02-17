@@ -9,11 +9,21 @@ type RootLoaderData = Awaited<ReturnType<typeof rootLoader>>;
 export default function DecoratedLayout() {
   const loaderData = useRouteLoaderData("root") as RootLoaderData | undefined;
 
-  const { codeName = "", newsUrl = "", docsUrl = "", helpUrl = "" } = loaderData ?? {};
+  const {
+    codeName = "",
+    newsServiceUrl = "",
+    docsServiceUrl = "",
+    helpServiceUrl = "",
+  } = loaderData ?? {};
 
   return (
     <>
-      <Header codeName={codeName} newsUrl={newsUrl} docsUrl={docsUrl} helpUrl={helpUrl} />
+      <Header
+        codeName={codeName}
+        newsServiceUrl={newsServiceUrl}
+        docsServiceUrl={docsServiceUrl}
+        helpServiceUrl={helpServiceUrl}
+      />
       <Outlet />
       <Footer codeName={codeName} />
     </>

@@ -22,8 +22,6 @@ vi.mock("react-router", async (importOriginal) => {
   };
 });
 
-const actualRouter = await vi.importActual("react-router");
-
 const baremetalModule = await import("../../src/layouts/baremetal");
 const { Layout, meta, default: App } = baremetalModule;
 

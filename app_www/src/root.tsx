@@ -53,6 +53,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     apexServiceUrl: env.APEX_SERVICE_URL ?? "",
     edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
     cspNonce,
-    sentryDsn: env.SENTRY_DSN ?? "",
+    sentryDsn: env.SENTRY_DNC ?? "",
   };
 }

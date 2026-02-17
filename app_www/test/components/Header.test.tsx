@@ -1,10 +1,9 @@
 import "../../test-setup.ts";
 
 import { describe, expect, it } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 
 const { render, screen } = await import("@testing-library/react");
-
-import { MemoryRouter } from "react-router-dom";
 
 import { Header } from "../../src/components/Header";
 
