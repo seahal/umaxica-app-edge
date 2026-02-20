@@ -1,5 +1,5 @@
 {
-  "exclude": ["app/**/*", "com/**/*", "org/**/*, dev/**/*"],
+  "exclude": ["app/**/*", "com/**/*", "org/**/*", "dev/**/*", "net/**/*"],
   "compilerOptions": {
     "target": "ESNext",
     "paths": {

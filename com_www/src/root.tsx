@@ -14,7 +14,7 @@ import type { JSX, ReactNode } from "react";
 import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
 import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
 import { NotFoundPage } from "./components/NotFoundPage";
-import { readCloudflareContext } from "./context";
+import { getEnv, getNonce } from "./context";
 
 const isDevEnvironment = import.meta.env.DEV;
 
@@ -99,9 +99,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element 
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
-  const cspNonce = cloudflareContext?.security?.nonce ?? "";
+  const env = getEnv(context);
+  const cspNonce = getNonce(context);
 
   return {
     codeName: env.BRAND_NAME ?? "",

@@ -12,6 +12,7 @@
   },
   "vars": {
     "SECRET_SAMPLE": "dev",
+    "VALUE_FROM_CLOUDFLARE": "",
     "EDGE_STAFF_URL": "org.localhost",
     "API_STAFF_URL": "api.org.localhost:3300",
     "WWW_STAFF_URL": "",

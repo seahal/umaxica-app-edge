@@ -4,14 +4,23 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 
 const { render } = await import("@testing-library/react");
 
-type CapturedProps = Parameters<(typeof import("../../src/components/ErrorPage"))["ErrorPage"]>[0];
-let lastProps: CapturedProps | undefined;
+interface ErrorPageProps {
+  status: number;
+  title: string;
+  message: string;
+  suggestion?: string;
+  showNavigation?: boolean;
+  showDetails?: boolean;
+  details?: string;
+  stack?: string;
+}
+let lastProps: ErrorPageProps | undefined = undefined;
 
 vi.mock("../../src/components/ErrorPage", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
-    ErrorPage: (props: CapturedProps) => {
+    ErrorPage: (props: ErrorPageProps) => {
       lastProps = props;
       return <div data-testid="error-page">{props.title}</div>;
     },
@@ -27,7 +36,7 @@ afterAll(() => {
 
 describe("error route wrappers", () => {
   it("forwards props for internal server errors", () => {
-    lastProps = undefined;
+    lastProps = undefined as ErrorPageProps | undefined;
     const { getByTestId } = render(
       <InternalServerErrorPage details="details" stack="stack" showDetails />,
     );
@@ -40,7 +49,7 @@ describe("error route wrappers", () => {
   });
 
   it("renders a not found page", () => {
-    lastProps = undefined;
+    lastProps = undefined as ErrorPageProps | undefined;
     const { getByTestId } = render(<NotFoundPage />);
 
     expect(getByTestId("error-page")).toHaveTextContent("ページが見つかりません");

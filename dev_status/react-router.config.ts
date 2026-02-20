@@ -9,5 +9,5 @@ export default {
   future: {
     unstable_viteEnvironmentApi: true,
   } as Config["future"],
-  presets: [vercelPreset()],
+  presets: [vercelPreset()] as Config["presets"],
 } satisfies Config;

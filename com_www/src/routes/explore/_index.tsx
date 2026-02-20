@@ -9,8 +9,9 @@ import {
   type Selection,
   Tag,
   TagGroup,
+  TagList,
 } from "react-aria-components";
-import { readCloudflareContext } from "../../context";
+import { getEnv } from "../../context";
 import type { Route } from "../+types/home";
 
 type ExploreCategory = "products" | "people" | "signals" | "playbooks";
@@ -156,15 +157,12 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
-  const value =
-    (env as Env & { VALUE_FROM_CLOUDFLARE?: string }).VALUE_FROM_CLOUDFLARE ??
-    "Calm automation signals are healthy.";
+  const env = getEnv(context);
+  const value = env.VALUE_FROM_CLOUDFLARE ?? "Calm automation signals are healthy.";
   return { message: value };
 }
 
-export default function Explore({ loaderData }: Route.ComponentProps): JSX.Element {
+export default function Explore({ loaderData }: Route.ComponentProps) {
   const [query, setQuery] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(() => new Set(["all"]));
 
@@ -255,17 +253,17 @@ export default function Explore({ loaderData }: Route.ComponentProps): JSX.Eleme
             selectionMode="single"
             selectedKeys={selectedKeys}
             onSelectionChange={setSelectedKeys}
-            className="flex flex-wrap gap-2"
           >
-            {filters.map((filter) => (
-              <Tag
-                key={filter.id}
-                id={filter.id}
-                className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition data-[selected]:border-blue-500 data-[selected]:bg-blue-50 data-[selected]:text-blue-600 dark:border-gray-700 dark:text-gray-300 dark:data-[selected]:bg-blue-500/20 dark:data-[selected]:text-blue-200"
-              >
-                {filter.label}
-              </Tag>
-            ))}
+            <TagList items={filters} className="flex flex-wrap gap-2">
+              {(filter) => (
+                <Tag
+                  id={filter.id}
+                  className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition data-[selected]:border-blue-500 data-[selected]:bg-blue-50 data-[selected]:text-blue-600 dark:border-gray-700 dark:text-gray-300 dark:data-[selected]:bg-blue-500/20 dark:data-[selected]:text-blue-200"
+                >
+                  {filter.label}
+                </Tag>
+              )}
+            </TagList>
           </TagGroup>
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">

@@ -21,5 +21,7 @@ export namespace Route {
     loaderData: {
       message: string;
     };
+    params?: Record<string, string>;
+    matches?: unknown[];
   }
 }

@@ -1,18 +1,21 @@
 import "../../test-setup.ts";
 
 import { describe, expect, it } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { createRoutesStub } from "react-router";
 
 const { render, screen } = await import("@testing-library/react");
 
 import { Header } from "../../src/components/Header";
 
 function renderHeader(props: Partial<Parameters<typeof Header>[0]> = {}, initialPath = "/") {
-  return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Header {...(props as Parameters<typeof Header>[0])} />
-    </MemoryRouter>,
-  );
+  const Stub = createRoutesStub([
+    {
+      path: "*",
+      Component: () => <Header {...(props as Parameters<typeof Header>[0])} />,
+    },
+  ]);
+  // @ts-expect-error - createRoutesStub return type doesn't include props
+  return render(<Stub initialEntries={[initialPath]} />);
 }
 
 describe("Header component", () => {

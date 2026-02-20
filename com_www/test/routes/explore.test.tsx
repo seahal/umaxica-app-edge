@@ -1,36 +1,50 @@
+import "../../test-setup.ts";
+
 import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import Explore from "../../src/routes/explore/_index";
 
-import { CloudflareContext } from "../../src/context";
+describe("Explore route (com)", () => {
+  it("renders explore page title", () => {
+    render(<Explore loaderData={{ message: "test message" }} params={{}} matches={[]} />);
 
-const routeModule = await import("../../src/routes/explore/_index");
-const { loader, meta } = routeModule;
-
-function createMockContext(env: Record<string, unknown>) {
-  const contextMap = new Map();
-  contextMap.set(CloudflareContext, {
-    cloudflare: { env },
+    expect(
+      screen.getByText("Umaxica を横断検索し、静かなシグナルをすぐに捉える"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("test message")).toBeInTheDocument();
   });
 
-  return {
-    get: (key: symbol) => contextMap.get(key),
-  };
-}
+  it("filters results based on query", async () => {
+    const user = userEvent.setup();
+    render(<Explore loaderData={{ message: "" }} params={{}} matches={[]} />);
 
-describe("Route: explore (com)", () => {
-  it("exposes meaningful metadata", () => {
-    const entries = meta({} as never);
+    const input = screen.getByPlaceholderText("例: onboarding, account liaison, latency");
+    await user.type(input, "Atlas");
 
-    expect(entries).toContainEqual({ title: "Umaxica Commerce | Explore" });
-    expect(entries).toContainEqual({
-      name: "description",
-      content: "検索レイアウトでサービスやチームシグナルを横断的に探索します。",
-    });
+    expect(screen.getByText("Atlas Console")).toBeInTheDocument();
+    expect(screen.queryByText("Edge Discovery Kit")).not.toBeInTheDocument();
   });
 
-  it("loads helper message from Cloudflare context", () => {
-    const context = createMockContext({ VALUE_FROM_CLOUDFLARE: "hello" });
-    const result = loader({ context } as never);
+  it("filters results based on tags/categories", async () => {
+    const user = userEvent.setup();
+    render(<Explore loaderData={{ message: "" }} params={{}} matches={[]} />);
 
-    expect(result).toEqual({ message: "hello" });
+    const productsTag = screen.getByRole("gridcell", { name: "プロダクト" });
+    await user.click(productsTag);
+
+    expect(screen.getByText("Atlas Console")).toBeInTheDocument();
+    expect(screen.queryByText("Client Liaison Squad")).not.toBeInTheDocument();
+  });
+
+  it("shows no results message when no matches found", async () => {
+    const _user = userEvent.setup();
+    render(<Explore loaderData={{ message: "" }} params={{}} matches={[]} />);
+
+    const input = screen.getByPlaceholderText("例: onboarding, account liaison, latency");
+    const { fireEvent } = await import("@testing-library/react");
+    fireEvent.change(input, { target: { value: "NONEXISTENT_QUERY" } });
+
+    expect(screen.getByText(/検索条件に一致する結果が見つかりません/)).toBeInTheDocument();
   });
 });

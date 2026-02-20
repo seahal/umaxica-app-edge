@@ -24,8 +24,23 @@ export default defineConfig({
       "com_www/**/*.test.{ts,tsx}",
       "org_www/**/*.test.{ts,tsx}",
       "dev_status/**/*.test.{ts,tsx}",
+      "net/**/*.test.{ts,tsx}",
       "test/**/*.test.{ts,tsx}",
     ],
     setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["**/*.{ts,tsx,js,jsx}"],
+      exclude: [
+        "**/+types/**",
+        "**/*.d.ts",
+        "**/*.test.{ts,tsx}",
+        "**/node_modules/**",
+        "**/build/**",
+        "**/.react-router/**",
+        "**/*.css",
+        "**/*.svg",
+      ],
+    },
   },
 });

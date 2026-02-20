@@ -3,10 +3,15 @@
   "dockerComposeFile": ["../compose.yml", "./compose.override.yml"],
   "service": "core",
   "remoteUser": "edge",
+  "containerUser": "edge",
   "workspaceFolder": "/home/edge/workspace",
   "shutdownAction": "none",
   "runServices": ["core"],
   "overrideCommand": false,
+  "remoteEnv": {
+    "EDITOR": "code --wait --reuse-window",
+    "DEBUGGER_DISABLE": "1"
+  },
 
   "forwardPorts": [5173, 8780, 8781, 8782],
   "portsAttributes": {
@@ -31,8 +36,6 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "oven.bun-vscode",
-        "biomejs.biome",
         "openai.chatgpt",
         "anthropic.claude-code",
         "bradlc.vscode-tailwindcss",
@@ -40,12 +43,22 @@
         "github.vscode-github-actions",
         "ms-azuretools.vscode-containers",
         "GitHub.codespaces",
-        "ms-vscode-remote.remote-containers"
+        "ms-vscode-remote.remote-containers",
+        "nicolo-ribaudo.oxfmt-vscode",
+        "nicolo-ribaudo.oxc-vscode",
+        "ms-playwright.playwright"
       ],
       "settings": {
-        "editor.defaultFormatter": "biomejs.biome",
+        "editor.defaultFormatter": "nicolo-ribaudo.oxfmt-vscode",
         "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
         "files.eol": "\n",
+        "files.associations": {
+          "compose.yml": "yaml",
+          "*.yml": "yaml"
+        },
         "terminal.integrated.defaultProfile.linux": "bash",
         "terminal.integrated.profiles.linux": {
           "bash": {
@@ -66,5 +79,17 @@
     "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
     "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {}
   },
-  "containerEnv": {}
+  "containerEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=4096"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/edge/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gh,target=/home/edge/.config/gh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/git,target=/home/edge/.config/git,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/edge/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,consistency=cached"
+  ],
+  "updateRemoteUserUID": true,
+  "postCreateCommand": "sudo chown -R 1000:1000 /home/edge/"
 }

@@ -13,6 +13,7 @@
   "vars": {
     "BRAND_NAME": "UMAXICA",
     "SECRET_SAMPLE": "SAMPLE_VALUE",
+    "VALUE_FROM_CLOUDFLARE": "",
     "EDGE_CORPORATE_URL": "com.localhost",
     "EDGE_SERVICE_URL": "app.localhost",
     "EDGE_STAFF_URL": "org.localhost",

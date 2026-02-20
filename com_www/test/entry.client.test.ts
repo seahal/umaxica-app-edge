@@ -27,7 +27,7 @@ vi.mock("react-router/dom", async (importOriginal) => {
   };
 });
 
-await import("../src/entry.client.tsx");
+await import("../src/entry.client");
 
 it("hydrates the com client entry without throwing", () => {
   expect(hydrateCalls.length).toBe(1);

@@ -51,18 +51,17 @@ describe("Route: Home (com)", () => {
       expect(result).toEqual({ message: "Test Message" });
     });
 
-    it("should handle missing Cloudflare context", () => {
-      // Don't set CloudflareContext at all
+    it("should throw error when Cloudflare context is missing", () => {
       const contextMap = new Map();
       const mockContext = {
         get: (key: symbol) => contextMap.get(key),
       };
 
-      const result = loader({
-        context: mockContext,
-      } as never);
-
-      expect(result).toEqual({ message: "" });
+      expect(() =>
+        loader({
+          context: mockContext,
+        } as never),
+      ).toThrow("Cloudflare environment is not available");
     });
 
     it("should handle missing env variables", () => {
@@ -79,16 +78,16 @@ describe("Route: Home (com)", () => {
       expect(result).toEqual({ message: "" });
     });
 
-    it("should handle undefined cloudflare object", () => {
+    it("should throw error when cloudflare object is undefined", () => {
       const mockContext = createMockContext({
         cloudflare: undefined,
       });
 
-      const result = loader({
-        context: mockContext,
-      } as never);
-
-      expect(result).toEqual({ message: "" });
+      expect(() =>
+        loader({
+          context: mockContext,
+        } as never),
+      ).toThrow("Cloudflare environment is not available");
     });
   });
 

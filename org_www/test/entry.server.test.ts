@@ -22,7 +22,7 @@ vi.mock("react-dom/server", async (importOriginal) => {
   };
 });
 
-const handleRequest = (await import("../src/entry.server.tsx")).default;
+const handleRequest = (await import("../src/entry.server")).default;
 
 it("handles org server entry requests", async () => {
   const request = new Request("https://org.example", {

@@ -1,7 +1,7 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import babel from "vite-plugin-babel";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -15,18 +15,18 @@ export default defineConfig(() => {
       tailwindcss(),
       cloudflare({
         viteEnvironment: { name: "ssr" },
-        inspectorPort: false, // avoid get-port syscall failures in restricted runtimes
+        inspectorPort: false,
       }),
       reactRouter(),
       babel({
         filter: /\.[jt]sx?$/,
         babelConfig: {
-          presets: ["@babel/preset-typescript"], // if you use TypeScript
+          presets: ["@babel/preset-typescript"],
           plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
         },
       }),
       tsconfigPaths(),
-    ],
+    ] as PluginOption[],
     optimizeDeps: {
       // Suppress deprecated esbuildOptions warning for Rolldown
       esbuildOptions: undefined,

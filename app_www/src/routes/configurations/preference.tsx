@@ -38,6 +38,7 @@ export default function Preference() {
           <Switch
             isSelected={darkMode}
             onChange={setDarkMode}
+            aria-label="ダークモード"
             className="group inline-flex items-center"
           >
             <div className="flex h-7 w-12 items-center rounded-full bg-gray-300 px-1 transition group-data-[selected]:bg-blue-500">
@@ -54,6 +55,7 @@ export default function Preference() {
           <Switch
             isSelected={highContrast}
             onChange={setHighContrast}
+            aria-label="高コントラスト"
             className="group inline-flex items-center"
           >
             <div className="flex h-7 w-12 items-center rounded-full bg-gray-300 px-1 transition group-data-[selected]:bg-blue-500">
@@ -176,6 +178,7 @@ export default function Preference() {
           <Switch
             isSelected={reduceMotion}
             onChange={setReduceMotion}
+            aria-label="アニメーションを削減"
             className="group inline-flex items-center"
           >
             <div className="flex h-7 w-12 items-center rounded-full bg-gray-300 px-1 transition group-data-[selected]:bg-blue-500">

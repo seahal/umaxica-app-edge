@@ -6,9 +6,9 @@
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) 1.3+ (verify with `bun -v`)
+- [pnpm](https://pnpm.io/) 10.29+ (verify with `pnpm -v`)
 - [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/)
-- Vecerl
+- Vercel CLI (optional, for dev_status deployment)
 - Docker & Docker Compose (optional for containerized dev)
 
 ## Workspace Overview
@@ -23,7 +23,7 @@
 Install dependencies once from the repo root:
 
 ```bash
-bun install
+pnpm install
 ```
 
 ## Local Development
@@ -45,24 +45,15 @@ docker compose up
 - separated env if you want to use `docker compose run bash`
 - Stop the stack with `docker compose down` when finished.
 
-### Bun + Wrangler (bare metal)
+### pnpm + Wrangler (bare metal)
 
 Run each workspace in its own terminal so that Wrangler mirrors the production runtime:
 
 ```bash
-bun run --cwd com server   # http://localhost:5170
-```
-
-```
-bun run --cwd app server   # http://localhost:5171
-```
-
-```
-bun run --cwd org server   # http://localhost:5172
-```
-
-```
-bun run --cwd dev server   # http://localhost:5173
+pnpm run --filter com server   # http://localhost:5170
+pnpm run --filter app server   # http://localhost:5171
+pnpm run --filter org server   # http://localhost:5172
+pnpm run --filter dev server   # http://localhost:5173
 ```
 
 ## Environment Variables
@@ -71,17 +62,17 @@ Vite reads `.env.local` while developing and `.env.production.local` when `NODE_
 
 ## Common Scripts
 
-- Format code: `bun run format`
-- Lint code: `bun run lint`
-- Generate Cloudflare types: `bun run cf-typegen`
-- Workspace-specific tasks: `bun run --cwd <workspace> <script>`
+- Format code: `pnpm run format`
+- Lint code: `pnpm run lint`
+- Generate Cloudflare types: `pnpm run cf-typegen`
+- Workspace-specific tasks: `pnpm run --filter <workspace> <script>`
 
 Workspace scripts for testing, preview builds, and deployments live in each `package.json`. Example:
 
 ```bash
-bun run --cwd app test
-bun run --cwd com preview
-bun run --cwd org deploy
+pnpm run --filter app test
+pnpm run --filter com preview
+pnpm run --filter org deploy
 ```
 
 ## Deployment
@@ -89,9 +80,9 @@ bun run --cwd org deploy
 Deploy each Workers site to Cloudflare:
 
 ```bash
-bun run --cwd com deploy
-bun run --cwd app deploy
-bun run --cwd org deploy
+pnpm run --filter com deploy
+pnpm run --filter app deploy
+pnpm run --filter org deploy
 ```
 
 `dev` is typically deployed on demand for demos.

@@ -43,7 +43,7 @@ describe("Baremetal Layout (com)", () => {
   });
 
   it("should include outlet for nested routes", () => {
-    const markup = renderToStaticMarkup(<Layout />);
+    const markup = renderToStaticMarkup(<Layout>{null}</Layout>);
     // Baremetal layout renders children directly, not through Outlet
     expect(markup).toContain("body");
   });

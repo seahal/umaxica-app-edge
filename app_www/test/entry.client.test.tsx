@@ -40,7 +40,7 @@ vi.mock("@sentry/react-router", () => ({
   captureMessage: vi.fn(() => {}),
 }));
 
-await import("../src/entry.client.tsx");
+await import("../src/entry.client");
 
 it("hydrates the app client entry without throwing", () => {
   expect(hydrateCalls.length).toBe(1);

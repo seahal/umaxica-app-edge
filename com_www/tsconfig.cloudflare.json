@@ -4,6 +4,7 @@
     ".react-router/types/**/*",
     "src/**/*",
     "workers/**/*",
+    "test/**/*",
     "./edge-runtime.ts",
     "worker-configuration.d.ts",
     "virtual-modules.d.ts",
@@ -14,7 +15,6 @@
     "composite": true,
     "strict": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["vite/client", "./worker-configuration.d.ts"],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
@@ -32,6 +32,8 @@
       "@org/test/*": ["../org/test/*"]
     },
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "typeRoots": ["../node_modules/@types", "./node_modules/@types"]
   }
 }

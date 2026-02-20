@@ -9,11 +9,13 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.11.9"
+    "@umaxica/shared": "workspace:*",
+    "hono": "^4.12.0",
+    "nuqs": "^2.8.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.2.3",
-    "vite": "^7.2.2",
-    "wrangler": "^4.17.0"
+    "@cloudflare/vite-plugin": "^1.25.2",
+    "vite": "^7.3.1",
+    "wrangler": "^4.67.0"
   }
 }

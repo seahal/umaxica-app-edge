@@ -43,6 +43,29 @@ declare module "react-router" {
     ...args: unknown[]
   ): (request: Request, context: unknown) => Promise<Response>;
 
+  export class RouterContextProvider {
+    set(key: unknown, value: unknown): void;
+  }
+
+  export function createRoutesStub(
+    routes: Array<{
+      path?: string;
+      index?: boolean;
+      children?: unknown[];
+      Component?: (props: { loaderData?: unknown }) => JSX.Element;
+      loader?: () => unknown;
+      action?: () => unknown;
+      HydrateFallback?: () => JSX.Element;
+      errorElement?: JSX.Element;
+    }>,
+    options?: { initialEntries?: string[] },
+  ): () => JSX.Element;
+
+  export function MemoryRouter(props: {
+    initialEntries?: string[];
+    children?: React.ReactNode;
+  }): JSX.Element;
+
   export namespace Route {
     export interface LoaderArgs {
       context: AppLoadContext;
@@ -62,6 +85,8 @@ declare module "react-router" {
     }
     export interface ComponentProps {
       loaderData?: unknown;
+      params?: Record<string, string>;
+      matches?: unknown[];
     }
     export interface ErrorBoundaryProps {
       error: unknown;

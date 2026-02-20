@@ -22,3 +22,19 @@ export function readCloudflareContext(source?: unknown): CloudflareContextValue 
   const reader = source as SymbolReader | null | undefined;
   return reader?.get?.(CloudflareContext);
 }
+
+export function getEnv(context: unknown): Env {
+  const cloudflareContext = readCloudflareContext(context);
+  const env = cloudflareContext?.cloudflare?.env;
+  if (!env) {
+    throw new Error(
+      "Cloudflare environment is not available. Ensure the request is handled by a Cloudflare Worker.",
+    );
+  }
+  return env;
+}
+
+export function getNonce(context: unknown): string {
+  const cloudflareContext = readCloudflareContext(context);
+  return cloudflareContext?.security?.nonce ?? "";
+}

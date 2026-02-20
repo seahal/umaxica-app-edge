@@ -1,6 +1,6 @@
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 import { AuthForm, SocialLoginButton } from "../../components/AuthForm";
-import { readCloudflareContext } from "../../context";
+import { getEnv } from "../../context";
 import type { Route } from "../+types/home";
 
 export function meta(_: Route.MetaArgs) {
@@ -11,10 +11,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
+  const env = getEnv(context);
   return {
-    message: (env as Env & { VALUE_FROM_CLOUDFLARE: string }).VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? "",
   };
 }
 

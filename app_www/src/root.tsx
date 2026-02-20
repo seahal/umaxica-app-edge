@@ -4,7 +4,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 
 import type { ReactNode } from "react";
-import { readCloudflareContext } from "./context";
+import { getEnv, getNonce } from "./context";
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta(_: Route.MetaArgs) {
@@ -13,8 +13,7 @@ export function meta(_: Route.MetaArgs) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const loaderData = useLoaderData<Awaited<ReturnType<typeof loader>>>();
-  const { cspNonce } = loaderData;
-  const nonce = cspNonce || undefined;
+  const nonce = loaderData.cspNonce || undefined;
 
   return (
     <html lang="ja">
@@ -40,9 +39,8 @@ export default function App() {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
-  const cspNonce = cloudflareContext?.security?.nonce ?? "";
+  const env = getEnv(context);
+  const cspNonce = getNonce(context);
 
   return {
     codeName: env.BRAND_NAME ?? "",

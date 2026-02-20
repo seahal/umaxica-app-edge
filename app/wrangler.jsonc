@@ -11,7 +11,7 @@
   //   "nodejs_compat"
   // ],
   "vars": {
-    "": "my-variable",
+    "MY_VAR": "my-variable",
   },
   // "kv_namespaces": [
   //	{

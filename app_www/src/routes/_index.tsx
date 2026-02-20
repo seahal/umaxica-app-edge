@@ -1,5 +1,5 @@
 import { Timeline } from "../components/Timeline";
-import { readCloudflareContext } from "../context";
+import { getEnv } from "../context";
 import type { Route } from "./+types/_index";
 
 export function meta(_: Route.MetaArgs) {
@@ -10,9 +10,8 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
-  const message = (env as Env & { VALUE_FROM_CLOUDFLARE?: string }).VALUE_FROM_CLOUDFLARE ?? "";
+  const env = getEnv(context);
+  const message = env.VALUE_FROM_CLOUDFLARE ?? "";
 
   return { message };
 }

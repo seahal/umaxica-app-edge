@@ -41,7 +41,7 @@ vi.mock("isbot", () => ({
   isbot: () => isBot,
 }));
 
-const handleRequest = (await import("../src/entry.server.tsx")).default;
+const handleRequest = (await import("../src/entry.server")).default;
 
 afterEach(() => {
   renderCalls = [];

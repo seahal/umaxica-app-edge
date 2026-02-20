@@ -11,7 +11,7 @@ import {
 } from "react-aria-components";
 import type { Post } from "../../components/PostCard";
 import { SearchResults, type Trend, type User } from "../../components/SearchResults";
-import { readCloudflareContext } from "../../context";
+import { getEnv } from "../../context";
 import type { Route } from "../+types/home";
 
 export const handle = {
@@ -27,10 +27,9 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const cloudflareContext = readCloudflareContext(context);
-  const env = cloudflareContext?.cloudflare?.env ?? ({} as Env);
+  const env = getEnv(context);
   return {
-    message: (env as Env & { VALUE_FROM_CLOUDFLARE: string }).VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? "",
   };
 }
 
@@ -199,6 +198,7 @@ export default function Search(_: Route.ComponentProps) {
                         setSearchQuery("");
                         setActiveSearch("");
                       }}
+                      aria-label="検索をクリア"
                       className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-500 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       <svg
@@ -219,6 +219,7 @@ export default function Search(_: Route.ComponentProps) {
                   )}
                   <Button
                     onPress={handleSearch}
+                    aria-label="検索実行"
                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-bold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   >
                     検索

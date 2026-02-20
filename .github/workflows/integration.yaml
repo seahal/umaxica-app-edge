@@ -22,7 +22,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -60,7 +60,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -68,7 +68,7 @@ jobs:
           cache: "pnpm"
       - name: Install deps
         run: pnpm install
-      - name: Format (Biome)
+      - name: Format (oxfmt)
         run: pnpm run format
 
   lint:
@@ -79,7 +79,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -98,7 +98,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -117,7 +117,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
