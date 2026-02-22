@@ -1,0 +1,18 @@
+packages:
+  - shared
+  - app/apex
+  - app/core
+  - com/apex
+  - com/core
+  - org/apex
+  - org/core
+  - dev/apex
+  - dev/status
+  - net/apex
+
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
+minimumReleaseAge: 4320

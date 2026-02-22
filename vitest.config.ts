@@ -1,0 +1,46 @@
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  esbuild: {
+    jsx: "automatic",
+  },
+  resolve: {
+    alias: {
+      "@sentry/react-router": new URL(
+        "./app/core/__mocks__/@sentry/react-router.ts",
+        import.meta.url,
+      ).pathname,
+      "@umaxica/shared": new URL("./shared/src", import.meta.url).pathname,
+    },
+  },
+  test: {
+    globals: true,
+    environment: "happy-dom",
+    include: [
+      "app/**/*.test.{ts,tsx}",
+      "com/**/*.test.{ts,tsx}",
+      "dev/**/*.test.{ts,tsx}",
+      "org/**/*.test.{ts,tsx}",
+      "net/**/*.test.{ts,tsx}",
+      "test/**/*.test.{ts,tsx}",
+    ],
+    setupFiles: ["./vitest.setup.ts"],
+    deps: {
+      interopDefault: true,
+    },
+    coverage: {
+      provider: "v8",
+      include: ["**/*.{ts,tsx,js,jsx}"],
+      exclude: [
+        "**/+types/**",
+        "**/*.d.ts",
+        "**/*.test.{ts,tsx}",
+        "**/node_modules/**",
+        "**/build/**",
+        "**/.react-router/**",
+        "**/*.css",
+        "**/*.svg",
+      ],
+    },
+  },
+});

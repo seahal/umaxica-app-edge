@@ -10,7 +10,6 @@ FROM node:${NODE_VERSION} AS base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
-ARG BUN_VERSION
 ARG DOCKER_UID
 ARG DOCKER_USER
 ARG DOCKER_GID
@@ -31,12 +30,10 @@ RUN apt-get update \
     openssh-client \
     sudo \
     tzdata \
-    unzip \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g "bun@1.3.2" \
-  && npm cache clean --force \
-  && corepack enable
+RUN corepack enable \
+  && corepack install --global pnpm@latest
 
 RUN set -eux; \
   base_user=node; \
@@ -71,30 +68,45 @@ ARG DOCKER_USER
 ARG DOCKER_GID
 ARG DOCKER_GROUP
 
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    bat \
+    entr \
+    fd-find \
+    fzf \
+    htop \
+    jq \
+    yq \
+    ncdu \
+    ripgrep \
+    tig \
+    tree \
+    watch \
+    bash \
+    curl \
+    wget \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV HOME=/home/${DOCKER_USER} \
     USER=${DOCKER_USER} \
     LANG=C.UTF-8 \
-    SHELL=/bin/bash \
-    BUN_INSTALL=/home/${DOCKER_USER}/.bun \
-    BUN_CACHE_DIR=/home/${DOCKER_USER}/.cache/bun
-ENV PATH=${BUN_INSTALL}/bin:${PATH}
+    SHELL=/bin/bash
 
 # Create necessary directories with proper permissions
-RUN mkdir -p "${BUN_INSTALL}" \
-             "${HOME}/.cache/bun" \
-             "${HOME}/.config" \
-             "${HOME}/workspace" \
-             "${HOME}/workspace/node_modules" \
+RUN mkdir -p \
+    "${HOME}/.config" \
+    "${HOME}/workspace" \
+    "${HOME}/workspace/node_modules" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}" \
   && chmod -R 755 "${HOME}"
 
 WORKDIR ${HOME}/workspace
 
+
+RUN rm -rf "${HOME}/.cache"
+RUN rm -rf "${HOME}/.local"
+
 USER ${DOCKER_USER}:${DOCKER_GROUP}
-
-# Set up bun for the user
-RUN bun --version
-
-EXPOSE 5170 5171 5172 5173
 
 CMD ["sleep", "infinity"]

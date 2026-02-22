@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "import", "jsx-a11y"],
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "globals": {},
+  "settings": {
+    "react": {
+      "version": "19"
+    }
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "react/no-danger": "off",
+    "typescript/no-explicit-any": "warn"
+  },
+  "ignorePatterns": [
+    "**/.wrangler/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "worker-configuration.d.ts",
+    "**/+types/**",
+    "**/.react-router/**",
+    "**/build/**"
+  ]
+}

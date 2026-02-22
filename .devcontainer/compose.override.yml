@@ -1,7 +1,20 @@
-name: 'edge-devcontainer'
+name: "edge-devcontainer"
 services:
   core:
     ports: [] # ← base compose.yml の ports: [ "5170:5170", ... ] を打ち消す
     environment:
       - DEVCONTAINER=1
+      # プロキシ変数を明示的にクリア（空文字列を防ぐ）
+      # ホストでプロキシを使う場合はここに実際の値を設定する
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - ALL_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - all_proxy=
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1

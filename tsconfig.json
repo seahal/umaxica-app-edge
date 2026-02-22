@@ -1,28 +1,38 @@
 {
-	"exclude": ["app/**/*", "com/**/*", "org/**/*, dev/**/*"],
-	"compilerOptions": {
-		"target": "ESNext",
-		"paths": {
-			"@app/*": ["./app/src/*"],
-			"@app/test/*": ["./app/test/*"],
-			"@com/*": ["./com/src/*"],
-			"@com/test/*": ["./com/test/*"],
-			"@org/*": ["./org/src/*"],
-			"@org/test/*": ["./org/test/*"],
-			"@dev/*": ["./dev/src/*"],
-			"@dev/test/*": ["./dev/test/*"]
-		},
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		// Use @types/bun definitions
-		"types": ["vite/client", "bun"],
-		// Best practices
-		"strict": true,
-		"skipLibCheck": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
-		"jsx": "react-jsx"
-	}
+  "exclude": [
+    "app/apex/**/*",
+    "app/core/**/*",
+    "com/apex/**/*",
+    "com/core/**/*",
+    "org/apex/**/*",
+    "org/core/**/*",
+    "dev/apex/**/*",
+    "dev/status/**/*",
+    "net/apex/**/*"
+  ],
+  "compilerOptions": {
+    "target": "ESNext",
+    "paths": {
+      "@app/*": ["./app/core/src/*"],
+      "@app/test/*": ["./app/core/test/*"],
+      "@com/*": ["./com/core/src/*"],
+      "@com/test/*": ["./com/core/test/*"],
+      "@org/*": ["./org/core/src/*"],
+      "@org/test/*": ["./org/core/test/*"],
+      "@dev/*": ["./dev/status/src/*"],
+      "@dev/test/*": ["./dev/status/test/*"]
+    },
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    // Use @types/bun definitions
+    "types": ["vite/client", "bun"],
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "jsx": "react-jsx"
+  }
 }
