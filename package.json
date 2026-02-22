@@ -45,5 +45,11 @@
     "vitest": "^4.0.18",
     "wrangler": "^4.67.0"
   },
-  "packageManager": "pnpm@10.29.3"
+  "packageManager": "pnpm@10.29.3",
+  "pnpm": {
+    "overrides": {
+      "minimatch": ">=10.2.1",
+      "ajv": ">=8.18.0"
+    }
+  }
 }

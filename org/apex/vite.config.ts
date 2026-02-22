@@ -1,12 +1,16 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "vite";
+import ssrPlugin from "vite-ssr-components/plugin";
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineConfig({
-  plugins: [cloudflare()],
+  plugins: [cloudflare(), ssrPlugin(), tailwindcss()],
   resolve: {
     alias: {
       "@umaxica/shared": path.resolve(__dirname, "../../shared/src/index.ts"),
@@ -14,7 +18,7 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 8782,
+    port: 5301,
     strictPort: true,
   },
 });

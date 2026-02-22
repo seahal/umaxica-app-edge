@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - develop
+  pull_request:
 defaults:
   run:
     shell: bash
@@ -19,111 +20,63 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
+      - uses: ./.github/actions/setup
       - name: Audit
-        run: pnpm audit
+        run: pnpm audit --audit-level=high
 
   outdated:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
+      - uses: ./.github/actions/setup
       - name: Outdated
         run: pnpm outdated || true
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   format:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
-      - name: Format (oxfmt)
-        run: pnpm run format
+      - uses: ./.github/actions/setup
+      - name: Format check (oxfmt)
+        run: pnpm exec oxfmt --check .
 
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
+      - uses: ./.github/actions/setup
       - name: Lint (oxlint)
-        run: pnpm run lint
+        run: pnpm exec oxlint .
 
   typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
+      - uses: ./.github/actions/setup
       - name: Typecheck
-        run: pnpm run typecheck
+        run: pnpm run type
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.x"
-          cache: "pnpm"
-      - name: Install deps
-        run: pnpm install
+      - uses: ./.github/actions/setup
       - name: Test
         run: pnpm test
