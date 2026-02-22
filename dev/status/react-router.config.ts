@@ -7,7 +7,7 @@ export default {
   ssr: true,
   appDirectory: "src",
   future: {
-    unstable_viteEnvironmentApi: true,
+    v8_viteEnvironmentApi: true,
   } as Config["future"],
   presets: [vercelPreset()] as Config["presets"],
 } satisfies Config;

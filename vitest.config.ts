@@ -7,9 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@sentry/react-router": new URL(
-        "./app_www/__mocks__/@sentry/react-router.ts",
+        "./app/core/__mocks__/@sentry/react-router.ts",
         import.meta.url,
       ).pathname,
+      "@umaxica/shared": new URL("./shared/src", import.meta.url).pathname,
     },
   },
   test: {
@@ -20,14 +21,13 @@ export default defineConfig({
       "com/**/*.test.{ts,tsx}",
       "dev/**/*.test.{ts,tsx}",
       "org/**/*.test.{ts,tsx}",
-      "app_www/**/*.test.{ts,tsx}",
-      "com_www/**/*.test.{ts,tsx}",
-      "org_www/**/*.test.{ts,tsx}",
-      "dev_status/**/*.test.{ts,tsx}",
       "net/**/*.test.{ts,tsx}",
       "test/**/*.test.{ts,tsx}",
     ],
     setupFiles: ["./vitest.setup.ts"],
+    deps: {
+      interopDefault: true,
+    },
     coverage: {
       provider: "v8",
       include: ["**/*.{ts,tsx,js,jsx}"],

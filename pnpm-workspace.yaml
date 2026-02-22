@@ -1,14 +1,14 @@
 packages:
   - shared
-  - app
-  - com
-  - org
-  - app_www
-  - com_www
-  - org_www
-  - dev
-  - dev_status
-  - net
+  - app/apex
+  - app/core
+  - com/apex
+  - com/core
+  - org/apex
+  - org/core
+  - dev/apex
+  - dev/status
+  - net/apex
 
 ignoredBuiltDependencies:
   - esbuild
