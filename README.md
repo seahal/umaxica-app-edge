@@ -94,6 +94,11 @@ pnpm run --filter org deploy
 - `org`: https://jp.umaxica.org, https://us.umaxica.org
 - `dev`: https://jp.umaxica.dev, https://us.umaxica.dev
 
+
+# tools
+- Sentry ... ?
+
+
 ## Known Issues & Limitations
 
 - This is a work in progress.
