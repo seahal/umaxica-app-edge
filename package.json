@@ -30,7 +30,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@typescript/native-preview": "7.0.0-dev.20260223.1",
+    "@typescript/native-preview": "7.0.0-dev.20260224.1",
     "@vercel/react-router": "^1.2.5",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "4.0.18",
