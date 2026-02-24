@@ -1,5 +1,4 @@
 packages:
-  - shared
   - app/apex
   - app/core
   - com/apex

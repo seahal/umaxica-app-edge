@@ -10,7 +10,6 @@ export default defineConfig({
         "./app/core/__mocks__/@sentry/react-router.ts",
         import.meta.url,
       ).pathname,
-      "@umaxica/shared": new URL("./shared/src", import.meta.url).pathname,
     },
   },
   test: {

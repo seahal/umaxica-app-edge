@@ -95,9 +95,6 @@ importers:
 
   app/apex:
     dependencies:
-      '@umaxica/shared':
-        specifier: workspace:*
-        version: link:../../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -196,9 +193,6 @@ importers:
 
   com/apex:
     dependencies:
-      '@umaxica/shared':
-        specifier: workspace:*
-        version: link:../../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -294,9 +288,6 @@ importers:
 
   dev/apex:
     dependencies:
-      '@umaxica/shared':
-        specifier: workspace:*
-        version: link:../../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -404,9 +395,6 @@ importers:
 
   net/apex:
     dependencies:
-      '@umaxica/shared':
-        specifier: workspace:*
-        version: link:../../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -438,9 +426,6 @@ importers:
 
   org/apex:
     dependencies:
-      '@umaxica/shared':
-        specifier: workspace:*
-        version: link:../../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -536,8 +521,6 @@ importers:
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260228.0)
-
-  shared: {}
 
 packages:
 
