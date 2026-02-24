@@ -58,7 +58,6 @@ pnpm run --filter com/core server
 pnpm run --filter app/core server
 pnpm run --filter org/core server
 pnpm run --filter dev/status server
-
 pnpm run --filter com/apex server
 pnpm run --filter app/apex server
 pnpm run --filter org/apex server
