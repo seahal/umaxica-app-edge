@@ -10,8 +10,6 @@ export const renderAboutPage = () => `<!DOCTYPE html>
 	<h2>Service Information</h2>
 	<p><strong>Service Name:</strong> COM</p>
 	<p><strong>Description:</strong> Umaxica App Status Page - COM Service</p>
-	<p><strong>Framework:</strong> Hono</p>
-	<p><strong>Runtime:</strong> Cloudflare Workers</p>
 	<h2>Contact</h2>
 	<p>For more information, please visit our main page.</p>
 </body>

@@ -6,19 +6,25 @@
 
 ## Prerequisites
 
+- Node.js 24.x (project Docker image uses `node:24-trixie`)
 - [pnpm](https://pnpm.io/) 10.29+ (verify with `pnpm -v`)
-- [Cloudflare Wrangler](https://developers.cloudflare.com/workers/wrangler/)
-- Vercel CLI (optional, for dev_status deployment)
-- Docker & Docker Compose (optional for containerized dev)
+- Docker & Docker Compose (optional)
 
 ## Workspace Overview
 
-| Workspace | Purpose                            | Default Dev Port        |
-| --------- | ---------------------------------- | ----------------------- |
-| `app`     | Service app for `*.umaxica.app`    | `http://localhost:5402` |
-| `com`     | Corporate site for `*.umaxica.com` | `http://localhost:5102` |
-| `org`     | Organize site for `*.umaxica.org`  | `http://localhost:5302` |
-| `dev`     | Status site for `*.umaxica.dev`    | `http://localhost:5502` |
+This repository is a pnpm workspace with 9 packages:
+
+| Package      | Role                                      | Dev Port |
+| ------------ | ----------------------------------------- | -------- |
+| `com/core`   | React Router app (`*.umaxica.com`)        | `5102`   |
+| `com/apex`   | Apex/static worker (`com`)                | `5101`   |
+| `app/core`   | React Router app (`*.umaxica.app`)        | `5402`   |
+| `app/apex`   | Apex/static worker (`app`)                | `5401`   |
+| `org/core`   | React Router app (`*.umaxica.org`)        | `5302`   |
+| `org/apex`   | Apex/static worker (`org`)                | `5301`   |
+| `dev/status` | Status app (React Router + Vercel preset) | `5502`   |
+| `dev/apex`   | Apex/static worker (`dev`)                | `5501`   |
+| `net/apex`   | Network-facing apex worker                | `5201`   |
 
 Install dependencies once from the repo root:
 
@@ -28,75 +34,75 @@ pnpm install
 
 ## Local Development
 
-### Dev Containers
-
-- Works best with VS Code Remote Containers / Dev Containers.
-- JetBrains IDEs are not fully supported in the container yet.
-
 ### Docker Compose
 
-Spin up the development environment inside Docker:
+Start containerized development shell:
 
 ```bash
 docker compose up
+docker compose exec core bash
 ```
 
-- if you want to use '' as you want to dive in `docker compose exec bash`
-- separated env if you want to use `docker compose run bash`
-- Stop the stack with `docker compose down` when finished.
+Stop with:
+
+```bash
+docker compose down
+```
 
 ### pnpm + Wrangler (bare metal)
 
-Run each workspace in its own terminal so that Wrangler mirrors the production runtime:
+Run only the package(s) you need:
 
 ```bash
-pnpm run --filter com server   # http://localhost:5102
-pnpm run --filter app server   # http://localhost:5402
-pnpm run --filter org server   # http://localhost:5302
-pnpm run --filter dev server   # http://localhost:5502
+pnpm run --filter com/core server
+pnpm run --filter app/core server
+pnpm run --filter org/core server
+pnpm run --filter dev/status server
+
+pnpm run --filter com/apex server
+pnpm run --filter app/apex server
+pnpm run --filter org/apex server
+pnpm run --filter dev/apex server
+pnpm run --filter net/apex server
 ```
 
 ## Environment Variables
 
-Vite reads `.env.local` while developing and `.env.production.local` when `NODE_ENV=production`. Copy the examples provided per workspace, update hostnames and API endpoints, and remember that only `VITE_`-prefixed variables are exposed to the client. Secrets should be stored with `wrangler secret put` or in `wrangler.jsonc` `vars`.
+Each workspace manages runtime values mainly through its `wrangler.jsonc` (`vars` and environments).  
+For client-side values in Vite/React Router, use `VITE_`-prefixed variables.
 
 ## Common Scripts
 
 - Format code: `pnpm run format`
 - Lint code: `pnpm run lint`
-- Generate Cloudflare types: `pnpm run cf-typegen`
+- Type-check: `pnpm run type`
+- Run tests: `pnpm run test`
 - Workspace-specific tasks: `pnpm run --filter <workspace> <script>`
 
-Workspace scripts for testing, preview builds, and deployments live in each `package.json`. Example:
+Examples:
 
 ```bash
-pnpm run --filter app test
-pnpm run --filter com preview
-pnpm run --filter org deploy
+pnpm run --filter app/core preview
+pnpm run --filter com/apex deploy
+pnpm run --filter net/apex cf-typegen
 ```
 
 ## Deployment
 
-Deploy each Workers site to Cloudflare:
+Packages with `deploy` script are deployed to Cloudflare Workers:
 
 ```bash
-pnpm run --filter com deploy
-pnpm run --filter app deploy
-pnpm run --filter org deploy
+pnpm run --filter com/core deploy
+pnpm run --filter app/core deploy
+pnpm run --filter org/core deploy
+pnpm run --filter com/apex deploy
+pnpm run --filter app/apex deploy
+pnpm run --filter org/apex deploy
+pnpm run --filter dev/apex deploy
+pnpm run --filter net/apex deploy
 ```
 
-`dev` is typically deployed on demand for demos.
-
-## Staging Hosts
-
-- `com`: https://jp.umaxica.com, https://us.umaxica.com
-- `app`: https://jp.umaxica.app, https://us.umaxica.app
-- `org`: https://jp.umaxica.org, https://us.umaxica.org
-- `dev`: https://jp.umaxica.dev, https://us.umaxica.dev
-
-# tools
-
-- Sentry ... ?
+`dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
 
 ## Known Issues & Limitations
 
