@@ -28,7 +28,7 @@ importers:
         version: 7.28.5(@babel/core@7.29.0)
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       '@cloudflare/workers-types':
         specifier: ^4.20260303.0
         version: 4.20260303.0
@@ -43,7 +43,7 @@ importers:
         version: 10.39.0(@react-router/node@7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)))(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@tailwindcss/vite':
         specifier: ^4.2.0
-        version: 4.2.0(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))
+        version: 4.2.0(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -54,17 +54,17 @@ importers:
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260223.1
-        version: 7.0.0-dev.20260223.1
+        specifier: 7.0.0-dev.20260224.1
+        version: 7.0.0-dev.20260224.1
       '@vercel/react-router':
         specifier: ^1.2.5
-        version: 1.2.5(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0)))(@react-router/node@7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 1.2.5(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0)))(@react-router/node@7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@vitejs/plugin-react':
         specifier: ^5.1.4
-        version: 5.1.4(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))
+        version: 5.1.4(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))
       '@vitest/coverage-v8':
         specifier: 4.0.18
-        version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1))
+        version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1))
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
@@ -79,16 +79,16 @@ importers:
         version: 1.49.0
       vite-plugin-babel:
         specifier: ^1.5.1
-        version: 1.5.1(@babel/core@7.29.0)(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))
+        version: 1.5.1(@babel/core@7.29.0)(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))
       vite-ssr-components:
         specifier: ^0.5.2
         version: 0.5.2
       vite-tsconfig-paths:
         specifier: ^6.1.1
-        version: 6.1.1(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))
+        version: 6.1.1(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260303.0)
@@ -104,10 +104,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260303.0)
@@ -149,7 +149,7 @@ importers:
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-hono-server:
         specifier: ^2.25.0
-        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       remix-i18next:
         specifier: ^7.4.2
         version: 7.4.2(i18next@25.8.10)(react-i18next@16.5.4(i18next@25.8.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -162,7 +162,7 @@ importers:
         version: 4.20260228.0
       '@react-router/dev':
         specifier: ^7.13.0
-        version: 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -183,10 +183,10 @@ importers:
         version: 20.6.1
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260228.0)
@@ -199,10 +199,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260303.0)
@@ -244,7 +244,7 @@ importers:
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-hono-server:
         specifier: ^2.25.0
-        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       remix-i18next:
         specifier: ^7.4.2
         version: 7.4.2(i18next@25.8.10)(react-i18next@16.5.4(i18next@25.8.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -257,7 +257,7 @@ importers:
         version: 4.20260228.0
       '@react-router/dev':
         specifier: ^7.13.0
-        version: 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -278,10 +278,10 @@ importers:
         version: 20.6.1
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260228.0)
@@ -297,10 +297,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260303.0)
@@ -351,7 +351,7 @@ importers:
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-hono-server:
         specifier: ^2.25.0
-        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       remix-i18next:
         specifier: ^7.4.2
         version: 7.4.2(i18next@25.8.10)(react-i18next@16.5.4(i18next@25.8.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -364,7 +364,7 @@ importers:
         version: 4.20260228.0
       '@react-router/dev':
         specifier: ^7.13.0
-        version: 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -385,10 +385,10 @@ importers:
         version: 20.6.1
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260228.0)
@@ -401,7 +401,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -416,7 +416,7 @@ importers:
         version: 4.2.0
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       vite-ssr-components:
         specifier: ^0.5.1
         version: 0.5.2
@@ -435,10 +435,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+        version: 1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260303.0)
@@ -480,7 +480,7 @@ importers:
         version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-hono-server:
         specifier: ^2.25.0
-        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       remix-i18next:
         specifier: ^7.4.2
         version: 7.4.2(i18next@25.8.10)(react-i18next@16.5.4(i18next@25.8.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -493,7 +493,7 @@ importers:
         version: 4.20260228.0
       '@react-router/dev':
         specifier: ^7.13.0
-        version: 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+        version: 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -514,10 +514,10 @@ importers:
         version: 20.6.1
       vite:
         specifier: npm:rolldown-vite@latest
-        version: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+        version: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
       wrangler:
         specifier: ^4.67.0
         version: 4.67.0(@cloudflare/workers-types@4.20260228.0)
@@ -3234,6 +3234,9 @@ packages:
   '@types/node@25.2.3':
     resolution: {integrity: sha512-m0jEgYlYz+mDJZ2+F4v8D1AyQb+QzsNqRuI7xg1VQX/KlKS0qT9r1Mo16yo5F/MtifXFgaofIFsdFMox2SxIbQ==}
 
+  '@types/node@25.3.0':
+    resolution: {integrity: sha512-4K3bqJpXpqfg2XKGK9bpDTc6xO/xoUP/RBWS7AtRMug6zZFaRekiLzjVtAoZMquxoAbzBvy5nxQ7veS5eYzf8A==}
+
   '@types/pg-pool@2.0.7':
     resolution: {integrity: sha512-U4CwmGVQcbEuqpyju8/ptOKg6gEC+Tqsvj2xS9o1g71bUh8twxnC6ZL5rZKCsGN0iyH0CwgUyc9VR5owNQF9Ng==}
 
@@ -3257,43 +3260,43 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-uDvCfIGr3PR8iKBA6OCNq6w0b2WMvmtkS8KUZVy04CH8ieFsxChYStLiyFTDX4GZs9BtWKeth/7qGDZewY20sQ==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-9VHXRhB7sM5DFqdlKaeDww8vuklgfzhYCjBazLCEnuFvb4J+rJ1DodLykc2bL+6kE8k6sdhYi3x8ipfbjtO44g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-hOKQicSgd1DhFbsqdpC5fMgg0R46sYbbtVjfXgYTAHg/WO6whfZ2SfPy9IIzsQ/CXYUZuwoJElCnc9DTcd66+w==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-uCHipPRcIhHnvb7lAM29MQ1QT9pZ+uirqtH630aOMFm8VG3j8mkxVM9iGRLx829n38DMSDLjc3joCrQO3+sDcQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-oRt0l3O/itqBEwd5rhfDAyziEzbSgWar1NShduK4n2mHWTHCI1I7mFsbSPbox2pdrqOwOr0QW8xu7xEgDWWRXA==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-yFEEq6hD2R70+lTogb211sPdCwz3H5hpYh0+YuKVMPsKo0oM8/jMvgjj2pyutmj/uCKLdbcJ9HP2vJ/13Szbcg==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-FVq6XjzqtLC1MVgQiumwpuW7Ug+S+WVEbvCUJQhrs8Szbf6fIFU/6+D6fOGCKzzo9SAD6zq2RNHtejBw74JSFA==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-cEWSRQ8b+CXdMJvoG18IjNTvBo+qT22B5imqm6nAssMpyHHQb62PvZGnrA8mPRQNPzLpa5F956j8GwAjyP8hBQ==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-qpFTW7q8Vvq1v/0bzfT8+D0wLjqydIP0qKlomrEGLlMnCCAnPodo2oLc2JCtacc40TSMZZARvhctTszCn1gWBA==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-zGz5kVcCeBRheQwA4jVTAxtbLsBsTkp9AEvWK5AlyCs1rQCUQobBhtx37X4VEmxn4ekIDMxYgaZdlZb7/PGp8w==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-HHu63F8cDhgIlqFGBnqBVQn7HSiORxyT0M6yPzG4tG4gdzx+aFUdogbYily0nzN5b6NolQTrFfh3Q85UfHCHqg==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-A0f9ZDQqKvGk/an59HuAJuzoI/wMyrgTd69oX9gFCx7+5E/ajSdgv0Eg1Fco+nyLfT/UVM0CV3ERyWrKzx277w==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-vSis36O5qT+vOYfei7GtfWWzvIoaNdmxa1zDypBKkGGCCHt/c5vp0pXls85+8jBVS11Ep6p7ECcHlt+R5CBaug==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-Se9JrcMdVLeDYMLn+CKEV3qy1yiildb5N23USGvnC9siNFalz8tVgd589dhRP+ywDhXnbIsZiFKDrZF/7B4wSQ==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20260223.1':
-    resolution: {integrity: sha512-NEifR9F/0khbTQRztM4Yuxcj9dFuK9ubWIXJwLSmKMlncSp4u1fzRnlfv1vlNKKrXB7BUXoANFHpsM5BEXJ06w==}
+  '@typescript/native-preview@7.0.0-dev.20260224.1':
+    resolution: {integrity: sha512-PU0zBXLvz6RKxbIubT66RCnJXgScdDIhfmNMkvRhOnX/C4SZom5TFSn7BEHC3w8JPj7OSz5OYoubtV1Haty2GA==}
     hasBin: true
 
   '@vercel/react-router@1.2.5':
@@ -3380,8 +3383,8 @@ packages:
     peerDependencies:
       acorn: ^8
 
-  acorn@8.15.0:
-    resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
+  acorn@8.16.0:
+    resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -3700,9 +3703,9 @@ packages:
     deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
-  glob@13.0.4:
-    resolution: {integrity: sha512-KACie1EOs9BIOMtenFaxwmYODWA3/fTfGSUnLhMJpXRntu1g+uL/Xvub5f8SCTppvo9q62Qy4LeOoUiaL54G5A==}
-    engines: {node: 20 || >=22}
+  glob@13.0.6:
+    resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
+    engines: {node: 18 || 20 || >=22}
 
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
@@ -3969,8 +3972,8 @@ packages:
     resolution: {integrity: sha512-+G4CpNBxa5MprY+04MbgOw1v7So6n5JY166pFi9KfYwT78fxScCeSNQSNzp6dpPSW2rONOps6Ocam1wFhCgoVw==}
     engines: {node: 18 || 20 || >=22}
 
-  minipass@7.1.2:
-    resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
+  minipass@7.1.3:
+    resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
     engines: {node: '>=16 || 14 >=14.17'}
 
   mkdirp@1.0.4:
@@ -4080,9 +4083,9 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  path-scurry@2.0.1:
-    resolution: {integrity: sha512-oWyT4gICAu+kaA7QWk/jvCHWarMKNs6pXOGWKDTr7cw4IGcUbW+PeTfbaQiLGheFRpjo6O9J0PmyMfQPjH71oA==}
-    engines: {node: 20 || >=22}
+  path-scurry@2.0.2:
+    resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
+    engines: {node: 18 || 20 || >=22}
 
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
@@ -4490,6 +4493,9 @@ packages:
 
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+
+  undici-types@7.18.2:
+    resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
   undici@7.18.2:
     resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
@@ -5526,12 +5532,12 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260219.0
 
-  '@cloudflare/vite-plugin@1.25.2(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
+  '@cloudflare/vite-plugin@1.25.2(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260219.0)
       miniflare: 4.20260219.0
       unenv: 2.0.0-rc.24
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       wrangler: 4.67.0(@cloudflare/workers-types@4.20260303.0)
       ws: 8.18.0
     transitivePeerDependencies:
@@ -5539,12 +5545,12 @@ snapshots:
       - utf-8-validate
       - workerd
 
-  '@cloudflare/vite-plugin@1.25.2(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
+  '@cloudflare/vite-plugin@1.25.2(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260219.0)
       miniflare: 4.20260219.0
       unenv: 2.0.0-rc.24
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
       wrangler: 4.67.0(@cloudflare/workers-types@4.20260303.0)
       ws: 8.18.0
     transitivePeerDependencies:
@@ -6924,7 +6930,7 @@ snapshots:
       '@cloudflare/workers-types': 4.20260303.0
       react-router: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  '@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))':
+  '@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/generator': 7.29.1
@@ -6954,8 +6960,8 @@ snapshots:
       semver: 7.7.4
       tinyglobby: 0.2.15
       valibot: 1.2.0
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
-      vite-node: 3.2.4(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
+      vite-node: 3.2.4(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
     optionalDependencies:
       wrangler: 4.67.0(@cloudflare/workers-types@4.20260228.0)
     transitivePeerDependencies:
@@ -6973,7 +6979,7 @@ snapshots:
       - tsx
       - yaml
 
-  '@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
+  '@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/generator': 7.29.1
@@ -7003,8 +7009,8 @@ snapshots:
       semver: 7.7.4
       tinyglobby: 0.2.15
       valibot: 1.2.0
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
-      vite-node: 3.2.4(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite-node: 3.2.4(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
     optionalDependencies:
       wrangler: 4.67.0(@cloudflare/workers-types@4.20260303.0)
     transitivePeerDependencies:
@@ -7726,7 +7732,7 @@ snapshots:
       '@sentry/node': 10.39.0
       '@sentry/react': 10.39.0(react@19.2.4)
       '@sentry/vite-plugin': 4.9.1
-      glob: 13.0.4
+      glob: 13.0.6
       react: 19.2.4
       react-router: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     transitivePeerDependencies:
@@ -8158,12 +8164,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.2.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.2.0
 
-  '@tailwindcss/vite@4.2.0(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))':
+  '@tailwindcss/vite@4.2.0(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))':
     dependencies:
       '@tailwindcss/node': 4.2.0
       '@tailwindcss/oxide': 4.2.0
       tailwindcss: 4.2.0
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -8241,7 +8247,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
 
   '@types/deep-eql@4.0.2': {}
 
@@ -8251,11 +8257,15 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
 
   '@types/node@25.2.3':
     dependencies:
       undici-types: 7.16.0
+
+  '@types/node@25.3.0':
+    dependencies:
+      undici-types: 7.18.2
 
   '@types/pg-pool@2.0.7':
     dependencies:
@@ -8263,7 +8273,7 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
       pg-protocol: 1.11.0
       pg-types: 2.2.0
 
@@ -8277,7 +8287,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
 
   '@types/whatwg-mimetype@3.0.2': {}
 
@@ -8285,40 +8295,40 @@ snapshots:
     dependencies:
       '@types/node': 25.2.3
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260223.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260224.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20260223.1':
+  '@typescript/native-preview@7.0.0-dev.20260224.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260223.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260223.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260224.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260224.1
 
-  '@vercel/react-router@1.2.5(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0)))(@react-router/node@7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@vercel/react-router@1.2.5(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0)))(@react-router/node@7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@react-router/dev': 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
+      '@react-router/dev': 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260303.0))
       '@react-router/node': 7.13.0(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@vercel/static-config': 3.1.2
       isbot: 5.1.35
@@ -8336,7 +8346,7 @@ snapshots:
       json-schema-to-ts: 1.6.4
       ts-morph: 12.0.0
 
-  '@vitejs/plugin-react@5.1.4(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1))':
+  '@vitejs/plugin-react@5.1.4(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -8344,11 +8354,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1))':
+  '@vitest/coverage-v8@4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.18
@@ -8360,7 +8370,7 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
+      vitest: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1)
 
   '@vitest/expect@4.0.18':
     dependencies:
@@ -8371,13 +8381,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.18(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))':
+  '@vitest/mocker@4.0.18(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))':
     dependencies:
       '@vitest/spy': 4.0.18
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
 
   '@vitest/pretty-format@4.0.18':
     dependencies:
@@ -8401,11 +8411,11 @@ snapshots:
       '@vitest/pretty-format': 4.0.18
       tinyrainbow: 3.0.3
 
-  acorn-import-attributes@1.9.5(acorn@8.15.0):
+  acorn-import-attributes@1.9.5(acorn@8.16.0):
     dependencies:
-      acorn: 8.15.0
+      acorn: 8.16.0
 
-  acorn@8.15.0: {}
+  acorn@8.16.0: {}
 
   agent-base@6.0.2:
     dependencies:
@@ -8701,15 +8711,15 @@ snapshots:
       foreground-child: 3.3.1
       jackspeak: 3.4.3
       minimatch: 10.2.2
-      minipass: 7.1.2
+      minipass: 7.1.3
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
 
-  glob@13.0.4:
+  glob@13.0.6:
     dependencies:
       minimatch: 10.2.2
-      minipass: 7.1.2
-      path-scurry: 2.0.1
+      minipass: 7.1.3
+      path-scurry: 2.0.2
 
   globrex@0.1.2: {}
 
@@ -8754,8 +8764,8 @@ snapshots:
 
   import-in-the-middle@2.0.6:
     dependencies:
-      acorn: 8.15.0
-      acorn-import-attributes: 1.9.5(acorn@8.15.0)
+      acorn: 8.16.0
+      acorn-import-attributes: 1.9.5(acorn@8.16.0)
       cjs-module-lexer: 2.2.0
       module-details-from-path: 1.0.4
 
@@ -8940,7 +8950,7 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.2
 
-  minipass@7.1.2: {}
+  minipass@7.1.3: {}
 
   mkdirp@1.0.4: {}
 
@@ -9041,12 +9051,12 @@ snapshots:
   path-scurry@1.11.1:
     dependencies:
       lru-cache: 10.4.3
-      minipass: 7.1.2
+      minipass: 7.1.3
 
-  path-scurry@2.0.1:
+  path-scurry@2.0.2:
     dependencies:
       lru-cache: 11.2.6
-      minipass: 7.1.2
+      minipass: 7.1.3
 
   path-to-regexp@6.3.0: {}
 
@@ -9226,17 +9236,17 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       react-router: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  react-router-hono-server@2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)):
+  react-router-hono-server@2.25.0(@cloudflare/workers-types@4.20260228.0)(@hono/node-server@1.19.9(hono@4.12.1))(@react-router/dev@7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)))(@types/react@19.2.14)(hono@4.12.1)(miniflare@4.20260219.0)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
       '@hono/node-server': 1.19.9(hono@4.12.1)
       '@hono/node-ws': 1.3.0(@hono/node-server@1.19.9(hono@4.12.1))(hono@4.12.1)
       '@hono/vite-dev-server': 0.25.0(hono@4.12.1)(miniflare@4.20260219.0)(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
-      '@react-router/dev': 7.13.0(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
+      '@react-router/dev': 7.13.0(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))(wrangler@4.67.0(@cloudflare/workers-types@4.20260228.0))
       '@types/react': 19.2.14
       hono: 4.12.1
       react-router: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
     optionalDependencies:
       '@cloudflare/workers-types': 4.20260228.0
       miniflare: 4.20260219.0
@@ -9320,7 +9330,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1):
+  rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1):
     dependencies:
       '@oxc-project/runtime': 0.101.0
       fdir: 6.5.0(picomatch@4.0.3)
@@ -9330,7 +9340,7 @@ snapshots:
       rolldown: 1.0.0-beta.53
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
       esbuild: 0.27.3
       fsevents: 2.3.3
       jiti: 2.6.1
@@ -9523,6 +9533,8 @@ snapshots:
 
   undici-types@7.16.0: {}
 
+  undici-types@7.18.2: {}
+
   undici@7.18.2: {}
 
   unenv@2.0.0-rc.24:
@@ -9531,7 +9543,7 @@ snapshots:
 
   unplugin@1.0.1:
     dependencies:
-      acorn: 8.15.0
+      acorn: 8.16.0
       chokidar: 3.6.0
       webpack-sources: 3.3.4
       webpack-virtual-modules: 0.5.0
@@ -9550,13 +9562,13 @@ snapshots:
 
   valibot@1.2.0: {}
 
-  vite-node@3.2.4(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1):
+  vite-node@3.2.4(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
     transitivePeerDependencies:
       - '@types/node'
       - esbuild
@@ -9571,10 +9583,10 @@ snapshots:
       - tsx
       - yaml
 
-  vite-plugin-babel@1.5.1(@babel/core@7.29.0)(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)):
+  vite-plugin-babel@1.5.1(@babel/core@7.29.0)(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)):
     dependencies:
       '@babel/core': 7.29.0
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
 
   vite-ssr-components@0.5.2:
     dependencies:
@@ -9584,17 +9596,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-tsconfig-paths@6.1.1(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)):
+  vite-tsconfig-paths@6.1.1(vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
       tsconfck: 3.1.6
-      vite: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1)
+      vite: 7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.31.1):
+  vite@7.3.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1):
     dependencies:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
@@ -9603,15 +9615,15 @@ snapshots:
       rollup: 4.58.0
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
       fsevents: 2.3.3
       jiti: 2.6.1
       lightningcss: 1.31.1
 
-  vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.3)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1):
+  vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(esbuild@0.27.3)(happy-dom@20.6.1)(jiti@2.6.1):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1))
+      '@vitest/mocker': 4.0.18(rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18
@@ -9628,11 +9640,11 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: rolldown-vite@7.3.1(@types/node@25.2.3)(esbuild@0.27.3)(jiti@2.6.1)
+      vite: rolldown-vite@7.3.1(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
-      '@types/node': 25.2.3
+      '@types/node': 25.3.0
       happy-dom: 20.6.1
     transitivePeerDependencies:
       - esbuild
