@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { applySecurityHeadersUnsafeInline } from "@umaxica/shared";
+import { applySecurityHeaders } from "@umaxica/shared";
 import { renderAboutPage } from "./pages/about-page";
 import { renderHealthPage } from "./pages/health-page";
 import {
@@ -18,7 +18,7 @@ const app = new Hono<{ Bindings: AssetEnv }>();
 
 app.use("*", async (c, next) => {
   await next();
-  applySecurityHeadersUnsafeInline(c);
+  applySecurityHeaders(c);
 });
 
 app.get("/", (c) => {

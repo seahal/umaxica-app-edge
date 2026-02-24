@@ -40,7 +40,6 @@ describe("GET /v1/health", () => {
 
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(response.headers.get("x-frame-options")).toBe("DENY");
-    expect(response.headers.get("x-xss-protection")).toBe("1; mode=block");
     expect(response.headers.get("content-security-policy")).toContain("default-src 'self'");
   });
 

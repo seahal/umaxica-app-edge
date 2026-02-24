@@ -8,7 +8,7 @@
   "compatibility_date": "2025-09-15",
   "main": "./workers/app.ts",
   // Ensure the server/client bundles exist before Wrangler runs (react-router)
-  "build": { "command": "bun run build" },
+  "build": { "command": "pnpm run build" },
   "observability": {
     "enabled": true,
   },

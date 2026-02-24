@@ -24,7 +24,7 @@ export default defineConfig(() => {
     ],
     server: {
       host: true,
-      port: 5302,
+      port: 5502,
       strictPort: true,
       watch: {
         usePolling: true,

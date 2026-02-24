@@ -15,14 +15,14 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "hono": "^4.12.1",
+    "hono": "^4.12.0",
     "jose": "^6.1.3",
     "tailwindcss": "^4.2.0"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.25.2",
-    "@cloudflare/workers-types": "^4.20260228.0",
+    "@cloudflare/workers-types": "^4.20260303.0",
     "@playwright/test": "^1.58.2",
     "@react-router/cloudflare": "^7.13.0",
     "@sentry/react-router": "^10.39.0",
@@ -30,7 +30,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@typescript/native-preview": "7.0.0-dev.20260222.1",
+    "@typescript/native-preview": "7.0.0-dev.20260223.1",
     "@vercel/react-router": "^1.2.5",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "4.0.18",
@@ -38,7 +38,6 @@
     "miniflare": "^4.20260219.0",
     "oxfmt": "^0.34.0",
     "oxlint": "^1.49.0",
-    "vite": "^7.3.1",
     "vite-plugin-babel": "^1.5.1",
     "vite-ssr-components": "^0.5.2",
     "vite-tsconfig-paths": "^6.1.1",
@@ -49,7 +48,8 @@
   "pnpm": {
     "overrides": {
       "minimatch": ">=10.2.1",
-      "ajv": ">=8.18.0"
+      "ajv": ">=8.18.0",
+      "vite": "npm:rolldown-vite@latest"
     }
   }
 }

@@ -27,11 +27,10 @@
     "react-router-dom": "^7.13.0",
     "react-router-hono-server": "^2.25.0",
     "remix-i18next": "^7.4.2",
-    "vite": "^6.3.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260217.0",
+    "@cloudflare/workers-types": "^4.20260228.0",
     "@react-router/dev": "^7.13.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -39,7 +38,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "happy-dom": "^20.6.1",
+    "vite": "npm:rolldown-vite@latest",
     "vitest": "^4.0.18",
-    "wrangler": "^4.65.0"
+    "wrangler": "^4.67.0"
   }
 }

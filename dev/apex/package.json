@@ -15,9 +15,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.25.2",
-    "tailwindcss": "^4.1.17",
-    "vite": "^6.1.0",
-    "vite-ssr-components": "^0.5.1",
+    "vite": "npm:rolldown-vite@latest",
     "wrangler": "^4.67.0"
   }
 }
