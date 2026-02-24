@@ -5,7 +5,7 @@
   "remoteUser": "edge",
   "containerUser": "edge",
   "workspaceFolder": "/home/edge/workspace",
-  "shutdownAction": "none",
+  "shutdownAction": "stopCompose",
   "runServices": ["core"],
   "overrideCommand": false,
   "remoteEnv": {
@@ -39,19 +39,32 @@
         "openai.chatgpt",
         "anthropic.claude-code",
         "bradlc.vscode-tailwindcss",
-        "-dbaeumer.vscode-eslint",
         "github.vscode-github-actions",
+        "GitHub.vscode-pull-request-github",
         "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.remote-explorer",
         "GitHub.codespaces",
         "ms-vscode-remote.remote-containers",
         "nicolo-ribaudo.oxfmt-vscode",
         "nicolo-ribaudo.oxc-vscode",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+
+        "-dbaeumer.vscode-eslint",
+        "-esbenp.prettier-vscode",
+        "-eamodio.gitlens",
+        "-GitHub.copilot",
+        "-GitHub.copilot-chat"
       ],
       "settings": {
+        "claude.allowDangerouslySkipPermissions": true,
+        "extensions.verifySignature": false,
         "editor.defaultFormatter": "nicolo-ribaudo.oxfmt-vscode",
         "editor.formatOnSave": true,
         "editor.tabSize": 2,
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit"
+        },
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true,
         "files.eol": "\n",
@@ -62,8 +75,10 @@
         "terminal.integrated.defaultProfile.linux": "bash",
         "terminal.integrated.profiles.linux": {
           "bash": {
-            "path": "bash",
-            "icon": "terminal-bash"
+            "path": "/bin/bash"
+          },
+          "zsh": {
+            "path": "/bin/zsh"
           }
         }
       }
@@ -77,16 +92,25 @@
     "ghcr.io/stu-bell/devcontainer-features/gemini-cli:0": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
     "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {}
+    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {},
+    "ghcr.io/devcontainers/features/sshd:latest": {},
+    "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
+    "ghcr.io/jasonthedeveloper/features/trivy:1": {}
   },
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096"
   },
   "mounts": [
     "source=${localEnv:HOME}/.claude,target=/home/edge/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude.json,target=/home/edge/.claude.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.copilot,target=/home/edge/.copilot,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gemini,target=/home/edge/.gemini,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/edge/.config/opencode,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/gh,target=/home/edge/.config/gh,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/git,target=/home/edge/.config/git,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.local/share/opencode,target=/home/edge/.local/share/opencode,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.local/state/opencode,target=/home/edge/.local/state/opencode,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/home/edge/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,consistency=cached"
   ],

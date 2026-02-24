@@ -32,23 +32,21 @@ describe("Authentication route", () => {
 
   it("handles social login clicks", async () => {
     const user = userEvent.setup();
-    const consoleSpy = vi.spyOn(console, "log");
-    // Mock alert since it's used in the component
-    vi.stubGlobal("alert", vi.fn());
+    const alertSpy = vi.fn();
+    vi.stubGlobal("alert", alertSpy);
 
     render(<Authentication loaderData={{ message: "test" }} params={{}} matches={[]} />);
 
     const googleButtons = screen.getAllByRole("button", { name: /Google/ });
     await user.click(googleButtons[0]!);
 
-    expect(consoleSpy).toHaveBeenCalledWith("Googleでログイン");
-    expect(window.alert).toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalled();
   });
 
   it("handles form submission", async () => {
     const user = userEvent.setup();
-    const consoleSpy = vi.spyOn(console, "log");
-    vi.stubGlobal("alert", vi.fn());
+    const alertSpy = vi.fn();
+    vi.stubGlobal("alert", alertSpy);
 
     render(<Authentication loaderData={{ message: "test" }} params={{}} matches={[]} />);
 
@@ -60,12 +58,6 @@ describe("Authentication route", () => {
     await user.type(passwordInput, "password123");
     await user.click(submitButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "認証データ:",
-      expect.objectContaining({
-        email: "test@example.com",
-        password: "password123",
-      }),
-    );
+    expect(alertSpy).toHaveBeenCalled();
   });
 });

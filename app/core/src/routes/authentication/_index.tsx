@@ -20,15 +20,12 @@ export function loader({ context }: Route.LoaderArgs) {
 export default function Authentication(_: Route.ComponentProps) {
   // フォーム送信時の処理（デモ用）
   const handleAuthSubmit = (data: Record<string, string>) => {
-    console.log("認証データ:", data);
     alert(
       `${data.name ? "新規登録" : "ログイン"}が送信されました！\n（実際には認証APIに接続します）`,
     );
   };
 
-  // ソーシャルログインの処理（デモ用）
   const handleSocialLogin = (provider: string) => {
-    console.log(`${provider}でログイン`);
     alert(`${provider}認証に接続します！\n（実際にはOAuth認証を行います）`);
   };
 

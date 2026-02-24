@@ -15,10 +15,10 @@
 
 | Workspace | Purpose                            | Default Dev Port        |
 | --------- | ---------------------------------- | ----------------------- |
-| `app`     | Service app for `*.umaxica.app`    | `http://localhost:5171` |
-| `com`     | Corporate site for `*.umaxica.com` | `http://localhost:5170` |
-| `org`     | Organize site for `*.umaxica.org`  | `http://localhost:5172` |
-| `dev`     | Status site for `*.umaxica.dev`    | `http://localhost:5173` |
+| `app`     | Service app for `*.umaxica.app`    | `http://localhost:5402` |
+| `com`     | Corporate site for `*.umaxica.com` | `http://localhost:5102` |
+| `org`     | Organize site for `*.umaxica.org`  | `http://localhost:5302` |
+| `dev`     | Status site for `*.umaxica.dev`    | `http://localhost:5502` |
 
 Install dependencies once from the repo root:
 
@@ -50,10 +50,10 @@ docker compose up
 Run each workspace in its own terminal so that Wrangler mirrors the production runtime:
 
 ```bash
-pnpm run --filter com server   # http://localhost:5170
-pnpm run --filter app server   # http://localhost:5171
-pnpm run --filter org server   # http://localhost:5172
-pnpm run --filter dev server   # http://localhost:5173
+pnpm run --filter com server   # http://localhost:5102
+pnpm run --filter app server   # http://localhost:5402
+pnpm run --filter org server   # http://localhost:5302
+pnpm run --filter dev server   # http://localhost:5502
 ```
 
 ## Environment Variables
