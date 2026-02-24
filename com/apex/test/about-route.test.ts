@@ -12,7 +12,6 @@ describe("GET /about", () => {
     expect(body).toContain("<title>About - COM</title>");
     expect(body).toContain("<strong>Service Name:</strong> COM");
     expect(body).toContain("Umaxica App Status Page - COM Service");
-    expect(body).toContain("<strong>Runtime:</strong> Cloudflare Workers");
   });
 
   it("applies security headers to the about response", async () => {

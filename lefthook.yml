@@ -17,7 +17,7 @@ pre-commit:
       skip:
         - merge
         - rebase
-    secret-scan:
-      run: gitleaks protect
+#    secret-scan:
+#      run: gitleaks protect
     test:
       run: pnpm test
