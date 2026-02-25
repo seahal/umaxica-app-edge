@@ -1,5 +1,5 @@
 {
-  "name": "umaxica-app-edge-app",
+  "name": "umaxica-apps-edge-app-core",
   "version": "0.1.0",
   "private": true,
   "description": "code for xx.umaxica.app",
@@ -15,9 +15,7 @@
     "type": "pnpm exec tsgo --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.9",
     "@sentry/react-router": "^10.39.0",
-    "hono": "^4.12.1",
     "i18next": "^25.8.10",
     "isbot": "^5.1.35",
     "react": "^19.2.4",
@@ -26,7 +24,6 @@
     "react-i18next": "^16.5.4",
     "react-router": "^7.13.1",
     "react-router-dom": "^7.13.1",
-    "react-router-hono-server": "^2.25.0",
     "remix-i18next": "^7.4.2",
     "zod": "^4.3.6"
   },

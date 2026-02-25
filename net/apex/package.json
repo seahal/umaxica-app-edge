@@ -1,5 +1,5 @@
 {
-  "name": "umaxica-app-apex-net",
+  "name": "umaxica-apps-edge-net-apex",
   "type": "module",
   "scripts": {
     "server": "vite",
@@ -9,7 +9,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.12.0"
+    "hono": "^4.12.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.25.2",
