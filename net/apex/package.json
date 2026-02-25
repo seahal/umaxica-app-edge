@@ -17,7 +17,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.1.17",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "^6.3.5",
     "vite-ssr-components": "^0.5.1",
     "wrangler": "^4.67.0"
   }
