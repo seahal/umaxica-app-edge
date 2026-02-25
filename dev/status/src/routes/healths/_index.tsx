@@ -79,8 +79,27 @@ const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
   investigating: "調査中",
 };
 
+function readRuntimeEnvValue(key: string): string | undefined {
+  const processEnv =
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+
+  const fromProcess = processEnv[key] ?? processEnv[`VITE_${key}`];
+  if (fromProcess !== undefined) {
+    return fromProcess;
+  }
+
+  const importEnv =
+    (
+      import.meta as ImportMeta & {
+        env?: Record<string, string | undefined>;
+      }
+    ).env ?? {};
+
+  return importEnv[key] ?? importEnv[`VITE_${key}`];
+}
+
 export function loader({ context }: Route.LoaderArgs): LoaderData {
-  const env = context?.cloudflare?.env ?? {};
+  const env = context?.cloudflare?.env ?? context?.runtime?.env ?? {};
   const now = new Date();
 
   const normalizeDate = (base: Date, daysAgo: number) => {
@@ -169,7 +188,13 @@ export function loader({ context }: Route.LoaderArgs): LoaderData {
     },
   ];
 
-  const noticeCandidate = (env.STATUS_NOTICE ?? env.VALUE_FROM_CLOUDFLARE ?? "").trim() || null;
+  const noticeCandidate =
+    (
+      env.STATUS_NOTICE ??
+      env.VALUE_FROM_CLOUDFLARE ??
+      readRuntimeEnvValue("STATUS_NOTICE") ??
+      ""
+    ).trim() || null;
 
   return {
     overall: {

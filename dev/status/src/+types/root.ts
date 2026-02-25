@@ -42,6 +42,9 @@ export namespace Route {
       cloudflare?: {
         env?: Record<string, string>;
       };
+      runtime?: {
+        env?: Record<string, string>;
+      };
     };
   }
 }

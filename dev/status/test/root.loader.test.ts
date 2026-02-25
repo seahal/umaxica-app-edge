@@ -4,6 +4,7 @@ import { loader } from "../src/root";
 
 type LoaderContext = {
   cloudflare?: { env?: Record<string, string> };
+  runtime?: { env?: Record<string, string> };
   security?: { nonce?: string };
 };
 
@@ -41,5 +42,27 @@ describe("dev root loader", () => {
     expect(typeof result.cspNonce).toBe("string");
     expect(result.cspNonce.length).toBeGreaterThan(0);
     expect(context.security?.nonce).toBe(result.cspNonce);
+  });
+
+  it("maps environment values from runtime.env (Vercel-compatible path)", async () => {
+    const result = await runLoader({
+      runtime: {
+        env: {
+          BRAND_NAME: "Umaxica Dev Runtime",
+          HELP_SERVICE_URL: "https://help.runtime.dev",
+          DOCS_SERVICE_URL: "https://docs.runtime.dev",
+          NEWS_SERVICE_URL: "https://news.runtime.dev",
+        },
+      },
+      security: { nonce: "runtime-nonce" },
+    });
+
+    expect(result).toMatchObject({
+      codeName: "Umaxica Dev Runtime",
+      helpServiceUrl: "https://help.runtime.dev",
+      docsServiceUrl: "https://docs.runtime.dev",
+      newsServiceUrl: "https://news.runtime.dev",
+      cspNonce: "runtime-nonce",
+    });
   });
 });

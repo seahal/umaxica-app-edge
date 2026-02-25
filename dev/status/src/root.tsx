@@ -66,11 +66,15 @@ function generateNonce(): string {
   return btoa(String.fromCharCode(...array));
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  // Generate nonce if not provided by context
-  const cspNonce = context?.security?.nonce ?? generateNonce();
+function readRuntimeEnvValue(key: string): string | undefined {
+  const processEnv =
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
-  const contextEnv = context?.cloudflare?.env ?? {};
+  const fromProcess = processEnv[key] ?? processEnv[`VITE_${key}`];
+  if (fromProcess !== undefined) {
+    return fromProcess;
+  }
+
   const importEnv =
     (
       import.meta as ImportMeta & {
@@ -78,15 +82,24 @@ export function loader({ context }: Route.LoaderArgs) {
       }
     ).env ?? {};
 
+  return importEnv[key] ?? importEnv[`VITE_${key}`];
+}
+
+export function loader({ context }: Route.LoaderArgs) {
+  // Generate nonce if not provided by context
+  const cspNonce = context?.security?.nonce ?? generateNonce();
+
+  const contextEnv = context?.cloudflare?.env ?? context?.runtime?.env ?? {};
+
   const readEnv = (key: string, fallback = ""): string => {
     const fromContext = contextEnv[key];
     if (fromContext !== undefined) {
       return fromContext.trim();
     }
 
-    const fromImport = importEnv[key] ?? importEnv[`VITE_${key}`];
-    if (fromImport !== undefined) {
-      return fromImport.trim();
+    const fromRuntime = readRuntimeEnvValue(key);
+    if (fromRuntime !== undefined) {
+      return fromRuntime.trim();
     }
 
     return fallback.trim();
