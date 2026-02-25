@@ -77,8 +77,37 @@ describe("SearchResults component", () => {
     expect(highlights[0]).toBeInTheDocument();
   });
 
+  it("shows no results message when type is all with no results", () => {
+    render(<SearchResults query="React" type="all" posts={[]} users={[]} trends={[]} />);
+
+    expect(screen.getByText("「React」に一致する結果が見つかりませんでした")).toBeInTheDocument();
+    expect(
+      screen.getByText("別のキーワードで検索するか、スペルを確認してください"),
+    ).toBeInTheDocument();
+  });
+
   it("shows no results message when specific filter has no data", () => {
     render(<SearchResults query="React" type="users" users={[]} />);
+
+    expect(screen.getByText("「React」に一致する結果が見つかりませんでした")).toBeInTheDocument();
+  });
+
+  it("renders trends only when type is trends", () => {
+    render(<SearchResults query="React" type="trends" trends={[sampleTrend]} />);
+
+    expect(screen.getByText("React Aria")).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes("テクノロジー"))).toBeInTheDocument();
+    expect(screen.getByText("5,234 件の投稿")).toBeInTheDocument();
+  });
+
+  it("shows no results when type is trends with empty trends", () => {
+    render(<SearchResults query="React" type="trends" trends={[]} />);
+
+    expect(screen.getByText("「React」に一致する結果が見つかりませんでした")).toBeInTheDocument();
+  });
+
+  it("shows no results when type is posts with empty posts", () => {
+    render(<SearchResults query="React" type="posts" posts={[]} />);
 
     expect(screen.getByText("「React」に一致する結果が見つかりませんでした")).toBeInTheDocument();
   });
