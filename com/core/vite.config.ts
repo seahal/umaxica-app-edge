@@ -10,12 +10,15 @@ const ReactCompilerConfig = {
 };
 
 export default defineConfig(() => {
+  const configuredPort = Number.parseInt(process.env.PORT ?? "5102", 10);
+  const serverPort = Number.isNaN(configuredPort) ? 5102 : configuredPort;
+
   return {
     plugins: [
       tailwindcss(),
       cloudflare({
         viteEnvironment: { name: "ssr" },
-        inspectorPort: false, // avoid get-port syscall failures in restricted runtimes
+        inspectorPort: false,
       }),
       reactRouter(),
       babel({
@@ -27,13 +30,10 @@ export default defineConfig(() => {
       }),
       tsconfigPaths(),
     ],
-    optimizeDeps: {
-      rolldownOptions: {},
-    },
     server: {
       host: true,
-      port: 5102,
-      strictPort: true,
+      port: serverPort,
+      strictPort: false,
       watch: {
         usePolling: true,
       },

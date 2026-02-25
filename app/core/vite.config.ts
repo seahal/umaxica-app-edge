@@ -10,27 +10,30 @@ const ReactCompilerConfig = {
 };
 
 export default defineConfig(() => {
+  const configuredPort = Number.parseInt(process.env.PORT ?? "5402", 10);
+  const serverPort = Number.isNaN(configuredPort) ? 5402 : configuredPort;
+
   return {
     plugins: [
       tailwindcss(),
-      cloudflare({ viteEnvironment: { name: "ssr" } }),
+      cloudflare({
+        viteEnvironment: { name: "ssr" },
+        inspectorPort: false,
+      }),
       reactRouter(),
       babel({
         filter: /\.[jt]sx?$/,
         babelConfig: {
-          presets: ["@babel/preset-typescript"], // if you use TypeScript
+          presets: ["@babel/preset-typescript"],
           plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
         },
       }),
       tsconfigPaths(),
     ],
-    optimizeDeps: {
-      rolldownOptions: {},
-    },
     server: {
       host: true,
-      port: 5402,
-      strictPort: true,
+      port: serverPort,
+      strictPort: false,
       watch: {
         usePolling: true,
       },

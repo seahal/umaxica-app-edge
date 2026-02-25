@@ -39,7 +39,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "happy-dom": "^20.6.1",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "^6.3.5",
     "vitest": "^4.0.18",
     "wrangler": "^4.67.0"
   }
