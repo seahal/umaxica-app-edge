@@ -11,7 +11,7 @@ import {
 import './app.css';
 import type { ReactNode } from 'react';
 import type { Route } from './+types/root';
-import { getNonce, middleware, readEnv } from './context';
+import { getNonce, readEnv } from './context';
 
 interface RouteErrorBoundaryProps {
   error: unknown;
@@ -60,8 +60,6 @@ const FALLBACK_SETTINGS = {
   helpServiceUrl: '',
   newsServiceUrl: '',
 } as const;
-
-export { middleware };
 
 export function loader({ context }: Route.LoaderArgs) {
   const cspNonce = getNonce(context);
