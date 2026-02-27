@@ -1,9 +1,9 @@
-import type { Route } from "./+types/sample";
+import type { Route } from './+types/sample';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "sample - Umaxica Org" },
-    { name: "description", content: "About this organization site" },
+    { title: 'sample - Umaxica Org' },
+    { content: 'About this organization site', name: 'description' },
   ];
 }
 

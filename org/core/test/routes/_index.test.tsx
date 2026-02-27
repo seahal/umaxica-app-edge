@@ -1,7 +1,6 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from 'react-dom/server';
 
-vi.mock("../../src/components/EventList", async (importOriginal) => {
+vi.mock(import('../../src/components/EventList'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -9,7 +8,7 @@ vi.mock("../../src/components/EventList", async (importOriginal) => {
   };
 });
 
-const routeModule = await import("../../src/routes/_index");
+const routeModule = await import('../../src/routes/_index');
 const { loader, meta, default: HomeRoute } = routeModule;
 
 afterAll(() => {
@@ -22,25 +21,25 @@ function runLoader(env: Record<string, unknown>) {
   } as never);
 }
 
-describe("Route: home (org)", () => {
-  it("defines localized metadata", () => {
+describe('Route: home (org)', () => {
+  it('defines localized metadata', () => {
     const entries = meta({} as never);
     expect(entries).toContainEqual({
-      title: "Umaxica Organization - イベント一覧",
+      title: 'Umaxica Organization - イベント一覧',
     });
     expect(entries).toContainEqual({
-      name: "description",
-      content: "コミュニティイベントに参加しましょう",
+      content: 'コミュニティイベントに参加しましょう',
+      name: 'description',
     });
   });
 
-  it("injects Cloudflare env values via the loader", () => {
-    const result = runLoader({ VALUE_FROM_CLOUDFLARE: "edge-ready" });
-    expect(result).toEqual({ message: "edge-ready" });
+  it('injects Cloudflare env values via the loader', () => {
+    const result = runLoader({ VALUE_FROM_CLOUDFLARE: 'edge-ready' });
+    expect(result).toStrictEqual({ message: 'edge-ready' });
   });
 
-  it("renders the event list component", () => {
-    const markup = renderToStaticMarkup(<HomeRoute loaderData={{ message: "" }} />);
+  it('renders the event list component', () => {
+    const markup = renderToStaticMarkup(<HomeRoute loaderData={{ message: '' }} />);
     expect(markup).toContain('data-testid="event-list"');
   });
 });

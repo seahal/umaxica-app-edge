@@ -1,5 +1,5 @@
-import { Tooltip, TooltipTrigger } from "react-aria-components";
-import { Link, NavLink } from "react-router";
+import { Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Link, NavLink } from 'react-router';
 
 interface HeaderProps {
   codeName?: string;
@@ -9,10 +9,10 @@ interface HeaderProps {
 }
 
 export function Header({
-  codeName = "",
-  helpServiceUrl = "",
-  docsServiceUrl = "",
-  newsServiceUrl = "",
+  codeName = '',
+  helpServiceUrl = '',
+  docsServiceUrl = '',
+  newsServiceUrl = '',
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
@@ -32,7 +32,7 @@ export function Header({
                 viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <title>{codeName || "Umaxica"}</title>
+                <title>{codeName || 'Umaxica'}</title>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -42,7 +42,7 @@ export function Header({
               </svg>
             </div>
             <span className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
-              {codeName || "Umaxica"}
+              {codeName || 'Umaxica'}
             </span>
           </Link>
 
@@ -102,8 +102,8 @@ export function Header({
               className={({ isActive }: { isActive: boolean }) =>
                 `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4 sm:text-sm ${
                   isActive
-                    ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-                    : "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+                    : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200'
                 }`
               }
             >

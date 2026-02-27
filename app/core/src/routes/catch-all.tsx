@@ -1,27 +1,27 @@
-import type { Route } from "./+types/catch-all";
-import { NotFoundPage } from "./NotFoundPage";
+import type { Route } from './+types/catch-all';
+import { NotFoundPage } from './NotFoundPage';
 
 export const handle = {
-  titleName: "404 - ページが見つかりません",
-  breadcrumb: () => "404",
+  breadcrumb: () => '404',
+  titleName: '404 - ページが見つかりません',
 };
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "404 - ページが見つかりません" },
+    { title: '404 - ページが見つかりません' },
     {
-      name: "description",
       content:
-        "お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。",
+        'お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。',
+      name: 'description',
     },
-    { name: "robots", content: "noindex, nofollow" },
+    { content: 'noindex, nofollow', name: 'robots' },
   ];
 }
 
 export function loader(_: Route.LoaderArgs) {
-  throw new Response("Not Found", {
+  throw new Response('Not Found', {
     status: 404,
-    statusText: "ページが見つかりません",
+    statusText: 'ページが見つかりません',
   });
 }
 

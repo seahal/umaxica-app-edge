@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -9,7 +9,7 @@ import {
   ModalOverlay,
   TextArea,
   TextField,
-} from "react-aria-components";
+} from 'react-aria-components';
 
 interface NewPostDialogProps {
   onSubmit?: (content: string) => void;
@@ -20,13 +20,15 @@ interface NewPostDialogProps {
  * React Aria の Dialog, Modal, TextField を使用
  */
 export function NewPostDialog({ onSubmit }: NewPostDialogProps) {
-  const [content, setContent] = useState("");
-  const maxLength = 280; // Twitter風の文字数制限
+  const [content, setContent] = useState('');
+  // Twitter風の文字数制限
+  const maxLength = 280;
 
   const handleSubmit = () => {
     if (content.trim()) {
       onSubmit?.(content);
-      setContent(""); // 送信後にクリア
+      // 送信後にクリア
+      setContent('');
     }
   };
 
@@ -85,8 +87,8 @@ export function NewPostDialog({ onSubmit }: NewPostDialogProps) {
                     <span
                       className={
                         content.length > maxLength * 0.9
-                          ? "text-red-500 dark:text-red-400 font-bold"
-                          : ""
+                          ? 'text-red-500 dark:text-red-400 font-bold'
+                          : ''
                       }
                     >
                       {content.length}
@@ -115,7 +117,7 @@ export function NewPostDialog({ onSubmit }: NewPostDialogProps) {
                         strokeWidth="3"
                         fill="none"
                         className={
-                          content.length > maxLength * 0.9 ? "text-red-500" : "text-blue-500"
+                          content.length > maxLength * 0.9 ? 'text-red-500' : 'text-blue-500'
                         }
                         strokeDasharray={`${2 * Math.PI * 16}`}
                         strokeDashoffset={`${2 * Math.PI * 16 * (1 - content.length / maxLength)}`}

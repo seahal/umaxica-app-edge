@@ -1,8 +1,8 @@
-import { isbot } from "isbot";
-import { renderToReadableStream } from "react-dom/server";
-import type { AppLoadContext, EntryContext } from "react-router";
-import { ServerRouter } from "react-router";
-import { getNonce } from "./context";
+import { isbot } from 'isbot';
+import { renderToReadableStream } from 'react-dom/server';
+import type { AppLoadContext, EntryContext } from 'react-router';
+import { ServerRouter } from 'react-router';
+import { getNonce } from './context';
 
 export default async function handleRequest(
   request: Request,
@@ -12,7 +12,7 @@ export default async function handleRequest(
   loadContext: AppLoadContext,
 ) {
   let shellRendered = false;
-  const userAgent = request.headers.get("user-agent");
+  const userAgent = request.headers.get('user-agent');
 
   const nonce = getNonce(loadContext);
 
@@ -23,8 +23,8 @@ export default async function handleRequest(
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
-        // errors encountered during initial shell rendering since they'll
-        // reject and get logged in handleDocumentRequest.
+        // Errors encountered during initial shell rendering since they'll
+        // Reject and get logged in handleDocumentRequest.
         if (shellRendered) {
           console.error(error);
         }
@@ -39,15 +39,15 @@ export default async function handleRequest(
     await body.allReady;
   }
 
-  responseHeaders.set("Content-Type", "text/html");
-  responseHeaders.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  responseHeaders.set('Content-Type', 'text/html');
+  responseHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   responseHeaders.set(
-    "Content-Security-Policy",
+    'Content-Security-Policy',
     `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   );
   responseHeaders.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), interest-cohort=()',
   );
 
   return new Response(body, {

@@ -4,14 +4,14 @@ pre-commit:
     format:
       run: pnpm run format
       stage_fixed: true
-      glob: "*.{js,jsx,ts,tsx,json,md}"
+      glob: '*.{js,jsx,ts,tsx,json,jsonc,yaml,yml,toml,md,mdx,css,scss,graphql}'
     lint:
       run: pnpm run lint
       stage_fixed: true
-      glob: "*.{js,jsx,ts,tsx}"
+      glob: '*.{js,jsx,ts,tsx}'
     typecheck:
       run: pnpm run typecheck
-      glob: "*.{ts,tsx}"
+      glob: '*.{ts,tsx}'
     audit:
       run: pnpm audit
       skip:

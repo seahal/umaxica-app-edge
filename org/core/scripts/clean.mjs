@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
-const cwd = new URL("..", import.meta.url);
-const root = new URL(".", cwd);
+const cwd = new URL('..', import.meta.url);
+const root = new URL('.', cwd);
 
 const TARGETS = [
-  "build",
-  "dist",
-  ".react-router",
-  "tsconfig.cloudflare.tsbuildinfo",
-  "tsconfig.node.tsbuildinfo",
+  'build',
+  'dist',
+  '.react-router',
+  'tsconfig.cloudflare.tsbuildinfo',
+  'tsconfig.node.tsbuildinfo',
 ];
 
 const args = process.argv.slice(2);
-const dryRun = args.includes("--dry-run");
+const dryRun = args.includes('--dry-run');
 
 const toDelete = [];
 for (const target of TARGETS) {
@@ -25,14 +25,14 @@ for (const target of TARGETS) {
 }
 
 // Also remove stray .map files in dist/build (if present)
-for (const dir of ["build", "dist"]) {
+for (const dir of ['build', 'dist']) {
   const dirPath = join(new URL(root).pathname, dir);
   if (existsSync(dirPath)) {
     try {
       for (const f of readdirSync(dirPath)) {
         const fp = join(dirPath, f);
         try {
-          if (statSync(fp).isFile() && /\.map$/.test(f)) {
+          if (statSync(fp).isFile() && f.endsWith('.map')) {
             toDelete.push(fp);
           }
         } catch {}
@@ -42,23 +42,25 @@ for (const dir of ["build", "dist"]) {
 }
 
 if (toDelete.length === 0) {
-  console.log("[clean] Nothing to remove.");
+  console.log('[clean] Nothing to remove.');
   process.exit(0);
 }
 
 if (dryRun) {
-  console.log("[clean] Dry run. Would remove:");
-  for (const p of toDelete) console.log("  -", p);
+  console.log('[clean] Dry run. Would remove:');
+  for (const p of toDelete) {
+    console.log('  -', p);
+  }
   process.exit(0);
 }
 
 for (const p of toDelete) {
   try {
-    rmSync(p, { recursive: true, force: true });
-    console.log("[clean] removed", p);
-  } catch (e) {
-    console.warn("[clean] failed to remove", p, e?.message ?? e);
+    rmSync(p, { force: true, recursive: true });
+    console.log('[clean] removed', p);
+  } catch (error) {
+    console.warn('[clean] failed to remove', p, error?.message ?? error);
   }
 }
 
-console.log("[clean] Done.");
+console.log('[clean] Done.');

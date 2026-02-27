@@ -1,7 +1,7 @@
-import type { Route } from "../+types/home";
+import type { Route } from '../+types/home';
 
 export function meta(_: Route.MetaArgs) {
-  return [{ name: "description", content: "status page" }];
+  return [{ content: 'status page', name: 'description' }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {

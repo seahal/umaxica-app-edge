@@ -1,9 +1,8 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { afterAll, describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from 'react-dom/server';
 
-vi.mock("react-aria-components", async (importOriginal) => {
+vi.mock(import('react-aria-components'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -20,36 +19,36 @@ vi.mock("react-aria-components", async (importOriginal) => {
         {children}
       </a>
     ),
-    TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
     Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+    TooltipTrigger: ({ children }: { children: React.ReactNode }) => children,
   };
 });
 
-const { Footer } = await import("../../src/components/Footer");
+const { Footer } = await import('../../src/components/Footer');
 
 afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe("Footer component (org)", () => {
-  it("falls back to a placeholder brand when no code name is provided", () => {
+describe('Footer component (org)', () => {
+  it('falls back to a placeholder brand when no code name is provided', () => {
     const markup = renderToStaticMarkup(<Footer />);
 
-    expect(markup).toContain("???");
+    expect(markup).toContain('???');
     expect(markup).toContain(new Date().getFullYear().toString());
   });
 
-  it("renders supplied code name and quick links", () => {
+  it('renders supplied code name and quick links', () => {
     const markup = renderToStaticMarkup(<Footer codeName="Org Hub" />);
 
-    expect(markup).toContain("Org Hub");
+    expect(markup).toContain('Org Hub');
     expect(markup).toContain('href="/"');
     expect(markup).toContain('href="https://jp.help.umaxica.org/contacts/new"');
     expect(markup).toContain('href="https://jp.docs.umaxica.org/privacy"');
     expect(markup).not.toContain('href="/about"');
   });
 
-  it("exposes the GitHub link with safe target attributes", () => {
+  it('exposes the GitHub link with safe target attributes', () => {
     const markup = renderToStaticMarkup(<Footer codeName="Org Hub" />);
 
     expect(markup).toContain('href="https://github.com/seahal/umaxica-app-edge"');

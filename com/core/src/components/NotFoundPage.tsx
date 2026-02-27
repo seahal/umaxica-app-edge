@@ -1,4 +1,4 @@
-import { ErrorPage } from "./ErrorPage";
+import { ErrorPage } from './ErrorPage';
 
 // 404エラー専用コンポーネント
 // この部分は404エラー表示の責務: ページが見つからない場合の専用UI
@@ -10,7 +10,7 @@ export function NotFoundPage() {
       title="ページが見つかりません"
       message="お探しのページは存在しないか、移動または削除された可能性があります。"
       suggestion="URLを確認するか、ホームページから目的のページをお探しください。"
-      showNavigation={true}
+      showNavigation
     />
   );
 }

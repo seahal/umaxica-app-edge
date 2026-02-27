@@ -12,10 +12,17 @@
     }
   },
   "rules": {
-    "no-unused-vars": "warn",
-    "no-console": "off",
-    "react/no-danger": "off",
-    "typescript/no-explicit-any": "warn"
+    "no-unused-vars": "error",
+    "no-console": "warn",
+    "no-var": "error",
+    "prefer-const": "error",
+    "eqeqeq": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "react/no-danger": "warn",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/consistent-type-imports": "error"
   },
   "ignorePatterns": [
     "**/.wrangler/**",

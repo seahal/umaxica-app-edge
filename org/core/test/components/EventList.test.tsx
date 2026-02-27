@@ -1,33 +1,32 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen } from '@testing-library/react';
 
-const { EventList } = await import("../../src/components/EventList");
+const { EventList } = await import('../../src/components/EventList');
 
 function getRenderedEventTitles() {
-  return screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent?.trim());
+  return screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent?.trim());
 }
 
-describe("EventList component (org)", () => {
-  it("renders all events by default", () => {
+describe('EventList component (org)', () => {
+  it('renders all events by default', () => {
     render(<EventList />);
 
-    expect(getRenderedEventTitles()).toEqual([
-      "React Aria ハンズオンワークショップ",
-      "Web アクセシビリティカンファレンス 2025",
-      "フロントエンド開発者ミートアップ",
-      "デザインシステム構築ウェビナー",
+    expect(getRenderedEventTitles()).toStrictEqual([
+      'React Aria ハンズオンワークショップ',
+      'Web アクセシビリティカンファレンス 2025',
+      'フロントエンド開発者ミートアップ',
+      'デザインシステム構築ウェビナー',
     ]);
   });
 
-  it("exposes category filters for each event type", () => {
+  it('exposes category filters for each event type', () => {
     render(<EventList />);
 
-    const filters = ["すべて", "カンファレンス", "ミートアップ", "ワークショップ", "ウェビナー"];
+    const filters = ['すべて', 'カンファレンス', 'ミートアップ', 'ワークショップ', 'ウェビナー'];
 
     for (const name of filters) {
-      expect(screen.getAllByRole("radio", { name })).not.toHaveLength(0);
+      expect(screen.getAllByRole('radio', { name })).not.toHaveLength(0);
     }
   });
 });

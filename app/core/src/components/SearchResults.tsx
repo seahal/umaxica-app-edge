@@ -1,5 +1,5 @@
-import { Button } from "react-aria-components";
-import type { Post } from "./PostCard";
+import { Button } from 'react-aria-components';
+import type { Post } from './PostCard';
 
 // ユーザー情報の型
 export interface User {
@@ -24,7 +24,7 @@ interface SearchResultsProps {
   posts?: Post[];
   users?: User[];
   trends?: Trend[];
-  type: "all" | "users" | "posts" | "trends";
+  type: 'all' | 'users' | 'posts' | 'trends';
 }
 
 /**
@@ -62,7 +62,7 @@ export function SearchResults({
   }
 
   // すべてのタブ：ユーザー、投稿、トレンドをまとめて表示
-  if (type === "all") {
+  if (type === 'all') {
     const hasResults = users.length > 0 || posts.length > 0 || trends.length > 0;
 
     if (!hasResults) {
@@ -102,7 +102,7 @@ export function SearchResults({
   }
 
   // ユーザー検索結果
-  if (type === "users") {
+  if (type === 'users') {
     if (users.length === 0) {
       return <NoResults query={query} />;
     }
@@ -117,7 +117,7 @@ export function SearchResults({
   }
 
   // 投稿検索結果
-  if (type === "posts") {
+  if (type === 'posts') {
     if (posts.length === 0) {
       return <NoResults query={query} />;
     }
@@ -132,7 +132,7 @@ export function SearchResults({
   }
 
   // トレンド検索結果
-  if (type === "trends") {
+  if (type === 'trends') {
     if (trends.length === 0) {
       return <NoResults query={query} />;
     }
@@ -167,7 +167,7 @@ function UserResult({ user }: { user: User }) {
         <div className="flex gap-3 flex-1 min-w-0">
           {/* アバター */}
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-            {user.name?.[0]?.toUpperCase() ?? "?"}
+            {user.name?.[0]?.toUpperCase() ?? '?'}
           </div>
 
           {/* ユーザー情報 */}
@@ -204,32 +204,34 @@ function UserResult({ user }: { user: User }) {
   );
 }
 
+// 検索クエリをハイライト表示する
+function highlightText(text: string, highlight: string) {
+  if (!highlight.trim()) {
+    return text;
+  }
+
+  const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+  return parts.map((part, i) =>
+    part.toLowerCase() === highlight.toLowerCase() ? (
+      <mark
+        key={`${part}-${i}`}
+        className="bg-yellow-200 dark:bg-yellow-800 text-gray-900 dark:text-gray-100"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  );
+}
+
 // 投稿検索結果の表示
 function PostResult({ post, query }: { post: Post; query: string }) {
-  // クエリをハイライト表示するヘルパー関数
-  const highlightText = (text: string, highlight: string) => {
-    if (!highlight.trim()) return text;
-
-    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
-    return parts.map((part, i) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <mark
-          key={`${part}-${i}`}
-          className="bg-yellow-200 dark:bg-yellow-800 text-gray-900 dark:text-gray-100"
-        >
-          {part}
-        </mark>
-      ) : (
-        part
-      ),
-    );
-  };
-
   return (
     <div className="p-4 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
       <div className="flex gap-3">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-          {post.author?.[0]?.toUpperCase() ?? "?"}
+          {post.author?.[0]?.toUpperCase() ?? '?'}
         </div>
 
         <div className="flex-1 min-w-0">

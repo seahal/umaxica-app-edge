@@ -1,8 +1,6 @@
 // Minimal React Router type shims for the com site
-declare module "react-router" {
-  export interface EntryContext {
-    [key: string]: unknown;
-  }
+declare module 'react-router' {
+  export type EntryContext = Record<string, unknown>;
 
   export interface ServerRouterProps {
     context: EntryContext;
@@ -65,7 +63,7 @@ declare module "react-router" {
   }
 
   export function createRoutesStub(
-    routes: Array<{
+    routes: {
       path?: string;
       index?: boolean;
       children?: unknown[];
@@ -74,7 +72,7 @@ declare module "react-router" {
       action?: () => unknown;
       HydrateFallback?: () => JSX.Element;
       errorElement?: JSX.Element;
-    }>,
+    }[],
   ): (props?: RoutesTestStubProps) => JSX.Element;
 
   export function MemoryRouter(props: {
@@ -107,11 +105,11 @@ declare module "react-router" {
     export interface ErrorBoundaryProps {
       error: unknown;
     }
-    export type LinksFunction = () => Array<{
+    export type LinksFunction = () => {
       rel: string;
       href: string;
       [key: string]: string;
-    }>;
+    }[];
   }
 
   export interface AppLoadContext {

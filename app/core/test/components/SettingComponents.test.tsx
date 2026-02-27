@@ -1,46 +1,44 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { describe, expect, it } from "vitest";
+import { render, screen } from '@testing-library/react';
 
-const { render, screen } = await import("@testing-library/react");
+import { SettingItem, SettingLayout, SettingSection } from '../../src/components/SettingComponents';
 
-import { SettingItem, SettingLayout, SettingSection } from "../../src/components/SettingComponents";
-
-describe("SettingComponents", () => {
-  it("renders SettingLayout without description", () => {
+describe('SettingComponents', () => {
+  it('renders SettingLayout without description', () => {
     render(
       <SettingLayout title="設定">
         <div>Content</div>
       </SettingLayout>,
     );
 
-    expect(screen.getByRole("heading", { name: "設定" })).toBeInTheDocument();
-    expect(screen.getByText("Content")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '設定' })).toBeInTheDocument();
+    expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
-  it("renders SettingSection without description", () => {
+  it('renders SettingSection without description', () => {
     render(
       <SettingSection title="セクション">
         <div>Content</div>
       </SettingSection>,
     );
 
-    expect(screen.getByRole("heading", { name: "セクション" })).toBeInTheDocument();
-    expect(screen.getByText("Content")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'セクション' })).toBeInTheDocument();
+    expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
-  it("renders SettingItem without description", () => {
+  it('renders SettingItem without description', () => {
     render(
       <SettingItem label="通知">
         <button type="button">Toggle</button>
       </SettingItem>,
     );
 
-    expect(screen.getByText("通知")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Toggle" })).toBeInTheDocument();
+    expect(screen.getByText('通知')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Toggle' })).toBeInTheDocument();
   });
 
-  it("renders multiple SettingSections", () => {
+  it('renders multiple SettingSections', () => {
     render(
       <SettingLayout title="設定">
         <SettingSection title="プライバシー">
@@ -52,15 +50,15 @@ describe("SettingComponents", () => {
       </SettingLayout>,
     );
 
-    expect(screen.getByRole("heading", { name: "プライバシー" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "通知" })).toBeInTheDocument();
-    expect(screen.getByText("Privacy content")).toBeInTheDocument();
-    expect(screen.getByText("Notification content")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'プライバシー' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '通知' })).toBeInTheDocument();
+    expect(screen.getByText('Privacy content')).toBeInTheDocument();
+    expect(screen.getByText('Notification content')).toBeInTheDocument();
   });
 
-  it("renders SettingItem with long description", () => {
+  it('renders SettingItem with long description', () => {
     const longDescription =
-      "This is a very long description that explains the setting in detail. It should wrap properly and display correctly.";
+      'This is a very long description that explains the setting in detail. It should wrap properly and display correctly.';
 
     render(
       <SettingItem label="詳細設定" description={longDescription}>
@@ -68,7 +66,7 @@ describe("SettingComponents", () => {
       </SettingItem>,
     );
 
-    expect(screen.getByText("詳細設定")).toBeInTheDocument();
+    expect(screen.getByText('詳細設定')).toBeInTheDocument();
     expect(screen.getByText(longDescription)).toBeInTheDocument();
   });
 });

@@ -1,14 +1,14 @@
-import { getEnv } from "../../context";
-import type { Route } from "../+types/home";
+import { getEnv } from '../../context';
+import type { Route } from '../+types/home';
 
 export function meta(_: Route.MetaArgs) {
-  return [{ name: "description", content: "Welcome to React Router!" }];
+  return [{ content: 'Welcome to React Router!', name: 'description' }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   return {
-    message: env.VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? '',
   };
 }
 

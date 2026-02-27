@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Button,
   ListBox,
@@ -7,27 +7,27 @@ import {
   Select,
   SelectValue,
   Switch,
-} from "react-aria-components";
-import { SettingItem, SettingLayout, SettingSection } from "../../components/SettingComponents";
-import type { Route } from "../+types/about";
+} from 'react-aria-components';
+import { SettingItem, SettingLayout, SettingSection } from '../../components/SettingComponents';
+import type { Route } from '../+types/about';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica - 環境設定" },
-    { name: "description", content: "表示や動作に関する設定" },
+    { title: 'Umaxica - 環境設定' },
+    { content: '表示や動作に関する設定', name: 'description' },
   ];
+}
+
+function handleSaveSettings() {
+  alert('設定を保存しました！');
 }
 
 export default function Preference() {
   const [darkMode, setDarkMode] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
-  const [language, setLanguage] = useState("ja");
-  const [timezone, setTimezone] = useState("Asia/Tokyo");
-
-  const handleSave = () => {
-    alert("設定を保存しました！");
-  };
+  const [language, setLanguage] = useState('ja');
+  const [timezone, setTimezone] = useState('Asia/Tokyo');
 
   return (
     <SettingLayout title="環境設定" description="アプリの表示や動作に関する設定を変更できます">
@@ -197,7 +197,7 @@ export default function Preference() {
           キャンセル
         </Button>
         <Button
-          onPress={handleSave}
+          onPress={handleSaveSettings}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-lg hover:shadow-xl"
         >
           変更を保存

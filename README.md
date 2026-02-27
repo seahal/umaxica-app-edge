@@ -67,8 +67,8 @@ pnpm run --filter net/apex server
 
 ## Environment Variables
 
-Each workspace manages runtime values mainly through its `wrangler.jsonc` (`vars` and environments).  
-For client-side values in Vite/React Router, use `VITE_`-prefixed variables.
+Cloudflare-targeted workspaces manage runtime values mainly through `wrangler.jsonc` (`vars` and environments).  
+`dev/status` and `dev/apex` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
 
 ## Common Scripts
 
@@ -102,6 +102,7 @@ pnpm run --filter net/apex deploy
 ```
 
 `dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
+`dev/apex` also includes `vercel.json` + `api/index.ts` for Vercel Edge Function routing.
 
 ## Known Issues & Limitations
 

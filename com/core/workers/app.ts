@@ -1,18 +1,16 @@
-import { createRequestHandler, RouterContextProvider } from "react-router";
-import { CloudflareContext } from "../src/context";
+import { RouterContextProvider, createRequestHandler } from 'react-router';
+import { CloudflareContext } from '../src/context';
 
 function generateNonce(): string {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
-  return btoa(String.fromCharCode(...array));
+  return btoa(String.fromCodePoint(...array));
 }
 
 const requestHandler = createRequestHandler(
-  () => import("virtual:react-router/server-build"),
+  () => import('virtual:react-router/server-build'),
   import.meta.env.MODE,
-  () => {
-    return new RouterContextProvider();
-  },
+  () => new RouterContextProvider(),
 );
 
 export default {
@@ -21,7 +19,7 @@ export default {
 
     const contextProvider = new RouterContextProvider();
     contextProvider.set(CloudflareContext, {
-      cloudflare: { env, ctx },
+      cloudflare: { ctx, env },
       security: { nonce },
     });
 

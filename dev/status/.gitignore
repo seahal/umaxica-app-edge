@@ -8,3 +8,4 @@
 .vercel
 
 .react-router/
+.env*.local

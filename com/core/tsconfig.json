@@ -6,6 +6,10 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
     "noEmit": true,
     "types": ["./worker-configuration.d.ts"]
   }

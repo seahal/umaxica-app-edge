@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import type { Route } from "../+types/root";
+import type { ReactNode } from 'react';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import type { Route } from '../+types/root';
 
-export const meta: Route.MetaFunction = () => [{ title: "" }];
+export const meta: Route.MetaFunction = () => [{ title: '' }];
 
 export function Layout({ children }: { children: ReactNode }) {
   return (

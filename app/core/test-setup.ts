@@ -1,7 +1,6 @@
-import { vi } from "vitest";
-
-vi.mock("@sentry/react-router", () => ({
-  init: () => {},
-  captureException: () => {},
-  captureMessage: () => {},
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
+vi.mock(import('@sentry/react-router'), () => ({
+  captureException: (): void => {},
+  init: (): void => {},
+  message: (): void => {},
 }));

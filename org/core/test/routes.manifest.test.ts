@@ -1,68 +1,68 @@
-import { describe, expect, it } from "vitest";
+import routes from '../src/routes';
 
-import routes from "../src/routes";
-
-type RouteManifestEntry = {
+interface RouteManifestEntry {
   children?: RouteManifestEntry[];
   file?: string;
   index?: boolean;
   path?: string;
-};
+}
 
-const flattenRoutes = (entries: RouteManifestEntry[]): RouteManifestEntry[] =>
-  entries.reduce<RouteManifestEntry[]>((acc, entry) => {
-    acc.push(entry);
+const flattenRoutes = (entries: RouteManifestEntry[]): RouteManifestEntry[] => {
+  const result: RouteManifestEntry[] = [];
+  for (const entry of entries) {
+    result.push(entry);
     if (entry.children?.length) {
-      acc.push(...flattenRoutes(entry.children));
+      result.push(...flattenRoutes(entry.children));
     }
-    return acc;
-  }, []);
+  }
+  return result;
+};
 
 const manifest = flattenRoutes(routes as RouteManifestEntry[]);
 
 const findByPath = (path: string) => manifest.find((entry) => entry.path === path);
 const findByFile = (file: string) => manifest.find((entry) => entry.file === file);
 
-describe("org route manifest", () => {
-  it("wraps primary routes with the decorated layout", () => {
+describe('org route manifest', () => {
+  it('wraps primary routes with the decorated layout', () => {
     const decorated = routes[0];
-    expect(decorated).toMatchObject({ file: "../src/layouts/decorated.tsx" });
-    expect(decorated?.children ?? []).toEqual([
-      expect.objectContaining({ index: true, file: "routes/_index.tsx" }),
+    expect(decorated).toMatchObject({ file: '../src/layouts/decorated.tsx' });
+    expect(decorated?.children ?? []).toStrictEqual([
+      expect.objectContaining({ file: 'routes/_index.tsx', index: true }),
       expect.objectContaining({
-        path: "configure",
-        file: "routes/configure.tsx",
+        file: 'routes/configure.tsx',
+        path: 'configure',
       }),
-      expect.objectContaining({ path: "*", file: "routes/catch-all.tsx" }),
+      expect.objectContaining({ file: 'routes/catch-all.tsx', path: '*' }),
     ]);
   });
 
-  it("includes the index route", () => {
-    expect(findByFile("routes/_index.tsx")).toMatchObject({
-      file: "routes/_index.tsx",
+  it('includes the index route', () => {
+    expect(findByFile('routes/_index.tsx')).toMatchObject({
+      file: 'routes/_index.tsx',
       index: true,
     });
   });
 
-  it("registers configure and catch-all routes", () => {
-    expect(findByPath("configure")).toMatchObject({
-      path: "configure",
-      file: "routes/configure.tsx",
+  it('registers configure and catch-all routes', () => {
+    expect(findByPath('configure')).toMatchObject({
+      file: 'routes/configure.tsx',
+      path: 'configure',
     });
-    expect(findByPath("*")).toMatchObject({
-      path: "*",
-      file: "routes/catch-all.tsx",
+    expect(findByPath('*')).toMatchObject({
+      file: 'routes/catch-all.tsx',
+      path: '*',
     });
   });
 
-  it("registers the baremetal layout for health checks", () => {
-    expect(findByFile("../src/layouts/baremetal.tsx")).toBeDefined();
+  it('registers the baremetal layout for health checks', () => {
+    expect(findByFile('../src/layouts/baremetal.tsx')).toBeDefined();
   });
 
-  it("exposes the /health route", () => {
-    expect(findByPath("/health")).toMatchObject({
-      path: "/health",
-      file: "routes/healths/_index.tsx",
+  it('exposes the /health route', () => {
+    expect(findByPath('/health')).toMatchObject({
+      file: 'routes/healths/_index.tsx',
+      path: '/health',
     });
   });
 });

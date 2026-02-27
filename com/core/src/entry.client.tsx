@@ -1,6 +1,7 @@
-import { type ErrorInfo, StrictMode, startTransition } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { HydratedRouter } from "react-router/dom";
+import { StrictMode, startTransition } from 'react';
+import type { ErrorInfo } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+import { HydratedRouter } from 'react-router/dom';
 
 startTransition(() => {
   hydrateRoot(
@@ -19,5 +20,5 @@ startTransition(() => {
 });
 
 function reportToErrorService(_error: unknown, _errorInfo: ErrorInfo | undefined) {
-  throw new Error("Function not implemented.");
+  throw new Error('Function not implemented.');
 }

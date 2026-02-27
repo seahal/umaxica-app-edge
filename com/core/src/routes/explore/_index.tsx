@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 import {
   Button,
   Input,
@@ -6,112 +6,112 @@ import {
   ListBox,
   ListBoxItem,
   SearchField,
-  type Selection,
   Tag,
   TagGroup,
   TagList,
-} from "react-aria-components";
-import { getEnv } from "../../context";
-import type { Route } from "../+types/home";
+} from 'react-aria-components';
+import type { Selection } from 'react-aria-components';
+import { getEnv } from '../../context';
+import type { Route } from '../+types/home';
 
-type ExploreCategory = "products" | "people" | "signals" | "playbooks";
+type ExploreCategory = 'products' | 'people' | 'signals' | 'playbooks';
 
-type ExploreResult = {
+interface ExploreResult {
   id: string;
   title: string;
   summary: string;
   category: ExploreCategory;
   tags: string[];
   signal: string;
-};
+}
 
 const filters = [
-  { id: "all", label: "すべて" },
-  { id: "products", label: "プロダクト" },
-  { id: "people", label: "担当者" },
-  { id: "signals", label: "シグナル" },
-  { id: "playbooks", label: "プレイブック" },
+  { id: 'all', label: 'すべて' },
+  { id: 'products', label: 'プロダクト' },
+  { id: 'people', label: '担当者' },
+  { id: 'signals', label: 'シグナル' },
+  { id: 'playbooks', label: 'プレイブック' },
 ] as const;
 
 const exploreLibrary: ExploreResult[] = [
   {
-    id: "edge-discovery",
-    title: "Edge Discovery Kit",
-    summary: "エッジで完結する顧客データ収集テンプレート。即時に信号化して施策へ転換できます。",
-    category: "products",
-    tags: ["Workers", "AI", "Realtime"],
-    signal: "推奨度 92",
+    category: 'products',
+    id: 'edge-discovery',
+    signal: '推奨度 92',
+    summary: 'エッジで完結する顧客データ収集テンプレート。即時に信号化して施策へ転換できます。',
+    tags: ['Workers', 'AI', 'Realtime'],
+    title: 'Edge Discovery Kit',
   },
   {
-    id: "atlas-console",
-    title: "Atlas Console",
-    summary: "複数ブランドの施策状況を1画面で監視。権限や地域ラベルを跨いだ横断検索が可能です。",
-    category: "products",
-    tags: ["Observability", "Access"],
-    signal: "アクティブ",
+    category: 'products',
+    id: 'atlas-console',
+    signal: 'アクティブ',
+    summary: '複数ブランドの施策状況を1画面で監視。権限や地域ラベルを跨いだ横断検索が可能です。',
+    tags: ['Observability', 'Access'],
+    title: 'Atlas Console',
   },
   {
-    id: "team-liaison",
-    title: "Client Liaison Squad",
+    category: 'people',
+    id: 'team-liaison',
+    signal: '応答 < 4h',
     summary:
-      "顧客伴走に特化したコンシェルジュチーム。成功ナレッジをテンプレ化し、再現度を高めます。",
-    category: "people",
-    tags: ["Account", "Enablement"],
-    signal: "応答 < 4h",
+      '顧客伴走に特化したコンシェルジュチーム。成功ナレッジをテンプレ化し、再現度を高めます。',
+    tags: ['Account', 'Enablement'],
+    title: 'Client Liaison Squad',
   },
   {
-    id: "signal-hygiene",
-    title: "Signal Hygiene Protocol",
-    summary: "取得したデータをノイズレスに保つための日次チェックリスト。自動化タスク例も付属。",
-    category: "playbooks",
-    tags: ["Ops", "Checklist"],
-    signal: "週次更新",
+    category: 'playbooks',
+    id: 'signal-hygiene',
+    signal: '週次更新',
+    summary: '取得したデータをノイズレスに保つための日次チェックリスト。自動化タスク例も付属。',
+    tags: ['Ops', 'Checklist'],
+    title: 'Signal Hygiene Protocol',
   },
   {
-    id: "latency-graph",
-    title: "Latency Pulse",
-    summary: "地域別の応答時間をリアルタイムで可視化し、逸脱を検知するとSlackに通知します。",
-    category: "signals",
-    tags: ["Monitoring", "Alert"],
-    signal: "83ms / JP",
+    category: 'signals',
+    id: 'latency-graph',
+    signal: '83ms / JP',
+    summary: '地域別の応答時間をリアルタイムで可視化し、逸脱を検知するとSlackに通知します。',
+    tags: ['Monitoring', 'Alert'],
+    title: 'Latency Pulse',
   },
   {
-    id: "handoff-kit",
-    title: "Handoff Narrative Kit",
+    category: 'playbooks',
+    id: 'handoff-kit',
+    signal: 'v2.4',
     summary:
-      "営業から成功支援チームへの引き継ぎテンプレ。背景・チャネル・KPIの抽象度を合わせます。",
-    category: "playbooks",
-    tags: ["Template", "Alignment"],
-    signal: "v2.4",
+      '営業から成功支援チームへの引き継ぎテンプレ。背景・チャネル・KPIの抽象度を合わせます。',
+    tags: ['Template', 'Alignment'],
+    title: 'Handoff Narrative Kit',
   },
 ];
 
 const savedViews = [
   {
-    id: "latency",
-    title: "Latency under 90ms",
-    description: "アジア・北米リージョンでレイテンシが基準内のエッジだけを抽出します。",
+    description: 'アジア・北米リージョンでレイテンシが基準内のエッジだけを抽出します。',
+    id: 'latency',
+    title: 'Latency under 90ms',
   },
   {
-    id: "launch-ready",
-    title: "Launch-ready products",
-    description: "QA完了・コンテンツ承認済みのローンチ候補をピックアップ。",
+    description: 'QA完了・コンテンツ承認済みのローンチ候補をピックアップ。',
+    id: 'launch-ready',
+    title: 'Launch-ready products',
   },
   {
-    id: "people-shifts",
-    title: "People shifts",
-    description: "担当者の稼働帯と役割変更をタイムライン表示します。",
+    description: '担当者の稼働帯と役割変更をタイムライン表示します。',
+    id: 'people-shifts',
+    title: 'People shifts',
   },
 ];
 
 const liveSignals = [
-  { id: "experience", label: "体験安定度", value: "97%", status: "stable" },
-  { id: "handoff", label: "ハンドオフ完了率", value: "82%", status: "at-risk" },
+  { id: 'experience', label: '体験安定度', status: 'stable', value: '97%' },
+  { id: 'handoff', label: 'ハンドオフ完了率', status: 'at-risk', value: '82%' },
   {
-    id: "insight",
-    label: "インサイト更新",
-    value: "12件 / 24h",
-    status: "stable",
+    id: 'insight',
+    label: 'インサイト更新',
+    status: 'stable',
+    value: '12件 / 24h',
   },
 ];
 
@@ -119,70 +119,72 @@ const categoryStyles: Record<
   ExploreCategory,
   { label: string; accent: string; indicator: string }
 > = {
-  products: {
-    label: "プロダクト",
-    accent: "from-blue-500/10 to-transparent border-blue-300/40",
-    indicator: "text-blue-500",
-  },
   people: {
-    label: "担当者",
-    accent: "from-emerald-500/10 to-transparent border-emerald-300/30",
-    indicator: "text-emerald-500",
-  },
-  signals: {
-    label: "シグナル",
-    accent: "from-purple-500/10 to-transparent border-purple-300/30",
-    indicator: "text-purple-500",
+    accent: 'from-emerald-500/10 to-transparent border-emerald-300/30',
+    indicator: 'text-emerald-500',
+    label: '担当者',
   },
   playbooks: {
-    label: "プレイブック",
-    accent: "from-amber-500/10 to-transparent border-amber-300/30",
-    indicator: "text-amber-500",
+    accent: 'from-amber-500/10 to-transparent border-amber-300/30',
+    indicator: 'text-amber-500',
+    label: 'プレイブック',
+  },
+  products: {
+    accent: 'from-blue-500/10 to-transparent border-blue-300/40',
+    indicator: 'text-blue-500',
+    label: 'プロダクト',
+  },
+  signals: {
+    accent: 'from-purple-500/10 to-transparent border-purple-300/30',
+    indicator: 'text-purple-500',
+    label: 'シグナル',
   },
 };
 
 export const handle = {
-  titleName: "Explore",
-  breadcrumb: () => "Explore",
+  breadcrumb: () => 'Explore',
+  titleName: 'Explore',
 };
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica Commerce | Explore" },
+    { title: 'Umaxica Commerce | Explore' },
     {
-      name: "description",
-      content: "検索レイアウトでサービスやチームシグナルを横断的に探索します。",
+      content: '検索レイアウトでサービスやチームシグナルを横断的に探索します。',
+      name: 'description',
     },
   ];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const value = env.VALUE_FROM_CLOUDFLARE ?? "Calm automation signals are healthy.";
+  const value = env.VALUE_FROM_CLOUDFLARE ?? 'Calm automation signals are healthy.';
   return { message: value };
 }
 
 export default function Explore({ loaderData }: Route.ComponentProps) {
-  const [query, setQuery] = useState("");
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(() => new Set(["all"]));
+  const [query, setQuery] = useState('');
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(() => new Set(['all']));
 
   const activeFilter = useMemo(() => {
-    const [first] = Array.from(selectedKeys);
-    return typeof first === "string" ? first : "all";
+    const [first] = [...selectedKeys];
+    return typeof first === 'string' ? first : 'all';
   }, [selectedKeys]);
 
   const normalizedQuery = query.trim().toLowerCase();
 
-  const filteredResults = useMemo(() => {
-    return exploreLibrary.filter((entry) => {
-      const matchesCategory = activeFilter === "all" || entry.category === activeFilter;
-      if (!normalizedQuery) {
-        return matchesCategory;
-      }
-      const haystack = [entry.title, entry.summary, ...entry.tags].join(" ").toLowerCase();
-      return matchesCategory && haystack.includes(normalizedQuery);
-    });
-  }, [activeFilter, normalizedQuery]);
+  const filteredResults = useMemo(
+    () =>
+      exploreLibrary.filter((entry) => {
+        const matchesCategory = activeFilter === 'all' || entry.category === activeFilter;
+        if (!normalizedQuery) {
+          return matchesCategory;
+        }
+        const haystack = [entry.title, entry.summary, ...entry.tags].join(' ').toLowerCase();
+        return matchesCategory && haystack.includes(normalizedQuery);
+      }),
+    [activeFilter, normalizedQuery],
+  );
 
   const helperMessage = loaderData?.message?.trim();
 
@@ -199,7 +201,7 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
           <p className="text-sm text-slate-500 dark:text-slate-300">
             部署やサービスの枠を超えた検索とフィルターで、必要な知恵袋や進行中の
             <span className="font-medium text-slate-800 dark:text-slate-100">
-              {" "}
+              {' '}
               オペレーション脈拍
             </span>
             を一枚で俯瞰できます。
@@ -235,7 +237,7 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
               <div className="absolute right-3 flex gap-1">
                 {query && (
                   <Button
-                    onPress={() => setQuery("")}
+                    onPress={() => setQuery('')}
                     className="rounded-full px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-200 dark:text-slate-200 dark:hover:bg-gray-700"
                   >
                     クリア
@@ -359,12 +361,12 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
                         {signal.label}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {signal.status === "stable" ? "安定" : "注視が必要"}
+                        {signal.status === 'stable' ? '安定' : '注視が必要'}
                       </p>
                     </div>
                     <span
                       className={`text-sm font-bold ${
-                        signal.status === "stable" ? "text-emerald-500" : "text-amber-500"
+                        signal.status === 'stable' ? 'text-emerald-500' : 'text-amber-500'
                       }`}
                     >
                       {signal.value}

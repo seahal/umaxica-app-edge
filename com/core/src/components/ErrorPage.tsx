@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from 'react-router';
 
 interface ErrorPageProps {
   status: number;
@@ -13,14 +13,18 @@ interface ErrorPageProps {
 
 function getErrorIcon(status: number): string {
   switch (status) {
-    case 404:
-      return "🔍";
-    case 500:
-      return "⚠️";
-    case 503:
-      return "🚧";
-    default:
-      return "❌";
+    case 404: {
+      return '🔍';
+    }
+    case 500: {
+      return '⚠️';
+    }
+    case 503: {
+      return '🚧';
+    }
+    default: {
+      return '❌';
+    }
   }
 }
 

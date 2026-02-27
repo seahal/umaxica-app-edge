@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -11,27 +11,27 @@ import {
   Radio,
   RadioGroup,
   TextField,
-} from "react-aria-components";
-import { SettingLayout, SettingSection } from "../../components/SettingComponents";
-import type { Route } from "../+types/about";
+} from 'react-aria-components';
+import { SettingLayout, SettingSection } from '../../components/SettingComponents';
+import type { Route } from '../+types/about';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica - アカウント設定" },
-    { name: "description", content: "アカウント情報の管理" },
+    { title: 'Umaxica - アカウント設定' },
+    { content: 'アカウント情報の管理', name: 'description' },
   ];
 }
 
+function handleDeleteAccountDemo() {
+  alert('アカウント削除機能は現在デモモードです');
+}
+
 export default function Account() {
-  const [email, setEmail] = useState("user@example.com");
-  const [region, setRegion] = useState("ja");
+  const [email, setEmail] = useState('user@example.com');
+  const [region, setRegion] = useState('ja');
 
   const handleEmailChange = () => {
     alert(`メールアドレスを ${email} に変更しました！`);
-  };
-
-  const handleDeleteAccount = () => {
-    alert("アカウント削除機能は現在デモモードです");
   };
 
   return (
@@ -133,7 +133,7 @@ export default function Account() {
                           </Button>
                           <Button
                             onPress={() => {
-                              handleDeleteAccount();
+                              handleDeleteAccountDemo();
                               close();
                             }}
                             className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-red-500"
@@ -160,7 +160,7 @@ export default function Account() {
           キャンセル
         </Button>
         <Button
-          onPress={() => alert("設定を保存しました！")}
+          onPress={() => alert('設定を保存しました！')}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-lg hover:shadow-xl"
         >
           変更を保存

@@ -1,34 +1,33 @@
-import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
-import { AuthForm, SocialLoginButton } from "../../components/AuthForm";
-import { getEnv } from "../../context";
-import type { Route } from "../+types/home";
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { AuthForm, SocialLoginButton } from '../../components/AuthForm';
+import { getEnv } from '../../context';
+import type { Route } from '../+types/home';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica - ログイン" },
-    { name: "description", content: "Umaxica にログインまたは新規登録" },
+    { title: 'Umaxica - ログイン' },
+    { content: 'Umaxica にログインまたは新規登録', name: 'description' },
   ];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   return {
-    message: env.VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? '',
   };
 }
 
+function handleAuthSubmitDemo(data: Record<string, string>) {
+  alert(
+    `${data.name ? '新規登録' : 'ログイン'}が送信されました！\n（実際には認証APIに接続します）`,
+  );
+}
+
+function handleSocialLoginDemo(provider: string) {
+  alert(`${provider}認証に接続します！\n（実際にはOAuth認証を行います）`);
+}
+
 export default function Authentication(_: Route.ComponentProps) {
-  // フォーム送信時の処理（デモ用）
-  const handleAuthSubmit = (data: Record<string, string>) => {
-    alert(
-      `${data.name ? "新規登録" : "ログイン"}が送信されました！\n（実際には認証APIに接続します）`,
-    );
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    alert(`${provider}認証に接続します！\n（実際にはOAuth認証を行います）`);
-  };
-
   return (
     <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -77,7 +76,7 @@ export default function Authentication(_: Route.ComponentProps) {
 
             {/* ログインタブ */}
             <TabPanel id="login" className="p-6">
-              <AuthForm type="login" onSubmit={handleAuthSubmit} />
+              <AuthForm type="login" onSubmit={handleAuthSubmitDemo} />
 
               {/* または区切り線 */}
               <div className="relative my-6">
@@ -93,18 +92,24 @@ export default function Authentication(_: Route.ComponentProps) {
 
               {/* ソーシャルログインボタン */}
               <div className="space-y-3">
-                <SocialLoginButton provider="google" onClick={() => handleSocialLogin("Google")} />
+                <SocialLoginButton
+                  provider="google"
+                  onClick={() => handleSocialLoginDemo('Google')}
+                />
                 <SocialLoginButton
                   provider="twitter"
-                  onClick={() => handleSocialLogin("Twitter")}
+                  onClick={() => handleSocialLoginDemo('Twitter')}
                 />
-                <SocialLoginButton provider="github" onClick={() => handleSocialLogin("GitHub")} />
+                <SocialLoginButton
+                  provider="github"
+                  onClick={() => handleSocialLoginDemo('GitHub')}
+                />
               </div>
             </TabPanel>
 
             {/* 新規登録タブ */}
             <TabPanel id="signup" className="p-6">
-              <AuthForm type="signup" onSubmit={handleAuthSubmit} />
+              <AuthForm type="signup" onSubmit={handleAuthSubmitDemo} />
 
               {/* または区切り線 */}
               <div className="relative my-6">
@@ -120,12 +125,18 @@ export default function Authentication(_: Route.ComponentProps) {
 
               {/* ソーシャルログインボタン */}
               <div className="space-y-3">
-                <SocialLoginButton provider="google" onClick={() => handleSocialLogin("Google")} />
+                <SocialLoginButton
+                  provider="google"
+                  onClick={() => handleSocialLoginDemo('Google')}
+                />
                 <SocialLoginButton
                   provider="twitter"
-                  onClick={() => handleSocialLogin("Twitter")}
+                  onClick={() => handleSocialLoginDemo('Twitter')}
                 />
-                <SocialLoginButton provider="github" onClick={() => handleSocialLogin("GitHub")} />
+                <SocialLoginButton
+                  provider="github"
+                  onClick={() => handleSocialLoginDemo('GitHub')}
+                />
               </div>
             </TabPanel>
           </Tabs>

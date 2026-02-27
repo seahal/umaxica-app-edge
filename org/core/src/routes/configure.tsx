@@ -1,7 +1,7 @@
-import type { Route } from "./+types/home";
+import type { Route } from './+types/home';
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "configure" }, { name: "description", content: "Welcome to React Router!" }];
+  return [{ title: 'configure' }, { content: 'Welcome to React Router!', name: 'description' }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {

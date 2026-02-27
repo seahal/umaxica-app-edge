@@ -1,14 +1,12 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { describe, expect, it } from "vitest";
+import { NewPostDialog } from '../../src/components/NewPostDialog';
 
-const { render, screen } = await import("@testing-library/react");
-const userEvent = (await import("@testing-library/user-event")).default;
+const { render, screen } = await import('@testing-library/react');
+const userEvent = (await import('@testing-library/user-event')).default;
 
-import { NewPostDialog } from "../../src/components/NewPostDialog";
-
-describe("NewPostDialog component", () => {
-  it("invokes onSubmit with trimmed content", async () => {
+describe('NewPostDialog component', () => {
+  it('invokes onSubmit with trimmed content', async () => {
     const user = userEvent.setup();
     const submissions: string[] = [];
 
@@ -20,166 +18,166 @@ describe("NewPostDialog component", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "新規投稿" }));
+    await user.click(screen.getByRole('button', { name: '新規投稿' }));
 
-    const textarea = await screen.findByLabelText("投稿内容");
-    await user.type(textarea, " テスト投稿 ");
+    const textarea = await screen.findByLabelText('投稿内容');
+    await user.type(textarea, ' テスト投稿 ');
 
-    const submitButton = screen.getByRole("button", { name: "投稿する" });
+    const submitButton = screen.getByRole('button', { name: '投稿する' });
     expect(submitButton).toBeEnabled();
 
     await user.click(submitButton);
-    expect(submissions).toEqual([" テスト投稿 "]);
+    expect(submissions).toStrictEqual([' テスト投稿 ']);
   });
 
-  it("keeps submit button disabled when content is empty", async () => {
+  it('keeps submit button disabled when content is empty', async () => {
     const user = userEvent.setup();
 
     render(<NewPostDialog />);
 
-    await user.click(screen.getByRole("button", { name: "新規投稿" }));
+    await user.click(screen.getByRole('button', { name: '新規投稿' }));
 
-    const submitButton = await screen.findByRole("button", {
-      name: "投稿する",
+    const submitButton = await screen.findByRole('button', {
+      name: '投稿する',
     });
     expect(submitButton).toBeDisabled();
   });
 
-  it("displays character count", async () => {
+  it('displays character count', async () => {
     const user = userEvent.setup();
 
     render(<NewPostDialog />);
 
-    await user.click(screen.getByRole("button", { name: "新規投稿" }));
+    await user.click(screen.getByRole('button', { name: '新規投稿' }));
 
-    const textarea = await screen.findByLabelText("投稿内容");
-    await user.type(textarea, "Hello");
+    const textarea = await screen.findByLabelText('投稿内容');
+    await user.type(textarea, 'Hello');
 
     // Should show character count "5 / 280"
-    expect(screen.getByText("5")).toBeInTheDocument();
-    expect(screen.getByText("/ 280")).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('/ 280')).toBeInTheDocument();
   });
 
-  // it("disables submit button when content exceeds max length", async () => {
-  // 	const user = userEvent.setup();
+  // It("disables submit button when content exceeds max length", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const textarea = await screen.findByLabelText("投稿内容");
+  // 	Const textarea = await screen.findByLabelText("投稿内容");
 
   // 	// Type exactly 281 characters (over the limit)
-  // 	const longText = "a".repeat(281);
-  // 	await user.type(textarea, longText);
+  // 	Const longText = "a".repeat(281);
+  // 	Await user.type(textarea, longText);
 
-  // 	const submitButton = screen.getByRole("button", { name: "投稿する" });
-  // 	expect(submitButton).toBeDisabled();
+  // 	Const submitButton = screen.getByRole("button", { name: "投稿する" });
+  // 	Expect(submitButton).toBeDisabled();
   // });
 
-  // it("closes dialog when close button is clicked", async () => {
-  // 	const user = userEvent.setup();
+  // It("closes dialog when close button is clicked", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const closeButton = await screen.findByRole("button", { name: "閉じる" });
-  // 	await user.click(closeButton);
+  // 	Const closeButton = await screen.findByRole("button", { name: "閉じる" });
+  // 	Await user.click(closeButton);
 
   // 	// Dialog should be closed
-  // 	expect(screen.queryByLabelText("投稿内容")).not.toBeInTheDocument();
+  // 	Expect(screen.queryByLabelText("投稿内容")).not.toBeInTheDocument();
   // });
 
-  // it("closes dialog when cancel button is clicked", async () => {
-  // 	const user = userEvent.setup();
+  // It("closes dialog when cancel button is clicked", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const cancelButton = await screen.findByRole("button", {
-  // 		name: "キャンセル",
+  // 	Const cancelButton = await screen.findByRole("button", {
+  // 		Name: "キャンセル",
   // 	});
-  // 	await user.click(cancelButton);
+  // 	Await user.click(cancelButton);
 
   // 	// Dialog should be closed
-  // 	expect(screen.queryByLabelText("投稿内容")).not.toBeInTheDocument();
+  // 	Expect(screen.queryByLabelText("投稿内容")).not.toBeInTheDocument();
   // });
 
-  // it("clears content after successful submission", async () => {
-  // 	const user = userEvent.setup();
-  // 	const submissions: string[] = [];
+  // It("clears content after successful submission", async () => {
+  // 	Const user = userEvent.setup();
+  // 	Const submissions: string[] = [];
 
-  // 	render(<NewPostDialog onSubmit={(content) => submissions.push(content)} />);
+  // 	Render(<NewPostDialog onSubmit={(content) => submissions.push(content)} />);
 
   // 	// First submission
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
-  // 	let textarea = await screen.findByLabelText("投稿内容");
-  // 	await user.type(textarea, "First post");
-  // 	await user.click(screen.getByRole("button", { name: "投稿する" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Let textarea = await screen.findByLabelText("投稿内容");
+  // 	Await user.type(textarea, "First post");
+  // 	Await user.click(screen.getByRole("button", { name: "投稿する" }));
 
-  // 	expect(submissions).toEqual(["First post"]);
+  // 	Expect(submissions).toEqual(["First post"]);
 
   // 	// Open dialog again
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
-  // 	textarea = await screen.findByLabelText("投稿内容");
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Textarea = await screen.findByLabelText("投稿内容");
 
   // 	// Content should be cleared
-  // 	expect(textarea).toHaveValue("");
+  // 	Expect(textarea).toHaveValue("");
   // });
 
-  // it("displays warning color when character count exceeds 90%", async () => {
-  // 	const user = userEvent.setup();
+  // It("displays warning color when character count exceeds 90%", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const textarea = await screen.findByLabelText("投稿内容");
+  // 	Const textarea = await screen.findByLabelText("投稿内容");
 
   // 	// Type 253 characters (90.3% of 280)
-  // 	const longText = "a".repeat(253);
-  // 	await user.type(textarea, longText);
+  // 	Const longText = "a".repeat(253);
+  // 	Await user.type(textarea, longText);
 
   // 	// Character count should be displayed
-  // 	expect(screen.getByText("253")).toBeInTheDocument();
+  // 	Expect(screen.getByText("253")).toBeInTheDocument();
   // });
 
-  // it("works without onSubmit callback", async () => {
-  // 	const user = userEvent.setup();
+  // It("works without onSubmit callback", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const textarea = await screen.findByLabelText("投稿内容");
-  // 	await user.type(textarea, "Test post");
+  // 	Const textarea = await screen.findByLabelText("投稿内容");
+  // 	Await user.type(textarea, "Test post");
 
-  // 	const submitButton = screen.getByRole("button", { name: "投稿する" });
+  // 	Const submitButton = screen.getByRole("button", { name: "投稿する" });
 
   // 	// Should not throw when clicking without callback
-  // 	await user.click(submitButton);
+  // 	Await user.click(submitButton);
   // });
 
-  // it("renders modal with correct heading", async () => {
-  // 	const user = userEvent.setup();
+  // It("renders modal with correct heading", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	expect(await screen.findByText("新規投稿を作成")).toBeInTheDocument();
+  // 	Expect(await screen.findByText("新規投稿を作成")).toBeInTheDocument();
   // });
 
-  // it("renders textarea with placeholder", async () => {
-  // 	const user = userEvent.setup();
+  // It("renders textarea with placeholder", async () => {
+  // 	Const user = userEvent.setup();
 
-  // 	render(<NewPostDialog />);
+  // 	Render(<NewPostDialog />);
 
-  // 	await user.click(screen.getByRole("button", { name: "新規投稿" }));
+  // 	Await user.click(screen.getByRole("button", { name: "新規投稿" }));
 
-  // 	const textarea = await screen.findByPlaceholderText("今何してる？");
-  // 	expect(textarea).toBeInTheDocument();
+  // 	Const textarea = await screen.findByPlaceholderText("今何してる？");
+  // 	Expect(textarea).toBeInTheDocument();
   // });
 });

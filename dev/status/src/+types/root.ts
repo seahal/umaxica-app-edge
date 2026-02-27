@@ -39,7 +39,7 @@ export namespace Route {
       security?: {
         nonce?: string;
       };
-      cloudflare?: {
+      runtime?: {
         env?: Record<string, string>;
       };
     };

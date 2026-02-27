@@ -1,32 +1,32 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { reactRouter } from "@react-router/dev/vite";
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
-import babel from "vite-plugin-babel";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
+import babel from 'vite-plugin-babel';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const ReactCompilerConfig = {
-  target: "19",
+  target: '19',
 };
 
 export default defineConfig(() => {
-  const configuredPort = Number.parseInt(process.env.PORT ?? "5102", 10);
+  const configuredPort = Number.parseInt(process.env.PORT ?? '5102', 10);
   const serverPort = Number.isNaN(configuredPort) ? 5102 : configuredPort;
 
   return {
     plugins: [
       tailwindcss(),
       cloudflare({
-        viteEnvironment: { name: "ssr" },
         inspectorPort: false,
+        viteEnvironment: { name: 'ssr' },
       }),
       reactRouter(),
       babel({
-        filter: /\.[jt]sx?$/,
         babelConfig: {
-          presets: ["@babel/preset-typescript"],
-          plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+          plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
+          presets: ['@babel/preset-typescript'],
         },
+        filter: /\.[jt]sx?$/,
       }),
       tsconfigPaths(),
     ],

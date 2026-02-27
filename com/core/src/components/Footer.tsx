@@ -1,10 +1,10 @@
-import { Link, Tooltip, TooltipTrigger } from "react-aria-components";
+import { Link, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 interface FooterProps {
   codeName?: string;
 }
 
-export function Footer({ codeName = "" }: FooterProps) {
+export function Footer({ codeName = '' }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -15,7 +15,7 @@ export function Footer({ codeName = "" }: FooterProps) {
           {/* Brand section */}
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h3 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-              {codeName || "???"}
+              {codeName || '???'}
             </h3>
             <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
               最先端技術でモダンなWeb体験を構築
@@ -121,7 +121,7 @@ export function Footer({ codeName = "" }: FooterProps) {
         <div className="mt-12 animate-in fade-in duration-700 delay-500 border-t border-gray-200 pt-8 dark:border-gray-800">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              © {currentYear} {codeName || "Umaxica"}.
+              © {currentYear} {codeName || 'Umaxica'}.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
               <TooltipTrigger delay={200}>

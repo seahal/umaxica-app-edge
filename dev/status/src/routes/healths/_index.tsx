@@ -4,47 +4,47 @@ import {
   Row,
   Tab,
   TabList,
+  TabPanel,
   Table,
   TableBody,
   TableHeader,
-  TabPanel,
   Tabs,
-} from "react-aria-components";
-import { useLoaderData } from "react-router";
-import type { Route } from "../+types/home";
+} from 'react-aria-components';
+import { useLoaderData } from 'react-router';
+import type { Route } from '../+types/home';
 
 export const meta: Route.MetaFunction = () => [
-  { title: "Umaxica Developers - ステータス" },
-  { name: "description", content: "Umaxica の開発者向けサービスの稼働状況" },
+  { title: 'Umaxica Developers - ステータス' },
+  { content: 'Umaxica の開発者向けサービスの稼働状況', name: 'description' },
 ];
 
-type StatusLevel = "operational" | "degraded" | "maintenance" | "outage";
-type IncidentStatus = "resolved" | "monitoring" | "investigating";
+type StatusLevel = 'operational' | 'degraded' | 'maintenance' | 'outage';
+type IncidentStatus = 'resolved' | 'monitoring' | 'investigating';
 
-type ServiceStatus = {
+interface ServiceStatus {
   id: string;
   name: string;
   level: StatusLevel;
   description: string;
-};
+}
 
-type Incident = {
+interface Incident {
   id: string;
   title: string;
   status: IncidentStatus;
   timeRange: string;
   description: string;
-};
+}
 
-type HistoryEntry = {
+interface HistoryEntry {
   id: string;
   date: string;
   level: StatusLevel;
   summary: string;
   incidents: Incident[];
-};
+}
 
-type LoaderData = {
+interface LoaderData {
   overall: {
     level: StatusLevel;
     message: string;
@@ -53,156 +53,176 @@ type LoaderData = {
   services: ServiceStatus[];
   history: HistoryEntry[];
   notice: string | null;
-};
+}
 
 const STATUS_LABELS: Record<StatusLevel, string> = {
-  operational: "正常",
-  degraded: "一部遅延",
-  maintenance: "メンテナンス",
-  outage: "障害",
+  degraded: '一部遅延',
+  maintenance: 'メンテナンス',
+  operational: '正常',
+  outage: '障害',
 };
 
 const STATUS_STYLES: Record<StatusLevel, string> = {
-  operational:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
   degraded:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800',
   maintenance:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  operational:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
   outage:
-    "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border-rose-200 dark:border-rose-800',
 };
 
 const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
-  resolved: "解決済み",
-  monitoring: "監視中",
-  investigating: "調査中",
+  investigating: '調査中',
+  monitoring: '監視中',
+  resolved: '解決済み',
 };
 
-export function loader({ context }: Route.LoaderArgs): LoaderData {
-  const env = context?.cloudflare?.env ?? {};
-  const now = new Date();
+function readRuntimeEnvValue(key: string): string | undefined {
+  const processEnv =
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
-  const normalizeDate = (base: Date, daysAgo: number) => {
-    const date = new Date(base);
-    date.setHours(12, 0, 0, 0);
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString();
-  };
+  const fromProcess = processEnv[key] ?? processEnv[`VITE_${key}`];
+  if (fromProcess !== undefined) {
+    return fromProcess;
+  }
+
+  const importEnv =
+    (
+      import.meta as ImportMeta & {
+        env?: Record<string, string | undefined>;
+      }
+    ).env ?? {};
+
+  return importEnv[key] ?? importEnv[`VITE_${key}`];
+}
+
+function normalizeDate(base: Date, daysAgo: number): string {
+  const date = new Date(base);
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+}
+
+export function loader({ context }: Route.LoaderArgs): LoaderData {
+  const env = context?.runtime?.env ?? {};
+  const now = new Date();
 
   const history: HistoryEntry[] = [
     {
-      id: "day-0",
       date: normalizeDate(now, 0),
-      level: "degraded",
-      summary: "Webhook 配信の再送キューに遅延が発生しています。順次解消中です。",
+      id: 'day-0',
       incidents: [
         {
-          id: "incident-webhook-delay",
-          title: "Webhook 配信遅延",
-          status: "monitoring",
-          timeRange: "10:20 - 現在 JST",
           description:
-            "高負荷キューの処理が滞留し、一部イベントで最大 6 分の遅延が発生しています。",
+            '高負荷キューの処理が滞留し、一部イベントで最大 6 分の遅延が発生しています。',
+          id: 'incident-webhook-delay',
+          status: 'monitoring',
+          timeRange: '10:20 - 現在 JST',
+          title: 'Webhook 配信遅延',
         },
       ],
+      level: 'degraded',
+      summary: 'Webhook 配信の再送キューに遅延が発生しています。順次解消中です。',
     },
     {
-      id: "day-1",
       date: normalizeDate(now, 1),
-      level: "operational",
-      summary: "全てのサービスが正常に稼働しました。",
+      id: 'day-1',
       incidents: [],
+      level: 'operational',
+      summary: '全てのサービスが正常に稼働しました。',
     },
     {
-      id: "day-2",
       date: normalizeDate(now, 2),
-      level: "maintenance",
-      summary: "ドキュメント検索クラスタの予定メンテナンスを実施しました。",
+      id: 'day-2',
       incidents: [
         {
-          id: "incident-maintenance",
-          title: "検索クラスタの夜間メンテナンス",
-          status: "resolved",
-          timeRange: "01:00 - 01:26 JST",
           description:
-            "メンテナンス中は検索機能が読み取り専用モードとなり、書き込みは一時停止しました。",
+            'メンテナンス中は検索機能が読み取り専用モードとなり、書き込みは一時停止しました。',
+          id: 'incident-maintenance',
+          status: 'resolved',
+          timeRange: '01:00 - 01:26 JST',
+          title: '検索クラスタの夜間メンテナンス',
         },
       ],
+      level: 'maintenance',
+      summary: 'ドキュメント検索クラスタの予定メンテナンスを実施しました。',
     },
     {
-      id: "day-3",
       date: normalizeDate(now, 3),
-      level: "outage",
-      summary: "Edge API 認証で一時的な失敗が発生しましたが現在は解消済みです。",
+      id: 'day-3',
       incidents: [
         {
-          id: "incident-auth-failure",
-          title: "Edge API 認証エラー",
-          status: "resolved",
-          timeRange: "18:12 - 18:44 JST",
           description:
-            "リージョン JP-1 のキャッシュ不整合により、署名検証が失敗して 401 応答が増加しました。",
+            'リージョン JP-1 のキャッシュ不整合により、署名検証が失敗して 401 応答が増加しました。',
+          id: 'incident-auth-failure',
+          status: 'resolved',
+          timeRange: '18:12 - 18:44 JST',
+          title: 'Edge API 認証エラー',
         },
       ],
+      level: 'outage',
+      summary: 'Edge API 認証で一時的な失敗が発生しましたが現在は解消済みです。',
     },
   ];
 
   const services: ServiceStatus[] = [
     {
-      id: "edge-api",
-      name: "Edge API",
-      level: "operational",
-      description: "平均レスポンス 120ms・エラー率 0.02%。",
+      description: '平均レスポンス 120ms・エラー率 0.02%。',
+      id: 'edge-api',
+      level: 'operational',
+      name: 'Edge API',
     },
     {
-      id: "developer-console",
-      name: "開発者コンソール",
-      level: "operational",
-      description: "デプロイ履歴の確認や設定更新が通常通りご利用いただけます。",
+      description: 'デプロイ履歴の確認や設定更新が通常通りご利用いただけます。',
+      id: 'developer-console',
+      level: 'operational',
+      name: '開発者コンソール',
     },
     {
-      id: "webhook-delivery",
-      name: "Webhook 配信",
-      level: "degraded",
-      description: "再送キューを監視中です。到達まで最大 6 分の遅延が発生する場合があります。",
+      description: '再送キューを監視中です。到達まで最大 6 分の遅延が発生する場合があります。',
+      id: 'webhook-delivery',
+      level: 'degraded',
+      name: 'Webhook 配信',
     },
   ];
 
-  const noticeCandidate = (env.STATUS_NOTICE ?? env.VALUE_FROM_CLOUDFLARE ?? "").trim() || null;
+  const noticeCandidate =
+    (env.STATUS_NOTICE ?? readRuntimeEnvValue('STATUS_NOTICE') ?? '').trim() || null;
 
   return {
-    overall: {
-      level: "degraded",
-      message: "Webhook 配信の遅延を監視しています。",
-    },
-    updatedAt: now.toISOString(),
-    services,
     history,
     notice: noticeCandidate,
+    overall: {
+      level: 'degraded',
+      message: 'Webhook 配信の遅延を監視しています。',
+    },
+    services,
+    updatedAt: now.toISOString(),
   };
 }
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("ja-JP", {
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
+  return new Intl.DateTimeFormat('ja-JP', {
+    day: 'numeric',
+    month: 'numeric',
+    weekday: 'short',
   })
     .format(date)
-    .replace("曜日", "");
+    .replace('曜日', '');
 }
 
 function formatUpdatedAt(dateString: string) {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('ja-JP', {
+    day: 'numeric',
+    hour: '2-digit',
     hour12: false,
+    minute: '2-digit',
+    month: 'numeric',
+    year: 'numeric',
   }).format(date);
 }
 
