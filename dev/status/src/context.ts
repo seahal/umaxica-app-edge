@@ -1,5 +1,5 @@
 import { createContext } from 'react-router';
-import type { MiddlewareFunction, RouterContext } from 'react-router';
+import type { RouterContext } from 'react-router';
 
 interface RuntimeContextValue {
   security?: {
@@ -105,20 +105,3 @@ export function readEnv(context: unknown, key: string, fallback = ''): string {
 
   return fallback.trim();
 }
-
-const runtimeContextMiddleware: MiddlewareFunction = ({ context }, next) => {
-  const currentContext = context.get(RuntimeContext) ?? {};
-  if (!currentContext.security?.nonce) {
-    context.set(RuntimeContext, {
-      ...currentContext,
-      security: {
-        ...currentContext.security,
-        nonce: generateNonce(),
-      },
-    });
-  }
-
-  return next();
-};
-
-export const middleware: MiddlewareFunction[] = [runtimeContextMiddleware];
