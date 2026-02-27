@@ -1,14 +1,14 @@
-import type { Route } from "../../+types/healths/_index";
-import { getEnv } from "../../context";
+import type { Route } from '../../+types/healths/_index';
+import { getEnv } from '../../context';
 
 export function meta(_: Route.MetaArgs) {
-  return [{ name: "description", content: "status page" }];
+  return [{ content: 'status page', name: 'description' }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   return {
-    message: env.VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? '',
   };
 }
 

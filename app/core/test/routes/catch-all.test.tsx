@@ -1,12 +1,10 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { afterAll, describe, expect, it, vi } from "vitest";
-
-const { render } = await import("@testing-library/react");
+const { render } = await import('@testing-library/react');
 
 let renderCount = 0;
 
-vi.mock("../../src/routes/NotFoundPage", async (importOriginal) => {
+vi.mock(import('../../src/routes/NotFoundPage'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -17,45 +15,49 @@ vi.mock("../../src/routes/NotFoundPage", async (importOriginal) => {
   };
 });
 
-const catchAllModule = await import("../../src/routes/catch-all");
+const catchAllModule = await import('../../src/routes/catch-all');
 const { default: CatchAll, meta, loader, handle } = catchAllModule;
 
 afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe("catch-all route", () => {
-  it("defines handle metadata for breadcrumbs", () => {
-    expect(handle.titleName).toBe("404 - ページが見つかりません");
-    expect(handle.breadcrumb()).toBe("404");
+describe('catch-all route', () => {
+  it('defines handle metadata for breadcrumbs', () => {
+    expect(handle.titleName).toBe('404 - ページが見つかりません');
+    expect(handle.breadcrumb()).toBe('404');
   });
 
-  it("returns SEO metadata", () => {
-    expect(meta({} as never)).toEqual([
-      { title: "404 - ページが見つかりません" },
+  it('returns SEO metadata', () => {
+    expect(meta({} as never)).toStrictEqual([
+      { title: '404 - ページが見つかりません' },
       {
-        name: "description",
         content:
-          "お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。",
+          'お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。',
+        name: 'description',
       },
-      { name: "robots", content: "noindex, nofollow" },
+      { content: 'noindex, nofollow', name: 'robots' },
     ]);
   });
 
-  it("throws a 404 response from the loader", () => {
+  it('throws a 404 response from the loader', () => {
     expect(() => loader({} as never)).toThrowError(Response);
+
+    let caughtError: unknown;
     try {
       loader({} as never);
     } catch (error) {
-      const response = error as Response;
-      expect(response.status).toBe(404);
-      expect(response.statusText).toBe("ページが見つかりません");
+      caughtError = error;
     }
+
+    const response = caughtError as Response;
+    expect(response.status).toBe(404);
+    expect(response.statusText).toBe('ページが見つかりません');
   });
 
-  it("renders the not found page component", () => {
+  it('renders the not found page component', () => {
     const { getByTestId } = render(<CatchAll />);
-    expect(getByTestId("not-found-page")).toBeInTheDocument();
+    expect(getByTestId('not-found-page')).toBeInTheDocument();
     expect(renderCount).toBe(1);
   });
 });

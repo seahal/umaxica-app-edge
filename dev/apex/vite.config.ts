@@ -1,8 +1,12 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { defineConfig } from "vite";
+import devServer from '@hono/vite-dev-server';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [cloudflare()],
+  plugins: [
+    devServer({
+      entry: 'src/index.ts',
+    }),
+  ],
   server: {
     host: true,
     port: 5501,

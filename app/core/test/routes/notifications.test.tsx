@@ -1,20 +1,20 @@
-import "../../test-setup.ts";
+/* eslint-disable import/no-relative-parent-imports */
+import '../../test-setup.ts';
 
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import Notifications from "../../src/routes/notifications/_index";
+import { render, screen } from '@testing-library/react';
+import Notifications from '../../src/routes/notifications/_index';
 
-describe("Notifications route", () => {
-  it("renders notifications page", () => {
-    render(<Notifications loaderData={{ message: "" }} params={{}} matches={[]} />);
+describe('Notifications route', () => {
+  it('renders notifications page', () => {
+    render(<Notifications loaderData={{ message: '' }} params={{}} matches={[]} />);
 
-    expect(screen.getByText("Notification")).toBeInTheDocument();
-    expect(screen.getByText("underconstrution...")).toBeInTheDocument();
+    expect(screen.getByText('Notification')).toBeInTheDocument();
+    expect(screen.getByText('underconstrution...')).toBeInTheDocument();
   });
 
-  it("accepts loader data", () => {
-    render(<Notifications loaderData={{ message: "test" }} params={{}} matches={[]} />);
+  it('accepts loader data', () => {
+    render(<Notifications loaderData={{ message: 'test' }} params={{}} matches={[]} />);
 
-    expect(screen.getByText("Notification")).toBeInTheDocument();
+    expect(screen.getByText('Notification')).toBeInTheDocument();
   });
 });

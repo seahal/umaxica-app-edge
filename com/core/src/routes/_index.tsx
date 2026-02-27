@@ -8,72 +8,72 @@ import {
   TabPanel,
   Tabs,
   TextField,
-} from "react-aria-components";
-import { getEnv } from "../context";
-import type { Route } from "./+types/_index";
+} from 'react-aria-components';
+import { getEnv } from '../context';
+import type { Route } from './+types/_index';
 
 const focusAreas = [
   {
-    title: "Modular Platform",
-    description: "企業横断で再利用できる抽象度の高い基盤を提供。",
-    metric: "Re-usable Capsules",
-    value: "128",
-    accent: "from-blue-500/20 to-blue-500/0",
+    accent: 'from-blue-500/20 to-blue-500/0',
+    description: '企業横断で再利用できる抽象度の高い基盤を提供。',
+    metric: 'Re-usable Capsules',
+    title: 'Modular Platform',
+    value: '128',
   },
   {
-    title: "Experience Studio",
-    description: "自然なUIレイヤーでブランド体験を迅速に具現化。",
-    metric: "Prototype Cycles",
-    value: "72h",
-    accent: "from-purple-500/20 to-purple-500/0",
+    accent: 'from-purple-500/20 to-purple-500/0',
+    description: '自然なUIレイヤーでブランド体験を迅速に具現化。',
+    metric: 'Prototype Cycles',
+    title: 'Experience Studio',
+    value: '72h',
   },
   {
-    title: "Adaptive Insight",
-    description: "コンテキストに応じて変化する洞察で継続的に最適化。",
-    metric: "Signal Streams",
-    value: "∞",
-    accent: "from-emerald-500/20 to-emerald-500/0",
+    accent: 'from-emerald-500/20 to-emerald-500/0',
+    description: 'コンテキストに応じて変化する洞察で継続的に最適化。',
+    metric: 'Signal Streams',
+    title: 'Adaptive Insight',
+    value: '∞',
   },
 ];
 
 const perspectives = [
   {
-    id: "vision",
-    label: "Vision",
-    title: "遥か先の価値を見据える抽象的な青写真",
-    body: "デジタル体験を単なるタッチポイントではなく、企業文化と結びついた有機的なプラットフォームとして再構築します。",
+    body: 'デジタル体験を単なるタッチポイントではなく、企業文化と結びついた有機的なプラットフォームとして再構築します。',
+    id: 'vision',
+    label: 'Vision',
+    title: '遥か先の価値を見据える抽象的な青写真',
   },
   {
-    id: "platform",
-    label: "Platform",
-    title: "静かながら強靭なオペレーションレイヤー",
-    body: "React Aria を中心に据えたアクセシブルなUIと、Cloudflare Workersによる分散エッジを組み合わせ、柔軟性と安定性を両立します。",
+    body: 'React Aria を中心に据えたアクセシブルなUIと、Cloudflare Workersによる分散エッジを組み合わせ、柔軟性と安定性を両立します。',
+    id: 'platform',
+    label: 'Platform',
+    title: '静かながら強靭なオペレーションレイヤー',
   },
   {
-    id: "practice",
-    label: "Practice",
-    title: "継続する共創プロセス",
-    body: "抽象的なサービス設計、リズミカルなプロトタイピング、そしてユーザーフィードバックの循環で、常に最適な姿に磨き上げます。",
+    body: '抽象的なサービス設計、リズミカルなプロトタイピング、そしてユーザーフィードバックの循環で、常に最適な姿に磨き上げます。',
+    id: 'practice',
+    label: 'Practice',
+    title: '継続する共創プロセス',
   },
 ];
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica Commerce - Abstract Experience Sample" },
+    { title: 'Umaxica Commerce - Abstract Experience Sample' },
     {
-      name: "description",
-      content: "抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。",
+      content: '抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。',
+      name: 'description',
     },
   ];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  return { message: env.VALUE_FROM_CLOUDFLARE ?? "" };
+  return { message: env.VALUE_FROM_CLOUDFLARE ?? '' };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const headline = loaderData?.message || "Sculpting Calm & Capable Experiences";
+  const headline = loaderData?.message || 'Sculpting Calm & Capable Experiences';
 
   return (
     <main className="relative isolate overflow-hidden bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
@@ -178,14 +178,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   id={item.id}
                   className={({ isSelected, isFocusVisible }) =>
                     [
-                      "flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 outline-none",
+                      'flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 outline-none',
                       isSelected
-                        ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white",
+                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white',
                       isFocusVisible
-                        ? "ring-2 ring-offset-2 ring-blue-400 dark:ring-offset-slate-950"
-                        : "",
-                    ].join(" ")
+                        ? 'ring-2 ring-offset-2 ring-blue-400 dark:ring-offset-slate-950'
+                        : '',
+                    ].join(' ')
                   }
                 >
                   {item.label}

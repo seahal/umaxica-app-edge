@@ -1,25 +1,26 @@
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "react-router";
+  isRouteErrorResponse,
+} from 'react-router';
+import type { MiddlewareFunction } from 'react-router';
 
-import type { Route } from "./+types/root";
-import "./app.css";
+import type { Route } from './+types/root';
+import './app.css';
 
-import type { JSX, ReactNode } from "react";
-import { ErrorPage, ServiceUnavailablePage } from "./components/ErrorPage";
-import { InternalServerErrorPage } from "./components/InternalServerErrorPage";
-import { NotFoundPage } from "./components/NotFoundPage";
-import { getEnv, getNonce } from "./context";
+import type { JSX, ReactNode } from 'react';
+import { ErrorPage, ServiceUnavailablePage } from './components/ErrorPage';
+import { InternalServerErrorPage } from './components/InternalServerErrorPage';
+import { NotFoundPage } from './components/NotFoundPage';
+import { CloudflareContext, getEnv, getNonce } from './context';
 
 const isDevEnvironment = import.meta.env.DEV;
 
 export function meta() {
-  return [{ title: "Umaxica" }];
+  return [{ title: 'Umaxica' }];
 }
 
 export const links: Route.LinksFunction = () => [];
@@ -46,6 +47,31 @@ export default function App() {
   return <Outlet />;
 }
 
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCodePoint(...bytes));
+}
+
+const securityContextMiddleware: MiddlewareFunction = ({ context }, next) => {
+  const currentContext = context.get(CloudflareContext) ?? {};
+  const currentNonce = currentContext.security?.nonce;
+
+  if (!currentNonce) {
+    context.set(CloudflareContext, {
+      ...currentContext,
+      security: {
+        ...currentContext.security,
+        nonce: generateNonce(),
+      },
+    });
+  }
+
+  return next();
+};
+
+export const middleware: MiddlewareFunction[] = [securityContextMiddleware];
+
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element {
   if (isRouteErrorResponse(error)) {
     const rr = error as { status: number; statusText?: string };
@@ -70,9 +96,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element 
       <ErrorPage
         status={rr.status}
         title={`${rr.status} エラー`}
-        message={rr.statusText || "リクエストの処理中にエラーが発生しました。"}
+        message={rr.statusText || 'リクエストの処理中にエラーが発生しました。'}
         suggestion="時間をおいて再度お試しいただくか、お問い合わせフォームからご連絡ください。"
-        showNavigation={true}
+        showNavigation
       />
     );
   }
@@ -93,20 +119,20 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element 
       title="予期しないエラー"
       message="申し訳ございません。予期しないエラーが発生しました。"
       suggestion="ページを再読み込みするか、お問い合わせフォームからご連絡ください。"
-      showNavigation={true}
+      showNavigation
     />
   );
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const cspNonce = getNonce(context);
 
   return {
-    codeName: env.BRAND_NAME ?? "",
-    newsServiceUrl: env.NEWS_CORPORATE_URL ?? "",
-    docsServiceUrl: env.DOCS_CORPORATE_URL ?? "",
-    helpServiceUrl: env.HELP_CORPORATE_URL ?? "",
+    codeName: env.BRAND_NAME ?? '',
     cspNonce,
+    docsServiceUrl: env.DOCS_CORPORATE_URL ?? '',
+    helpServiceUrl: env.HELP_CORPORATE_URL ?? '',
+    newsServiceUrl: env.NEWS_CORPORATE_URL ?? '',
   };
 }

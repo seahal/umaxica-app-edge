@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Button,
   Input,
@@ -8,119 +8,121 @@ import {
   TabList,
   TabPanel,
   Tabs,
-} from "react-aria-components";
-import type { Post } from "../../components/PostCard";
-import { SearchResults, type Trend, type User } from "../../components/SearchResults";
-import { getEnv } from "../../context";
-import type { Route } from "../+types/home";
+} from 'react-aria-components';
+import type { Post } from '../../components/PostCard';
+import { SearchResults } from '../../components/SearchResults';
+import type { Trend, User } from '../../components/SearchResults';
+import { getEnv } from '../../context';
+import type { Route } from '../+types/home';
 
 export const handle = {
-  titleName: "Explore",
-  breadcrumb: () => "Explore",
+  breadcrumb: () => 'Explore',
+  titleName: 'Explore',
 };
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica - 探索" },
-    { name: "description", content: "ユーザー、投稿、トレンドを探索" },
+    { title: 'Umaxica - 探索' },
+    { content: 'ユーザー、投稿、トレンドを探索', name: 'description' },
   ];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   return {
-    message: env.VALUE_FROM_CLOUDFLARE ?? "",
+    message: env.VALUE_FROM_CLOUDFLARE ?? '',
   };
 }
 
 // サンプルデータ
 const sampleUsers: User[] = [
   {
-    id: "1",
-    name: "田中太郎",
-    username: "tanaka_taro",
-    bio: "Webエンジニア | React と TypeScript が好き | 東京在住",
+    bio: 'Webエンジニア | React と TypeScript が好き | 東京在住',
     followers: 1234,
+    id: '1',
+    name: '田中太郎',
+    username: 'tanaka_taro',
     verified: true,
   },
   {
-    id: "2",
-    name: "山田花子",
-    username: "yamada_hanako",
-    bio: "デザイナー | UI/UX デザインに情熱を注いでいます",
+    bio: 'デザイナー | UI/UX デザインに情熱を注いでいます',
     followers: 567,
+    id: '2',
+    name: '山田花子',
+    username: 'yamada_hanako',
     verified: false,
   },
   {
-    id: "3",
-    name: "佐藤次郎",
-    username: "sato_jiro",
-    bio: "フロントエンド開発者 | アクセシビリティ advocate",
+    bio: 'フロントエンド開発者 | アクセシビリティ advocate',
     followers: 890,
+    id: '3',
+    name: '佐藤次郎',
+    username: 'sato_jiro',
     verified: true,
   },
 ];
 
 const samplePosts: Post[] = [
   {
-    id: "1",
-    author: "田中太郎",
-    username: "tanaka_taro",
+    author: '田中太郎',
     content:
-      "React Aria を使ってアクセシブルなUIを作るのは楽しい！\nキーボード操作も完璧に動作します。",
-    timestamp: "2時間前",
+      'React Aria を使ってアクセシブルなUIを作るのは楽しい！\nキーボード操作も完璧に動作します。',
+    id: '1',
     likes: 45,
-    reposts: 8,
     replies: 3,
+    reposts: 8,
+    timestamp: '2時間前',
+    username: 'tanaka_taro',
   },
   {
-    id: "2",
-    author: "山田花子",
-    username: "yamada_hanako",
+    author: '山田花子',
     content:
-      "新しいデザインシステムを構築中です。\nReact Aria Components はデザインの自由度が高くて最高！",
-    timestamp: "5時間前",
+      '新しいデザインシステムを構築中です。\nReact Aria Components はデザインの自由度が高くて最高！',
+    id: '2',
     likes: 78,
-    reposts: 12,
     replies: 6,
+    reposts: 12,
+    timestamp: '5時間前',
+    username: 'yamada_hanako',
   },
   {
-    id: "3",
-    author: "佐藤次郎",
-    username: "sato_jiro",
+    author: '佐藤次郎',
     content:
-      "アクセシビリティは全てのユーザーのためのもの。\nReact Aria のおかげで実装が簡単になりました。",
-    timestamp: "1日前",
+      'アクセシビリティは全てのユーザーのためのもの。\nReact Aria のおかげで実装が簡単になりました。',
+    id: '3',
     likes: 156,
-    reposts: 34,
     replies: 18,
+    reposts: 34,
+    timestamp: '1日前',
+    username: 'sato_jiro',
   },
 ];
 
 const sampleTrends: Trend[] = [
   {
-    id: "1",
-    topic: "#ReactAria",
-    category: "テクノロジー",
-    posts: 12345,
+    category: 'テクノロジー',
+    id: '1',
+    posts: 12_345,
+    topic: '#ReactAria',
   },
   {
-    id: "2",
-    topic: "#アクセシビリティ",
-    category: "テクノロジー",
+    category: 'テクノロジー',
+    id: '2',
     posts: 8901,
+    topic: '#アクセシビリティ',
   },
   {
-    id: "3",
-    topic: "#WebDevelopment",
-    category: "テクノロジー",
-    posts: 23456,
+    category: 'テクノロジー',
+    id: '3',
+    posts: 23_456,
+    topic: '#WebDevelopment',
   },
 ];
 
 export default function Search(_: Route.ComponentProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeSearch, setActiveSearch] = useState(""); // 実際に検索された文字列
+  const [searchQuery, setSearchQuery] = useState('');
+  // 実際に検索された文字列
+  const [activeSearch, setActiveSearch] = useState('');
 
   // 検索実行
   const handleSearch = () => {
@@ -129,7 +131,7 @@ export default function Search(_: Route.ComponentProps) {
 
   // Enter キーで検索
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleSearch();
     }
   };
@@ -195,8 +197,8 @@ export default function Search(_: Route.ComponentProps) {
                   {searchQuery && (
                     <Button
                       onPress={() => {
-                        setSearchQuery("");
-                        setActiveSearch("");
+                        setSearchQuery('');
+                        setActiveSearch('');
                       }}
                       aria-label="検索をクリア"
                       className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-500 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -300,8 +302,8 @@ export default function Search(_: Route.ComponentProps) {
                   key={trend.id}
                   className={`p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer ${
                     index !== sampleTrends.length - 1
-                      ? "border-b border-gray-200 dark:border-gray-800"
-                      : ""
+                      ? 'border-b border-gray-200 dark:border-gray-800'
+                      : ''
                   }`}
                 >
                   <div className="text-sm text-gray-500 dark:text-gray-400">

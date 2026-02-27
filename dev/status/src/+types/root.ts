@@ -39,9 +39,6 @@ export namespace Route {
       security?: {
         nonce?: string;
       };
-      cloudflare?: {
-        env?: Record<string, string>;
-      };
       runtime?: {
         env?: Record<string, string>;
       };

@@ -1,11 +1,12 @@
-import { Hono, type Context } from "hono";
-import { renderAboutPage } from "./pages/about-page";
-import { renderHealthPage } from "./pages/health-page";
+import { Hono } from 'hono';
+import type { Context } from 'hono';
+import { renderAboutPage } from './pages/about-page';
+import { renderHealthPage } from './pages/health-page';
 import {
   buildRegionErrorPayload,
   getDefaultRedirectUrl,
   resolveRedirectUrl,
-} from "./pages/root-redirect";
+} from './pages/root-redirect';
 
 const DEFAULT_CSP_STYLE_SRC = "'self' https:";
 
@@ -14,34 +15,34 @@ function buildCspHeader(styleSrc: string = DEFAULT_CSP_STYLE_SRC): string {
 }
 
 function applySecurityHeaders(c: Context): void {
-  c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-  c.header("Content-Security-Policy", buildCspHeader());
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  c.header('Content-Security-Policy', buildCspHeader());
   c.header(
-    "Permissions-Policy",
-    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+    'Permissions-Policy',
+    'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
   );
-  c.header("X-Content-Type-Options", "nosniff");
-  c.header("X-Frame-Options", "DENY");
-  c.header("Referrer-Policy", "no-referrer");
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Referrer-Policy', 'no-referrer');
 }
 
-type AssetEnv = {
+interface AssetEnv {
   ASSETS?: {
     fetch: (request: Request) => Promise<Response>;
   };
-};
+}
 
 type AppBindings = AssetEnv;
 
 const app = new Hono<{ Bindings: AppBindings }>();
 
-app.use("*", async (c, next) => {
+app.use('*', async (c, next) => {
   await next();
   applySecurityHeaders(c);
 });
 
-app.get("/", (c) => {
-  const regionParam = c.req.query("ri");
+app.get('/', (c) => {
+  const regionParam = c.req.query('ri');
 
   const redirectUrl = resolveRedirectUrl(regionParam);
   if (redirectUrl) {
@@ -56,16 +57,10 @@ app.get("/", (c) => {
   return c.json(buildRegionErrorPayload(), 500);
 });
 
-app.get("/health", (c) => {
-  return c.html(renderHealthPage(new Date().toISOString()));
-});
+app.get('/health', (c) => c.html(renderHealthPage(new Date().toISOString())));
 
-app.get("/about", (c) => {
-  return c.html(renderAboutPage());
-});
+app.get('/about', (c) => c.html(renderAboutPage()));
 
-app.get("/v1/health", (c) => {
-  return c.json({ status: "ok" });
-});
+app.get('/v1/health', (c) => c.json({ status: 'ok' }));
 
 export default app;

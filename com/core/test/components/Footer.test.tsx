@@ -1,9 +1,8 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { afterAll, describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from 'react-dom/server';
 
-vi.mock("react-aria-components", async (importOriginal) => {
+vi.mock(import('react-aria-components'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -20,35 +19,35 @@ vi.mock("react-aria-components", async (importOriginal) => {
         {children}
       </a>
     ),
-    TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
     Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+    TooltipTrigger: ({ children }: { children: React.ReactNode }) => children,
   };
 });
 
-const { Footer } = await import("../../src/components/Footer");
+const { Footer } = await import('../../src/components/Footer');
 
 afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe("Footer component (com)", () => {
-  it("falls back to placeholder branding when code name is absent", () => {
+describe('Footer component (com)', () => {
+  it('falls back to placeholder branding when code name is absent', () => {
     const markup = renderToStaticMarkup(<Footer />);
 
-    expect(markup).toContain("???");
+    expect(markup).toContain('???');
     expect(markup).toContain(new Date().getFullYear().toString());
   });
 
-  it("renders provided code name and quick links", () => {
+  it('renders provided code name and quick links', () => {
     const markup = renderToStaticMarkup(<Footer codeName="Commerce Hub" />);
 
-    expect(markup).toContain("Commerce Hub");
+    expect(markup).toContain('Commerce Hub');
     expect(markup).toContain('href="/"');
     expect(markup).toContain('href="https://jp.help.umaxica.com/contacts/new"');
     expect(markup).not.toContain('href="/about"');
   });
 
-  it("exposes social links with security attributes", () => {
+  it('exposes social links with security attributes', () => {
     const markup = renderToStaticMarkup(<Footer codeName="Commerce Hub" />);
 
     expect(markup).toContain('href="https://github.com/seahal/umaxica-app-edge"');

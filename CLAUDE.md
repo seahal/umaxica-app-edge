@@ -73,6 +73,8 @@ Each domain has a **backend** (Hono on Workers) and **frontend** (React Router v
 - **Type checker**: tsgo (not tsc)
 - **Pre-commit hooks**: Lefthook runs format, lint, typecheck, audit, secret-scan (gitleaks), and tests in parallel
 
+> **IMPORTANT**: Do not modify the configurations for oxlint, oxfmt, tsgo, or vitest without explicit user permission.
+
 ## TypeScript
 
 Strict mode enabled. Key compiler options: `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`. Module resolution is `Bundler`. Path aliases `@app/*`, `@com/*`, `@org/*` map to respective `<workspace>/src/*`.

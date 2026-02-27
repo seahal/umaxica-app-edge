@@ -1,5 +1,3 @@
-import { afterAll, expect, it, vi } from "vitest";
-
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
 const originalWindow = globalThis.window as (Window & typeof globalThis) | undefined;
@@ -16,7 +14,7 @@ if (!originalWindow) {
   } as unknown as Window & typeof globalThis;
 }
 
-vi.mock("react-dom/client", async (importOriginal) => {
+vi.mock(import('react-dom/client'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -26,7 +24,7 @@ vi.mock("react-dom/client", async (importOriginal) => {
   };
 });
 
-vi.mock("react-router/dom", async (importOriginal) => {
+vi.mock(import('react-router/dom'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -34,15 +32,15 @@ vi.mock("react-router/dom", async (importOriginal) => {
   };
 });
 
-vi.mock("@sentry/react-router", () => ({
-  init: vi.fn(() => {}),
+vi.mock(import('@sentry/react-router'), () => ({
   captureException: vi.fn(() => {}),
   captureMessage: vi.fn(() => {}),
+  init: vi.fn(() => {}),
 }));
 
-await import("../src/entry.client");
+await import('../src/entry.client');
 
-it("hydrates the app client entry without throwing", () => {
+it('hydrates the app client entry without throwing', () => {
   expect(hydrateCalls.length).toBe(1);
   expect(hydrateCalls[0]?.[0]).toBe(document);
 });

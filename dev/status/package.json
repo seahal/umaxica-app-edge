@@ -27,7 +27,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260228.0",
     "@react-router/dev": "^7.13.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -36,7 +35,6 @@
     "@types/react-dom": "^19.2.3",
     "happy-dom": "^20.6.1",
     "vite": "^6.3.5",
-    "vitest": "^4.0.18",
-    "wrangler": "^4.67.0"
+    "vitest": "^4.0.18"
   }
 }

@@ -1,9 +1,8 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from 'react-dom/server';
 
 let renderCount = 0;
 
-vi.mock("../../src/components/NotFoundPage", async (importOriginal) => {
+vi.mock(import('../../src/components/NotFoundPage'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -14,37 +13,41 @@ vi.mock("../../src/components/NotFoundPage", async (importOriginal) => {
   };
 });
 
-const routeModule = await import("../../src/routes/catch-all");
+const routeModule = await import('../../src/routes/catch-all');
 const { meta, loader, default: CatchAll } = routeModule;
 
 afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe("Route: catch-all (com)", () => {
-  it("declares SEO metadata discouraging indexing", () => {
+describe('Route: catch-all (com)', () => {
+  it('declares SEO metadata discouraging indexing', () => {
     const entries = meta({} as never);
     expect(entries).toContainEqual({
-      title: "404 - ページが見つかりません | UMAXICA",
+      title: '404 - ページが見つかりません | UMAXICA',
     });
     expect(entries).toContainEqual({
-      name: "robots",
-      content: "noindex, nofollow",
+      content: 'noindex, nofollow',
+      name: 'robots',
     });
   });
 
-  it("throws a 404 response from the loader", () => {
+  it('throws a 404 response from the loader', () => {
     expect(() => loader({} as never)).toThrowError(Response);
+
+    let caughtError: unknown;
     try {
       loader({} as never);
     } catch (error) {
-      const response = error as Response;
-      expect(response.status).toBe(404);
-      expect(response.statusText).toBe("ページが見つかりません");
+      caughtError = error;
     }
+
+    const response = caughtError as Response;
+    expect(response.status).toBe(404);
+    expect(response.statusText).toBe('ページが見つかりません');
   });
 
-  it("renders the not found page component", () => {
+  it('renders the not found page component', () => {
     renderCount = 0;
     const markup = renderToStaticMarkup(<CatchAll />);
 

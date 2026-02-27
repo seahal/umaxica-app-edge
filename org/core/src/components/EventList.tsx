@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -9,7 +9,7 @@ import {
   ModalOverlay,
   Radio,
   RadioGroup,
-} from "react-aria-components";
+} from 'react-aria-components';
 
 // イベントデータの型
 interface Event {
@@ -19,7 +19,7 @@ interface Event {
   date: string;
   time: string;
   location: string;
-  category: "conference" | "meetup" | "workshop" | "webinar";
+  category: 'conference' | 'meetup' | 'workshop' | 'webinar';
   capacity: number;
   registered: number;
 }
@@ -27,72 +27,72 @@ interface Event {
 // サンプルイベントデータ
 const events: Event[] = [
   {
-    id: "1",
-    title: "React Aria ハンズオンワークショップ",
-    description: "アクセシブルな UI コンポーネントを React Aria で構築する方法を学びます",
-    date: "2025-11-15",
-    time: "14:00 - 17:00",
-    location: "オンライン",
-    category: "workshop",
     capacity: 50,
+    category: 'workshop',
+    date: '2025-11-15',
+    description: 'アクセシブルな UI コンポーネントを React Aria で構築する方法を学びます',
+    id: '1',
+    location: 'オンライン',
     registered: 32,
+    time: '14:00 - 17:00',
+    title: 'React Aria ハンズオンワークショップ',
   },
   {
-    id: "2",
-    title: "Web アクセシビリティカンファレンス 2025",
-    description: "最新のアクセシビリティ技術とベストプラクティスを学ぶ",
-    date: "2025-11-22",
-    time: "10:00 - 18:00",
-    location: "東京国際フォーラム",
-    category: "conference",
     capacity: 200,
+    category: 'conference',
+    date: '2025-11-22',
+    description: '最新のアクセシビリティ技術とベストプラクティスを学ぶ',
+    id: '2',
+    location: '東京国際フォーラム',
     registered: 156,
+    time: '10:00 - 18:00',
+    title: 'Web アクセシビリティカンファレンス 2025',
   },
   {
-    id: "3",
-    title: "フロントエンド開発者ミートアップ",
-    description: "フロントエンド開発者同士の交流会",
-    date: "2025-11-08",
-    time: "19:00 - 21:00",
-    location: "渋谷カフェスペース",
-    category: "meetup",
     capacity: 30,
+    category: 'meetup',
+    date: '2025-11-08',
+    description: 'フロントエンド開発者同士の交流会',
+    id: '3',
+    location: '渋谷カフェスペース',
     registered: 28,
+    time: '19:00 - 21:00',
+    title: 'フロントエンド開発者ミートアップ',
   },
   {
-    id: "4",
-    title: "デザインシステム構築ウェビナー",
-    description: "React Aria を使ったデザインシステムの作り方",
-    date: "2025-11-30",
-    time: "20:00 - 21:30",
-    location: "オンライン",
-    category: "webinar",
     capacity: 100,
+    category: 'webinar',
+    date: '2025-11-30',
+    description: 'React Aria を使ったデザインシステムの作り方',
+    id: '4',
+    location: 'オンライン',
     registered: 67,
+    time: '20:00 - 21:30',
+    title: 'デザインシステム構築ウェビナー',
   },
 ];
 
 const categoryNames = {
-  conference: "カンファレンス",
-  meetup: "ミートアップ",
-  workshop: "ワークショップ",
-  webinar: "ウェビナー",
+  conference: 'カンファレンス',
+  meetup: 'ミートアップ',
+  webinar: 'ウェビナー',
+  workshop: 'ワークショップ',
 };
 
 const categoryColors = {
-  conference: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  meetup: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  workshop: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  webinar: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  conference: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  meetup: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  webinar: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  workshop: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
 /** イベント一覧コンポーネント（組織・団体サイト向け） */
 export function EventList() {
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterCategory, setFilterCategory] = useState('all');
 
   // フィルタリング
   const filteredEvents = events.filter(
-    (e) => filterCategory === "all" || e.category === filterCategory,
+    (e) => filterCategory === 'all' || e.category === filterCategory,
   );
 
   return (
@@ -201,8 +201,8 @@ function EventCard({ event }: { event: Event }) {
           <div className="bg-gradient-to-br from-teal-400 to-green-500 rounded-xl p-4 text-white text-center min-w-[100px]">
             <div className="text-3xl font-bold">{new Date(event.date).getDate()}</div>
             <div className="text-sm">
-              {new Date(event.date).toLocaleDateString("ja-JP", {
-                month: "short",
+              {new Date(event.date).toLocaleDateString('ja-JP', {
+                month: 'short',
               })}
             </div>
             <div className="text-xs mt-1">{event.time}</div>
@@ -264,7 +264,7 @@ function EventCard({ event }: { event: Event }) {
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className={`h-full ${
-                  fillRate >= 90 ? "bg-red-500" : fillRate >= 70 ? "bg-yellow-500" : "bg-green-500"
+                  fillRate >= 90 ? 'bg-red-500' : fillRate >= 70 ? 'bg-yellow-500' : 'bg-green-500'
                 }`}
                 style={{ width: `${fillRate}%` }}
               />
@@ -278,7 +278,7 @@ function EventCard({ event }: { event: Event }) {
               isDisabled={remaining === 0}
               className="px-6 py-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
-              {remaining === 0 ? "満員" : "参加申し込み"}
+              {remaining === 0 ? '満員' : '参加申し込み'}
             </Button>
 
             {/* 申し込み確認モーダル */}

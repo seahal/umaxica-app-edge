@@ -1,5 +1,3 @@
-import app from "../../src/index";
+import app from '../../src/index';
 
-export const requestFromComApp = (path: string, init?: RequestInit) => {
-  return app.request(path, init);
-};
+export const requestFromComApp = (path: string, init?: RequestInit) => app.request(path, init);

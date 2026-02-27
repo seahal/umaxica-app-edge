@@ -1,5 +1,3 @@
-import { afterAll, expect, it, vi } from "vitest";
-
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
 
@@ -9,7 +7,7 @@ if (!originalDocument) {
   } as unknown as Document;
 }
 
-vi.mock("react-dom/client", async (importOriginal) => {
+vi.mock(import('react-dom/client'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -19,7 +17,7 @@ vi.mock("react-dom/client", async (importOriginal) => {
   };
 });
 
-vi.mock("react-router/dom", async (importOriginal) => {
+vi.mock(import('react-router/dom'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -27,9 +25,9 @@ vi.mock("react-router/dom", async (importOriginal) => {
   };
 });
 
-await import("../src/entry.client");
+await import('../src/entry.client');
 
-it("hydrates the com client entry without throwing", () => {
+it('hydrates the com client entry without throwing', () => {
   expect(hydrateCalls.length).toBe(1);
   expect(hydrateCalls[0]?.[0]).toBe(document);
 });

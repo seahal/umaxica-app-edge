@@ -1,45 +1,43 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   esbuild: {
-    jsx: "automatic",
+    jsx: 'automatic',
   },
   resolve: {
     alias: {
-      "@sentry/react-router": new URL(
-        "./app/core/__mocks__/@sentry/react-router.ts",
-        import.meta.url,
-      ).pathname,
+      '@sentry/react-router': new URL('app/core/__mocks__/@sentry/react-router.ts', import.meta.url)
+        .pathname,
     },
   },
   test: {
-    globals: true,
-    environment: "happy-dom",
-    include: [
-      "app/**/*.test.{ts,tsx}",
-      "com/**/*.test.{ts,tsx}",
-      "dev/**/*.test.{ts,tsx}",
-      "org/**/*.test.{ts,tsx}",
-      "net/**/*.test.{ts,tsx}",
-      "test/**/*.test.{ts,tsx}",
-    ],
-    setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      exclude: [
+        '**/+types/**',
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/node_modules/**',
+        '**/build/**',
+        '**/.react-router/**',
+        '**/*.css',
+        '**/*.svg',
+      ],
+      include: ['**/*.{ts,tsx,js,jsx}'],
+      provider: 'v8',
+    },
     deps: {
       interopDefault: true,
     },
-    coverage: {
-      provider: "v8",
-      include: ["**/*.{ts,tsx,js,jsx}"],
-      exclude: [
-        "**/+types/**",
-        "**/*.d.ts",
-        "**/*.test.{ts,tsx}",
-        "**/node_modules/**",
-        "**/build/**",
-        "**/.react-router/**",
-        "**/*.css",
-        "**/*.svg",
-      ],
-    },
+    environment: 'happy-dom',
+    globals: true,
+    include: [
+      'app/**/*.test.{ts,tsx}',
+      'com/**/*.test.{ts,tsx}',
+      'dev/**/*.test.{ts,tsx}',
+      'org/**/*.test.{ts,tsx}',
+      'net/**/*.test.{ts,tsx}',
+      'test/**/*.test.{ts,tsx}',
+    ],
+    setupFiles: ['./vitest.setup.ts'],
   },
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Link as AriaLink,
   Breadcrumb,
@@ -13,7 +13,7 @@ import {
   TabList,
   TabPanel,
   Tabs,
-} from "react-aria-components";
+} from 'react-aria-components';
 
 // ドキュメントデータの型
 interface DocSection {
@@ -26,10 +26,6 @@ interface DocSection {
 // サンプルドキュメントデータ
 const docSections: DocSection[] = [
   {
-    id: "getting-started",
-    title: "はじめに",
-    content:
-      "React Aria Components へようこそ。このライブラリは、アクセシブルな UI コンポーネントを簡単に構築できるように設計されています。",
     code: `import { Button } from 'react-aria-components';
 
 function App() {
@@ -39,12 +35,12 @@ function App() {
     </Button>
   );
 }`,
+    content:
+      'React Aria Components へようこそ。このライブラリは、アクセシブルな UI コンポーネントを簡単に構築できるように設計されています。',
+    id: 'getting-started',
+    title: 'はじめに',
   },
   {
-    id: "button",
-    title: "Button コンポーネント",
-    content:
-      "Button は最も基本的なコンポーネントの一つです。onClick ではなく onPress を使うことで、タッチデバイスでも正しく動作します。",
     code: `import { Button } from 'react-aria-components';
 
 <Button
@@ -53,12 +49,12 @@ function App() {
 >
   ボタン
 </Button>`,
+    content:
+      'Button は最も基本的なコンポーネントの一つです。onClick ではなく onPress を使うことで、タッチデバイスでも正しく動作します。',
+    id: 'button',
+    title: 'Button コンポーネント',
   },
   {
-    id: "tabs",
-    title: "Tabs コンポーネント",
-    content:
-      "Tabs は複数のコンテンツを切り替えるためのコンポーネントです。キーボードの矢印キーでも操作できます。",
     code: `import { Tabs, TabList, Tab, TabPanel } from 'react-aria-components';
 
 <Tabs>
@@ -73,12 +69,12 @@ function App() {
     コンテンツ2
   </TabPanel>
 </Tabs>`,
+    content:
+      'Tabs は複数のコンテンツを切り替えるためのコンポーネントです。キーボードの矢印キーでも操作できます。',
+    id: 'tabs',
+    title: 'Tabs コンポーネント',
   },
   {
-    id: "dialog",
-    title: "Dialog コンポーネント",
-    content:
-      "Dialog はモーダルウィンドウを実装するためのコンポーネントです。フォーカストラップや ESC キーでの閉じる機能が自動的に提供されます。",
     code: `import {
   DialogTrigger,
   Button,
@@ -100,12 +96,12 @@ function App() {
     </Dialog>
   </Modal>
 </DialogTrigger>`,
+    content:
+      'Dialog はモーダルウィンドウを実装するためのコンポーネントです。フォーカストラップや ESC キーでの閉じる機能が自動的に提供されます。',
+    id: 'dialog',
+    title: 'Dialog コンポーネント',
   },
   {
-    id: "form",
-    title: "Form コンポーネント",
-    content:
-      "Form 関連のコンポーネントは、アクセシブルなフォームを簡単に作成できます。バリデーションやエラー表示も組み込まれています。",
     code: `import {
   Form,
   TextField,
@@ -121,6 +117,10 @@ function App() {
   </TextField>
   <Button type="submit">送信</Button>
 </Form>`,
+    content:
+      'Form 関連のコンポーネントは、アクセシブルなフォームを簡単に作成できます。バリデーションやエラー表示も組み込まれています。',
+    id: 'form',
+    title: 'Form コンポーネント',
   },
 ];
 
@@ -129,8 +129,8 @@ function App() {
  * React Aria の SearchField、Tabs、Breadcrumbs を使用
  */
 export function DocsViewer() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSection, setSelectedSection] = useState("getting-started");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSection, setSelectedSection] = useState('getting-started');
 
   // 検索フィルタリング
   const filteredSections = docSections.filter(
@@ -179,8 +179,10 @@ export function DocsViewer() {
               selectionMode="single"
               selectedKeys={[selectedSection]}
               onSelectionChange={(keys: Iterable<string | number>) => {
-                const key = Array.from(keys)[0];
-                if (key) setSelectedSection(key as string);
+                const key = [...keys][0];
+                if (key) {
+                  setSelectedSection(key as string);
+                }
               }}
               className="space-y-1 outline-none"
             >
@@ -267,15 +269,15 @@ export function DocsViewer() {
                       <div className="relative">
                         <Button
                           onPress={() => {
-                            navigator.clipboard.writeText(currentSection?.code ?? "");
-                            alert("コードをクリップボードにコピーしました！");
+                            navigator.clipboard.writeText(currentSection?.code ?? '');
+                            alert('コードをクリップボードにコピーしました！');
                           }}
                           className="absolute top-4 right-4 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                           コピー
                         </Button>
                         <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-6 rounded-xl overflow-x-auto">
-                          <code>{currentSection?.code ?? ""}</code>
+                          <code>{currentSection?.code ?? ''}</code>
                         </pre>
                       </div>
                     </TabPanel>

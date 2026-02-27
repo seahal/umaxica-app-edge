@@ -14,38 +14,39 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "hono": "^4.12.1",
+    "hono": "^4.12.2",
     "jose": "^6.1.3",
-    "tailwindcss": "^4.2.0"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
-    "@cloudflare/vite-plugin": "^1.25.2",
-    "@cloudflare/workers-types": "^4.20260303.0",
+    "@cloudflare/vite-plugin": "^1.25.4",
+    "@cloudflare/workers-types": "^4.20260305.0",
     "@react-router/cloudflare": "^7.13.1",
     "@sentry/react-router": "^10.39.0",
-    "@tailwindcss/vite": "^4.2.0",
+    "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@typescript/native-preview": "7.0.0-dev.20260224.1",
+    "@typescript/native-preview": "7.0.0-dev.20260227.1",
     "@vercel/react-router": "^1.2.5",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "4.0.18",
     "babel-plugin-react-compiler": "^1.0.0",
-    "miniflare": "^4.20260219.0",
-    "oxfmt": "^0.34.0",
-    "oxlint": "^1.49.0",
+    "miniflare": "^4.20260302.0",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
     "vite-plugin-babel": "^1.5.1",
     "vite-ssr-components": "^0.5.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18",
-    "wrangler": "^4.67.0"
+    "wrangler": "^4.68.0"
   },
   "packageManager": "pnpm@10.29.3",
   "pnpm": {
     "overrides": {
-      "minimatch": ">=10.2.1",
+      "minimatch": ">=10.2.3",
+      "fast-xml-parser": "5.3.8",
       "ajv": ">=8.18.0"
     },
     "ignoredBuiltDependencies": [

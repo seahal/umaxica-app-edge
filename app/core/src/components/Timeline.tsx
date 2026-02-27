@@ -1,63 +1,68 @@
-import { useState } from "react";
-import { Button, Tab, TabList, TabPanel, Tabs } from "react-aria-components";
-import { NewPostDialog } from "./NewPostDialog";
-import { type Post, PostCard } from "./PostCard";
+import { useState } from 'react';
+import { Button, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { NewPostDialog } from './NewPostDialog';
+import { PostCard } from './PostCard';
+import type { Post } from './PostCard';
 
 // サンプルデータ
 const initialPosts: Post[] = [
   {
-    id: "1",
-    author: "田中太郎",
-    username: "tanaka_taro",
-    content: "今日はいい天気ですね！散歩に行ってきます。",
-    timestamp: "2時間前",
+    author: '田中太郎',
+    content: '今日はいい天気ですね！散歩に行ってきます。',
+    id: '1',
     likes: 42,
-    reposts: 8,
     replies: 5,
+    reposts: 8,
+    timestamp: '2時間前',
+    username: 'tanaka_taro',
   },
   {
-    id: "2",
-    author: "山田花子",
-    username: "yamada_hanako",
+    author: '山田花子',
     content:
-      "新しいプロジェクトを始めました！\nReact Aria を使ってアクセシブルなUIを作っています。\n\n#React #ReactAria #アクセシビリティ",
-    timestamp: "4時間前",
+      '新しいプロジェクトを始めました！\nReact Aria を使ってアクセシブルなUIを作っています。\n\n#React #ReactAria #アクセシビリティ',
+    id: '2',
     likes: 128,
-    reposts: 23,
     replies: 15,
+    reposts: 23,
+    timestamp: '4時間前',
+    username: 'yamada_hanako',
   },
   {
-    id: "3",
-    author: "佐藤次郎",
-    username: "sato_jiro",
-    content: "コーヒーブレイク中☕\n午後も頑張ります！",
-    timestamp: "6時間前",
+    author: '佐藤次郎',
+    content: 'コーヒーブレイク中☕\n午後も頑張ります！',
+    id: '3',
     likes: 67,
-    reposts: 3,
     replies: 8,
+    reposts: 3,
+    timestamp: '6時間前',
+    username: 'sato_jiro',
   },
   {
-    id: "4",
-    author: "鈴木美咲",
-    username: "suzuki_misaki",
+    author: '鈴木美咲',
     content:
-      "最近 Tailwind CSS v4 を触ってるけど、めちゃくちゃ書きやすくなってる！\nカスタマイズも簡単だし、開発体験が最高です。",
-    timestamp: "8時間前",
+      '最近 Tailwind CSS v4 を触ってるけど、めちゃくちゃ書きやすくなってる！\nカスタマイズも簡単だし、開発体験が最高です。',
+    id: '4',
     likes: 234,
-    reposts: 45,
     replies: 32,
+    reposts: 45,
+    timestamp: '8時間前',
+    username: 'suzuki_misaki',
   },
   {
-    id: "5",
-    author: "高橋健",
-    username: "takahashi_ken",
-    content: "週末はキャンプに行く予定です🏕️\n久しぶりのアウトドア、楽しみ！",
-    timestamp: "10時間前",
+    author: '高橋健',
+    content: '週末はキャンプに行く予定です🏕️\n久しぶりのアウトドア、楽しみ！',
+    id: '5',
     likes: 89,
-    reposts: 12,
     replies: 18,
+    reposts: 12,
+    timestamp: '10時間前',
+    username: 'takahashi_ken',
   },
 ];
+
+function handleReplyDemo(postId: string) {
+  console.log(`返信: ${postId}`);
+}
 
 /**
  * SNS風のタイムラインコンポーネント
@@ -69,14 +74,14 @@ export function Timeline() {
   // 新規投稿の追加
   const handleNewPost = (content: string) => {
     const newPost: Post = {
-      id: Date.now().toString(),
-      author: "あなた",
-      username: "current_user",
+      author: 'あなた',
       content,
-      timestamp: "たった今",
+      id: Date.now().toString(),
       likes: 0,
-      reposts: 0,
       replies: 0,
+      reposts: 0,
+      timestamp: 'たった今',
+      username: 'current_user',
     };
     setPosts([newPost, ...posts]);
   };
@@ -91,11 +96,6 @@ export function Timeline() {
     setPosts(
       posts.map((post) => (post.id === postId ? { ...post, reposts: post.reposts + 1 } : post)),
     );
-  };
-
-  // 返信の処理（デモ用）
-  const handleReply = (postId: string) => {
-    console.log(`返信: ${postId}`);
   };
 
   return (
@@ -132,7 +132,7 @@ export function Timeline() {
                 post={post}
                 onLike={handleLike}
                 onRepost={handleRepost}
-                onReply={handleReply}
+                onReply={handleReplyDemo}
               />
             ))}
           </div>

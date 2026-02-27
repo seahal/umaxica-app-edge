@@ -1,5 +1,6 @@
-import { Hono, type Context } from "hono";
-import { renderer } from "./renderer";
+import { Hono } from 'hono';
+import type { Context } from 'hono';
+import { renderer } from './renderer';
 
 const DEFAULT_CSP_STYLE_SRC = "'self' https:";
 
@@ -8,25 +9,25 @@ function buildCspHeader(styleSrc: string = DEFAULT_CSP_STYLE_SRC): string {
 }
 
 function applySecurityHeaders(c: Context): void {
-  c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-  c.header("Content-Security-Policy", buildCspHeader());
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  c.header('Content-Security-Policy', buildCspHeader());
   c.header(
-    "Permissions-Policy",
-    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+    'Permissions-Policy',
+    'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
   );
-  c.header("X-Content-Type-Options", "nosniff");
-  c.header("X-Frame-Options", "DENY");
-  c.header("Referrer-Policy", "no-referrer");
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Referrer-Policy', 'no-referrer');
 }
 
 const app = new Hono();
 
-app.use("*", async (c, next) => {
+app.use('*', async (c, next) => {
   await next();
   applySecurityHeaders(c);
 });
 
-app.get("/health", (c) => {
+app.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.render(
     <div class="space-y-4">
@@ -40,8 +41,8 @@ app.get("/health", (c) => {
 
 app.use(renderer);
 
-app.get("/", (c) => {
-  return c.render(
+app.get('/', (c) =>
+  c.render(
     <>
       <hr />
       <div class="space-y-4">
@@ -63,18 +64,18 @@ app.get("/", (c) => {
       </div>
       <hr />
     </>,
-  );
-});
+  ),
+);
 
-app.get("/about", (c) => {
-  return c.render(
+app.get('/about', (c) =>
+  c.render(
     <>
       <hr />
       <h2>Contact</h2>
       <p>For more information, please visit our main page.</p>
       <hr />
     </>,
-  );
-});
+  ),
+);
 
 export default app;

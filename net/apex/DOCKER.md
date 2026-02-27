@@ -104,7 +104,7 @@ docker compose exec dev env | grep -Ei 'http_proxy|https_proxy|no_proxy|all_prox
 
 ```yaml
 ports:
-  - "3000:5173" # ホスト側のポートを 3000 に変更
+  - '3000:5173' # ホスト側のポートを 3000 に変更
 ```
 
 ### 依存関係が見つからない

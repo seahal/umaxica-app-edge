@@ -1,14 +1,15 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
+import type { MiddlewareFunction } from 'react-router';
 
-import type { Route } from "./+types/root";
-import "./app.css";
+import type { Route } from './+types/root';
+import './app.css';
 
-import type { ReactNode } from "react";
-import { getEnv, getNonce } from "./context";
+import type { ReactNode } from 'react';
+import { CloudflareContext, getEnv, getNonce } from './context';
 
 // 既定のメタ情報（各ページで未指定の場合のデフォルト）
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "" }];
+  return [{ title: '' }];
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -38,19 +39,44 @@ export default function App() {
   return <Outlet />;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCodePoint(...bytes));
+}
+
+const securityContextMiddleware: MiddlewareFunction = ({ context }, next) => {
+  const currentContext = context.get(CloudflareContext) ?? {};
+  const currentNonce = currentContext.security?.nonce;
+
+  if (!currentNonce) {
+    context.set(CloudflareContext, {
+      ...currentContext,
+      security: {
+        ...currentContext.security,
+        nonce: generateNonce(),
+      },
+    });
+  }
+
+  return next();
+};
+
+export const middleware: MiddlewareFunction[] = [securityContextMiddleware];
+
+export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const cspNonce = getNonce(context);
 
   return {
-    codeName: env.BRAND_NAME ?? "",
-    helpServiceUrl: env.HELP_SERVICE_URL ?? "",
-    docsServiceUrl: env.DOCS_SERVICE_URL ?? "",
-    newsServiceUrl: env.NEWS_SERVICE_URL ?? "",
-    apiServiceUrl: env.API_SERVICE_URL ?? "",
-    apexServiceUrl: env.APEX_SERVICE_URL ?? "",
-    edgeServiceUrl: env.EDGE_SERVICE_URL ?? "",
+    apexServiceUrl: env.APEX_SERVICE_URL ?? '',
+    apiServiceUrl: env.API_SERVICE_URL ?? '',
+    codeName: env.BRAND_NAME ?? '',
     cspNonce,
-    sentryDsn: env.SENTRY_DNC ?? "",
+    docsServiceUrl: env.DOCS_SERVICE_URL ?? '',
+    edgeServiceUrl: env.EDGE_SERVICE_URL ?? '',
+    helpServiceUrl: env.HELP_SERVICE_URL ?? '',
+    newsServiceUrl: env.NEWS_SERVICE_URL ?? '',
+    sentryDsn: env.SENTRY_DNC ?? '',
   };
 }

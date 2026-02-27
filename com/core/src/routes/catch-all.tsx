@@ -1,22 +1,22 @@
-import { NotFoundPage } from "../components/NotFoundPage";
-import type { Route } from "./+types/catch-all";
+import { NotFoundPage } from '../components/NotFoundPage';
+import type { Route } from './+types/catch-all';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "404 - ページが見つかりません | UMAXICA" },
+    { title: '404 - ページが見つかりません | UMAXICA' },
     {
-      name: "description",
       content:
-        "お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。",
+        'お探しのページは見つかりませんでした。URLを確認するか、ホームページから目的のページをお探しください。',
+      name: 'description',
     },
-    { name: "robots", content: "noindex, nofollow" },
+    { content: 'noindex, nofollow', name: 'robots' },
   ];
 }
 
 export function loader(_: Route.LoaderArgs) {
-  throw new Response("Not Found", {
+  throw new Response('Not Found', {
     status: 404,
-    statusText: "ページが見つかりません",
+    statusText: 'ページが見つかりません',
   });
 }
 

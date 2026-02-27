@@ -1,15 +1,15 @@
-import { Link } from "react-router-dom";
-import { SettingLayout } from "../../components/SettingComponents";
-import { getEnv } from "../../context";
-import type { Route } from "../+types/home";
+import { Link } from 'react-router-dom';
+import { SettingLayout } from '../../components/SettingComponents';
+import { getEnv } from '../../context';
+import type { Route } from '../+types/home';
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Umaxica - 設定" }, { name: "description", content: "アカウントと環境設定" }];
+  return [{ title: 'Umaxica - 設定' }, { content: 'アカウントと環境設定', name: 'description' }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  return { message: env.SECRET_SAMPLE ?? "" };
+  return { message: env.SECRET_SAMPLE ?? '' };
 }
 
 // 設定メニューアイテムのコンポーネント

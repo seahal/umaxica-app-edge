@@ -1,12 +1,12 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
-import { readdirSync } from "node:fs";
-import { extname, join, relative } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
 
-const srcDirPath = fileURLToPath(new URL("../src", import.meta.url));
-const skipFileNames = new Set(["entry.client.tsx", "entry.server.tsx"]);
-const allowedExtensions = new Set([".ts", ".tsx"]);
+import { readdirSync } from 'node:fs';
+import { extname, join, relative } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const srcDirPath = fileURLToPath(new URL('../src', import.meta.url));
+const skipFileNames = new Set(['entry.client.tsx', 'entry.server.tsx']);
+const allowedExtensions = new Set(['.ts', '.tsx']);
 
 function collectModules(currentDir: string): string[] {
   const entries = readdirSync(currentDir, { withFileTypes: true });
@@ -16,7 +16,7 @@ function collectModules(currentDir: string): string[] {
     const fullPath = join(currentDir, entry.name);
 
     if (entry.isDirectory()) {
-      if (entry.name.startsWith("+")) {
+      if (entry.name.startsWith('+')) {
         continue;
       }
       files.push(...collectModules(fullPath));
@@ -28,7 +28,7 @@ function collectModules(currentDir: string): string[] {
       continue;
     }
 
-    if (entry.name.endsWith(".d.ts")) {
+    if (entry.name.endsWith('.d.ts')) {
       continue;
     }
 
@@ -42,10 +42,10 @@ function collectModules(currentDir: string): string[] {
   return files;
 }
 
-const moduleFilePaths = collectModules(srcDirPath).sort((a, b) => a.localeCompare(b));
+const moduleFilePaths = collectModules(srcDirPath).toSorted((a, b) => a.localeCompare(b));
 
-describe("app src module imports", () => {
-  it("found executable source files to import", () => {
+describe('app src module imports', () => {
+  it('found executable source files to import', () => {
     expect(moduleFilePaths.length).toBeGreaterThan(0);
   });
 

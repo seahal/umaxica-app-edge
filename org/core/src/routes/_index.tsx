@@ -1,10 +1,10 @@
-import { EventList } from "../components/EventList";
-import type { Route } from "./+types/_index";
+import { EventList } from '../components/EventList';
+import type { Route } from './+types/_index';
 
 export function meta(_: Route.MetaArgs) {
   return [
-    { title: "Umaxica Organization - イベント一覧" },
-    { name: "description", content: "コミュニティイベントに参加しましょう" },
+    { title: 'Umaxica Organization - イベント一覧' },
+    { content: 'コミュニティイベントに参加しましょう', name: 'description' },
   ];
 }
 

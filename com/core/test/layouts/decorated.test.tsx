@@ -1,20 +1,19 @@
-import "../../test-setup.ts";
+import '../../test-setup.ts';
 
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { createRoutesStub } from "react-router";
-import DecoratedLayout from "../../src/layouts/decorated";
+import { render, screen } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
+import DecoratedLayout from '../../src/layouts/decorated';
 
-vi.mock("react-router", async (importOriginal) => {
+vi.mock(import('react-router'), async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     Outlet: () => <div data-testid="outlet">Outlet Content</div>,
     useRouteLoaderData: (id: string) => {
-      if (id === "root") {
+      if (id === 'root') {
         return {
-          codeName: "MOCK_BRAND",
-          newsServiceUrl: "news.mock.com",
+          codeName: 'MOCK_BRAND',
+          newsServiceUrl: 'news.mock.com',
         };
       }
       return null;
@@ -22,22 +21,22 @@ vi.mock("react-router", async (importOriginal) => {
   };
 });
 
-describe("DecoratedLayout (com)", () => {
-  it("renders header and footer with loader data", () => {
+describe('DecoratedLayout (com)', () => {
+  it('renders header and footer with loader data', () => {
     const Stub = createRoutesStub([
       {
-        path: "*",
         Component: DecoratedLayout,
+        path: '*',
       },
     ]);
     // @ts-expect-error - createRoutesStub return type doesn't include props
-    render(<Stub initialEntries={["/"]} />);
+    render(<Stub initialEntries={['/']} />);
 
-    expect(screen.getAllByText("MOCK_BRAND").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("outlet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "📰" })).toHaveAttribute(
-      "href",
-      "https://news.mock.com",
+    expect(screen.getAllByText('MOCK_BRAND').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('outlet')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '📰' })).toHaveAttribute(
+      'href',
+      'https://news.mock.com',
     );
   });
 });

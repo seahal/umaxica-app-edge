@@ -16,13 +16,13 @@
       "enabled": true,
       "head_sampling_rate": 1,
       "persist": true,
-      "invocation_logs": true,
+      "invocation_logs": true
     },
     "traces": {
       "enabled": true,
       "persist": true,
-      "head_sampling_rate": 1,
-    },
+      "head_sampling_rate": 1
+    }
   },
   "vars": {
     "BRAND_NAME": "UMAXICA",
@@ -47,7 +47,7 @@
     "HELP_CORPORATE_URL": "jp.help.umaxica.com",
     "HELP_SERVICE_URL": "jp.help.umaxica.app",
     "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n",
+    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n"
   },
   "env": {
     "production": {
@@ -73,9 +73,9 @@
         "HELP_CORPORATE_URL": "help.umaxica.com",
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
-        "JWT_PUBLIC_KEY": "",
-      },
-    },
+        "JWT_PUBLIC_KEY": ""
+      }
+    }
   },
   /**
    * Smart Placement
@@ -100,9 +100,9 @@
   "kv_namespaces": [
     {
       "binding": "BINDING_NAME",
-      "id": "5a9428637f2545c3971a1d13bcf5ba5a",
-    },
-  ],
+      "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+    }
+  ]
   /**
    * Service Bindings (communicate between multiple Workers)
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
