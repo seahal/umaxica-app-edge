@@ -23,7 +23,6 @@ This repository is a pnpm workspace with 9 packages:
 | `org/core`   | React Router app (`*.umaxica.org`)        | `5302`   |
 | `org/apex`   | Apex/static worker (`org`)                | `5301`   |
 | `dev/status` | Status app (React Router + Vercel preset) | `5502`   |
-| `dev/apex`   | Apex/static worker (`dev`)                | `5501`   |
 | `net/apex`   | Network-facing apex worker                | `5201`   |
 
 Install dependencies once from the repo root:
@@ -62,7 +61,6 @@ pnpm run --filter com/apex server
 pnpm run --filter app/apex server
 pnpm run --filter org/apex server
 pnpm run --filter dev/apex server
-pnpm run --filter net/apex server
 ```
 
 ## Environment Variables
@@ -98,7 +96,6 @@ pnpm run --filter com/apex deploy
 pnpm run --filter app/apex deploy
 pnpm run --filter org/apex deploy
 pnpm run --filter dev/apex deploy
-pnpm run --filter net/apex deploy
 ```
 
 `dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
