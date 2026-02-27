@@ -60,6 +60,7 @@ const initialPosts: Post[] = [
   },
 ];
 
+// oxlint-disable no-console
 function handleReplyDemo(postId: string) {
   console.log(`返信: ${postId}`);
 }

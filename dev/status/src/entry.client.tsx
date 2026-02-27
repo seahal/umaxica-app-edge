@@ -1,4 +1,5 @@
 import { StrictMode, startTransition } from 'react';
+// oxlint-disable no-console
 import type { ErrorInfo } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';

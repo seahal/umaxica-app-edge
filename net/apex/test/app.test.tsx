@@ -24,6 +24,13 @@ describe('Net Hono app', () => {
     expect(body).toContain('Contact');
   });
 
+  it('renders footer with current UTC year', async () => {
+    const res = await app.request('/');
+    const body = await res.text();
+    const currentYear = new Date().getUTCFullYear();
+    expect(body).toContain(`© ${currentYear} UMAXICA`);
+  });
+
   it('applies security headers', async () => {
     const res = await app.request('/');
     expect(res.headers.get('Strict-Transport-Security')).toBeTruthy();
