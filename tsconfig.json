@@ -8,7 +8,8 @@
     "org/core/**/*",
     "dev/apex/**/*",
     "dev/status/**/*",
-    "net/apex/**/*"
+    "net/apex/**/*",
+    "shared/**/*"
   ],
   "compilerOptions": {
     "target": "ESNext",

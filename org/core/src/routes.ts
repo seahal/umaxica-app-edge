@@ -7,5 +7,4 @@ export default [
     route('configure', 'routes/configure.tsx'),
     route('*', 'routes/catch-all.tsx'),
   ]),
-  layout('../src/layouts/baremetal.tsx', [route('/health', 'routes/healths/_index.tsx')]),
 ] satisfies RouteConfig;

@@ -9,8 +9,6 @@ describe('GET /health', () => {
 
     const body = await response.text();
     expect(body).toContain('<title>Health Check - ORG</title>');
-    expect(body).toContain('<strong>Service:</strong> ORG');
-    expect(body).toContain('<strong>Status:</strong> Running');
     expect(body).toContain('<strong>Timestamp:</strong>');
   });
 

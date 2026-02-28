@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { renderer } from './renderer';
 
 const DEFAULT_CSP_STYLE_SRC = "'self' https:";
@@ -39,12 +40,16 @@ app.get('/health', (c) => {
   );
 });
 
+app.get('/v1/health', (c) => {
+  const timestampIso = new Date().toISOString();
+  return c.json({ status: 'ok', timestamp: timestampIso });
+});
+
 app.use(renderer);
 
 app.get('/', (c) =>
   c.render(
     <>
-      <hr />
       <div class="space-y-4">
         <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
         <p>
@@ -53,6 +58,7 @@ app.get('/', (c) =>
           <a href="https://umaxica.app">umaxica.app</a>) or our corporate site (
           <a href="https://umaxica.com">umaxica.com</a>).
         </p>
+        <h2 class="text-3xl font-semibold text-gray-800">このサイトについて</h2>
         <p>
           本ドメイン（<a href="https://umaxica.net">umaxica.net</a>
           ）は、一般向けのウェブサイトとして運用いたしておりません。
@@ -62,7 +68,6 @@ app.get('/', (c) =>
           の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
         </p>
       </div>
-      <hr />
     </>,
   ),
 );
@@ -70,12 +75,17 @@ app.get('/', (c) =>
 app.get('/about', (c) =>
   c.render(
     <>
-      <hr />
       <h2>Contact</h2>
       <p>For more information, please visit our main page.</p>
-      <hr />
     </>,
   ),
 );
+
+app.get('/sitemap.xml', (c) => {
+  const xml = buildSitemapXml([
+    { loc: 'https://umaxica.net/', changefreq: 'monthly', priority: 1.0 },
+  ]);
+  return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
+});
 
 export default app;

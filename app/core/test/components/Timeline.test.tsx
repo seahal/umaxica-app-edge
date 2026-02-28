@@ -1,4 +1,5 @@
 import '../../test-setup.ts';
+// oxlint-disable no-console
 
 import { Timeline } from '../../src/components/Timeline';
 

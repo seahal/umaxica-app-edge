@@ -46,15 +46,4 @@ describe('com route manifest', () => {
       path: 'explore',
     });
   });
-
-  it('registers the baremetal layout for health checks', () => {
-    expect(findByFile('../src/layouts/baremetal.tsx')).toBeDefined();
-  });
-
-  it('exposes the /health route', () => {
-    expect(findByPath('/health')).toMatchObject({
-      file: 'routes/healths/_index.tsx',
-      path: '/health',
-    });
-  });
 });

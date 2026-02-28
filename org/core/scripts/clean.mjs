@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// oxlint-disable no-console
 import { existsSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 

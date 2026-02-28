@@ -129,6 +129,7 @@ describe('entry.server handleRequest', () => {
     const routerContext = {
       isSpaMode: false,
     } as unknown as EntryContext;
+    // oxlint-disable no-console
     const originalConsoleError = console.error;
     const errorCalls: unknown[][] = [];
     // eslint-disable-next-line no-console
@@ -163,6 +164,7 @@ describe('entry.server handleRequest', () => {
       expect(errorCalls.length).toBeGreaterThan(0);
       expect(errorCalls[0]?.[0]).toBeInstanceOf(Error);
     } finally {
+      // oxlint-disable no-console
       console.error = originalConsoleError;
     }
   });

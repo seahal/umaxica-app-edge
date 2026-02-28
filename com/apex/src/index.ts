@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { handleAssetsAndSpaFallback } from '../../../shared/edge-static/spa-fallback';
+import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { renderAboutPage } from './pages/about-page';
 import { renderHealthPage } from './pages/health-page';
 import {
@@ -26,11 +28,11 @@ function applySecurityHeaders(c: Context): void {
   c.header('Referrer-Policy', 'no-referrer');
 }
 
-interface AssetEnv {
-  ASSETS?: {
+type AssetEnv = {
+  ASSETS: {
     fetch: (request: Request) => Promise<Response>;
   };
-}
+};
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 
@@ -60,5 +62,22 @@ app.get('/health', (c) => c.html(renderHealthPage(new Date().toISOString())));
 app.get('/about', (c) => c.html(renderAboutPage()));
 
 app.get('/v1/health', (c) => c.json({ status: 'ok' }));
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.get('/sitemap.xml', (c) => {
+  const xml = buildSitemapXml([
+    { loc: 'https://umaxica.com/', changefreq: 'monthly', priority: 1.0 },
+    { loc: 'https://umaxica.com/about', changefreq: 'monthly', priority: 0.5 },
+    { loc: 'https://umaxica.com/health', changefreq: 'weekly', priority: 0.3 },
+  ]);
+  return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
+});
+
+app.notFound((c) =>
+  handleAssetsAndSpaFallback({
+    request: c.req.raw,
+    env: c.env,
+  }),
+);
 
 export default app;

@@ -5,7 +5,7 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "umaxica-app-edge-staging-com",
-  "compatibility_date": "2025-09-15",
+  "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
   // Ensure the server/client bundles exist before Wrangler runs (react-router)
   "build": { "command": "pnpm run build" },
@@ -96,7 +96,12 @@
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/
    */
-  "assets": { "directory": "./public/", "binding": "ASSETS" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  },
   "kv_namespaces": [
     {
       "binding": "BINDING_NAME",

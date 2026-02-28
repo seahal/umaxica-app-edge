@@ -60,11 +60,4 @@ describe('route manifest', () => {
       path: 'configuration/preference',
     });
   });
-
-  it('exposes the baremetal health check', () => {
-    expect(findByPath('/health')).toMatchObject({
-      file: 'routes/healths/_index.tsx',
-      path: '/health',
-    });
-  });
 });

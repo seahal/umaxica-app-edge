@@ -36,6 +36,7 @@ export default defineConfig({
       'dev/**/*.test.{ts,tsx}',
       'org/**/*.test.{ts,tsx}',
       'net/**/*.test.{ts,tsx}',
+      'shared/**/*.test.{ts,tsx}',
       'test/**/*.test.{ts,tsx}',
     ],
     setupFiles: ['./vitest.setup.ts'],

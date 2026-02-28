@@ -7,10 +7,9 @@ export const renderAboutPage = () => `<!DOCTYPE html>
 </head>
 <body>
 	<h1>About COM Service</h1>
+	<hr>
 	<h2>Service Information</h2>
 	<p><strong>Service Name:</strong> COM</p>
 	<p><strong>Description:</strong> Umaxica App Status Page - COM Service</p>
-	<h2>Contact</h2>
-	<p>For more information, please visit our main page.</p>
 </body>
 </html>`;
