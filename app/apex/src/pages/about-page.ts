@@ -7,12 +7,9 @@ export const renderAboutPage = () => `<!DOCTYPE html>
 </head>
 <body>
 	<h1>About APP Service</h1>
+	<hr/>
 	<h2>Service Information</h2>
 	<p><strong>Service Name:</strong> APP</p>
 	<p><strong>Description:</strong> Umaxica App Status Page - APP Service</p>
-	<p><strong>Framework:</strong> Hono</p>
-	<p><strong>Runtime:</strong> Cloudflare Workers</p>
-	<h2>Contact</h2>
-	<p>For more information, please visit our main page.</p>
 </body>
 </html>`;
