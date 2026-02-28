@@ -37,4 +37,26 @@ describe('Net Hono app', () => {
     expect(res.headers.get('Content-Security-Policy')).toBeTruthy();
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
   });
+
+  it('returns sitemap.xml with correct content type', async () => {
+    const res = await app.request('/sitemap.xml');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/xml');
+  });
+
+  it('returns JSON health check at /v1/health', async () => {
+    const res = await app.request('/v1/health');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/json');
+    const body = await res.json();
+    expect(body.status).toBe('ok');
+    expect(body.timestamp).toBeTruthy();
+  });
+
+  it('returns valid sitemap XML with umaxica.net URL', async () => {
+    const res = await app.request('/sitemap.xml');
+    const body = await res.text();
+    expect(body).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(body).toContain('<loc>https://umaxica.net/</loc>');
+  });
 });

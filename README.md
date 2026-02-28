@@ -106,3 +106,11 @@ pnpm run --filter dev/apex deploy
 - This is a work in progress.
 - The public availability of this repository is not guaranteed permanently.
 - No warranty is provided, and the authors shall not be held liable for any damages arising from the use of this repository.
+
+## 404 Behavior (Cloudflare Assets + Worker)
+
+- `app/core`, `org/core`, `com/core`, `app/apex`, `org/apex`, `com/apex` now use `assets.directory = "./dist"` with `not_found_handling = "404-page"` and `run_worker_first = true`.
+- Build generates `dist/spa-routes.json` via `scripts/export-spa-routes.ts`.
+- Unknown paths return HTTP `404` and serve `dist/404.html` from Worker fallback.
+- For known SPA paths in the manifest, Worker returns the app response (`core`) or `index.html` when available.
+- Update manifest candidates in each package's `scripts/spa-routes.ts`, then run `pnpm --filter <pkg> build`.

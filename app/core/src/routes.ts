@@ -14,5 +14,4 @@ export default [
     ...prefix('explore', [index('routes/explore/_index.tsx')]),
     ...prefix('authentication', [index('routes/authentication/_index.tsx')]),
   ]),
-  layout('../src/layouts/baremetal.tsx', [route('/health', 'routes/healths/_index.tsx')]),
 ] satisfies RouteConfig;

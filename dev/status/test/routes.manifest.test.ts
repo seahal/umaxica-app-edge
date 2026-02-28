@@ -20,7 +20,6 @@ const flattenRoutes = (entries: RouteManifestEntry[]): RouteManifestEntry[] => {
 
 const manifest = flattenRoutes(routes as RouteManifestEntry[]);
 
-const findByPath = (path: string) => manifest.find((entry) => entry.path === path);
 const findByFile = (file: string) => manifest.find((entry) => entry.file === file);
 
 describe('dev route manifest', () => {
@@ -36,14 +35,6 @@ describe('dev route manifest', () => {
     expect(findByFile('routes/home.tsx')).toMatchObject({
       file: 'routes/home.tsx',
       index: true,
-    });
-  });
-
-  it('registers the baremetal health route', () => {
-    expect(findByFile('../src/layouts/baremetal.tsx')).toBeDefined();
-    expect(findByPath('/health')).toMatchObject({
-      file: 'routes/healths/_index.tsx',
-      path: '/health',
     });
   });
 });

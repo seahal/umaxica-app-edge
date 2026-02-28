@@ -10,7 +10,6 @@ import {
   meta as configurationMeta,
 } from '../src/routes/configurations/_index';
 import { loader as exploreLoader } from '../src/routes/explore/_index';
-import { loader as healthLoader } from '../src/routes/healths/_index';
 import { loader as messagesLoader } from '../src/routes/messages/_index';
 import { loader as notificationsLoader } from '../src/routes/notifications/_index';
 
@@ -58,7 +57,6 @@ describe('route loader coverage harness', () => {
     ['authentication index', authenticationLoader as never, 'VALUE_FROM_CLOUDFLARE'],
     ['configuration index', configurationLoader as never, 'SECRET_SAMPLE'],
     ['explore index', exploreLoader as never, 'VALUE_FROM_CLOUDFLARE'],
-    ['health check', healthLoader as never, 'VALUE_FROM_CLOUDFLARE'],
     ['messages index', messagesLoader as never, 'VALUE_FROM_CLOUDFLARE'],
     ['notifications index', notificationsLoader as never, 'VALUE_FROM_CLOUDFLARE'],
   ] as const)(

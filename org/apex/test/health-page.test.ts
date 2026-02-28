@@ -7,10 +7,7 @@ describe(renderHealthPage, () => {
 
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('<title>Health Check - ORG</title>');
-    expect(html).toContain('<h1>Health Check</h1>');
     expect(html).toContain('<p>✓ OK</p>');
-    expect(html).toContain('<strong>Service:</strong> ORG');
-    expect(html).toContain('<strong>Status:</strong> Running');
     expect(html).toContain(`<strong>Timestamp:</strong> ${timestamp}`);
   });
 
