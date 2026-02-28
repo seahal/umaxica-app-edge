@@ -107,12 +107,7 @@
   /**
    * Static Assets
    */
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "404-page",
-    "run_worker_first": true
-  },
+  "assets": { "directory": "./public/", "binding": "ASSETS" },
   /**
    * Service Bindings (communicate between multiple Workers)
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
