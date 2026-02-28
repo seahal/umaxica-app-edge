@@ -5,7 +5,7 @@
   "description": "code for xx.umaxica.app",
   "type": "module",
   "scripts": {
-    "build": "react-router build && node --experimental-strip-types ./scripts/export-spa-routes.ts",
+    "build": "react-router build",
     "typegen": "react-router typegen",
     "cf-typegen": "pnpm exec wrangler types",
     "deploy": "pnpm run build && pnpm exec wrangler deploy",

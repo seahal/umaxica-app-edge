@@ -96,12 +96,7 @@
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/
    */
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "404-page",
-    "run_worker_first": true
-  },
+  "assets": { "directory": "./public/", "binding": "ASSETS" },
   "kv_namespaces": [
     {
       "binding": "BINDING_NAME",
