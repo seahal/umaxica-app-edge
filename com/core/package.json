@@ -7,12 +7,12 @@
   "scripts": {
     "build": "react-router build",
     "typegen": "react-router typegen",
-    "cf-typegen": "pnpm exec wrangler types",
+    "cf-typegen": "pnpm wrangler types",
     "deploy": "pnpm run build && pnpm exec wrangler deploy",
     "server": "react-router dev",
     "postinstall": "pnpm run cf-typegen || true",
     "preview": "pnpm run build && vite preview",
-    "type": "pnpm exec tsgo --noEmit"
+    "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
   },
   "dependencies": {
     "@sentry/react-router": "^10.39.0",
@@ -28,16 +28,21 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260228.0",
+    "@babel/preset-typescript": "^7.28.5",
+    "@cloudflare/vite-plugin": "^1.25.6",
     "@react-router/dev": "^7.13.0",
+    "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "babel-plugin-react-compiler": "^1.0.0",
     "happy-dom": "^20.6.1",
-    "vite": "^6.3.5",
+    "vite": "8.0.0-beta.16",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18",
-    "wrangler": "^4.67.0"
+    "wrangler": "^4.69.0"
   }
 }

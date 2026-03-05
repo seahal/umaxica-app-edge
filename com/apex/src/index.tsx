@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
+import { apexCsrf } from '../../../shared/apex/csrf';
 import { etag } from 'hono/etag';
+import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
@@ -17,6 +19,7 @@ const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use(etag());
 app.use(logger());
+app.use('*', apexCsrf);
 
 app.use('*', async (c, next) => {
   await next();
@@ -90,7 +93,11 @@ pageRoutes.get('/sitemap.xml', (c) => {
   return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
 });
 
-app.onError(async (_err, c) => {
+app.onError(async (err, c) => {
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
+
   const url = new URL('/500.html', c.req.url);
   const res = await c.env.ASSETS.fetch(new Request(url.toString()));
   return new Response(res.body, {
@@ -101,7 +108,14 @@ app.onError(async (_err, c) => {
 
 app.route('/', apiRoutes);
 app.route('/', pageRoutes);
-app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
+app.notFound(async (c) => {
+  const url = new URL('/404.html', c.req.url);
+  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
+  return new Response(res.body, {
+    status: 404,
+    headers: res.headers,
+  });
+});
 
 export default Sentry.withSentry(
   (env?: AssetEnv & { SENTRY_DSN?: string }) => ({
