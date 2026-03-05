@@ -31,5 +31,19 @@
       "binding": "BREAKER_KV",
       "id": "9848aee238284c88ac888f61d9acb471"
     }
+  ],
+  /**
+   * Rate Limiting
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+   */
+  "rate_limits": [
+    {
+      "binding": "RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 10000,
+        "period": 60
+      }
+    }
   ]
 }
