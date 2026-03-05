@@ -1,4 +1,7 @@
+import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
+import { etag } from 'hono/etag';
+import { logger } from 'hono/logger';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import {
@@ -11,6 +14,9 @@ import { renderer } from './renderer';
 const app = new Hono<{ Bindings: AssetEnv }>();
 const apiRoutes = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
+
+app.use(etag());
+app.use(logger());
 
 app.use('*', async (c, next) => {
   await next();
@@ -97,4 +103,10 @@ app.route('/', apiRoutes);
 app.route('/', pageRoutes);
 app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
-export default app;
+export default Sentry.withSentry(
+  (env?: AssetEnv & { SENTRY_DSN?: string }) => ({
+    dsn: env?.SENTRY_DSN,
+    tracesSampleRate: 1,
+  }),
+  app,
+);

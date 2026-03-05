@@ -92,13 +92,16 @@ importers:
 
   app/apex:
     dependencies:
+      '@sentry/cloudflare':
+        specifier: ^10.40.0
+        version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
         specifier: ^4.12.3
         version: 4.12.3
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.4(vite@6.4.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260302.0)(wrangler@4.68.0(@cloudflare/workers-types@4.20260305.1))
+        version: 1.25.4(vite@6.4.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260305.0)(wrangler@4.68.0(@cloudflare/workers-types@4.20260305.1))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -196,13 +199,16 @@ importers:
 
   com/apex:
     dependencies:
+      '@sentry/cloudflare':
+        specifier: ^10.40.0
+        version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
         specifier: ^4.12.3
         version: 4.12.3
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.2
-        version: 1.25.4(vite@6.4.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260305.0)(wrangler@4.68.0(@cloudflare/workers-types@4.20260305.1))
+        version: 1.25.4(vite@6.4.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1))(workerd@1.20260302.0)(wrangler@4.68.0(@cloudflare/workers-types@4.20260305.1))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -370,6 +376,9 @@ importers:
 
   net/apex:
     dependencies:
+      '@sentry/cloudflare':
+        specifier: ^10.40.0
+        version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
         specifier: ^4.12.3
         version: 4.12.3
@@ -401,6 +410,9 @@ importers:
 
   org/apex:
     dependencies:
+      '@sentry/cloudflare':
+        specifier: ^10.40.0
+        version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
         specifier: ^4.12.3
         version: 4.12.3
@@ -2860,6 +2872,15 @@ packages:
     resolution: {integrity: sha512-tavJ7yGUZV+z3Ct2/ZB6mg339i08sAk6HDkgqmSRuQEu2iLS5sl9HIvuXfM6xjv8fwlgFOSy++WNABNAcGHUbg==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@sentry/cloudflare@10.40.0':
+    resolution: {integrity: sha512-Tr8iDSUUlmwEBvXHic/zujEZZjs6XZ6mWJ3wOyb7gtjcd9umaRQtvALLHBaGg1uQoZkLjLpDas3q1p/dS4B6rw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.x
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
 
   '@sentry/core@10.39.0':
     resolution: {integrity: sha512-xCLip2mBwCdRrvXHtVEULX0NffUTYZZBhEUGht0WFL+GNdNQ7gmBOGOczhZlrf2hgFFtDO0fs1xiP9bqq5orEQ==}
@@ -7953,6 +7974,13 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@sentry/cloudflare@10.40.0(@cloudflare/workers-types@4.20260305.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@sentry/core': 10.40.0
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20260305.1
 
   '@sentry/core@10.39.0': {}
 

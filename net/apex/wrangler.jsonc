@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "umaxica-apps-edge-apex-net",
   "compatibility_date": "2025-08-03",
+  "compatibility_flags": ["nodejs_als"],
   "main": "./src/index.tsx",
   "assets": {
     "binding": "ASSETS",
