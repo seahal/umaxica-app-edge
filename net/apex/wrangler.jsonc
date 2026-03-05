@@ -5,7 +5,8 @@
   "main": "./src/index.tsx",
   "assets": {
     "binding": "ASSETS",
-    "directory": "./public"
+    "directory": "./public",
+    "not_found_handling": "404-page"
   },
   "observability": {
     "enabled": true,
