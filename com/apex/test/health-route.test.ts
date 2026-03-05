@@ -8,9 +8,9 @@ describe('GET /health', () => {
     expect(response.headers.get('content-type')).toContain('text/html');
 
     const body = await response.text();
-    expect(body).toContain('<title>Health Check - COM</title>');
-    expect(body).toContain('<p>✓ OK</p>');
-    expect(body).toContain('<strong>Timestamp:</strong>');
+    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('✓ OK');
+    expect(body).toContain('Timestamp:');
   });
 
   it('applies security headers to the health response', async () => {

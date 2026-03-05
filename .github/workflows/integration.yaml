@@ -103,3 +103,28 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm test
+
+  build-vite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - app/apex
+          - app/core
+          - com/apex
+          - com/core
+          - dev/status
+          - net/apex
+          - org/apex
+          - org/core
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm -C ${{ matrix.target }} run build

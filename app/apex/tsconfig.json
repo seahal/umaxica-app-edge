@@ -10,8 +10,10 @@
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "lib": ["ESNext", "DOM"],
-    "types": ["bun-types"],
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  }
+    "jsxImportSource": "hono/jsx",
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*", "*.d.ts"]
 }

@@ -8,10 +8,10 @@ describe('GET /about', () => {
     expect(response.headers.get('content-type')).toContain('text/html');
 
     const body = await response.text();
-    expect(body).toContain('<title>About - ORG</title>');
-    expect(body).toContain('<strong>Service Name:</strong> ORG');
-    expect(body).toContain('Umaxica App Status Page - ORG Service');
-    expect(body).toContain('<strong>Runtime:</strong> Cloudflare Workers');
+    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('About this site.');
+    expect(body).toContain('https://umaxica.org');
+    expect(body).toContain('https://umaxica.app');
   });
 
   it('applies security headers to the about response', async () => {

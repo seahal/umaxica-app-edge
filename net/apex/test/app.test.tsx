@@ -21,7 +21,7 @@ describe('Net Hono app', () => {
     const res = await app.request('/about');
     expect(res.status).toBe(200);
     const body = await res.text();
-    expect(body).toContain('Contact');
+    expect(body).toContain('About');
   });
 
   it('renders footer with current UTC year', async () => {

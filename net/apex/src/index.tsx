@@ -1,34 +1,28 @@
+import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
-import type { Context } from 'hono';
+import { etag } from 'hono/etag';
+import { logger } from 'hono/logger';
+import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { renderer } from './renderer';
 
-const DEFAULT_CSP_STYLE_SRC = "'self' https:";
+const app = new Hono<{ Bindings: AssetEnv }>();
+const apiRoutes = new Hono<{ Bindings: AssetEnv }>();
+const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
-function buildCspHeader(styleSrc: string = DEFAULT_CSP_STYLE_SRC): string {
-  return `default-src 'self'; base-uri 'self'; font-src 'self' https: data:; form-action 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src ${styleSrc}; style-src-attr 'none'; upgrade-insecure-requests`;
-}
-
-function applySecurityHeaders(c: Context): void {
-  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  c.header('Content-Security-Policy', buildCspHeader());
-  c.header(
-    'Permissions-Policy',
-    'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
-  );
-  c.header('X-Content-Type-Options', 'nosniff');
-  c.header('X-Frame-Options', 'DENY');
-  c.header('Referrer-Policy', 'no-referrer');
-}
-
-const app = new Hono();
+app.use(etag());
+app.use(logger());
 
 app.use('*', async (c, next) => {
   await next();
-  applySecurityHeaders(c);
+  if (c.res.status !== 404 && c.res.status !== 500) {
+    applySecurityHeaders(c);
+  }
 });
 
-app.get('/health', (c) => {
+pageRoutes.use(renderer);
+
+pageRoutes.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.render(
     <div class="space-y-4">
@@ -40,14 +34,12 @@ app.get('/health', (c) => {
   );
 });
 
-app.get('/v1/health', (c) => {
+apiRoutes.get('/v1/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.json({ status: 'ok', timestamp: timestampIso });
 });
 
-app.use(renderer);
-
-app.get('/', (c) =>
+pageRoutes.get('/', (c) =>
   c.render(
     <>
       <div class="space-y-4">
@@ -72,20 +64,53 @@ app.get('/', (c) =>
   ),
 );
 
-app.get('/about', (c) =>
+pageRoutes.get('/about', (c) =>
   c.render(
-    <>
-      <h2>Contact</h2>
-      <p>For more information, please visit our main page.</p>
-    </>,
+    <div class="space-y-4">
+      <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
+      <p>
+        This domain (<a href="https://umaxica.net">umaxica.net</a>) is not operated as a
+        public-facing website. To access our services, please visit our official websites (
+        <a href="https://umaxica.app">umaxica.app</a>, <a href="https://umaxica.com">umaxica.com</a>
+        , <a href="https://umaxica.org">umaxica.org</a>).
+      </p>
+      <h2 class="text-3xl font-semibold text-gray-800">このサイトについて</h2>
+      <p>
+        本ドメイン（<a href="https://umaxica.net">umaxica.net</a>
+        ）は、一般向けのウェブサイトとして運用いたしておりません。弊社サービスの利用につきましては、
+        <a href="https://umaxica.app">umaxica.app</a>、{' '}
+        <a href="https://umaxica.com">umaxica.com</a>、{' '}
+        <a href="https://umaxica.org">umaxica.org</a>
+        の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
+      </p>
+    </div>,
   ),
 );
 
-app.get('/sitemap.xml', (c) => {
+pageRoutes.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([
     { loc: 'https://umaxica.net/', changefreq: 'monthly', priority: 1.0 },
   ]);
   return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
 });
 
-export default app;
+app.onError(async (_err, c) => {
+  const url = new URL('/500.html', c.req.url);
+  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
+  return new Response(res.body, {
+    status: 500,
+    headers: res.headers,
+  });
+});
+
+app.route('/', apiRoutes);
+app.route('/', pageRoutes);
+app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
+
+export default Sentry.withSentry(
+  (env?: AssetEnv & { SENTRY_DSN?: string }) => ({
+    dsn: env?.SENTRY_DSN,
+    tracesSampleRate: 1,
+  }),
+  app,
+);
