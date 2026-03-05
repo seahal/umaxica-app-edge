@@ -120,11 +120,17 @@ app.onError(async (err, c) => {
 app.route('/', apiRoutes);
 app.route('/', pageRoutes);
 app.notFound(async (c) => {
-  const url = new URL('/404.html', c.req.url);
-  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
-  return new Response(res.body, {
+  // Let the asset layer (and Vite in dev) handle static/dev paths first.
+  const assetRes = await c.env.ASSETS.fetch(c.req.raw);
+  if (assetRes.status !== 404) {
+    return assetRes;
+  }
+
+  const fallbackUrl = new URL('/404.html', c.req.url);
+  const fallbackRes = await c.env.ASSETS.fetch(new Request(fallbackUrl.toString()));
+  return new Response(fallbackRes.body, {
     status: 404,
-    headers: res.headers,
+    headers: fallbackRes.headers,
   });
 });
 
