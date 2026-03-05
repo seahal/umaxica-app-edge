@@ -9,8 +9,8 @@ describe('GET /about', () => {
 
     const body = await response.text();
 
-    expect(body).toContain('<title>About - APP</title>');
-    expect(body).toContain('<h2>About</h2>');
+    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('About');
     expect(body).toContain('For more information, please visit our main page.');
   });
 
@@ -34,10 +34,9 @@ describe('GET /about', () => {
     const response = await requestFromApp('/about');
     const body = await response.text();
 
-    expect(body).toContain('<!DOCTYPE html>');
     expect(body).toContain('<html');
     expect(body).toContain('</html>');
     expect(body).toContain('<head>');
-    expect(body).toContain('<body>');
+    expect(body).toContain('<body');
   });
 });

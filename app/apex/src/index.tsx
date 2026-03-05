@@ -1,0 +1,82 @@
+import { Hono } from 'hono';
+import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
+import { buildSitemapXml } from '../../../shared/apex/sitemap';
+import {
+  buildRegionErrorPayload,
+  getDefaultRedirectUrl,
+  resolveRedirectUrl,
+} from './root-redirect';
+import { renderer } from './renderer';
+
+const app = new Hono<{ Bindings: AssetEnv }>();
+
+app.use('*', async (c, next) => {
+  await next();
+  if (c.res.status !== 404 && c.res.status !== 500) {
+    applySecurityHeaders(c);
+  }
+});
+
+app.get('/', (c) => {
+  const regionParam = c.req.query('ri');
+
+  const redirectUrl = resolveRedirectUrl(regionParam);
+  if (redirectUrl) {
+    return c.redirect(redirectUrl, 301);
+  }
+
+  const defaultRedirectUrl = getDefaultRedirectUrl();
+  if (defaultRedirectUrl) {
+    return c.redirect(defaultRedirectUrl, 301);
+  }
+
+  return c.json(buildRegionErrorPayload(), 500);
+});
+
+app.get('/v1/health', (c) => c.json({ status: 'ok' }));
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.use(renderer);
+
+app.get('/health', (c) => {
+  const timestampIso = new Date().toISOString();
+  return c.render(
+    <div class="space-y-4">
+      <p>✓ OK</p>
+      <p>
+        <strong>Timestamp:</strong> {timestampIso}
+      </p>
+    </div>,
+  );
+});
+
+app.get('/about', (c) =>
+  c.render(
+    <>
+      <h2>About</h2>
+      <p>For more information, please visit our main page.</p>
+    </>,
+  ),
+);
+
+app.get('/sitemap.xml', (c) => {
+  const xml = buildSitemapXml([
+    { loc: 'https://umaxica.app/', changefreq: 'monthly', priority: 1.0 },
+    { loc: 'https://umaxica.app/about', changefreq: 'monthly', priority: 0.5 },
+    { loc: 'https://umaxica.app/health', changefreq: 'weekly', priority: 0.3 },
+  ]);
+  return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
+});
+
+app.onError(async (_err, c) => {
+  const url = new URL('/500.html', c.req.url);
+  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
+  return new Response(res.body, {
+    status: 500,
+    headers: res.headers,
+  });
+});
+
+app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
+
+export default app;

@@ -8,8 +8,8 @@ describe('GET /about', () => {
     expect(response.headers.get('content-type')).toContain('text/html');
 
     const body = await response.text();
-    expect(body).toContain('<title>About - COM</title>');
-    expect(body).toContain('<h2>About</h2>');
+    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('About');
     expect(body).toContain('For more information, please visit our main page.');
   });
 

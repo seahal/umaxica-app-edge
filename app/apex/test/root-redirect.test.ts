@@ -2,7 +2,7 @@ import {
   buildRegionErrorPayload,
   getDefaultRedirectUrl,
   resolveRedirectUrl,
-} from '../src/pages/root-redirect';
+} from '../src/root-redirect';
 
 describe('root-redirect utilities', () => {
   describe(resolveRedirectUrl, () => {

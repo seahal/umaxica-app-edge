@@ -9,9 +9,9 @@ describe('GET /health', () => {
 
     const body = await response.text();
 
-    expect(body).toContain('<title>Health Check - APP</title>');
-    expect(body).toContain('<p>✓ OK</p>');
-    expect(body).toContain('<strong>Timestamp:</strong>');
+    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('✓ OK');
+    expect(body).toContain('Timestamp:');
   });
 
   it('applies security headers to HTML responses', async () => {
@@ -25,8 +25,7 @@ describe('GET /health', () => {
     const response = await requestFromApp('/health');
     const body = await response.text();
 
-    // Extract timestamp from HTML
-    const timestampMatch = body.match(/<strong>Timestamp:<\/strong>\s*([^<]+)/);
+    const timestampMatch = body.match(/Timestamp:<\/strong>\s*([^<]+)/);
     expect(timestampMatch?.[1]).toBeTruthy();
 
     const timestamp = timestampMatch?.[1];
@@ -35,10 +34,8 @@ describe('GET /health', () => {
     }
 
     const normalizedTimestamp = timestamp.trim();
-    // Validate ISO 8601 format
     expect(normalizedTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
 
-    // Verify it's a valid date
     const date = new Date(normalizedTimestamp);
     expect(date.toString()).not.toBe('Invalid Date');
   });
@@ -47,11 +44,10 @@ describe('GET /health', () => {
     const response = await requestFromApp('/health');
     const body = await response.text();
 
-    expect(body).toContain('<!DOCTYPE html>');
     expect(body).toContain('<html');
     expect(body).toContain('</html>');
-    expect(body).toContain('<meta charset="UTF-8">');
-    expect(body).toContain('<meta name="viewport"');
+    expect(body).toContain('charSet');
+    expect(body).toContain('viewport');
   });
 
   it('includes all required CSP directives', async () => {

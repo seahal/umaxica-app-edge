@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    font-family: sans-serif;
+  }
+
+  a {
+    @apply text-blue-600 underline;
+  }
+}

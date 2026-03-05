@@ -1,37 +1,12 @@
 import { Hono } from 'hono';
-import type { Context } from 'hono';
+import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
-import { renderAboutPage } from './pages/about-page';
-import { renderHealthPage } from './pages/health-page';
 import {
   buildRegionErrorPayload,
   getDefaultRedirectUrl,
   resolveRedirectUrl,
-} from './pages/root-redirect';
-
-const DEFAULT_CSP_STYLE_SRC = "'self' https:";
-
-function buildCspHeader(styleSrc: string = DEFAULT_CSP_STYLE_SRC): string {
-  return `default-src 'self'; base-uri 'self'; font-src 'self' https: data:; form-action 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src ${styleSrc}; style-src-attr 'none'; upgrade-insecure-requests`;
-}
-
-function applySecurityHeaders(c: Context): void {
-  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  c.header('Content-Security-Policy', buildCspHeader());
-  c.header(
-    'Permissions-Policy',
-    'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
-  );
-  c.header('X-Content-Type-Options', 'nosniff');
-  c.header('X-Frame-Options', 'DENY');
-  c.header('Referrer-Policy', 'no-referrer');
-}
-
-type AssetEnv = {
-  ASSETS: {
-    fetch: (request: Request) => Promise<Response>;
-  };
-};
+} from './root-redirect';
+import { renderer } from './renderer';
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 
@@ -47,23 +22,42 @@ app.get('/', (c) => {
 
   const redirectUrl = resolveRedirectUrl(regionParam);
   if (redirectUrl) {
-    return c.redirect(redirectUrl, 302);
+    return c.redirect(redirectUrl, 301);
   }
 
   const defaultRedirectUrl = getDefaultRedirectUrl();
   if (defaultRedirectUrl) {
-    return c.redirect(defaultRedirectUrl, 302);
+    return c.redirect(defaultRedirectUrl, 301);
   }
 
   return c.json(buildRegionErrorPayload(), 500);
 });
 
-app.get('/health', (c) => c.html(renderHealthPage(new Date().toISOString())));
-
-app.get('/about', (c) => c.html(renderAboutPage()));
-
 app.get('/v1/health', (c) => c.json({ status: 'ok' }));
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
+
+app.use(renderer);
+
+app.get('/health', (c) => {
+  const timestampIso = new Date().toISOString();
+  return c.render(
+    <div class="space-y-4">
+      <p>✓ OK</p>
+      <p>
+        <strong>Timestamp:</strong> {timestampIso}
+      </p>
+    </div>,
+  );
+});
+
+app.get('/about', (c) =>
+  c.render(
+    <>
+      <h2>About</h2>
+      <p>For more information, please visit our main page.</p>
+    </>,
+  ),
+);
 
 app.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([
