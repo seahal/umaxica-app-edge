@@ -127,4 +127,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm -C ${{ matrix.target }} run build
+      - if: ${{ startsWith(matrix.target, 'dev/') }}
+        run: pnpm -C ${{ matrix.target }} run build
+      - if: ${{ !startsWith(matrix.target, 'dev/') }}
+        run: pnpm --dir ${{ matrix.target }} run build
