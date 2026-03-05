@@ -118,5 +118,19 @@
       "binding": "BINDING_NAME",
       "id": "5a9428637f2545c3971a1d13bcf5ba5a"
     }
+  ],
+  /**
+   * Rate Limiting
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+   */
+  "rate_limits": [
+    {
+      "binding": "RATE_LIMITER",
+      "namespace_id": "2001",
+      "simple": {
+        "limit": 10000,
+        "period": 60
+      }
+    }
   ]
 }

@@ -102,10 +102,24 @@
       "binding": "BINDING_NAME",
       "id": "5a9428637f2545c3971a1d13bcf5ba5a"
     }
-  ]
+  ],
   /**
    * Service Bindings (communicate between multiple Workers)
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
    */
   // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }],
+  /**
+   * Rate Limiting
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+   */
+  "rate_limits": [
+    {
+      "binding": "RATE_LIMITER",
+      "namespace_id": "2002",
+      "simple": {
+        "limit": 10000,
+        "period": 60
+      }
+    }
+  ]
 }
