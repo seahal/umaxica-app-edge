@@ -26,5 +26,11 @@
   },
   "placement": {
     "mode": "smart"
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "BREAKER_KV",
+      "id": "TODO_NET_APEX_KV_NAMESPACE_ID"
+    }
+  ]
 }

@@ -24,5 +24,11 @@
       "head_sampling_rate": 1
     }
   },
-  "placement": { "mode": "smart" }
+  "placement": { "mode": "smart" },
+  "kv_namespaces": [
+    {
+      "binding": "BREAKER_KV",
+      "id": "TODO_COM_APEX_KV_NAMESPACE_ID"
+    }
+  ]
 }

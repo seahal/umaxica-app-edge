@@ -1,9 +1,9 @@
 /** @jsxImportSource hono/jsx */
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { Link, ViteClient } from 'vite-ssr-components/hono';
-import { Footer } from './footer';
 
 export const renderer = jsxRenderer(({ children }) => {
+  const currentYear = new Date().getUTCFullYear();
   return (
     <html lang="ja">
       <head>
@@ -20,9 +20,13 @@ export const renderer = jsxRenderer(({ children }) => {
           </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 leading-loose">{children}</main>
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">{children}</main>
 
-        <Footer />
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+          <div class="max-w-7xl mx-auto px-4 py-4">
+            <p class="text-center text-sm text-gray-600">&copy; {currentYear} UMAXICA</p>
+          </div>
+        </footer>
       </body>
     </html>
   );

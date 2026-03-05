@@ -28,8 +28,8 @@ describe('shared Footer component', () => {
   it('applies expected CSS classes', () => {
     const html = (<Footer />).toString();
     expect(html).toContain('bg-white');
-    expect(html).toContain('shadow-sm');
-    expect(html).toContain('bg-gray-50');
+    expect(html).toContain('border-t');
+    expect(html).toContain('border-gray-200');
     expect(html).toContain('text-center');
   });
 });

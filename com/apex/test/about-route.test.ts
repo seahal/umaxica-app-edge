@@ -9,8 +9,9 @@ describe('GET /about', () => {
 
     const body = await response.text();
     expect(body).toContain('<title>UMAXICA</title>');
-    expect(body).toContain('About');
-    expect(body).toContain('For more information, please visit our main page.');
+    expect(body).toContain('About this site.');
+    expect(body).toContain('https://umaxica.com');
+    expect(body).toContain('https://umaxica.app');
   });
 
   it('applies security headers to the about response', async () => {
