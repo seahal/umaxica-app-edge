@@ -1,30 +1,8 @@
 /** @jsxImportSource hono/jsx */
 import { jsxRenderer } from 'hono/jsx-renderer';
-import { Link, ViteClient } from 'vite-ssr-components/hono';
 
-const renderViteClient = () => {
-  try {
-    return <ViteClient />;
-  } catch (err) {
-    console.error('Failed to render ViteClient', {
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
-    });
-    return null;
-  }
-};
-
-const renderStylesheet = () => {
-  try {
-    return <Link href="/src/style.css" rel="stylesheet" />;
-  } catch (err) {
-    console.error('Failed to render stylesheet link from Vite manifest', {
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
-    });
-    return <link href="/src/style.css" rel="stylesheet" />;
-  }
-};
+const viteEnv = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env;
+const isDev = Boolean(viteEnv?.DEV);
 
 export const renderer = jsxRenderer(({ children }) => {
   const currentYear = new Date().getUTCFullYear();
@@ -34,8 +12,8 @@ export const renderer = jsxRenderer(({ children }) => {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>UMAXICA</title>
-        {renderViteClient()}
-        {renderStylesheet()}
+        {isDev ? <script src="/@vite/client" type="module" /> : null}
+        <link href="/src/style.css" rel="stylesheet" />
       </head>
       <body class="min-h-screen flex flex-col bg-gray-50">
         <header class="bg-white shadow-sm">
