@@ -98,6 +98,13 @@ app.onError(async (err, c) => {
     return err.getResponse();
   }
 
+  console.error('Unhandled apex error', {
+    method: c.req.method,
+    url: c.req.url,
+    message: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+  });
+
   const url = new URL('/500.html', c.req.url);
   const res = await c.env.ASSETS.fetch(new Request(url.toString()));
   return new Response(res.body, {
