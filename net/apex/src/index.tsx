@@ -4,6 +4,8 @@ import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { renderer } from './renderer';
 
 const app = new Hono<{ Bindings: AssetEnv }>();
+const apiRoutes = new Hono<{ Bindings: AssetEnv }>();
+const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use('*', async (c, next) => {
   await next();
@@ -12,7 +14,9 @@ app.use('*', async (c, next) => {
   }
 });
 
-app.get('/health', (c) => {
+pageRoutes.use(renderer);
+
+pageRoutes.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.render(
     <div class="space-y-4">
@@ -24,14 +28,12 @@ app.get('/health', (c) => {
   );
 });
 
-app.get('/v1/health', (c) => {
+apiRoutes.get('/v1/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.json({ status: 'ok', timestamp: timestampIso });
 });
 
-app.use(renderer);
-
-app.get('/', (c) =>
+pageRoutes.get('/', (c) =>
   c.render(
     <>
       <div class="space-y-4">
@@ -56,7 +58,7 @@ app.get('/', (c) =>
   ),
 );
 
-app.get('/about', (c) =>
+pageRoutes.get('/about', (c) =>
   c.render(
     <>
       <h2>About</h2>
@@ -65,7 +67,7 @@ app.get('/about', (c) =>
   ),
 );
 
-app.get('/sitemap.xml', (c) => {
+pageRoutes.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([
     { loc: 'https://umaxica.net/', changefreq: 'monthly', priority: 1.0 },
   ]);
@@ -81,6 +83,8 @@ app.onError(async (_err, c) => {
   });
 });
 
+app.route('/', apiRoutes);
+app.route('/', pageRoutes);
 app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;

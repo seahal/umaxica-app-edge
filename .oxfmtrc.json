@@ -16,6 +16,12 @@
       }
     },
     {
+      "files": ["**/*.yaml", "**/*.yml"],
+      "options": {
+        "printWidth": 100
+      }
+    },
+    {
       "files": ["**/*.md", "**/*.mdx"],
       "options": {
         "printWidth": 80

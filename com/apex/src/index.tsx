@@ -9,6 +9,8 @@ import {
 import { renderer } from './renderer';
 
 const app = new Hono<{ Bindings: AssetEnv }>();
+const apiRoutes = new Hono<{ Bindings: AssetEnv }>();
+const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use('*', async (c, next) => {
   await next();
@@ -17,7 +19,7 @@ app.use('*', async (c, next) => {
   }
 });
 
-app.get('/', (c) => {
+pageRoutes.get('/', (c) => {
   const regionParam = c.req.query('ri');
 
   const redirectUrl = resolveRedirectUrl(regionParam);
@@ -33,12 +35,12 @@ app.get('/', (c) => {
   return c.json(buildRegionErrorPayload(), 500);
 });
 
-app.get('/v1/health', (c) => c.json({ status: 'ok' }));
-app.get('/api/health', (c) => c.json({ status: 'ok' }));
+apiRoutes.get('/v1/health', (c) => c.json({ status: 'ok' }));
+apiRoutes.get('/api/health', (c) => c.json({ status: 'ok' }));
 
-app.use(renderer);
+pageRoutes.use(renderer);
 
-app.get('/health', (c) => {
+pageRoutes.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
   return c.render(
     <div class="space-y-4">
@@ -50,7 +52,7 @@ app.get('/health', (c) => {
   );
 });
 
-app.get('/about', (c) =>
+pageRoutes.get('/about', (c) =>
   c.render(
     <>
       <h2>About</h2>
@@ -59,7 +61,7 @@ app.get('/about', (c) =>
   ),
 );
 
-app.get('/sitemap.xml', (c) => {
+pageRoutes.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([
     { loc: 'https://umaxica.com/', changefreq: 'monthly', priority: 1.0 },
     { loc: 'https://umaxica.com/about', changefreq: 'monthly', priority: 0.5 },
@@ -77,6 +79,8 @@ app.onError(async (_err, c) => {
   });
 });
 
+app.route('/', apiRoutes);
+app.route('/', pageRoutes);
 app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;
