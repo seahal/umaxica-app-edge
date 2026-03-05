@@ -1,12 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "umaxica-app-apex-net",
+  "name": "umaxica-apps-edge-apex-net",
   "compatibility_date": "2025-08-03",
   "main": "./src/index.tsx",
   "assets": {
     "binding": "ASSETS",
     "directory": "./public",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "run_worker_first": true
   },
   "observability": {
     "enabled": true,

@@ -21,7 +21,13 @@ function applySecurityHeaders(c: Context): void {
   c.header('Referrer-Policy', 'no-referrer');
 }
 
-const app = new Hono();
+type AssetEnv = {
+  ASSETS: {
+    fetch: (request: Request) => Promise<Response>;
+  };
+};
+
+const app = new Hono<{ Bindings: AssetEnv }>();
 
 app.use('*', async (c, next) => {
   await next();
@@ -87,5 +93,7 @@ app.get('/sitemap.xml', (c) => {
   ]);
   return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
 });
+
+app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;
