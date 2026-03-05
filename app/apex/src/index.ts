@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { handleAssetsAndSpaFallback } from '../../../shared/edge-static/spa-fallback';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { renderAboutPage } from './pages/about-page';
 import { renderHealthPage } from './pages/health-page';
@@ -40,7 +39,9 @@ const app = new Hono<{ Bindings: AppBindings }>();
 
 app.use('*', async (c, next) => {
   await next();
-  applySecurityHeaders(c);
+  if (c.res.status !== 404 && c.res.status !== 500) {
+    applySecurityHeaders(c);
+  }
 });
 
 app.get('/', (c) => {
@@ -75,11 +76,15 @@ app.get('/sitemap.xml', (c) => {
   return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
 });
 
-app.notFound((c) =>
-  handleAssetsAndSpaFallback({
-    request: c.req.raw,
-    env: c.env,
-  }),
-);
+app.onError(async (_err, c) => {
+  const url = new URL('/500.html', c.req.url);
+  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
+  return new Response(res.body, {
+    status: 500,
+    headers: res.headers,
+  });
+});
+
+app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;

@@ -31,7 +31,9 @@ const app = new Hono<{ Bindings: AssetEnv }>();
 
 app.use('*', async (c, next) => {
   await next();
-  applySecurityHeaders(c);
+  if (c.res.status !== 404 && c.res.status !== 500) {
+    applySecurityHeaders(c);
+  }
 });
 
 app.get('/health', (c) => {
@@ -81,7 +83,7 @@ app.get('/', (c) =>
 app.get('/about', (c) =>
   c.render(
     <>
-      <h2>Contact</h2>
+      <h2>About</h2>
       <p>For more information, please visit our main page.</p>
     </>,
   ),
@@ -92,6 +94,15 @@ app.get('/sitemap.xml', (c) => {
     { loc: 'https://umaxica.net/', changefreq: 'monthly', priority: 1.0 },
   ]);
   return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
+});
+
+app.onError(async (_err, c) => {
+  const url = new URL('/500.html', c.req.url);
+  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
+  return new Response(res.body, {
+    status: 500,
+    headers: res.headers,
+  });
 });
 
 app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
