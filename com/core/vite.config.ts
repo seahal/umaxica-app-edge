@@ -1,8 +1,8 @@
 import { cloudflare } from '@cloudflare/vite-plugin';
+import react from '@vitejs/plugin-react';
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 const ReactCompilerConfig = {
@@ -21,12 +21,12 @@ export default defineConfig(() => {
         viteEnvironment: { name: 'ssr' },
       }),
       reactRouter(),
-      babel({
-        babelConfig: {
+      react({
+        babel: {
           plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
           presets: ['@babel/preset-typescript'],
         },
-        filter: /\.[jt]sx?$/,
+        include: /\.[jt]sx?$/,
       }),
       tsconfigPaths(),
     ],

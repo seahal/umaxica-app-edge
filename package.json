@@ -9,7 +9,7 @@
     "formach:check": "pnpm exec oxfmt --check .",
     "lint": "pnpm exec oxlint --fix .",
     "lint:check": "pnpm exec oxlint .",
-    "type": "pnpm exec tsgo --noEmit",
+    "type": "pnpm -r --if-present --filter ./app/apex --filter ./app/core --filter ./com/apex --filter ./com/core --filter ./org/apex --filter ./org/core --filter ./net/apex run type",
     "typecheck": "pnpm run type",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
@@ -22,7 +22,6 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.25.6",
-    "@cloudflare/workers-types": "^4.20260305.1",
     "@react-router/cloudflare": "^7.13.1",
     "@sentry/react-router": "^10.40.0",
     "@tailwindcss/vite": "^4.2.1",
