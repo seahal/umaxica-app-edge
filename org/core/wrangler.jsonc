@@ -4,9 +4,12 @@
  */
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "umaxica-app-edge-staging-org",
+  "name": "umaxica-apps-edge-org-core",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
+  "workers_dev": false,
+  "preview_urls": true,
+  "upload_source_maps": true,
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -38,11 +41,25 @@
     "HELP_CORPORATE_URL": "jp.help.umaxica.com",
     "HELP_SERVICE_URL": "jp.help.umaxica.app",
     "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "BRAND_NAME": "UMAXICA",
-    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEf1h+IRwQVKzLvJ6MFQt0cL0+KexwH4Qs\n58N5MBwBICkx45Lo12qLEs7ko6oR0G1RCAn/LoFBOT4/5yRZBIvKHbiPCrV/uWym\nG9//tUEjBiGZSsIATuW08ujgh/yOHGOG\n-----END PUBLIC KEY-----\n"
+    "BRAND_NAME": "UMAXICA"
   },
   "env": {
     "development": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        }
+      },
       "kv_namespaces": [
         {
           "binding": "BINDING_NAME",
@@ -61,6 +78,21 @@
       ]
     },
     "production": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 0.2,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.05,
+          "persist": true
+        }
+      },
       "vars": {
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
@@ -83,7 +115,9 @@
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA",
-        "JWT_PUBLIC_KEY": ""
+        "SECRET_SAMPLE": "dev",
+        "VALUE_FROM_CLOUDFLARE": "",
+        "WWW_STAFF_URL": ""
       },
       "kv_namespaces": [
         {
@@ -107,9 +141,7 @@
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
    */
-  "placement": {
-    "mode": "smart"
-  },
+  "placement": { "mode": "smart" },
   /**
    * Bindings
    * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including

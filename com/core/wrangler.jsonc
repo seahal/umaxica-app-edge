@@ -7,6 +7,9 @@
   "name": "umaxica-apps-edge-com-core",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
+  "workers_dev": false,
+  "preview_urls": true,
+  "upload_source_maps": true,
   // Ensure the server/client bundles exist before Wrangler runs (react-router)
   "build": { "command": "pnpm run build" },
   "observability": {
@@ -46,11 +49,25 @@
     "DOCS_STAFF_URL": "jp.docs.umaxica.org",
     "HELP_CORPORATE_URL": "jp.help.umaxica.com",
     "HELP_SERVICE_URL": "jp.help.umaxica.app",
-    "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n"
+    "HELP_STAFF_URL": "jp.help.umaxica.org"
   },
   "env": {
     "development": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        }
+      },
       "kv_namespaces": [
         {
           "binding": "BINDING_NAME",
@@ -69,6 +86,21 @@
       ]
     },
     "production": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 0.2,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.05,
+          "persist": true
+        }
+      },
       "vars": {
         "BRAND_NAME": "UMAXICA",
         "APEX_CORPORATE_URL": "umaxica.com",
@@ -91,7 +123,7 @@
         "HELP_CORPORATE_URL": "help.umaxica.com",
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
-        "JWT_PUBLIC_KEY": ""
+        "VALUE_FROM_CLOUDFLARE": ""
       },
       "kv_namespaces": [
         {

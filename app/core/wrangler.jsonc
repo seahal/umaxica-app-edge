@@ -4,9 +4,12 @@
  */
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "umaxica-app-edge-staging-app",
+  "name": "umaxica-apps-edge-app-core",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
+  "workers_dev": false,
+  "preview_urls": true,
+  "upload_source_maps": true,
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -45,12 +48,25 @@
     "DOCS_STAFF_URL": "jp.docs.umaxica.org",
     "HELP_CORPORATE_URL": "jp.help.umaxica.com",
     "HELP_SERVICE_URL": "jp.help.umaxica.app",
-    "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0tfSUTdHHauNW9EVYrPxVg6jvlXjFgmJ\n4RZVGkIgzmW9lHE/IlLosDlBa5r2HI0tZKDHlSAaRxTfLD65FMrUNYRQBnvo3te1\n/u6YkHzsI0pcDYGsGtytmX2GR3LIdxq6\n-----END PUBLIC KEY-----\n",
-    "SENTRY_DNC": "https://8a6246e4549a95ae3481bfc40656da87@o4510319686057984.ingest.us.sentry.io/4510319874015242"
+    "HELP_STAFF_URL": "jp.help.umaxica.org"
   },
   "env": {
     "development": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        }
+      },
       "kv_namespaces": [
         {
           "binding": "BINDING_NAME",
@@ -69,6 +85,21 @@
       ]
     },
     "production": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 0.2,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.05,
+          "persist": true
+        }
+      },
       "vars": {
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
@@ -91,8 +122,8 @@
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA",
-        "JWT_PUBLIC_KEY": "",
-        "SENTRY_DNC": ""
+        "SECRET_SAMPLE": "SAMPLE_VALUE",
+        "VALUE_FROM_CLOUDFLARE": ""
       },
       "kv_namespaces": [
         {
@@ -112,13 +143,6 @@
       ]
     }
   },
-  "secret_store_secrets": [
-    {
-      "binding": "UMAXICA_JP_APP_JWT_PUBLIC_KEY",
-      "store_id": "eb74dec1a757471281526676fb6e6509",
-      "secret_name": "JWT_PUBLIC_KEY"
-    }
-  ],
   /**
    * Smart Placement
    */
