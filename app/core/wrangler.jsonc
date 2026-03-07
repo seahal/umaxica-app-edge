@@ -7,6 +7,16 @@
   "name": "umaxica-app-edge-staging-app",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
+  "workers_dev": false,
+  "preview_urls": true,
+  "limits": {
+    "cpu_ms": 30000,
+    "subrequests": 2000
+  },
+  "upload_source_maps": true,
+  "secrets": {
+    "required": ["JWT_PUBLIC_KEY", "SENTRY_DNC"]
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -51,6 +61,21 @@
   },
   "env": {
     "development": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true
+        }
+      },
       "kv_namespaces": [
         {
           "binding": "BINDING_NAME",
@@ -69,6 +94,21 @@
       ]
     },
     "production": {
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 0.2,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2,
+          "persist": true
+        },
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.05,
+          "persist": true
+        }
+      },
       "vars": {
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
