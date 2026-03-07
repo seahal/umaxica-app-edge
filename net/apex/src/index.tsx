@@ -102,12 +102,19 @@ app.onError(async (err, c) => {
     return err.getResponse();
   }
 
+  // eslint-disable-next-line no-console
   console.error('Unhandled apex error', {
     method: c.req.method,
     url: c.req.url,
     message: err instanceof Error ? err.message : String(err),
     stack: err instanceof Error ? err.stack : undefined,
   });
+
+  if (!c.env.ASSETS) {
+    // eslint-disable-next-line no-console
+    console.error('ASSETS binding is missing for 500 fallback', { url: c.req.url });
+    return c.text('Internal Server Error', 500);
+  }
 
   const url = new URL('/500.html', c.req.url);
   const res = await c.env.ASSETS.fetch(new Request(url.toString()));
@@ -120,6 +127,12 @@ app.onError(async (err, c) => {
 app.route('/', apiRoutes);
 app.route('/', pageRoutes);
 app.notFound(async (c) => {
+  if (!c.env.ASSETS) {
+    // eslint-disable-next-line no-console
+    console.error('ASSETS binding is missing for 404 fallback', { url: c.req.url });
+    return c.text('Not Found', 404);
+  }
+
   // Let the asset layer (and Vite in dev) handle static/dev paths first.
   const assetRes = await c.env.ASSETS.fetch(c.req.raw);
   if (assetRes.status !== 404) {

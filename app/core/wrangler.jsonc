@@ -50,6 +50,24 @@
     "SENTRY_DNC": "https://8a6246e4549a95ae3481bfc40656da87@o4510319686057984.ingest.us.sentry.io/4510319874015242"
   },
   "env": {
+    "development": {
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "2001",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    },
     "production": {
       "vars": {
         "APEX_CORPORATE_URL": "umaxica.com",
@@ -75,7 +93,23 @@
         "BRAND_NAME": "UMAXICA",
         "JWT_PUBLIC_KEY": "",
         "SENTRY_DNC": ""
-      }
+      },
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "2001",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
     }
   },
   "secret_store_secrets": [
@@ -123,12 +157,12 @@
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    */
-  "rate_limits": [
+  "ratelimits": [
     {
-      "binding": "RATE_LIMITER",
+      "name": "RATE_LIMITER",
       "namespace_id": "2001",
       "simple": {
-        "limit": 10000,
+        "limit": 1000,
         "period": 60
       }
     }

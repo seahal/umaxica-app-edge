@@ -25,6 +25,44 @@
       "head_sampling_rate": 1
     }
   },
+  "env": {
+    "development": {
+      "kv_namespaces": [
+        {
+          "binding": "BREAKER_KV",
+          "id": "bdbc8d77ad2d4421a1f653dedd97e273"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "1003",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    },
+    "production": {
+      "kv_namespaces": [
+        {
+          "binding": "BREAKER_KV",
+          "id": "bdbc8d77ad2d4421a1f653dedd97e273"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "1003",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    }
+  },
   "placement": { "mode": "smart" },
   "kv_namespaces": [
     {
@@ -36,12 +74,12 @@
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    */
-  "rate_limits": [
+  "ratelimits": [
     {
-      "binding": "RATE_LIMITER",
+      "name": "RATE_LIMITER",
       "namespace_id": "1003",
       "simple": {
-        "limit": 10000,
+        "limit": 1000,
         "period": 60
       }
     }

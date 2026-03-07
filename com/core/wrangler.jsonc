@@ -50,6 +50,24 @@
     "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n"
   },
   "env": {
+    "development": {
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "2002",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    },
     "production": {
       "vars": {
         "BRAND_NAME": "UMAXICA",
@@ -74,7 +92,23 @@
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "JWT_PUBLIC_KEY": ""
-      }
+      },
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "2002",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
     }
   },
   /**
@@ -112,12 +146,12 @@
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    */
-  "rate_limits": [
+  "ratelimits": [
     {
-      "binding": "RATE_LIMITER",
+      "name": "RATE_LIMITER",
       "namespace_id": "2002",
       "simple": {
-        "limit": 10000,
+        "limit": 1000,
         "period": 60
       }
     }
