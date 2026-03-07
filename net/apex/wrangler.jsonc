@@ -33,9 +33,9 @@
           "id": "c6e6da19377c4d878faefac24e2a1b42"
         }
       ],
-      "rate_limits": [
+      "ratelimits": [
         {
-          "binding": "RATE_LIMITER",
+          "name": "RATE_LIMITER",
           "namespace_id": "1004",
           "simple": {
             "limit": 1000,
@@ -51,9 +51,9 @@
           "id": "c6e6da19377c4d878faefac24e2a1b42"
         }
       ],
-      "rate_limits": [
+      "ratelimits": [
         {
-          "binding": "RATE_LIMITER",
+          "name": "RATE_LIMITER",
           "namespace_id": "1004",
           "simple": {
             "limit": 1000,
@@ -76,9 +76,9 @@
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    */
-  "rate_limits": [
+  "ratelimits": [
     {
-      "binding": "RATE_LIMITER",
+      "name": "RATE_LIMITER",
       "namespace_id": "1004",
       "simple": {
         "limit": 1000,

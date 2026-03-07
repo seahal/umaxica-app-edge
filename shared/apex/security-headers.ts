@@ -19,7 +19,7 @@ export function applySecurityHeaders(c: Context): void {
 }
 
 export type AssetEnv = {
-  ASSETS: {
+  ASSETS?: {
     fetch: (request: Request) => Promise<Response>;
   };
 };
