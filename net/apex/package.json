@@ -6,6 +6,8 @@
     "build": "vite build --ssr src/index.tsx && rm -rf dist/client && mkdir -p dist/client && cp -a public/. dist/client/",
     "preview": "$npm_execpath run build && vite preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
+    "deploy:upload": "$npm_execpath run build && wrangler versions upload",
+    "deploy:promote": "wrangler versions deploy --yes",
     "cf-typegen": "pnpm wrangler types --env-interface CloudflareBindings",
     "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
   },

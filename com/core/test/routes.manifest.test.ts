@@ -24,8 +24,15 @@ const findByPath = (path: string) => manifest.find((entry) => entry.path === pat
 const findByFile = (file: string) => manifest.find((entry) => entry.file === file);
 
 describe('com route manifest', () => {
+  it('exposes the health route', () => {
+    expect(findByPath('health')).toMatchObject({
+      file: 'routes/health.tsx',
+      path: 'health',
+    });
+  });
+
   it('wraps primary routes with the decorated layout', () => {
-    const decorated = routes[0];
+    const decorated = routes[1];
     expect(decorated).toMatchObject({ file: '../src/layouts/decorated.tsx' });
     expect(decorated?.children ?? []).toStrictEqual([
       expect.objectContaining({ file: 'routes/_index.tsx', index: true }),

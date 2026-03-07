@@ -14,7 +14,6 @@ import {
 import { renderer } from './renderer';
 
 const app = new Hono<{ Bindings: AssetEnv }>();
-const apiRoutes = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use(etag());
@@ -23,7 +22,7 @@ app.use('*', apexCsrf);
 
 app.use('*', async (c, next) => {
   await next();
-  if (c.res.status !== 404 && c.res.status !== 500) {
+  if (c.res.status !== 400 && c.res.status !== 404) {
     applySecurityHeaders(c);
   }
 });
@@ -41,11 +40,8 @@ pageRoutes.get('/', (c) => {
     return c.redirect(defaultRedirectUrl, 301);
   }
 
-  return c.json(buildRegionErrorPayload(), 500);
+  return c.json(buildRegionErrorPayload(), 400);
 });
-
-apiRoutes.get('/v1/health', (c) => c.json({ status: 'ok' }));
-apiRoutes.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 pageRoutes.use(renderer);
 
@@ -108,19 +104,18 @@ app.onError(async (err, c) => {
 
   if (!c.env.ASSETS) {
     // eslint-disable-next-line no-console
-    console.error('ASSETS binding is missing for 500 fallback', { url: c.req.url });
-    return c.text('Internal Server Error', 500);
+    console.error('ASSETS binding is missing for 400 fallback', { url: c.req.url });
+    return c.text('Bad Request', 400);
   }
 
-  const url = new URL('/500.html', c.req.url);
+  const url = new URL('/400.html', c.req.url);
   const res = await c.env.ASSETS.fetch(new Request(url.toString()));
   return new Response(res.body, {
-    status: 500,
+    status: 400,
     headers: res.headers,
   });
 });
 
-app.route('/', apiRoutes);
 app.route('/', pageRoutes);
 app.notFound(async (c) => {
   if (!c.env.ASSETS) {

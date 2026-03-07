@@ -24,6 +24,13 @@ const findByPath = (path: string) => manifest.find((entry) => entry.path === pat
 const findByFile = (file: string) => manifest.find((entry) => entry.file === file);
 
 describe('route manifest', () => {
+  it('exposes the health route', () => {
+    expect(findByPath('health')).toMatchObject({
+      file: 'routes/health.tsx',
+      path: 'health',
+    });
+  });
+
   it('includes the application index route', () => {
     expect(findByFile('routes/_index.tsx')).toMatchObject({
       file: 'routes/_index.tsx',
