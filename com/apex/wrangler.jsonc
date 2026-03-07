@@ -25,6 +25,44 @@
       "head_sampling_rate": 1
     }
   },
+  "env": {
+    "development": {
+      "kv_namespaces": [
+        {
+          "binding": "BREAKER_KV",
+          "id": "38d85c2cbf3c4578b9fb2bf999affda9"
+        }
+      ],
+      "rate_limits": [
+        {
+          "binding": "RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    },
+    "production": {
+      "kv_namespaces": [
+        {
+          "binding": "BREAKER_KV",
+          "id": "38d85c2cbf3c4578b9fb2bf999affda9"
+        }
+      ],
+      "rate_limits": [
+        {
+          "binding": "RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    }
+  },
   "placement": { "mode": "smart" },
   "kv_namespaces": [
     {
@@ -41,7 +79,7 @@
       "binding": "RATE_LIMITER",
       "namespace_id": "1002",
       "simple": {
-        "limit": 10000,
+        "limit": 1000,
         "period": 60
       }
     }

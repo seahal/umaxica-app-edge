@@ -102,6 +102,7 @@ app.onError(async (err, c) => {
     return err.getResponse();
   }
 
+  // eslint-disable-next-line no-console
   console.error('Unhandled apex error', {
     method: c.req.method,
     url: c.req.url,

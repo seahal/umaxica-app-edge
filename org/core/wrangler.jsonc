@@ -42,6 +42,24 @@
     "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEf1h+IRwQVKzLvJ6MFQt0cL0+KexwH4Qs\n58N5MBwBICkx45Lo12qLEs7ko6oR0G1RCAn/LoFBOT4/5yRZBIvKHbiPCrV/uWym\nG9//tUEjBiGZSsIATuW08ujgh/yOHGOG\n-----END PUBLIC KEY-----\n"
   },
   "env": {
+    "development": {
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "rate_limits": [
+        {
+          "binding": "RATE_LIMITER",
+          "namespace_id": "2003",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
+    },
     "production": {
       "vars": {
         "APEX_CORPORATE_URL": "umaxica.com",
@@ -66,7 +84,23 @@
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA",
         "JWT_PUBLIC_KEY": ""
-      }
+      },
+      "kv_namespaces": [
+        {
+          "binding": "BINDING_NAME",
+          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
+        }
+      ],
+      "rate_limits": [
+        {
+          "binding": "RATE_LIMITER",
+          "namespace_id": "2003",
+          "simple": {
+            "limit": 1000,
+            "period": 60
+          }
+        }
+      ]
     }
   },
   /**
@@ -114,7 +148,7 @@
       "binding": "RATE_LIMITER",
       "namespace_id": "2003",
       "simple": {
-        "limit": 10000,
+        "limit": 1000,
         "period": 60
       }
     }

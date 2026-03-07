@@ -35,6 +35,7 @@ services:
     init: true
     user: edge:group
     environment:
+      - CLOUDFLARE_ENV=development
       - NODE_OPTIONS=--max-old-space-size=4096
       - HTTP_PROXY
       - HTTPS_PROXY
