@@ -9,6 +9,8 @@
     "typegen": "react-router typegen",
     "cf-typegen": "pnpm wrangler types",
     "deploy": "pnpm run build && pnpm exec wrangler deploy",
+    "deploy:upload": "pnpm run build && pnpm exec wrangler versions upload",
+    "deploy:promote": "pnpm exec wrangler versions deploy --yes",
     "server": "react-router dev",
     "postinstall": "pnpm run cf-typegen || true",
     "preview": "pnpm run build && vite preview",

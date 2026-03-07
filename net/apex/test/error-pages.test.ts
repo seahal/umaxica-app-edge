@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import app from '../src/index';
 
 const notFoundHtml = readFileSync(resolve(__dirname, '../public/404.html'), 'utf-8');
-const serverErrorHtml = readFileSync(resolve(__dirname, '../public/500.html'), 'utf-8');
+const badRequestHtml = readFileSync(resolve(__dirname, '../public/400.html'), 'utf-8');
 
 /**
  * Simulates Cloudflare Workers asset binding with not_found_handling: "404-page".
@@ -14,8 +14,8 @@ function createMockAssets() {
   return {
     fetch: async (request: Request) => {
       const url = new URL(request.url);
-      if (url.pathname === '/500.html') {
-        return new Response(serverErrorHtml, {
+      if (url.pathname === '/400.html') {
+        return new Response(badRequestHtml, {
           status: 200,
           headers: { 'content-type': 'text/html; charset=utf-8' },
         });
@@ -47,7 +47,7 @@ describe('404 error page', () => {
   });
 });
 
-describe('500 error page', () => {
+describe('400 error page', () => {
   type AssetEnv = {
     ASSETS: { fetch: (request: Request) => Promise<Response> };
   };
@@ -56,7 +56,7 @@ describe('500 error page', () => {
 
   errorApp.use('*', async (c, next) => {
     await next();
-    if (c.res.status !== 404 && c.res.status !== 500) {
+    if (c.res.status !== 400 && c.res.status !== 404) {
       c.header('Content-Security-Policy', "default-src 'self'");
     }
   });
@@ -66,17 +66,17 @@ describe('500 error page', () => {
   });
 
   errorApp.onError(async (_err, c) => {
-    const url = new URL('/500.html', c.req.url);
+    const url = new URL('/400.html', c.req.url);
     const res = await c.env.ASSETS.fetch(new Request(url.toString()));
-    return new Response(res.body, { status: 500, headers: res.headers });
+    return new Response(res.body, { status: 400, headers: res.headers });
   });
 
-  it('returns 500 with custom page content', async () => {
+  it('returns 400 with custom page content', async () => {
     const res = await errorApp.request('/error', {}, env);
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
     const body = await res.text();
-    expect(body).toContain('something went wrong');
+    expect(body).toContain('400 Bad Request');
   });
 
   it('does not include CSP header', async () => {

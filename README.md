@@ -86,7 +86,8 @@ pnpm run --filter net/apex cf-typegen
 
 ## Deployment
 
-Packages with `deploy` script are deployed to Cloudflare Workers:
+Packages with `deploy` script are deployed to Cloudflare Workers.
+For versioned rollout, use `deploy:upload` then `deploy:promote`.
 
 ```bash
 pnpm run --filter com/core deploy
@@ -96,6 +97,13 @@ pnpm run --filter com/apex deploy
 pnpm run --filter app/apex deploy
 pnpm run --filter org/apex deploy
 pnpm run --filter dev/apex deploy
+```
+
+Versioned workflow example:
+
+```bash
+pnpm run --filter com/apex deploy:upload
+pnpm run --filter com/apex deploy:promote
 ```
 
 `dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
