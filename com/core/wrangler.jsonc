@@ -9,14 +9,7 @@
   "main": "./workers/app.ts",
   "workers_dev": false,
   "preview_urls": true,
-  "limits": {
-    "cpu_ms": 30000,
-    "subrequests": 2000
-  },
   "upload_source_maps": true,
-  "secrets": {
-    "required": ["JWT_PUBLIC_KEY"]
-  },
   // Ensure the server/client bundles exist before Wrangler runs (react-router)
   "build": { "command": "pnpm run build" },
   "observability": {
@@ -129,7 +122,8 @@
         "DOCS_STAFF_URL": "jp.docs.umaxica.org",
         "HELP_CORPORATE_URL": "help.umaxica.com",
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
-        "HELP_STAFF_URL": "jp.help.umaxica.org"
+        "HELP_STAFF_URL": "jp.help.umaxica.org",
+        "VALUE_FROM_CLOUDFLARE": ""
       },
       "kv_namespaces": [
         {

@@ -4,19 +4,12 @@
  */
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "umaxica-app-edge-staging-org",
+  "name": "umaxica-apps-edge-org-core",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
   "workers_dev": false,
   "preview_urls": true,
-  "limits": {
-    "cpu_ms": 30000,
-    "subrequests": 2000
-  },
   "upload_source_maps": true,
-  "secrets": {
-    "required": ["JWT_PUBLIC_KEY"]
-  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -121,7 +114,10 @@
         "HELP_CORPORATE_URL": "help.umaxica.com",
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
-        "BRAND_NAME": "UMAXICA"
+        "BRAND_NAME": "UMAXICA",
+        "SECRET_SAMPLE": "dev",
+        "VALUE_FROM_CLOUDFLARE": "",
+        "WWW_STAFF_URL": ""
       },
       "kv_namespaces": [
         {
