@@ -56,8 +56,7 @@
     "DOCS_STAFF_URL": "jp.docs.umaxica.org",
     "HELP_CORPORATE_URL": "jp.help.umaxica.com",
     "HELP_SERVICE_URL": "jp.help.umaxica.app",
-    "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE6XiiqrTp5+LlmtdTr38vLV4GhOzVi9Ld\n28nXZd+cVnIXh21O0Axn0UgK/tK0eR6Zow620IGN7NBG0V+G7d0dBY2Uaot0MkTt\nuOUebPb4V+Ni1XFzFWNWgiRXVVv16qxI\n-----END PUBLIC KEY-----\n"
+    "HELP_STAFF_URL": "jp.help.umaxica.org"
   },
   "env": {
     "development": {
@@ -130,8 +129,7 @@
         "DOCS_STAFF_URL": "jp.docs.umaxica.org",
         "HELP_CORPORATE_URL": "help.umaxica.com",
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
-        "HELP_STAFF_URL": "jp.help.umaxica.org",
-        "JWT_PUBLIC_KEY": ""
+        "HELP_STAFF_URL": "jp.help.umaxica.org"
       },
       "kv_namespaces": [
         {

@@ -12,7 +12,7 @@
 
 ## Workspace Overview
 
-This repository is a pnpm workspace with 9 packages:
+This repository is a pnpm workspace with 8 packages:
 
 | Package      | Role                                      | Dev Port |
 | ------------ | ----------------------------------------- | -------- |
@@ -60,13 +60,13 @@ pnpm run --filter dev/status server
 pnpm run --filter com/apex server
 pnpm run --filter app/apex server
 pnpm run --filter org/apex server
-pnpm run --filter dev/apex server
+pnpm run --filter net/apex server
 ```
 
 ## Environment Variables
 
-Cloudflare-targeted workspaces manage runtime values mainly through `wrangler.jsonc` (`vars` and environments).  
-`dev/status` and `dev/apex` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
+Cloudflare-targeted workspaces manage runtime values mainly through `wrangler.jsonc` (`vars` and environments).
+`dev/status` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
 
 ## Common Scripts
 
@@ -96,7 +96,7 @@ pnpm run --filter org/core deploy
 pnpm run --filter com/apex deploy
 pnpm run --filter app/apex deploy
 pnpm run --filter org/apex deploy
-pnpm run --filter dev/apex deploy
+pnpm run --filter net/apex deploy
 ```
 
 Versioned workflow example:
@@ -107,18 +107,3 @@ pnpm run --filter com/apex deploy:promote
 ```
 
 `dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
-`dev/apex` also includes `vercel.json` + `api/index.ts` for Vercel Edge Function routing.
-
-## Known Issues & Limitations
-
-- This is a work in progress.
-- The public availability of this repository is not guaranteed permanently.
-- No warranty is provided, and the authors shall not be held liable for any damages arising from the use of this repository.
-
-## 404 Behavior (Cloudflare Assets + Worker)
-
-- `app/core`, `org/core`, `com/core`, `app/apex`, `org/apex`, `com/apex` now use `assets.directory = "./dist"` with `not_found_handling = "404-page"` and `run_worker_first = true`.
-- Build generates `dist/spa-routes.json` via `scripts/export-spa-routes.ts`.
-- Unknown paths return HTTP `404` and serve `dist/404.html` from Worker fallback.
-- For known SPA paths in the manifest, Worker returns the app response (`core`) or `index.html` when available.
-- Update manifest candidates in each package's `scripts/spa-routes.ts`, then run `pnpm --filter <pkg> build`.
