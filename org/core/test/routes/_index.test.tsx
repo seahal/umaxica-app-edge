@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 
-vi.mock(import('../../src/components/EventList'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('../../src/components/EventList', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     EventList: () => <div data-testid="event-list" />,

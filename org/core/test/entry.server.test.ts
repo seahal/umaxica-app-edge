@@ -3,8 +3,8 @@ import { CloudflareContext } from '../src/context';
 
 const renderCalls: unknown[][] = [];
 
-vi.mock(import('react-dom/server'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-dom/server', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     renderToReadableStream: (...args: unknown[]) => {
@@ -32,7 +32,7 @@ it('handles org server entry requests', async () => {
   const responseHeaders = new Headers();
   const routerContext = { isSpaMode: false } as unknown as EntryContext;
 
-  const contextMap = new Map<symbol, unknown>([
+  const contextMap = new Map<unknown, unknown>([
     [CloudflareContext, { security: { nonce: 'abc123' } }],
   ]);
 

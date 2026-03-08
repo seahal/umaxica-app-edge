@@ -7,10 +7,10 @@ interface LoaderContext {
 }
 
 function createMockContext(data: LoaderContext) {
-  const contextMap = new Map<symbol, unknown>([[CloudflareContext, data]]);
+  const contextMap = new Map<unknown, unknown>([[CloudflareContext, data]]);
 
   return {
-    get: (key: symbol) => contextMap.get(key),
+    get: (key: unknown) => contextMap.get(key),
   };
 }
 
@@ -20,8 +20,8 @@ function runLoader(context: LoaderContext) {
 }
 
 describe('root loader', () => {
-  it('maps Cloudflare env values into loader data', async () => {
-    const result = await runLoader({
+  it('maps Cloudflare env values into loader data', () => {
+    const result = runLoader({
       cloudflare: {
         env: {
           APEX_SERVICE_URL: 'umaxica.app',

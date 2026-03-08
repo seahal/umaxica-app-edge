@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-router';
 import {
   Links,
   Meta,
@@ -5,19 +6,29 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
+  useLoaderData,
 } from 'react-router';
-import type { MiddlewareFunction } from 'react-router';
+import type { RouterContextProvider } from './context';
 
 import type { Route } from './+types/root';
 import './app.css';
 
-import type { JSX, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ErrorPage, ServiceUnavailablePage } from './components/ErrorPage';
 import { InternalServerErrorPage } from './components/InternalServerErrorPage';
 import { NotFoundPage } from './components/NotFoundPage';
 import { CloudflareContext, getEnv, getNonce } from './context';
 
-const isDevEnvironment = import.meta.env.DEV;
+// Local definition of MiddlewareFunction since it might not be exported from react-router
+type MiddlewareFunction = (
+  args: {
+    context: RouterContextProvider;
+    request: Request;
+  },
+  next: () => Promise<Response> | Response,
+) => Promise<Response> | Response;
+
+const isDevEnvironment = (import.meta as unknown as { env: { DEV: boolean } }).env.DEV;
 
 export function meta() {
   return [{ title: 'Umaxica' }];
@@ -26,6 +37,12 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
+  const { cspNonce, sentryDsn, sentryEnvironment } =
+    useLoaderData<Awaited<ReturnType<typeof loader>>>();
+  const nonce = cspNonce || undefined;
+  const publicEnv = { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
+  const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
+
   return (
     <html lang="en">
       <head>
@@ -36,8 +53,12 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+        >{`window.ENV=${serializedPublicEnv};`}</script>
+        <ScrollRestoration {...(nonce ? { nonce } : {})} />
+        <Scripts {...(nonce ? { nonce } : {})} />
       </body>
     </html>
   );
@@ -72,7 +93,7 @@ const securityContextMiddleware: MiddlewareFunction = ({ context }, next) => {
 
 export const middleware: MiddlewareFunction[] = [securityContextMiddleware];
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): React.JSX.Element {
   if (isRouteErrorResponse(error)) {
     const rr = error as { status: number; statusText?: string };
 
@@ -104,11 +125,15 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element 
   }
 
   if (error instanceof Error) {
+    Sentry.captureException(error);
+    const details = error.message;
+    const stack = isDevEnvironment ? error.stack : undefined;
+
     return (
       <InternalServerErrorPage
-        details={error.message}
-        stack={isDevEnvironment ? error.stack : undefined}
+        details={details}
         showDetails={isDevEnvironment}
+        {...(stack ? { stack } : {})}
       />
     );
   }
@@ -125,7 +150,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): JSX.Element 
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const env = getEnv(context);
+  const env = getEnv(context) as unknown as Record<string, string | undefined>;
   const cspNonce = getNonce(context);
 
   return {
@@ -134,5 +159,7 @@ export function loader({ context }: Route.LoaderArgs) {
     docsServiceUrl: env.DOCS_CORPORATE_URL ?? '',
     helpServiceUrl: env.HELP_CORPORATE_URL ?? '',
     newsServiceUrl: env.NEWS_CORPORATE_URL ?? '',
+    sentryDsn: env.SENTRY_DSN ?? '',
+    sentryEnvironment: env.SENTRY_ENVIRONMENT ?? '',
   };
 }

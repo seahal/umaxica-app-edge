@@ -1,3 +1,5 @@
+export {};
+
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
 
@@ -7,8 +9,8 @@ if (!originalDocument) {
   } as unknown as Document;
 }
 
-vi.mock(import('react-dom/client'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-dom/client', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     hydrateRoot: (...args: unknown[]) => {
@@ -17,8 +19,8 @@ vi.mock(import('react-dom/client'), async (importOriginal) => {
   };
 });
 
-vi.mock(import('react-router/dom'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router/dom', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     HydratedRouter: () => null,

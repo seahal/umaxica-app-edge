@@ -4,8 +4,8 @@ import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import DecoratedLayout from '../../src/layouts/decorated';
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Outlet: () => <div data-testid="outlet">Outlet Content</div>,
@@ -29,7 +29,6 @@ describe('DecoratedLayout (com)', () => {
         path: '*',
       },
     ]);
-    // @ts-expect-error - createRoutesStub return type doesn't include props
     render(<Stub initialEntries={['/']} />);
 
     expect(screen.getAllByText('MOCK_BRAND').length).toBeGreaterThan(0);

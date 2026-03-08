@@ -26,7 +26,10 @@ export type Meta = {
   twitter?: TwitterMeta;
 };
 
-type MetaContext = Pick<Context, 'get' | 'set'>;
+type MetaContext = {
+  get: (key: unknown) => unknown;
+  set: (key: unknown, value: unknown) => void;
+};
 
 function toNonEmptyTrimmed(value: string | undefined): string | undefined {
   if (typeof value !== 'string') {

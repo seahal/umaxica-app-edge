@@ -11,8 +11,8 @@ type LoaderData = Awaited<ReturnType<RootModule['loader']>>;
 let loaderDataOverride: LoaderData | undefined;
 const isRouteErrorResponseMock = vi.fn();
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Link: ({
@@ -49,6 +49,8 @@ const baseLoaderData: LoaderData = {
   docsServiceUrl: 'docs.umaxica.com' as 'jp.docs.umaxica.com' | 'docs.umaxica.com',
   helpServiceUrl: 'help.umaxica.com' as 'jp.help.umaxica.com' | 'help.umaxica.com',
   newsServiceUrl: 'news.umaxica.com' as 'jp.news.umaxica.com' | 'news.umaxica.com',
+  sentryDsn: '',
+  sentryEnvironment: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -86,7 +88,7 @@ describe('com root route component', () => {
 describe('com root loader', () => {
   it('throws error when context is empty', () => {
     const loadContext = {
-      get: () => {},
+      get: (_key: unknown) => {},
     } as unknown as AppLoadContext;
 
     expect(() => loader({ context: loadContext } as never)).toThrow(
@@ -94,8 +96,8 @@ describe('com root loader', () => {
     );
   });
 
-  it('returns values from environment variables', async () => {
-    const contextMap = new Map<symbol, unknown>([
+  it('returns values from environment variables', () => {
+    const contextMap = new Map<unknown, unknown>([
       [
         CloudflareContext,
         {
@@ -113,16 +115,17 @@ describe('com root loader', () => {
     ]);
 
     const loadContext = {
-      get: (key: symbol) => contextMap.get(key),
+      get: (key: unknown) => contextMap.get(key),
     } as unknown as AppLoadContext;
 
-    const result = await loader({ context: loadContext } as never);
+    const result = loader({ context: loadContext } as never);
 
     expect(result.codeName).toBe('TestBrand');
     expect(result.cspNonce).toBe('test-nonce-123');
     expect(result.newsServiceUrl).toBe('https://news.example.com');
     expect(result.docsServiceUrl).toBe('https://docs.example.com');
     expect(result.helpServiceUrl).toBe('https://help.example.com');
+    expect(result.sentryDsn).toBe('');
   });
 });
 

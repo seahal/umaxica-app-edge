@@ -3,3 +3,6 @@
 export const init = () => {};
 export const captureException = () => {};
 export const captureMessage = () => {};
+export const captureReactException = () => {};
+export const reactRouterTracingIntegration = () => ({ name: 'ReactRouterTracingIntegration' });
+export const browserProfilingIntegration = () => ({ name: 'BrowserProfiling' });

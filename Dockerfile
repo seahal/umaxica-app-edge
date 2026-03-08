@@ -86,6 +86,7 @@ RUN apt-get update \
     bash \
     curl \
     wget \
+    python3 \
   && rm -rf /var/lib/apt/lists/*
 
 ENV HOME=/home/${DOCKER_USER} \

@@ -29,7 +29,7 @@ describe('root-redirect utilities', () => {
     });
 
     it('returns null for undefined input', () => {
-      expect(resolveRedirectUrl()).toBeNull();
+      expect(resolveRedirectUrl(undefined)).toBeNull();
     });
 
     it('returns null for empty string', () => {

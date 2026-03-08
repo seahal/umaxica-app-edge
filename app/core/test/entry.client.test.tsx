@@ -1,3 +1,5 @@
+export {};
+
 const hydrateCalls: unknown[][] = [];
 const originalDocument = globalThis.document as Document | undefined;
 const originalWindow = globalThis.window as (Window & typeof globalThis) | undefined;
@@ -14,8 +16,8 @@ if (!originalWindow) {
   } as unknown as Window & typeof globalThis;
 }
 
-vi.mock(import('react-dom/client'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-dom/client', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     hydrateRoot: (...args: unknown[]) => {
@@ -24,18 +26,21 @@ vi.mock(import('react-dom/client'), async (importOriginal) => {
   };
 });
 
-vi.mock(import('react-router/dom'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router/dom', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     HydratedRouter: () => null,
   };
 });
 
-vi.mock(import('@sentry/react-router'), () => ({
+vi.mock('@sentry/react-router', () => ({
+  browserProfilingIntegration: vi.fn(() => ({ name: 'BrowserProfiling' })),
   captureException: vi.fn(() => {}),
+  captureReactException: vi.fn(() => {}),
   captureMessage: vi.fn(() => {}),
   init: vi.fn(() => {}),
+  reactRouterTracingIntegration: vi.fn(() => ({ name: 'ReactRouterTracingIntegration' })),
 }));
 
 await import('../src/entry.client');

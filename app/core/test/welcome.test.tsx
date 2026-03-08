@@ -1,3 +1,5 @@
+// @ts-ignore
+// @ts-ignore
 import '../test-setup.ts';
 
 import { Welcome } from '../src/welcome/welcome';

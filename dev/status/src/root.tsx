@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-router';
 import {
   Links,
   Meta,
@@ -16,6 +17,12 @@ import { getNonce, readEnv } from './context';
 interface RouteErrorBoundaryProps {
   error: unknown;
 }
+
+function isDevEnvironment(): boolean {
+  const importMeta = import.meta as ImportMeta & { env?: Record<string, unknown> };
+  return importMeta.env?.['DEV'] === true;
+}
+
 export const links: Route.LinksFunction = () => [
   { href: 'https://fonts.googleapis.com', rel: 'preconnect' },
   {
@@ -30,8 +37,10 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+  const { cspNonce, sentryDsn } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
+  const publicEnv = { SENTRY_DSN: sentryDsn };
+  const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
     <html lang="en">
@@ -43,6 +52,10 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+        >{`window.ENV=${serializedPublicEnv};`}</script>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -59,6 +72,7 @@ const FALLBACK_SETTINGS = {
   docsServiceUrl: '',
   helpServiceUrl: '',
   newsServiceUrl: '',
+  sentryDsn: '',
 } as const;
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -68,8 +82,9 @@ export function loader({ context }: Route.LoaderArgs) {
   const helpServiceUrl = readEnv(context, 'HELP_SERVICE_URL', FALLBACK_SETTINGS.helpServiceUrl);
   const docsServiceUrl = readEnv(context, 'DOCS_SERVICE_URL', FALLBACK_SETTINGS.docsServiceUrl);
   const newsServiceUrl = readEnv(context, 'NEWS_SERVICE_URL', FALLBACK_SETTINGS.newsServiceUrl);
+  const sentryDsn = readEnv(context, 'SENTRY_DSN', FALLBACK_SETTINGS.sentryDsn);
 
-  return { codeName, cspNonce, docsServiceUrl, helpServiceUrl, newsServiceUrl };
+  return { codeName, cspNonce, docsServiceUrl, helpServiceUrl, newsServiceUrl, sentryDsn };
 }
 
 export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {
@@ -81,9 +96,12 @@ export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {
     message = error.status === 404 ? '404' : 'Error';
     details =
       error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
+  } else if (isDevEnvironment() && error && error instanceof Error) {
+    Sentry.captureException(error);
     details = error.message;
     ({ stack } = error);
+  } else if (error instanceof Error) {
+    Sentry.captureException(error);
   }
 
   return (

@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { PostCard } from '../../src/components/PostCard';

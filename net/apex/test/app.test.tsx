@@ -5,8 +5,10 @@ describe('Net Hono app', () => {
     const res = await app.request('/health');
     expect(res.status).toBe(200);
     const body = await res.text();
-    expect(body).toContain('✓ OK');
+    expect(body).toContain('<strong>Status:</strong> OK');
     expect(body).toContain('Timestamp');
+    expect(body).not.toContain('<header');
+    expect(body).not.toContain('<footer');
   });
 
   it('renders root page', async () => {

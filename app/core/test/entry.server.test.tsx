@@ -35,12 +35,12 @@ let renderImplementation: (...args: unknown[]) => ReturnType<typeof createStream
   return createStream();
 };
 
-vi.mock(import('react-dom/server'), () => ({
+vi.mock('react-dom/server', () => ({
   renderToReadableStream: (...args: unknown[]) => renderImplementation(...args),
 }));
 
 let isBot = false;
-vi.mock(import('isbot'), () => ({
+vi.mock('isbot', () => ({
   isbot: () => isBot,
 }));
 
@@ -76,7 +76,7 @@ describe('entry.server handleRequest', () => {
       isSpaMode: false,
     } as unknown as EntryContext;
 
-    const contextMap = new Map<symbol, unknown>([
+    const contextMap = new Map<any, any>([
       [CloudflareContext, { security: { nonce: 'nonce-123' } }],
     ]);
     const loadContext = {
@@ -84,9 +84,9 @@ describe('entry.server handleRequest', () => {
         ctx: {} as ExecutionContext,
         env: {} as Env,
       },
-      get: (key: symbol) => contextMap.get(key),
+      get: (key: any) => contextMap.get(key),
       set: () => {},
-    };
+    } as any;
 
     const response = await handleRequest(request, 200, headers, routerContext, loadContext);
 
@@ -108,15 +108,15 @@ describe('entry.server handleRequest', () => {
       isSpaMode: true,
     } as unknown as EntryContext;
 
-    const contextMap = new Map();
+    const contextMap = new Map<any, any>();
     const loadContext = {
       cloudflare: {
         ctx: {} as ExecutionContext,
         env: {} as Env,
       },
-      get: (key: symbol) => contextMap.get(key),
+      get: (key: any) => contextMap.get(key),
       set: () => {},
-    };
+    } as any;
 
     await handleRequest(request, 200, headers, routerContext, loadContext);
 
@@ -149,15 +149,15 @@ describe('entry.server handleRequest', () => {
     };
 
     try {
-      const contextMap = new Map();
+      const contextMap = new Map<any, any>();
       const loadContext = {
         cloudflare: {
           ctx: {} as ExecutionContext,
           env: {} as Env,
         },
-        get: (key: symbol) => contextMap.get(key),
+        get: (key: any) => contextMap.get(key),
         set: () => {},
-      };
+      } as any;
       await handleRequest(request, 200, headers, routerContext, loadContext);
       // eslint-disable-next-line no-promise-executor-return
       await new Promise((resolve) => setTimeout(resolve, 0));

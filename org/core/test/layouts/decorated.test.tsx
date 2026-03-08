@@ -5,8 +5,8 @@ let routeLoaderDataOverride:
   | { codeName?: string; helpUrl?: string; docsUrl?: string; newsUrl?: string }
   | undefined;
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Outlet: () => createElement('vi-outlet'),
@@ -14,11 +14,11 @@ vi.mock(import('react-router'), async (importOriginal) => {
   };
 });
 
-vi.mock(import('../../src/components/Header'), () => ({
+vi.mock('../../src/components/Header', () => ({
   Header: (props: Record<string, unknown>) => createElement('vi-header', props),
 }));
 
-vi.mock(import('../../src/components/Footer'), () => ({
+vi.mock('../../src/components/Footer', () => ({
   Footer: (props: Record<string, unknown>) => createElement('vi-footer', props),
 }));
 

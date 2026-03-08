@@ -269,7 +269,7 @@ export function DocsViewer() {
                       <div className="relative">
                         <Button
                           onPress={() => {
-                            navigator.clipboard.writeText(currentSection?.code ?? '');
+                            void navigator.clipboard.writeText(currentSection?.code ?? '');
                             alert('コードをクリップボードにコピーしました！');
                           }}
                           className="absolute top-4 right-4 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"

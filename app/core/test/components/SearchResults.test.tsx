@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { SearchResults } from '../../src/components/SearchResults';

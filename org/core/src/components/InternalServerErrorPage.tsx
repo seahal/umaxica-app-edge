@@ -1,5 +1,4 @@
 /* eslint-disable import/no-named-export */
-import type { JSX } from 'react';
 import { ErrorPage } from './ErrorPage';
 
 interface Props {
@@ -12,7 +11,7 @@ export function InternalServerErrorPage({
   details,
   stack,
   showDetails = false,
-}: Props): JSX.Element {
+}: Props): React.JSX.Element {
   return (
     <ErrorPage
       status={500}
@@ -21,8 +20,8 @@ export function InternalServerErrorPage({
       suggestion="しばらく時間をおいて再度お試しください。問題が継続する場合は、お気軽にお問い合わせください。"
       showNavigation
       showDetails={showDetails}
-      details={details}
-      stack={stack}
+      {...(details ? { details } : {})}
+      {...(stack ? { stack } : {})}
     />
   );
 }

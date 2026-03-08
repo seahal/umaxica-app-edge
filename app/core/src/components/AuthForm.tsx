@@ -233,7 +233,7 @@ export function SocialLoginButton({ provider, onClick }: SocialLoginButtonProps)
 
   return (
     <Button
-      onPress={onClick}
+      {...(onClick ? { onPress: onClick } : {})}
       className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${config.bgColor} ${config.textColor} ${config.borderColor}`}
     >
       {config.icon}

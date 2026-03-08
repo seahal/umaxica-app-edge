@@ -1,5 +1,12 @@
-import { createContext } from 'react-router';
-import type { RouterContext } from 'react-router';
+// Local definitions for RouterContext
+export interface RouterContext<T> {
+  readonly name: string;
+  readonly _type: T;
+}
+
+export function createContext<T>(name: string): RouterContext<T> {
+  return { name } as unknown as RouterContext<T>;
+}
 
 export interface CloudflareContextValue {
   cloudflare?: {
@@ -11,7 +18,9 @@ export interface CloudflareContextValue {
   };
 }
 
-export const CloudflareContext = createContext<CloudflareContextValue>('CloudflareContext');
+export const CloudflareContext = createContext<CloudflareContextValue>(
+  'CloudflareContext',
+) as RouterContext<CloudflareContextValue>;
 
 export function getEnv(context: unknown): Env {
   const provider = context as RouterContextProvider | null | undefined;
@@ -31,6 +40,7 @@ export function getNonce(context: unknown): string {
   return cloudflareContext?.security?.nonce ?? '';
 }
 
-interface RouterContextProvider {
+export interface RouterContextProvider {
   get<T>(context: RouterContext<T>): T | undefined;
+  set<T>(context: RouterContext<T>, value: T): void;
 }

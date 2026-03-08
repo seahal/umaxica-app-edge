@@ -7,8 +7,8 @@ type LoaderData = Awaited<ReturnType<RootModule['loader']>>;
 
 let loaderDataOverride: LoaderData | undefined;
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Links: (props: Record<string, unknown>) => createElement('vi-links', props),
@@ -33,6 +33,7 @@ const baseLoaderData: LoaderData = {
   docsServiceUrl: 'docs.dev',
   helpServiceUrl: 'help.dev',
   newsServiceUrl: 'news.dev',
+  sentryDsn: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {

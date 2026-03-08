@@ -167,8 +167,11 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
   const [selectedKeys, setSelectedKeys] = useState<Selection>(() => new Set(['all']));
 
   const activeFilter = useMemo(() => {
-    const [first] = [...selectedKeys];
-    return typeof first === 'string' ? first : 'all';
+    if (selectedKeys === 'all') {
+      return 'all';
+    }
+    const [first] = Array.from(selectedKeys);
+    return typeof first === 'string' ? (first as ExploreCategory | 'all') : 'all';
   }, [selectedKeys]);
 
   const normalizedQuery = query.trim().toLowerCase();

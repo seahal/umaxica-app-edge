@@ -42,7 +42,7 @@ function collectModules(currentDir: string): string[] {
   return files;
 }
 
-const moduleFilePaths = collectModules(srcDirPath).toSorted((a, b) => a.localeCompare(b));
+const moduleFilePaths = [...collectModules(srcDirPath)].sort((a, b) => a.localeCompare(b));
 
 describe('com src module imports', () => {
   it('found executable source files to import', () => {

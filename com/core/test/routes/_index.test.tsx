@@ -11,10 +11,10 @@ import { CloudflareContext } from '../../src/context';
 const { loader, meta, default: Home } = await import('../../src/routes/_index');
 
 function createMockContext(data: { cloudflare?: { env?: Record<string, unknown> } }) {
-  const contextMap = new Map<symbol, unknown>([[CloudflareContext, data]]);
+  const contextMap = new Map<unknown, unknown>([[CloudflareContext, data]]);
 
   return {
-    get: (key: symbol) => contextMap.get(key),
+    get: (key: unknown) => contextMap.get(key),
   };
 }
 
@@ -79,7 +79,7 @@ describe('Route: Home (com)', () => {
     it('should throw error when cloudflare object is undefined', () => {
       const mockContext = createMockContext({
         cloudflare: undefined,
-      });
+      } as unknown as { cloudflare?: { env?: Record<string, unknown> } });
 
       expect(() =>
         loader({

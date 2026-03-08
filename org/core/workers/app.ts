@@ -9,7 +9,7 @@ function generateNonce(): string {
 
 const requestHandler = createRequestHandler(
   () => import('virtual:react-router/server-build'),
-  import.meta.env.MODE,
+  (import.meta as unknown as { env: { MODE: string } }).env.MODE,
   () => new RouterContextProvider(),
 );
 

@@ -8,7 +8,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const env = getEnv(context);
+  const env = getEnv(context) as unknown as Record<string, string | undefined>;
   return { message: env.SECRET_SAMPLE ?? '' };
 }
 

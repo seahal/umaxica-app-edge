@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-vi.mock(import('../../src/components/DocsViewer'), () => ({
+vi.mock('../../src/components/DocsViewer', () => ({
   DocsViewer: () => <div data-testid="docs-viewer">Docs Content</div>,
 }));
 

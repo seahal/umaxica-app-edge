@@ -10,8 +10,10 @@ describe('GET /health', () => {
     const body = await response.text();
 
     expect(body).toContain('<title>UMAXICA</title>');
-    expect(body).toContain('✓ OK');
+    expect(body).toContain('<strong>Status:</strong> OK');
     expect(body).toContain('Timestamp:');
+    expect(body).not.toContain('<header');
+    expect(body).not.toContain('<footer');
   });
 
   it('applies security headers to HTML responses', async () => {
