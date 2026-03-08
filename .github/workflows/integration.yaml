@@ -27,6 +27,13 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm audit --audit-level=high
+      - name: Importmap audit (if available)
+        run: |
+          if [ -x bin/importmap ]; then
+            bin/importmap audit
+          else
+            echo "bin/importmap not found, skipping importmap audit"
+          fi
 
   outdated:
     runs-on: ubuntu-latest

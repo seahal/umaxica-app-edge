@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { NewPostDialog } from '../../src/components/NewPostDialog';

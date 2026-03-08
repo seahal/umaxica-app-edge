@@ -32,7 +32,7 @@ describe('org route manifest', () => {
   });
 
   it('wraps primary routes with the decorated layout', () => {
-    const decorated = routes[1];
+    const decorated = findByFile('../src/layouts/decorated.tsx');
     expect(decorated).toMatchObject({ file: '../src/layouts/decorated.tsx' });
     expect(decorated?.children ?? []).toStrictEqual([
       expect.objectContaining({ file: 'routes/_index.tsx', index: true }),

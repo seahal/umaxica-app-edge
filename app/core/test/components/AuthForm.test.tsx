@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { AuthForm, SocialLoginButton } from '../../src/components/AuthForm';

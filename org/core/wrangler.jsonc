@@ -26,7 +26,7 @@
     }
   },
   "vars": {
-    "SECRET_SAMPLE": "dev",
+    "SENTRY_ENVIRONMENT": "dev",
     "VALUE_FROM_CLOUDFLARE": "",
     "EDGE_STAFF_URL": "org.localhost",
     "API_STAFF_URL": "api.org.localhost:3300",
@@ -94,6 +94,7 @@
         }
       },
       "vars": {
+        "SENTRY_ENVIRONMENT": "production",
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
         "APEX_STAFF_URL": "umaxica.org",
@@ -115,7 +116,6 @@
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA",
-        "SECRET_SAMPLE": "dev",
         "VALUE_FROM_CLOUDFLARE": "",
         "WWW_STAFF_URL": ""
       },

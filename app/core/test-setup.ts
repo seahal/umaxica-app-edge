@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
-vi.mock(import('@sentry/react-router'), () => ({
+vi.mock('@sentry/react-router', () => ({
   captureException: (): void => {},
+  captureReactException: (): void => {},
+  browserProfilingIntegration: (): { name: string } => ({ name: 'BrowserProfiling' }),
   init: (): void => {},
-  message: (): void => {},
+  reactRouterTracingIntegration: (): { name: string } => ({
+    name: 'ReactRouterTracingIntegration',
+  }),
 }));

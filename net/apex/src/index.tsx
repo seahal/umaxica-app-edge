@@ -13,28 +13,18 @@ const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use(etag());
 app.use(logger());
-app.use('*', apexCsrf);
+app.use('*', (c, next) =>
+  apexCsrf(c as unknown as Parameters<typeof apexCsrf>[0], next as Parameters<typeof apexCsrf>[1]),
+);
 
 app.use('*', async (c, next) => {
   await next();
   if (c.res.status !== 400 && c.res.status !== 404) {
-    applySecurityHeaders(c);
+    applySecurityHeaders(c as unknown as { header: (name: string, value: string) => void });
   }
 });
 
 pageRoutes.use(renderer);
-
-pageRoutes.get('/health', (c) => {
-  const timestampIso = new Date().toISOString();
-  return c.render(
-    <div class="space-y-4">
-      <p>✓ OK</p>
-      <p>
-        <strong>Timestamp:</strong> {timestampIso}
-      </p>
-    </div>,
-  );
-});
 
 pageRoutes.get('/', (c) =>
   c.render(
@@ -92,6 +82,8 @@ pageRoutes.get('/sitemap.xml', (c) => {
 });
 
 app.onError(async (err, c) => {
+  Sentry.captureException(err);
+
   if (err instanceof HTTPException) {
     return err.getResponse();
   }
@@ -118,6 +110,50 @@ app.onError(async (err, c) => {
   });
 });
 
+app.get('/health', (c) => {
+  const timestampIso = new Date().toISOString();
+  try {
+    return c.html(
+      `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UMAXICA</title>
+    <link href="/src/style.css" rel="stylesheet" />
+  </head>
+  <body class="min-h-screen flex flex-col bg-gray-50">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+      <div class="space-y-4">
+        <p><strong>Status:</strong> OK</p>
+        <p><strong>Timestamp:</strong> ${timestampIso}</p>
+      </div>
+    </main>
+  </body>
+</html>`,
+      200,
+    );
+  } catch {
+    return c.html(
+      `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UMAXICA</title>
+  </head>
+  <body>
+    <main>
+      <p>status: error</p>
+      <p>timestamp: ${timestampIso}</p>
+    </main>
+  </body>
+</html>`,
+      503,
+    );
+  }
+});
+
 app.route('/', pageRoutes);
 app.notFound(async (c) => {
   if (!c.env.ASSETS) {
@@ -141,9 +177,12 @@ app.notFound(async (c) => {
 });
 
 export default Sentry.withSentry(
-  (env?: AssetEnv & { SENTRY_DSN?: string }) => ({
+  (env?: AssetEnv & { SENTRY_DSN?: string; SENTRY_ENVIRONMENT?: string }) => ({
     dsn: env?.SENTRY_DSN,
-    tracesSampleRate: 1,
+    environment: env?.SENTRY_ENVIRONMENT,
+    sendDefaultPii: true,
+    enableLogs: true,
+    tracesSampleRate: 1.0,
   }),
   app,
 );

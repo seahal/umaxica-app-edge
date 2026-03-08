@@ -8,7 +8,13 @@ const ReactCompilerConfig = {
   target: '19',
 };
 
-export default defineConfig(() => ({
+export default defineConfig(({ command }) => ({
+  oxc: {
+    jsx: {
+      runtime: 'automatic',
+      development: command !== 'build',
+    },
+  },
   plugins: [
     tailwindcss(),
     reactRouter(),

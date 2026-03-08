@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { render, screen } from '@testing-library/react';

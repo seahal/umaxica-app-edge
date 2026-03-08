@@ -1,9 +1,17 @@
+import * as Sentry from '@sentry/react-router';
 import { isbot } from 'isbot';
 // oxlint-disable no-console
 import { renderToReadableStream } from 'react-dom/server';
-import type { AppLoadContext, EntryContext } from 'react-router';
+import type { AppLoadContext, EntryContext, HandleErrorFunction } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
+
+export const handleError: HandleErrorFunction = (error, { request }) => {
+  if (!request.signal.aborted) {
+    Sentry.captureException(error);
+    console.error(error);
+  }
+};
 
 export default async function handleRequest(
   request: Request,
@@ -29,7 +37,7 @@ export default async function handleRequest(
           console.error(error);
         }
       },
-    },
+    } as Parameters<typeof renderToReadableStream>[1],
   );
   shellRendered = true;
 

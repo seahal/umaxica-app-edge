@@ -1,8 +1,8 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Links: (props: Record<string, unknown>) => createElement('vi-links', props),

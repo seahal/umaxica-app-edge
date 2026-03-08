@@ -1,5 +1,5 @@
 /* eslint-disable import/no-named-export, import/no-relative-parent-imports */
 import app from '../../src/index';
 
-export const requestFromOrgApp = (path: string, init?: RequestInit): Response =>
+export const requestFromOrgApp = (path: string, init?: RequestInit): Response | Promise<Response> =>
   app.request(path, init);

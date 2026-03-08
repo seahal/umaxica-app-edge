@@ -30,6 +30,9 @@
   },
   "env": {
     "development": {
+      "vars": {
+        "SENTRY_ENVIRONMENT": "dev"
+      },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
@@ -63,6 +66,9 @@
       ]
     },
     "production": {
+      "vars": {
+        "SENTRY_ENVIRONMENT": "production"
+      },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 0.2,

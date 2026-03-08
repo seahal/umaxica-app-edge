@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { createRoutesStub } from 'react-router';
@@ -12,7 +13,6 @@ function renderHeader(props: Partial<Parameters<typeof Header>[0]> = {}, initial
       path: '*',
     },
   ]);
-  // @ts-expect-error - createRoutesStub return type doesn't include props
   return render(<Stub initialEntries={[initialPath]} />);
 }
 

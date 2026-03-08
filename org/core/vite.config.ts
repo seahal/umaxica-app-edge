@@ -9,11 +9,17 @@ const ReactCompilerConfig = {
   target: '19',
 };
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   const configuredPort = Number.parseInt(process.env.PORT ?? '5302', 10);
   const serverPort = Number.isNaN(configuredPort) ? 5302 : configuredPort;
 
   return {
+    oxc: {
+      jsx: {
+        runtime: 'automatic',
+        development: command !== 'build',
+      },
+    },
     plugins: [
       tailwindcss(),
       cloudflare({

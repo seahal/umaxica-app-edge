@@ -1,11 +1,12 @@
+// @ts-ignore
 import '../../test-setup.ts';
 
 const { render } = await import('@testing-library/react');
 
 let renderCount = 0;
 
-vi.mock(import('../../src/routes/NotFoundPage'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('../../src/routes/NotFoundPage', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     NotFoundPage: () => {

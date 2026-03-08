@@ -10,8 +10,8 @@ let loaderDataOverride: LoaderData | undefined;
 
 const isRouteErrorResponseMock = vi.fn();
 
-vi.mock(import('react-router'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     Links: (props: Record<string, unknown>) => createElement('vi-links', props),
@@ -39,6 +39,7 @@ const baseLoaderData: LoaderData = {
   docsServiceUrl: '',
   helpServiceUrl: '',
   newsServiceUrl: '',
+  sentryDsn: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {

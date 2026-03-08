@@ -1,3 +1,4 @@
 import app from '../../src/index';
 
-export const requestFromComApp = (path: string, init?: RequestInit) => app.request(path, init);
+export const requestFromComApp = (path: string, init?: RequestInit): Response | Promise<Response> =>
+  app.request(path, init);

@@ -14,7 +14,7 @@ import { loader as messagesLoader } from '../src/routes/messages/_index';
 import { loader as notificationsLoader } from '../src/routes/notifications/_index';
 
 function createMockContext(env: Record<string, unknown>) {
-  const contextMap = new Map<symbol, unknown>([
+  const contextMap = new Map<unknown, unknown>([
     [
       CloudflareContext,
       {
@@ -28,7 +28,7 @@ function createMockContext(env: Record<string, unknown>) {
       ctx: {} as unknown,
       env,
     },
-    get: (key: symbol) => contextMap.get(key),
+    get: (key: unknown) => contextMap.get(key),
     set: () => {},
   };
 }

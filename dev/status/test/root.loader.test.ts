@@ -10,8 +10,8 @@ function runLoader(context: LoaderContext) {
 }
 
 describe('dev root loader', () => {
-  it('maps environment values for header/footer configuration', async () => {
-    const result = await runLoader({
+  it('maps environment values for header/footer configuration', () => {
+    const result = runLoader({
       runtime: {
         env: {
           BRAND_NAME: 'Umaxica Dev Hub',
@@ -32,17 +32,17 @@ describe('dev root loader', () => {
     });
   });
 
-  it('generates a nonce when not provided', async () => {
+  it('generates a nonce when not provided', () => {
     const context: LoaderContext = {};
-    const result = await runLoader(context);
+    const result = runLoader(context);
 
     expectTypeOf(result.cspNonce).toBeString();
     expect(result.cspNonce.length).toBeGreaterThan(0);
     expect(context.security?.nonce).toBe(result.cspNonce);
   });
 
-  it('maps environment values from runtime.env (Vercel-compatible path)', async () => {
-    const result = await runLoader({
+  it('maps environment values from runtime.env (Vercel-compatible path)', () => {
+    const result = runLoader({
       runtime: {
         env: {
           BRAND_NAME: 'Umaxica Dev Runtime',

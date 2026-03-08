@@ -2,8 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 let renderCount = 0;
 
-vi.mock(import('../../src/components/NotFoundPage'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('../../src/components/NotFoundPage', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
     NotFoundPage: () => {

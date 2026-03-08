@@ -1,3 +1,4 @@
+// @ts-ignore
 import '../../test-setup.ts';
 // oxlint-disable no-console
 
@@ -38,9 +39,9 @@ describe('Timeline component', () => {
     const articles = screen.getAllByRole('article');
     expect(articles.length).toBeGreaterThan(0);
 
-    const firstPost = articles[0];
+    const firstPost = articles[0] as HTMLElement;
     expect(firstPost).toBeDefined();
-    expect(within(firstPost as HTMLElement).getByText('42')).toBeInTheDocument();
+    expect(within(firstPost).getByText('42')).toBeInTheDocument();
 
     await user.click(within(firstPost).getByRole('button', { name: /いいね/ }));
 

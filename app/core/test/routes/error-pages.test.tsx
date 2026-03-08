@@ -1,5 +1,6 @@
 /* eslint-disable import/no-relative-parent-imports */
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
+// @ts-ignore
 import '../../test-setup.ts';
 
 const HTTP_STATUS_500 = 500;
@@ -19,11 +20,11 @@ interface ErrorPageProps {
 }
 let lastProps: ErrorPageProps | undefined;
 
-vi.mock(import('../../src/components/ErrorPage'), async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock('../../src/components/ErrorPage', async (importOriginal) => {
+  const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
-    ErrorPage: (props: ErrorPageProps): JSX.Element => {
+    ErrorPage: (props: ErrorPageProps): React.JSX.Element => {
       lastProps = props;
       return <div data-testid="error-page">{props.title}</div>;
     },
@@ -45,10 +46,11 @@ describe('error route wrappers', () => {
     );
 
     expect(getByTestId('error-page')).toHaveTextContent('サーバーエラー');
-    expect(lastProps?.status).toBe(HTTP_STATUS_500);
-    expect(lastProps?.showDetails).toBeTruthy();
-    expect(lastProps?.details).toBe('details');
-    expect(lastProps?.stack).toBe('stack');
+    const props = lastProps as ErrorPageProps | undefined;
+    expect(props?.status).toBe(HTTP_STATUS_500);
+    expect(props?.showDetails).toBeTruthy();
+    expect(props?.details).toBe('details');
+    expect(props?.stack).toBe('stack');
   });
 
   it('renders a not found page', () => {
@@ -56,7 +58,8 @@ describe('error route wrappers', () => {
     const { getByTestId } = render(<NotFoundPage />);
 
     expect(getByTestId('error-page')).toHaveTextContent('ページが見つかりません');
-    expect(lastProps?.status).toBe(HTTP_STATUS_404);
-    expect(lastProps?.showNavigation).toBeTruthy();
+    const props = lastProps as ErrorPageProps | undefined;
+    expect(props?.status).toBe(HTTP_STATUS_404);
+    expect(props?.showNavigation).toBeTruthy();
   });
 });

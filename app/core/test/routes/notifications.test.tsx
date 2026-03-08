@@ -1,4 +1,5 @@
 /* eslint-disable import/no-relative-parent-imports */
+// @ts-ignore
 import '../../test-setup.ts';
 
 import { render, screen } from '@testing-library/react';
