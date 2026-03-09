@@ -10,7 +10,6 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
-    "noEmit": true,
-    "types": ["./worker-configuration.d.ts"]
+    "noEmit": true
   }
 }

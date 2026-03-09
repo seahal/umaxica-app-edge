@@ -8,6 +8,7 @@
     "workers/**/*",
     "test/**/*",
     "./edge-runtime.ts",
+    "sensitive-env.d.ts",
     "worker-configuration.d.ts",
     "virtual-modules.d.ts",
     "react-router-types.d.ts"

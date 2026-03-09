@@ -7,6 +7,7 @@
   "name": "umaxica-apps-edge-org-core",
   "compatibility_date": "2026-02-27",
   "main": "./workers/app.ts",
+  "keep_vars": true,
   "workers_dev": false,
   "preview_urls": true,
   "upload_source_maps": true,
@@ -25,26 +26,25 @@
       "head_sampling_rate": 1
     }
   },
-  "vars": {
-    "SENTRY_ENVIRONMENT": "dev",
-    "VALUE_FROM_CLOUDFLARE": "",
-    "EDGE_STAFF_URL": "org.localhost",
-    "API_STAFF_URL": "api.org.localhost:3300",
-    "WWW_STAFF_URL": "",
-    "AUTH_STAFF_URL": "auth.org.localhost:3300",
-    "NEWS_CORPORATE_URL": "jp.news.umaxica.com",
-    "NEWS_SERVICE_URL": "jp.news.umaxica.app",
-    "NEWS_STAFF_URL": "jp.news.umaxica.org",
-    "DOCS_CORPORATE_URL": "jp.docs.umaxica.com",
-    "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
-    "DOCS_STAFF_URL": "jp.docs.umaxica.org",
-    "HELP_CORPORATE_URL": "jp.help.umaxica.com",
-    "HELP_SERVICE_URL": "jp.help.umaxica.app",
-    "HELP_STAFF_URL": "jp.help.umaxica.org",
-    "BRAND_NAME": "UMAXICA"
-  },
   "env": {
     "development": {
+      "vars": {
+        "SENTRY_ENVIRONMENT": "development",
+        "EDGE_STAFF_URL": "org.localhost",
+        "API_STAFF_URL": "api.org.localhost:3300",
+        "WWW_STAFF_URL": "",
+        "AUTH_STAFF_URL": "auth.org.localhost:3300",
+        "NEWS_CORPORATE_URL": "jp.news.umaxica.com",
+        "NEWS_SERVICE_URL": "jp.news.umaxica.app",
+        "NEWS_STAFF_URL": "jp.news.umaxica.org",
+        "DOCS_CORPORATE_URL": "jp.docs.umaxica.com",
+        "DOCS_SERVICE_URL": "jp.docs.umaxica.app",
+        "DOCS_STAFF_URL": "jp.docs.umaxica.org",
+        "HELP_CORPORATE_URL": "jp.help.umaxica.com",
+        "HELP_SERVICE_URL": "jp.help.umaxica.app",
+        "HELP_STAFF_URL": "jp.help.umaxica.org",
+        "BRAND_NAME": "UMAXICA"
+      },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
@@ -116,7 +116,6 @@
         "HELP_SERVICE_URL": "jp.help.umaxica.app",
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA",
-        "VALUE_FROM_CLOUDFLARE": "",
         "WWW_STAFF_URL": ""
       },
       "kv_namespaces": [
