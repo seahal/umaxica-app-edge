@@ -86,7 +86,12 @@ pnpm run --filter net/apex cf-typegen
 
 ## Deployment
 
-Packages with `deploy` script are deployed to Cloudflare Workers.
+This project uses two hosting platforms:
+
+- **Cloudflare Workers** — `com/*`, `app/*`, `org/*`, `net/*` packages are deployed as Workers
+- **Vercel** — `dev/*` packages are deployed via the Vercel React Router preset
+
+For Cloudflare Workers packages, use the `deploy` script.
 For versioned rollout, use `deploy:upload` then `deploy:promote`.
 
 ```bash

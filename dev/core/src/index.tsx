@@ -8,7 +8,10 @@ import { logger } from 'hono/logger';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
+import { captureException, initObservability } from './observability';
 import { renderer } from './renderer';
+
+initObservability();
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
@@ -16,7 +19,7 @@ const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 function resolvePublicAssetPath(filename: string): string {
   const candidates = [
     resolve(process.cwd(), 'public', filename),
-    resolve(process.cwd(), 'dev/apex/public', filename),
+    resolve(process.cwd(), 'dev/core/public', filename),
   ];
 
   const matchedPath = candidates.find((candidate) => existsSync(candidate));
@@ -27,7 +30,21 @@ function resolvePublicAssetPath(filename: string): string {
   return matchedPath;
 }
 
-const notFoundHtml = readFileSync(resolvePublicAssetPath('404.html'), 'utf-8');
+function resolveErrorPagePath(filename: string): string {
+  const candidates = [
+    resolve(process.cwd(), 'src/error-pages', filename),
+    resolve(process.cwd(), 'dev/core/src/error-pages', filename),
+  ];
+
+  const matchedPath = candidates.find((candidate) => existsSync(candidate));
+  if (!matchedPath) {
+    throw new Error(`Unable to locate error page template: ${filename}`);
+  }
+
+  return matchedPath;
+}
+
+const notFoundHtml = readFileSync(resolveErrorPagePath('404.html'), 'utf-8');
 const badRequestHtml = readFileSync(resolvePublicAssetPath('400.html'), 'utf-8');
 
 app.use(etag());
@@ -101,6 +118,13 @@ pageRoutes.get('/sitemap.xml', (c) => {
 });
 
 app.onError(async (err, c) => {
+  captureException(err, {
+    request: {
+      method: c.req.method,
+      url: c.req.url,
+    },
+  });
+
   if (err instanceof HTTPException) {
     return err.getResponse();
   }

@@ -34,6 +34,7 @@ const baseLoaderData: LoaderData = {
   helpServiceUrl: 'help.dev',
   newsServiceUrl: 'news.dev',
   sentryDsn: '',
+  sentryEnvironment: 'development',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {

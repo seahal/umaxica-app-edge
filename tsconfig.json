@@ -6,7 +6,7 @@
     "com/core/**/*",
     "org/apex/**/*",
     "org/core/**/*",
-    "dev/apex/**/*",
+    "dev/core/**/*",
     "dev/status/**/*",
     "net/apex/**/*",
     "shared/**/*"

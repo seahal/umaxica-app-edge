@@ -40,6 +40,7 @@ const baseLoaderData: LoaderData = {
   helpServiceUrl: '',
   newsServiceUrl: '',
   sentryDsn: '',
+  sentryEnvironment: 'development',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -132,6 +133,8 @@ describe('dev_status root loader', () => {
           DOCS_SERVICE_URL: 'https://docs.test.com',
           HELP_SERVICE_URL: 'https://help.test.com',
           NEWS_SERVICE_URL: 'https://news.test.com',
+          SENTRY_DSN: 'https://public@example.ingest.sentry.io/1',
+          SENTRY_ENVIRONMENT: 'local-dev',
         },
       },
     };
@@ -141,6 +144,8 @@ describe('dev_status root loader', () => {
     expect(result.helpServiceUrl).toBe('https://help.test.com');
     expect(result.docsServiceUrl).toBe('https://docs.test.com');
     expect(result.newsServiceUrl).toBe('https://news.test.com');
+    expect(result.sentryDsn).toBe('https://public@example.ingest.sentry.io/1');
+    expect(result.sentryEnvironment).toBe('local-dev');
   });
 
   it('trims environment variable values', () => {
