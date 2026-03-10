@@ -1,21 +1,23 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { ViteClient } from 'vite-ssr-components/hono';
+import { getBrandName } from '../../../shared/apex/brand';
 
-export const renderer = jsxRenderer(({ children }) => {
+export const renderer = jsxRenderer(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
+  const brandName = getBrandName(c.env);
   return (
     <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>UMAXICA</title>
+        <title>{brandName}</title>
         <ViteClient />
         <link href="/src/style.css" rel="stylesheet" />
       </head>
       <body class="min-h-screen flex flex-col bg-gray-50">
         <header class="bg-white shadow-sm">
           <div class="max-w-7xl mx-auto px-4 py-6">
-            <h1 class="text-2xl font-bold text-gray-900">UMAXICA</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{brandName}</h1>
           </div>
         </header>
 
@@ -23,7 +25,9 @@ export const renderer = jsxRenderer(({ children }) => {
 
         <footer class="bg-white border-t border-gray-200 mt-auto">
           <div class="max-w-7xl mx-auto px-4 py-4">
-            <p class="text-center text-sm text-gray-600">&copy; {currentYear} UMAXICA</p>
+            <p class="text-center text-sm text-gray-600">
+              &copy; {currentYear} {brandName}
+            </p>
           </div>
         </footer>
       </body>

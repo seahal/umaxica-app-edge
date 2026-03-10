@@ -1,0 +1,59 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { Hono } from 'hono';
+import app from '../src/index';
+
+const notFoundHtml = readFileSync(resolve(__dirname, '../public/404.html'), 'utf-8');
+const badRequestHtml = readFileSync(resolve(__dirname, '../public/400.html'), 'utf-8');
+
+describe('404 error page', () => {
+  it('returns 404 with custom page content', async () => {
+    const res = await app.request('/nonexistent-path');
+
+    expect(res.status).toBe(404);
+    const body = await res.text();
+    expect(body).toContain("The page you were looking for doesn't exist");
+  });
+
+  it('does not include CSP header', async () => {
+    const res = await app.request('/nonexistent-path');
+
+    expect(res.headers.get('content-security-policy')).toBeNull();
+  });
+});
+
+describe('400 error page', () => {
+  const errorApp = new Hono();
+
+  errorApp.use('*', async (c, next) => {
+    await next();
+    if (c.res.status !== 400 && c.res.status !== 404) {
+      c.header('Content-Security-Policy', "default-src 'self'");
+    }
+  });
+
+  errorApp.get('/error', () => {
+    throw new Error('test error');
+  });
+
+  errorApp.onError(async () => {
+    return new Response(badRequestHtml, {
+      status: 400,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+  });
+
+  it('returns 400 with custom page content', async () => {
+    const res = await errorApp.request('/error');
+
+    expect(res.status).toBe(400);
+    const body = await res.text();
+    expect(body).toContain('400 Bad Request');
+  });
+
+  it('does not include CSP header', async () => {
+    const res = await errorApp.request('/error');
+
+    expect(res.headers.get('content-security-policy')).toBeNull();
+  });
+});

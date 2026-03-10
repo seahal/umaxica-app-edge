@@ -1,0 +1,24 @@
+{
+  "name": "umaxica-apps-edge-net-apex",
+  "type": "module",
+  "scripts": {
+    "server": "pnpm run build && pnpm exec tsx src/dev-server.ts",
+    "style:watch": "vite build --watch",
+    "build": "rm -rf public/assets && vite build",
+    "preview": "pnpm run build",
+    "type": "pnpm exec tsgo --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.4",
+    "hono": "^4.12.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.1.17",
+    "tsx": "^4.20.6",
+    "vite": "8.0.0-beta.16",
+    "vite-ssr-components": "^0.5.1"
+  }
+}

@@ -16,6 +16,12 @@ describe('GET /health', () => {
     expect(body).not.toContain('<footer');
   });
 
+  it('uses BRAND_NAME from env in the health page title', async () => {
+    const response = await requestFromApp('/health', {}, { BRAND_NAME: 'UMAXCA' });
+    const body = await response.text();
+    expect(body).toContain('<title>UMAXCA</title>');
+  });
+
   it('applies security headers to HTML responses', async () => {
     const response = await requestFromApp('/health');
 

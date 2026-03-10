@@ -14,6 +14,12 @@ describe('GET /about', () => {
     expect(body).toContain('https://umaxica.app');
   });
 
+  it('uses BRAND_NAME from env in the page title', async () => {
+    const response = await requestFromOrgApp('/about', {}, { BRAND_NAME: 'UMAXCA' });
+    const body = await response.text();
+    expect(body).toContain('<title>UMAXCA</title>');
+  });
+
   it('applies security headers to the about response', async () => {
     const response = await requestFromOrgApp('/about');
 

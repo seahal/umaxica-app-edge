@@ -5,6 +5,7 @@ import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
+import { getBrandName } from '../../../shared/apex/brand';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import {
   buildRegionErrorPayload,
@@ -108,6 +109,7 @@ app.onError(async (err, c) => {
 
 app.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
+  const brandName = getBrandName(c.env);
   try {
     return c.html(
       `<!doctype html>
@@ -115,7 +117,7 @@ app.get('/health', (c) => {
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UMAXICA</title>
+    <title>${brandName}</title>
     <link href="/src/style.css" rel="stylesheet" />
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50">
@@ -136,7 +138,7 @@ app.get('/health', (c) => {
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UMAXICA</title>
+    <title>${brandName}</title>
   </head>
   <body>
     <main>
