@@ -27,6 +27,7 @@ export default defineConfig({
       ],
       include: ['**/*.{ts,tsx,js,jsx}'],
       provider: 'v8',
+      reporter: ['text', 'text-summary'],
     },
     deps: {
       interopDefault: true,

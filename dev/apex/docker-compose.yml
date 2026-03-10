@@ -1,0 +1,83 @@
+name: 'umaxica-net'
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - DOCKER_UID=${UID:-1000}
+        - DOCKER_GID=${GID:-1000}
+        - DOCKER_USER=apex
+        - DOCKER_GROUP=group
+    working_dir: /home/apex/workspace
+    volumes:
+      - type: bind
+        source: ..
+        target: /home/apex/workspace
+        consistency: cached
+      - type: volume
+        source: node-modules
+        target: /home/apex/workspace/node_modules
+        volume:
+          nocopy: true
+    ports:
+      - '5501:5501'
+    environment:
+      - NODE_ENV=development
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - NO_PROXY
+      - ALL_PROXY
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - all_proxy
+    command: pnpm run --filter umaxica-apps-edge-net-apex server
+    tty: true
+    stdin_open: true
+    init: true
+    user: apex:group
+    restart: unless-stopped
+
+  build:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - DOCKER_UID=${UID:-1000}
+        - DOCKER_GID=${GID:-1000}
+        - DOCKER_USER=apex
+        - DOCKER_GROUP=group
+    working_dir: /home/apex/workspace
+    volumes:
+      - type: bind
+        source: ..
+        target: /home/apex/workspace
+        consistency: cached
+      - type: volume
+        source: node-modules
+        target: /home/apex/workspace/node_modules
+        volume:
+          nocopy: true
+    environment:
+      - NODE_ENV=production
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - NO_PROXY
+      - ALL_PROXY
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - all_proxy
+    command: pnpm run --filter umaxica-apps-edge-net-apex build
+    user: apex:group
+    profiles:
+      - build
+
+volumes:
+  node-modules:
+    driver: local

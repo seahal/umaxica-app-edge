@@ -13,10 +13,9 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
-  pull-requests: write
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -27,16 +26,9 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm audit --audit-level=high
-      - name: Importmap audit (if available)
-        run: |
-          if [ -x bin/importmap ]; then
-            bin/importmap audit
-          else
-            echo "bin/importmap not found, skipping importmap audit"
-          fi
 
   outdated:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -49,7 +41,7 @@ jobs:
       - run: pnpm outdated || true
 
   secret-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -60,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   format:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -73,7 +65,7 @@ jobs:
       - run: pnpm exec oxfmt --check .
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -86,7 +78,7 @@ jobs:
       - run: pnpm exec oxlint .
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -99,7 +91,7 @@ jobs:
       - run: pnpm run type
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -112,7 +104,7 @@ jobs:
       - run: pnpm test
 
   build-vite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 15
     strategy:
       fail-fast: false
