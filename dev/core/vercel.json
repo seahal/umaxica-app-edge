@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install --filter ./dev/apex... --ignore-scripts",
+  "installCommand": "pnpm install --filter ./dev/core... --ignore-scripts",
   "buildCommand": "pnpm run build",
   "routes": [
     {

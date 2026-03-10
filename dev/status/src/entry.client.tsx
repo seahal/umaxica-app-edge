@@ -8,6 +8,7 @@ declare global {
   interface Window {
     ENV: {
       SENTRY_DSN?: string;
+      SENTRY_ENVIRONMENT?: string;
     };
   }
 }
@@ -15,8 +16,11 @@ declare global {
 if (window.ENV?.SENTRY_DSN) {
   Sentry.init({
     dsn: window.ENV.SENTRY_DSN,
+    environment: window.ENV.SENTRY_ENVIRONMENT,
+    enableLogs: true,
     integrations: [Sentry.reactRouterTracingIntegration(), Sentry.browserProfilingIntegration()],
     profilesSampleRate: 1.0,
+    sendDefaultPii: true,
     tracesSampleRate: 1.0,
   });
 }

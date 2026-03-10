@@ -34,6 +34,20 @@ npm run dev
 
 Your application will be available at `http://localhost:5173`.
 
+## Observability
+
+For a free-tier setup, this app is wired for Sentry.
+
+Set these variables before starting the server:
+
+```bash
+export SENTRY_DSN="https://<public-key>@o<org>.ingest.sentry.io/<project>"
+export SENTRY_ENVIRONMENT="local-dev"
+npm run dev
+```
+
+If `SENTRY_DSN` is unset, Sentry stays disabled.
+
 ## Building for Production
 
 Create a production build:

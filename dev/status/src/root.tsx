@@ -37,9 +37,10 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { cspNonce, sentryDsn } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
+  const { cspNonce, sentryDsn, sentryEnvironment } =
+    useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
-  const publicEnv = { SENTRY_DSN: sentryDsn };
+  const publicEnv = { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
   const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
@@ -73,6 +74,7 @@ const FALLBACK_SETTINGS = {
   helpServiceUrl: '',
   newsServiceUrl: '',
   sentryDsn: '',
+  sentryEnvironment: 'development',
 } as const;
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -83,8 +85,21 @@ export function loader({ context }: Route.LoaderArgs) {
   const docsServiceUrl = readEnv(context, 'DOCS_SERVICE_URL', FALLBACK_SETTINGS.docsServiceUrl);
   const newsServiceUrl = readEnv(context, 'NEWS_SERVICE_URL', FALLBACK_SETTINGS.newsServiceUrl);
   const sentryDsn = readEnv(context, 'SENTRY_DSN', FALLBACK_SETTINGS.sentryDsn);
+  const sentryEnvironment = readEnv(
+    context,
+    'SENTRY_ENVIRONMENT',
+    FALLBACK_SETTINGS.sentryEnvironment,
+  );
 
-  return { codeName, cspNonce, docsServiceUrl, helpServiceUrl, newsServiceUrl, sentryDsn };
+  return {
+    codeName,
+    cspNonce,
+    docsServiceUrl,
+    helpServiceUrl,
+    newsServiceUrl,
+    sentryDsn,
+    sentryEnvironment,
+  };
 }
 
 export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {

@@ -4,7 +4,7 @@ import app from '../src/index';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const notFoundHtml = readFileSync(resolve(__dirname, '../public/404.html'), 'utf-8');
+const notFoundHtml = readFileSync(resolve(__dirname, '../src/error-pages/404.html'), 'utf-8');
 const badRequestHtml = readFileSync(resolve(__dirname, '../public/400.html'), 'utf-8');
 
 describe('net/apex/src/index.tsx coverage', () => {

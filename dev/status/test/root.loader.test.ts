@@ -18,6 +18,8 @@ describe('dev root loader', () => {
           DOCS_SERVICE_URL: 'docs.dev.umaxica.app',
           HELP_SERVICE_URL: 'help.dev.umaxica.app',
           NEWS_SERVICE_URL: 'news.dev.umaxica.app',
+          SENTRY_DSN: 'https://public@example.ingest.sentry.io/1',
+          SENTRY_ENVIRONMENT: 'preview',
         },
       },
       security: { nonce: 'test-nonce' },
@@ -29,6 +31,8 @@ describe('dev root loader', () => {
       docsServiceUrl: 'docs.dev.umaxica.app',
       helpServiceUrl: 'help.dev.umaxica.app',
       newsServiceUrl: 'news.dev.umaxica.app',
+      sentryDsn: 'https://public@example.ingest.sentry.io/1',
+      sentryEnvironment: 'preview',
     });
   });
 
@@ -49,6 +53,8 @@ describe('dev root loader', () => {
           DOCS_SERVICE_URL: 'https://docs.runtime.dev',
           HELP_SERVICE_URL: 'https://help.runtime.dev',
           NEWS_SERVICE_URL: 'https://news.runtime.dev',
+          SENTRY_DSN: 'https://public@example.ingest.sentry.io/2',
+          SENTRY_ENVIRONMENT: 'staging',
         },
       },
       security: { nonce: 'runtime-nonce' },
@@ -60,6 +66,8 @@ describe('dev root loader', () => {
       docsServiceUrl: 'https://docs.runtime.dev',
       helpServiceUrl: 'https://help.runtime.dev',
       newsServiceUrl: 'https://news.runtime.dev',
+      sentryDsn: 'https://public@example.ingest.sentry.io/2',
+      sentryEnvironment: 'staging',
     });
   });
 });

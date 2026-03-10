@@ -5,8 +5,10 @@ import { renderToReadableStream } from 'react-dom/server';
 import type { AppLoadContext, EntryContext, HandleErrorFunction } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
+import { initServerSentry } from './sentry.server';
 
 export const handleError: HandleErrorFunction = (error, { request }) => {
+  initServerSentry();
   if (!request.signal.aborted) {
     Sentry.captureException(error);
     console.error(error);
@@ -20,6 +22,7 @@ export default async function handleRequest(
   routerContext: EntryContext,
   loadContext: AppLoadContext,
 ) {
+  initServerSentry();
   let shellRendered = false;
   const userAgent = request.headers.get('user-agent');
   const nonce = getNonce(loadContext);
