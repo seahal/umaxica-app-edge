@@ -167,7 +167,7 @@ app.get('/health', (c) => {
 });
 
 app.route('/', pageRoutes);
-app.notFound(async (c) => {
+app.notFound(async () => {
   return new Response(notFoundHtml, {
     status: 404,
     headers: {

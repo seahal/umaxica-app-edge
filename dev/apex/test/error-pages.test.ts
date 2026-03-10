@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import app from '../src/index';
 
-const notFoundHtml = readFileSync(resolve(__dirname, '../public/404.html'), 'utf-8');
 const badRequestHtml = readFileSync(resolve(__dirname, '../public/400.html'), 'utf-8');
 
 describe('404 error page', () => {

@@ -13,6 +13,7 @@
     "hono": "^4.12.4"
   },
   "devDependencies": {
+    "@types/node": "22.19.11",
     "@types/react": "^19.2.14",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
