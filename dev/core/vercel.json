@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install --filter ./dev/core... --ignore-scripts",
+  "framework": null,
+  "installCommand": "pnpm install --ignore-scripts",
   "buildCommand": "pnpm run build",
+  "outputDirectory": "public",
   "routes": [
     {
       "handle": "filesystem"
