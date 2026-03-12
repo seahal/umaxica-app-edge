@@ -9,15 +9,15 @@
 
 ## 利用可能なサービス
 
-### 1. dev - 開発サーバー（Vite）
+### 1. dev - 開発サーバー（Hono）
 
-Vite の開発サーバーを起動します。HMR（Hot Module Replacement）が有効です。
+Node 上で `dev/core` の Hono サーバーを起動します。
 
 ```bash
 docker compose up dev
 ```
 
-アクセス: http://localhost:5173 または http://localhost:5174
+アクセス: http://localhost:5501
 
 ### 2. wrangler - Cloudflare Workers ローカルプレビュー
 
@@ -29,9 +29,9 @@ docker compose --profile wrangler up wrangler
 
 アクセス: http://localhost:8787
 
-### 3. build - プロダクションビルド
+### 3. build - 静的アセット検証
 
-プロダクション用にビルドします。
+コミット済みの `public/` 配下アセットが揃っているか検証します。
 
 ```bash
 docker compose --profile build run --rm build
@@ -104,7 +104,7 @@ docker compose exec dev env | grep -Ei 'http_proxy|https_proxy|no_proxy|all_prox
 
 ```yaml
 ports:
-  - '3000:5173' # ホスト側のポートを 3000 に変更
+  - '3000:5501' # ホスト側のポートを 3000 に変更
 ```
 
 ### 依存関係が見つからない
@@ -136,11 +136,11 @@ docker compose up dev
    docker compose up dev
    ```
 
-3. ブラウザで http://localhost:5173 を開く
+3. ブラウザで http://localhost:5501 を開く
 
-4. コードを編集すると自動的にリロードされます
+4. コードを編集したら必要に応じてサーバーを再起動します
 
-5. プロダクションビルド:
+5. 静的アセットを検証:
 
    ```bash
    docker compose --profile build run --rm build

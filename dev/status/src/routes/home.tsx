@@ -4,6 +4,7 @@ import type { Route } from './+types/home';
 export const meta: Route.MetaFunction = () => [
   { title: 'Umaxica Developers - ドキュメント' },
   { content: 'React Aria Components のドキュメント', name: 'description' },
+  { content: 'index, follow', name: 'robots' },
 ];
 
 export default function Home() {

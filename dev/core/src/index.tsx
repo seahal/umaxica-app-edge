@@ -1,5 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Hono } from 'hono';
 import { apexCsrf } from '../../../shared/apex/csrf';
 import { etag } from 'hono/etag';
@@ -8,6 +6,7 @@ import { logger } from 'hono/logger';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
+import { badRequestHtml, notFoundHtml } from './error-pages';
 import { captureException, initObservability } from './observability';
 import { renderer } from './renderer';
 
@@ -15,37 +14,6 @@ initObservability();
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
-
-function resolvePublicAssetPath(filename: string): string {
-  const candidates = [
-    resolve(process.cwd(), 'public', filename),
-    resolve(process.cwd(), 'dev/core/public', filename),
-  ];
-
-  const matchedPath = candidates.find((candidate) => existsSync(candidate));
-  if (!matchedPath) {
-    throw new Error(`Unable to locate public asset: ${filename}`);
-  }
-
-  return matchedPath;
-}
-
-function resolveErrorPagePath(filename: string): string {
-  const candidates = [
-    resolve(process.cwd(), 'src/error-pages', filename),
-    resolve(process.cwd(), 'dev/core/src/error-pages', filename),
-  ];
-
-  const matchedPath = candidates.find((candidate) => existsSync(candidate));
-  if (!matchedPath) {
-    throw new Error(`Unable to locate error page template: ${filename}`);
-  }
-
-  return matchedPath;
-}
-
-const notFoundHtml = readFileSync(resolveErrorPagePath('404.html'), 'utf-8');
-const badRequestHtml = readFileSync(resolvePublicAssetPath('400.html'), 'utf-8');
 
 app.use(etag());
 app.use(logger());

@@ -48,8 +48,8 @@ importers:
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260308.1
-        version: 7.0.0-dev.20260308.1
+        specifier: 7.0.0-dev.20260311.1
+        version: 7.0.0-dev.20260311.1
       '@vercel/react-router':
         specifier: ^1.2.5
         version: 1.2.5(@react-router/dev@7.13.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.0-beta.16(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))(wrangler@4.71.0(@cloudflare/workers-types@4.20260305.1))(yaml@2.8.2))(@react-router/node@7.13.1(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -355,27 +355,9 @@ importers:
       '@types/node':
         specifier: 22.19.11
         version: 22.19.11
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.27(postcss@8.5.8)
-      postcss:
-        specifier: ^8.4.49
-        version: 8.5.8
-      tailwindcss:
-        specifier: ^4.1.17
-        version: 4.2.1
       tsx:
         specifier: ^4.20.6
         version: 4.21.0
-      vite:
-        specifier: 8.0.0-beta.16
-        version: 8.0.0-beta.16(@types/node@22.19.11)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
-      vite-ssr-components:
-        specifier: ^0.5.1
-        version: 0.5.2
 
   dev/status:
     dependencies:
@@ -3794,43 +3776,43 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-mywkctYr45fUBUYD35poInc9HEjup0zyCO5z3ZU2QC9eCQShpwYSDceoSCwxVKB/b/f/CU6H3LqINFeIz5CvrQ==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-k3UqlA40U9m8meAyliJdbTayDSGZRBGNsEDP2rtjOomLUo2IA0eIi4vNAjQKzsXFtyfoQ59MGAqOLSO/CzVrQA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-iF+Y4USbCiD5BxmXI6xYuy+S6d2BhxKDb3YHjchzqg3AgleDNTd2rqSzlWv4ku26V2iOSfpM9t1H/xluL9pgNw==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-8PNUCS1HPeXMK1F+1D3A4MyD+9Nil2mM3mWSwayUZpqT/A+dfEtcoo4Oe7Gz6qvMZbhCjbipwhTC84ilisiE1g==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-uEIIbW1JYPGEesVh/P5xA+xox7pQ6toeFPeke2X2H2bs5YkWHVaUQtVZuKNmGelw+2PCG6XRrXvMgMp056ebuQ==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-WwRJO5ryMEs4Flro6JKNq0T+hR78eYFrItautu9o6EsIpeevk7Cq7T0BBgCrAf+A5aKts21HpiWzfHI0YP/CuQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-vg8hwfwIhT8CmYJI5lG3PP8IoNzKKBGbq1cKjxQabSZTPuQKwVFVity2XKTKZKd+qRGL7xW4UWMJZLFgSx3b2Q==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-9T8kwNALCWzuNe00ri/f6wwoVD64YZW24cqkycFeptIF+DfNxfHMddWd7fvtHf0OKzPtkL83mkjBtviNeVKOfQ==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-Yd/ht0CGE4NYUAjuHa1u4VbiJbyUgvDh+b2o+Zcb2h5t8B761DIzDm24QqVXh+KhvGUoEodXWg3g3APxLHqj8Q==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-oMm3cb4njzMLBb61TI4EGq5Igxc+hoPHHNpMWqORfiYu/uQZWnter/twamTrZo6boCFtIa59mrGkhR3Qz7kauA==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-Klk6BoiHegfPmkO0YYrXmbYVdPjOfN25lRkzenqDIwbyzPlABHvICCyo5YRvWD3HU4EeDfLisIFU9wEd/0duCw==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-EQ5nz4qrwtzMZ5bjdMVQ2ke5BHQWDBz9IQsdh/8UU819cs5ZBnKmFFe5wOrIngqFvq4EoWKDXf983Vw0q4erkg==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-4LrXmaMfzedwczANIkD/M9guPD4EWuQnCxOJsJkdYi3ExWQDjIFwfmxTtAmfPBWxVExLfn7UUkz/yCtcv2Wd+w==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-Y/5A7BaRFV1Pro4BqNW3nVDuId7YdPXktl769x1yUjTDQLH6YJEJVeBkFkT0+4e1O5IL92rxxr8rWMLypNKnTw==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20260308.1':
-    resolution: {integrity: sha512-8a3oe5IAfBkEfMouRheNhOXUScBSHIUknPvUdsbxx7s+Ja1lxFNA1X1TTl2T18vu72Q/mM86vxefw5eW8/ps3g==}
+  '@typescript/native-preview@7.0.0-dev.20260311.1':
+    resolution: {integrity: sha512-BnyOW/mdZVZGevyeJ4RRY60CI4F121QBa++8Rwd+/Ms48OKQ30eMhaIKWGowz/u4WjJZmrzhFxIzN92XeSWMCQ==}
     hasBin: true
 
   '@vercel/react-router@1.2.5':
@@ -9348,36 +9330,36 @@ snapshots:
     dependencies:
       '@types/node': 22.19.11
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260308.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260311.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20260308.1':
+  '@typescript/native-preview@7.0.0-dev.20260311.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260308.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260308.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260311.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260311.1
 
   '@vercel/react-router@1.2.5(@react-router/dev@7.13.1(@types/node@25.3.0)(jiti@2.6.1)(lightningcss@1.31.1)(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.0-beta.16(@types/node@25.3.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))(wrangler@4.71.0(@cloudflare/workers-types@4.20260305.1))(yaml@2.8.2))(@react-router/node@7.13.1(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -10733,22 +10715,6 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.6.1
       lightningcss: 1.31.1
-      tsx: 4.21.0
-      yaml: 2.8.2
-
-  vite@8.0.0-beta.16(@types/node@22.19.11)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2):
-    dependencies:
-      '@oxc-project/runtime': 0.115.0
-      lightningcss: 1.31.1
-      picomatch: 4.0.3
-      postcss: 8.5.8
-      rolldown: 1.0.0-rc.6
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 22.19.11
-      esbuild: 0.27.3
-      fsevents: 2.3.3
-      jiti: 2.6.1
       tsx: 4.21.0
       yaml: 2.8.2
 

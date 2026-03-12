@@ -13,7 +13,7 @@ export function initObservability() {
   }
 
   Sentry.init({
-    dsn,
+    dsn: dsn as string,
     environment: readEnv('SENTRY_ENVIRONMENT') ?? 'development',
     enableLogs: true,
     profilesSampleRate: 1.0,
@@ -37,7 +37,7 @@ export function captureException(
   }
 
   initObservability();
-  Sentry.withScope((scope) => {
+  Sentry.withScope((scope: Sentry.Scope) => {
     if (context?.request) {
       scope.setContext('request', context.request);
     }

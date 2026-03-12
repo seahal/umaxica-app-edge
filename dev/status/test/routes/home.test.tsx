@@ -26,6 +26,7 @@ describe('Home route (dev/status)', () => {
     expect(metaResult).toStrictEqual([
       { title: 'Umaxica Developers - ドキュメント' },
       { content: 'React Aria Components のドキュメント', name: 'description' },
+      { content: 'index, follow', name: 'robots' },
     ]);
   });
 });
