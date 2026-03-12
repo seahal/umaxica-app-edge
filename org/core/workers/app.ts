@@ -1,4 +1,5 @@
 import { RouterContextProvider, createRequestHandler } from 'react-router';
+import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { CloudflareContext } from '../src/context';
 
 function generateNonce(): string {
@@ -15,6 +16,9 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
+    const rateLimitResponse = await checkRateLimit(request, env.RATE_LIMITER);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const nonce = generateNonce();
 
     const contextProvider = new RouterContextProvider();

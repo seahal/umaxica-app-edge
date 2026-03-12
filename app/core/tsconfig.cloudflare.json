@@ -6,6 +6,7 @@
     "src/**/.server/**/*",
     "src/**/.client/**/*",
     "workers/**/*",
+    "../../shared/**/*",
     "test/**/*",
     "./edge-runtime.ts",
     "sensitive-env.d.ts",

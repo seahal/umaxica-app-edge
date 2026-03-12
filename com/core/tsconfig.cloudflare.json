@@ -4,6 +4,7 @@
     ".react-router/types/**/*",
     "src/**/*",
     "workers/**/*",
+    "../../shared/**/*",
     "test/**/*",
     "./edge-runtime.ts",
     "sensitive-env.d.ts",

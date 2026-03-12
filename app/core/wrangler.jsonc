@@ -78,7 +78,7 @@
           "name": "RATE_LIMITER",
           "namespace_id": "2001",
           "simple": {
-            "limit": 1000,
+            "limit": 2000,
             "period": 60
           }
         }
@@ -135,7 +135,7 @@
           "name": "RATE_LIMITER",
           "namespace_id": "2001",
           "simple": {
-            "limit": 1000,
+            "limit": 2000,
             "period": 60
           }
         }
@@ -185,7 +185,7 @@
       "name": "RATE_LIMITER",
       "namespace_id": "2001",
       "simple": {
-        "limit": 1000,
+        "limit": 2000,
         "period": 60
       }
     }

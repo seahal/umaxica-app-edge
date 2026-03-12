@@ -38,7 +38,20 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm outdated || true
+      - run: pnpm outdated
+
+  knip:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm exec knip
 
   secret-scan:
     runs-on: ubuntu-slim
@@ -101,7 +114,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm test
+      - run: pnpm run test:cov
 
   build-vite:
     runs-on: ubuntu-slim
@@ -130,3 +143,9 @@ jobs:
         run: pnpm -C ${{ matrix.target }} run build
       - if: ${{ !startsWith(matrix.target, 'dev/') }}
         run: pnpm --dir ${{ matrix.target }} run build
+      - name: Report compressed size
+        uses: preactjs/compressed-size-action@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          build-directory: '${{ matrix.target }}/build'
+          pattern: '{**/*.js,**/*.css}'
