@@ -1,9 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Hono } from 'hono';
+import { badRequestHtml } from '../src/error-pages';
 import app from '../src/index';
-
-const badRequestHtml = readFileSync(resolve(__dirname, '../public/400.html'), 'utf-8');
 
 describe('404 error page', () => {
   it('returns 404 with custom page content', async () => {

@@ -2,8 +2,10 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import app from './index';
 
+const statusPublicRoot = '../status/public';
+
 app.use('/assets/*', serveStatic({ root: './public' }));
-app.use('/favicon.ico', serveStatic({ root: './public' }));
+app.use('/favicon.ico', serveStatic({ root: statusPublicRoot }));
 app.use('/robots.txt', serveStatic({ root: './public' }));
 app.use('/400.html', serveStatic({ root: './public' }));
 app.use('/500.html', serveStatic({ root: './public' }));

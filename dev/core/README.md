@@ -1,6 +1,5 @@
 ```txt
 pnpm install
-pnpm --dir dev/core run build
 pnpm --dir dev/core run server
 ```
 
@@ -21,3 +20,4 @@ pnpm --dir dev/core run build
 ```
 
 The runtime entrypoint for Vercel is `api/[[...route]].ts`, which adapts the Hono app with `hono/vercel`.
+Static assets for this app are committed under `public/`, so no asset bundler is required.
