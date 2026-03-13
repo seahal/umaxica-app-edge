@@ -1,5 +1,4 @@
 /** @jsxImportSource hono/jsx */
-import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { Child } from 'hono/jsx';
 import { buildBrandTitle, type BrandTitleOptions } from './title';
@@ -57,7 +56,7 @@ export function getMeta(c: MetaContext, defaultMeta?: Meta): Meta | undefined {
 }
 
 type SeoHeadProps = {
-  c: Context;
+  c: MetaContext;
   brand: BrandTitleOptions;
   defaultMeta?: Meta;
 };
@@ -96,7 +95,7 @@ export function SeoHead({ c, brand, defaultMeta }: SeoHeadProps) {
 }
 
 type LayoutProps = {
-  c: Context;
+  c: MetaContext;
   brand: BrandTitleOptions;
   defaultMeta?: Meta;
   children: Child;

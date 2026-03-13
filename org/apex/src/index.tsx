@@ -3,7 +3,9 @@ import { Hono } from 'hono';
 import { apexCsrf } from '../../../shared/apex/csrf';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
+import { languageDetector } from 'hono/language';
 import { logger } from 'hono/logger';
+import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
@@ -14,6 +16,8 @@ import {
   resolveRedirectUrl,
 } from './root-redirect';
 import { renderer } from './renderer';
+
+void languageDetector;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
@@ -55,7 +59,7 @@ pageRoutes.get('/', (c) => {
 
 pageRoutes.use(renderer as unknown as Parameters<typeof pageRoutes.use>[0]);
 
-pageRoutes.get('/about', (c) => {
+pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
     title: 'UMAXICA (org) - apex - About',
     description:
@@ -115,7 +119,7 @@ app.onError(async (err, c) => {
   });
 });
 
-app.get('/health', (c) => {
+app.get('/health', timeout(2000), (c) => {
   const timestampIso = new Date().toISOString();
   const brandName = getBrandName(c.env);
   try {
