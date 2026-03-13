@@ -1,3 +1,4 @@
 User-agent: *
-Disallow:
+Disallow: /
+Allow: /about
 Sitemap: https://umaxica.app/sitemap.xml
