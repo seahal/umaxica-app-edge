@@ -3,12 +3,17 @@ import { Hono } from 'hono';
 import { apexCsrf } from '../../../shared/apex/csrf';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
+import { languageDetector } from 'hono/language';
 import { logger } from 'hono/logger';
+import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
 import { setMeta } from '../../../shared/apex/seo';
 import { renderer } from './renderer';
+
+void languageDetector;
+void timeout;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
@@ -34,7 +39,7 @@ app.use('*', async (c, next) => {
 
 pageRoutes.use(renderer);
 
-pageRoutes.get('/', (c) => {
+pageRoutes.get('/', timeout(2000), (c) => {
   setMeta(c, {
     title: 'UMAXICA (net) - apex',
     canonical: 'https://umaxica.net/',
@@ -65,7 +70,7 @@ pageRoutes.get('/', (c) => {
   );
 });
 
-pageRoutes.get('/about', (c) => {
+pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
     title: 'UMAXICA (net) - apex - About',
     description:
@@ -125,7 +130,7 @@ app.onError(async (err, c) => {
   });
 });
 
-app.get('/health', (c) => {
+app.get('/health', timeout(2000), (c) => {
   const timestampIso = new Date().toISOString();
   const brandName = getBrandName(c.env);
   try {
