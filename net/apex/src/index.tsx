@@ -41,7 +41,7 @@ pageRoutes.use(renderer);
 
 pageRoutes.get('/', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'UMAXICA (net) - apex',
+    title: 'UMAXICA (net) - Apex',
     canonical: 'https://umaxica.net/',
     robots: 'index,follow',
   });
@@ -72,7 +72,7 @@ pageRoutes.get('/', timeout(2000), (c) => {
 
 pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'UMAXICA (net) - apex - About',
+    title: 'Health Status | UMAXICA (net) - Apex',
     description:
       'umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
     canonical: 'https://umaxica.net/about',

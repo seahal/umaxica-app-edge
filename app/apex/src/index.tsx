@@ -61,7 +61,7 @@ pageRoutes.use(renderer as unknown as Parameters<typeof pageRoutes.use>[0]);
 
 pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'UMAXICA (app) - apex - About',
+    title: 'Health Status | UMAXICA (app) - Apex',
     description:
       'umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
     canonical: 'https://umaxica.app/about',
