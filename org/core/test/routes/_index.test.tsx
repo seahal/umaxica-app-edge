@@ -31,6 +31,10 @@ describe('Route: home (org)', () => {
       content: 'コミュニティイベントに参加しましょう',
       name: 'description',
     });
+    expect(entries).toContainEqual({
+      content: 'index, follow',
+      name: 'robots',
+    });
   });
 
   it('injects Cloudflare env values via the loader', () => {

@@ -28,6 +28,7 @@ describe('dev route manifest', () => {
     expect(decorated).toMatchObject({ file: '../src/layouts/decorated.tsx' });
     expect(decorated?.children ?? []).toStrictEqual([
       expect.objectContaining({ file: 'routes/home.tsx', index: true }),
+      expect.objectContaining({ file: 'routes/health.tsx', path: 'health' }),
       expect.objectContaining({ file: 'routes/catch-all.tsx', path: '*' }),
     ]);
   });
@@ -43,6 +44,13 @@ describe('dev route manifest', () => {
     expect(findByFile('routes/catch-all.tsx')).toMatchObject({
       file: 'routes/catch-all.tsx',
       path: '*',
+    });
+  });
+
+  it('exposes the health route', () => {
+    expect(findByFile('routes/health.tsx')).toMatchObject({
+      file: 'routes/health.tsx',
+      path: 'health',
     });
   });
 });

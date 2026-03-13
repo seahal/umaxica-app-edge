@@ -6,6 +6,7 @@ export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Umaxica - ホーム' },
     { content: 'Umaxica - 今何してる？', name: 'description' },
+    { content: 'index, follow', name: 'robots' },
   ];
 }
 

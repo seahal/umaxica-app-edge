@@ -5,6 +5,7 @@ export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Umaxica Organization - イベント一覧' },
     { content: 'コミュニティイベントに参加しましょう', name: 'description' },
+    { content: 'index, follow', name: 'robots' },
   ];
 }
 

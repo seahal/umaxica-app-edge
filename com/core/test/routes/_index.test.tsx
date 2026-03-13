@@ -28,6 +28,7 @@ describe('Route: Home (com)', () => {
           content: '抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。',
           name: 'description',
         },
+        { content: 'index, follow', name: 'robots' },
       ]);
     });
   });
