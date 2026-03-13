@@ -7,7 +7,6 @@ import { logger } from 'hono/logger';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
-import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import { setMeta } from '../../../shared/apex/seo';
 import {
   buildRegionErrorPayload,
@@ -59,6 +58,8 @@ pageRoutes.get('/about', (c) => {
     title: 'UMAXICA (app) - apex - About',
     description:
       'umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
+    canonical: 'https://umaxica.app/about',
+    robots: 'index,follow',
   });
 
   return c.render(
@@ -81,15 +82,6 @@ pageRoutes.get('/about', (c) => {
       </p>
     </div>,
   );
-});
-
-pageRoutes.get('/sitemap.xml', (c) => {
-  const xml = buildSitemapXml([
-    { loc: 'https://umaxica.app/', changefreq: 'monthly', priority: 1.0 },
-    { loc: 'https://umaxica.app/about', changefreq: 'monthly', priority: 0.5 },
-    { loc: 'https://umaxica.app/health', changefreq: 'weekly', priority: 0.3 },
-  ]);
-  return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=UTF-8' });
 });
 
 app.onError(async (err, c) => {
@@ -132,6 +124,7 @@ app.get('/health', (c) => {
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${brandName}</title>
+    <meta name="robots" content="noindex, nofollow" />
     <link href="/src/style.css" rel="stylesheet" />
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50">
@@ -144,6 +137,7 @@ app.get('/health', (c) => {
   </body>
 </html>`,
       200,
+      { 'X-Robots-Tag': 'noindex, nofollow' },
     );
   } catch {
     return c.html(
@@ -153,6 +147,7 @@ app.get('/health', (c) => {
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${brandName}</title>
+    <meta name="robots" content="noindex, nofollow" />
   </head>
   <body>
     <main>
@@ -162,6 +157,7 @@ app.get('/health', (c) => {
   </body>
 </html>`,
       503,
+      { 'X-Robots-Tag': 'noindex, nofollow' },
     );
   }
 });

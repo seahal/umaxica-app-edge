@@ -6,9 +6,11 @@ describe('GET /health', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
 
     const body = await response.text();
     expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
     expect(body).toContain('<strong>Status:</strong> OK');
     expect(body).toContain('Timestamp:');
     expect(body).not.toContain('<header');

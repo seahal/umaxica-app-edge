@@ -4,9 +4,11 @@ describe('Net Hono app', () => {
   it('renders health check', async () => {
     const res = await app.request('/health');
     expect(res.status).toBe(200);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const body = await res.text();
     expect(body).toContain('<strong>Status:</strong> OK');
     expect(body).toContain('Timestamp');
+    expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
     expect(body).not.toContain('<header');
     expect(body).not.toContain('<footer');
   });
@@ -18,6 +20,8 @@ describe('Net Hono app', () => {
     expect(body).toContain('About this site.');
     expect(body).toContain('umaxica.app');
     expect(body).toContain('<title>UMAXICA (net) - apex</title>');
+    expect(body).toContain('<link rel="canonical" href="https://umaxica.net/"');
+    expect(body).toContain('<meta name="robots" content="index,follow"');
   });
 
   it('renders about page', async () => {
@@ -29,6 +33,8 @@ describe('Net Hono app', () => {
     expect(body).toContain(
       '<meta name="description" content="umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
     );
+    expect(body).toContain('<link rel="canonical" href="https://umaxica.net/about"');
+    expect(body).toContain('<meta name="robots" content="index,follow"');
   });
 
   it('renders footer with current UTC year', async () => {
@@ -50,18 +56,5 @@ describe('Net Hono app', () => {
     expect(res.headers.get('Strict-Transport-Security')).toBeTruthy();
     expect(res.headers.get('Content-Security-Policy')).toBeTruthy();
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
-  });
-
-  it('returns sitemap.xml with correct content type', async () => {
-    const res = await app.request('/sitemap.xml');
-    expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toContain('application/xml');
-  });
-
-  it('returns valid sitemap XML with umaxica.net URL', async () => {
-    const res = await app.request('/sitemap.xml');
-    const body = await res.text();
-    expect(body).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(body).toContain('<loc>https://umaxica.net/</loc>');
   });
 });

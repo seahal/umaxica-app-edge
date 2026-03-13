@@ -12,6 +12,8 @@ describe('GET /about', () => {
     expect(body).toContain(
       '<meta name="description" content="umaxica.com is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
     );
+    expect(body).toContain('<link rel="canonical" href="https://umaxica.com/about"');
+    expect(body).toContain('<meta name="robots" content="index,follow"');
     expect(body).toContain('About this site.');
     expect(body).toContain('https://umaxica.com');
     expect(body).toContain('https://umaxica.app');
