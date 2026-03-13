@@ -40,6 +40,19 @@ jobs:
       - run: pnpm install
       - run: pnpm outdated || true
 
+  knip:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm exec knip --include unlisted,unresolved,binaries
+
   secret-scan:
     runs-on: ubuntu-slim
     timeout-minutes: 10
@@ -101,7 +114,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm test
+      - run: pnpm run test:cov
 
   build-vite:
     runs-on: ubuntu-slim
@@ -130,3 +143,17 @@ jobs:
         run: pnpm -C ${{ matrix.target }} run build
       - if: ${{ !startsWith(matrix.target, 'dev/') }}
         run: pnpm --dir ${{ matrix.target }} run build
+      - name: Report asset sizes
+        run: |
+          case "${{ matrix.target }}" in
+            */apex) asset_dir="${{ matrix.target }}/dist/client" ;;
+            *) asset_dir="${{ matrix.target }}/build/client" ;;
+          esac
+
+          if [[ ! -d "$asset_dir" ]]; then
+            echo "Asset directory not found: $asset_dir" >&2
+            exit 1
+          fi
+
+          echo "Asset directory: $asset_dir"
+          find "$asset_dir" -type f \( -name '*.js' -o -name '*.css' \) -printf '%P\t%s bytes\n' | sort

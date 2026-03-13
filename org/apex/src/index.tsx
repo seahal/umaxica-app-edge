@@ -4,8 +4,10 @@ import { apexCsrf } from '../../../shared/apex/csrf';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
+import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
+import { setMeta } from '../../../shared/apex/seo';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
 import {
   buildRegionErrorPayload,
@@ -19,6 +21,12 @@ const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 
 app.use(etag());
 app.use(logger());
+app.use(async (c, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RATE_LIMITER binding from wrangler.jsonc
+  const blocked = await checkRateLimit(c.req.raw, (c.env as any)?.RATE_LIMITER);
+  if (blocked) return blocked;
+  await next();
+});
 app.use('*', (c, next) =>
   apexCsrf(c as unknown as Parameters<typeof apexCsrf>[0], next as Parameters<typeof apexCsrf>[1]),
 );
@@ -48,8 +56,14 @@ pageRoutes.get('/', (c) => {
 
 pageRoutes.use(renderer as unknown as Parameters<typeof pageRoutes.use>[0]);
 
-pageRoutes.get('/about', (c) =>
-  c.render(
+pageRoutes.get('/about', (c) => {
+  setMeta(c, {
+    title: 'UMAXICA (org) - apex - About',
+    description:
+      'umaxica.org is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
+  });
+
+  return c.render(
     <div class="space-y-4">
       <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
       <p>
@@ -68,8 +82,8 @@ pageRoutes.get('/about', (c) =>
         の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
       </p>
     </div>,
-  ),
-);
+  );
+});
 
 pageRoutes.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([

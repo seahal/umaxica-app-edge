@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "hono": "^4.12.5",
-    "jose": "^6.2.0",
+    "jose": "^6.2.1",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
@@ -33,6 +33,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "4.0.18",
     "babel-plugin-react-compiler": "^1.0.0",
+    "happy-dom": "^20.8.3",
     "knip": "^5.86.0",
     "miniflare": "^4.20260305.0",
     "oxfmt": "^0.36.0",

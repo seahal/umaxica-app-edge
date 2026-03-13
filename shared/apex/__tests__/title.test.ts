@@ -59,7 +59,6 @@ describe('brandFromEnv', () => {
     expect(brand).toEqual({
       brandName: 'Umaxica',
       separator: ' | ',
-      defaultPageTitle: undefined,
     });
   });
 });

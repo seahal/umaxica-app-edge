@@ -28,6 +28,7 @@ function resolveSeparator(value: unknown): string | undefined {
 
 export function brandFromEnv(c: ContextWithEnv | null | undefined): BrandTitleOptions {
   const env = c?.env ?? {};
+  const defaultPageTitle = toNonEmptyTrimmed(env.BRAND_DEFAULT_TITLE);
 
   // Cloudflare Workers vars:
   // - BRAND_NAME
@@ -36,7 +37,7 @@ export function brandFromEnv(c: ContextWithEnv | null | undefined): BrandTitleOp
   return {
     brandName: toNonEmptyTrimmed(env.BRAND_NAME) ?? DEFAULT_BRAND_NAME,
     separator: resolveSeparator(env.BRAND_SEPARATOR) ?? DEFAULT_BRAND_SEPARATOR,
-    defaultPageTitle: toNonEmptyTrimmed(env.BRAND_DEFAULT_TITLE),
+    ...(defaultPageTitle ? { defaultPageTitle } : {}),
   };
 }
 

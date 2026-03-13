@@ -21,3 +21,5 @@ pre-commit:
     #      run: gitleaks protect
     test:
       run: pnpm test
+    outdated:
+      run: pnpm outdated

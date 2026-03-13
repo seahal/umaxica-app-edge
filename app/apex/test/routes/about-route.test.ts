@@ -9,7 +9,10 @@ describe('GET /about', () => {
 
     const body = await response.text();
 
-    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('<title>UMAXICA (app) - apex - About</title>');
+    expect(body).toContain(
+      '<meta name="description" content="umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
+    );
     expect(body).toContain('About this site.');
     expect(body).toContain('https://umaxica.app');
     expect(body).toContain('https://umaxica.com');
@@ -18,7 +21,7 @@ describe('GET /about', () => {
   it('uses BRAND_NAME from env in the page title', async () => {
     const response = await requestFromApp('/about', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await response.text();
-    expect(body).toContain('<title>UMAXCA</title>');
+    expect(body).toContain('<title>UMAXICA (app) - apex - About</title>');
   });
 
   it('applies security headers to the about page', async () => {

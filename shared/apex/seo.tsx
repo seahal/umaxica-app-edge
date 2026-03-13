@@ -18,6 +18,7 @@ export type TwitterMeta = {
 };
 
 export type Meta = {
+  title?: string;
   pageTitle?: string;
   description?: string;
   canonical?: string;
@@ -65,7 +66,7 @@ export function SeoHead({ c, brand, defaultMeta }: SeoHeadProps) {
   const meta = getMeta(c, defaultMeta);
   const og = meta?.og;
   const twitter = meta?.twitter;
-  const title = buildBrandTitle(meta?.pageTitle, brand);
+  const title = toNonEmptyTrimmed(meta?.title) ?? buildBrandTitle(meta?.pageTitle, brand);
   const description = toNonEmptyTrimmed(meta?.description);
   const canonical = toNonEmptyTrimmed(meta?.canonical);
   const robots = toNonEmptyTrimmed(meta?.robots);
@@ -103,12 +104,14 @@ type LayoutProps = {
 };
 
 export function Layout({ c, brand, defaultMeta, children, lang = 'ja' }: LayoutProps) {
+  const seoHeadProps = defaultMeta ? { c, brand, defaultMeta } : { c, brand };
+
   return (
     <html lang={lang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <SeoHead c={c} brand={brand} defaultMeta={defaultMeta} />
+        <SeoHead {...seoHeadProps} />
       </head>
       <body>{children}</body>
     </html>
