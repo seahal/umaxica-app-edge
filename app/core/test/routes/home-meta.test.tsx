@@ -1,3 +1,5 @@
+export {};
+
 const routeModule = await import('../../src/routes/_index');
 const { meta } = routeModule;
 

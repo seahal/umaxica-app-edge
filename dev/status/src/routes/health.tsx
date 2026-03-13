@@ -16,6 +16,10 @@ type HealthLoaderData = {
   timestamp: string;
 };
 
+export function meta() {
+  return [{ title: 'Health Status | UMAXICA (dev)' }];
+}
+
 export function loader() {
   const timestamp = new Date().toISOString();
   const headers = { 'X-Robots-Tag': 'noindex, nofollow' };

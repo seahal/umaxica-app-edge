@@ -19,7 +19,7 @@ describe('Net Hono app', () => {
     const body = await res.text();
     expect(body).toContain('About this site.');
     expect(body).toContain('umaxica.app');
-    expect(body).toContain('<title>UMAXICA (net) - apex</title>');
+    expect(body).toContain('<title>UMAXICA (net) - Apex</title>');
     expect(body).toContain('<link rel="canonical" href="https://umaxica.net/"');
     expect(body).toContain('<meta name="robots" content="index,follow"');
   });
@@ -29,7 +29,7 @@ describe('Net Hono app', () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('About');
-    expect(body).toContain('<title>UMAXICA (net) - apex - About</title>');
+    expect(body).toContain('<title>Health Status | UMAXICA (net) - Apex</title>');
     expect(body).toContain(
       '<meta name="description" content="umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
     );
@@ -47,7 +47,7 @@ describe('Net Hono app', () => {
   it('renders root page with brand name from env', async () => {
     const res = await app.request('/', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await res.text();
-    expect(body).toContain('<title>UMAXICA (net) - apex</title>');
+    expect(body).toContain('<title>UMAXICA (net) - Apex</title>');
     expect(body).toContain('UMAXCA');
   });
 

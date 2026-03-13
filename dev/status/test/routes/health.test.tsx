@@ -1,6 +1,10 @@
-import { loader } from '../../src/routes/health';
+import { loader, meta } from '../../src/routes/health';
 
 describe('dev/status health route', () => {
+  it('provides the health status page title', () => {
+    expect(meta()).toStrictEqual([{ title: 'Health Status | UMAXICA (dev)' }]);
+  });
+
   it('marks the response as noindex', () => {
     const response = loader();
 
