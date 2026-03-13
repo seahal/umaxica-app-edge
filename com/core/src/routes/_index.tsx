@@ -64,6 +64,7 @@ export function meta(_: Route.MetaArgs) {
       content: '抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。',
       name: 'description',
     },
+    { content: 'index, follow', name: 'robots' },
   ];
 }
 
