@@ -8,6 +8,7 @@ import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { getBrandName } from '../../../shared/apex/brand';
 import { buildSitemapXml } from '../../../shared/apex/sitemap';
+import { setMeta } from '../../../shared/apex/seo';
 import {
   buildRegionErrorPayload,
   getDefaultRedirectUrl,
@@ -53,8 +54,14 @@ pageRoutes.get('/', (c) => {
 
 pageRoutes.use(renderer);
 
-pageRoutes.get('/about', (c) =>
-  c.render(
+pageRoutes.get('/about', (c) => {
+  setMeta(c, {
+    title: 'UMAXICA (app) - apex - About',
+    description:
+      'umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
+  });
+
+  return c.render(
     <div class="space-y-4">
       <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
       <p>
@@ -73,8 +80,8 @@ pageRoutes.get('/about', (c) =>
         の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
       </p>
     </div>,
-  ),
-);
+  );
+});
 
 pageRoutes.get('/sitemap.xml', (c) => {
   const xml = buildSitemapXml([

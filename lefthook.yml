@@ -21,9 +21,5 @@ pre-commit:
     #      run: gitleaks protect
     test:
       run: pnpm test
-
-pre-push:
-  parallel: true
-  commands:
     outdated:
       run: pnpm outdated

@@ -1,6 +1,8 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { ViteClient } from 'vite-ssr-components/hono';
 import { getBrandName } from '../../../shared/apex/brand';
+import { brandFromEnv } from '../../../shared/apex/title';
+import { SeoHead } from '../../../shared/apex/seo';
 
 export const renderer = jsxRenderer(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
@@ -10,7 +12,11 @@ export const renderer = jsxRenderer(({ children }, c) => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{brandName}</title>
+        <SeoHead
+          c={c}
+          brand={brandFromEnv(c)}
+          defaultMeta={{ description: 'This domain does not provide services for end users.' }}
+        />
         <ViteClient />
         <link href="/src/style.css" rel="stylesheet" />
       </head>

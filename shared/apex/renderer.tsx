@@ -1,6 +1,8 @@
 /** @jsxImportSource hono/jsx */
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { getBrandName } from './brand';
+import { brandFromEnv } from './title';
+import { SeoHead } from './seo';
 
 export const renderer = jsxRenderer(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
@@ -10,7 +12,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{brandName}</title>
+        <SeoHead c={c} brand={brandFromEnv(c)} />
         <link href="/src/style.css" rel="stylesheet" />
       </head>
       <body class="min-h-screen flex flex-col bg-gray-50">

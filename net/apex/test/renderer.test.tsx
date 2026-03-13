@@ -57,4 +57,11 @@ describe('Renderer layout', () => {
     expect(body).toContain('viewport');
     expect(body).toContain('width=device-width');
   });
+
+  it('includes meta description for homepage rendering', async () => {
+    const res = await app.request('/');
+    const body = await res.text();
+    expect(body).toContain('name="description"');
+    expect(body).toContain('This domain does not provide services for end users.');
+  });
 });

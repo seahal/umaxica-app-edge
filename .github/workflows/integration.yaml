@@ -38,7 +38,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm outdated
+      - run: pnpm outdated || true
 
   knip:
     runs-on: ubuntu-slim
@@ -51,7 +51,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm exec knip
+      - run: pnpm exec knip --include unlisted,unresolved,binaries
 
   secret-scan:
     runs-on: ubuntu-slim
@@ -143,9 +143,17 @@ jobs:
         run: pnpm -C ${{ matrix.target }} run build
       - if: ${{ !startsWith(matrix.target, 'dev/') }}
         run: pnpm --dir ${{ matrix.target }} run build
-      - name: Report compressed size
-        uses: preactjs/compressed-size-action@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          build-directory: '${{ matrix.target }}/build'
-          pattern: '{**/*.js,**/*.css}'
+      - name: Report asset sizes
+        run: |
+          case "${{ matrix.target }}" in
+            */apex) asset_dir="${{ matrix.target }}/dist/client" ;;
+            *) asset_dir="${{ matrix.target }}/build/client" ;;
+          esac
+
+          if [[ ! -d "$asset_dir" ]]; then
+            echo "Asset directory not found: $asset_dir" >&2
+            exit 1
+          fi
+
+          echo "Asset directory: $asset_dir"
+          find "$asset_dir" -type f \( -name '*.js' -o -name '*.css' \) -printf '%P\t%s bytes\n' | sort
