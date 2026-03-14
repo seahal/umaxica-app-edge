@@ -48,7 +48,9 @@ describe('Route: home (org)', () => {
   });
 
   it('renders the event list component', () => {
-    const markup = renderToStaticMarkup(<HomeRoute loaderData={{ message: '' }} />);
+    const markup = renderToStaticMarkup(
+      <HomeRoute loaderData={{ codeName: 'Umaxica', message: '' }} />,
+    );
     expect(markup).toContain('data-testid="event-list"');
   });
 });

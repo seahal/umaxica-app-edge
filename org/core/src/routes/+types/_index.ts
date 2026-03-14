@@ -1,7 +1,12 @@
 // Generated type file for the org index route
 export namespace Route {
+  export interface LoaderData {
+    codeName: string;
+    message?: string;
+  }
+
   export interface MetaArgs {
-    data?: unknown;
+    data?: LoaderData;
     params: Record<string, string>;
     matches: unknown[];
   }
@@ -18,8 +23,6 @@ export namespace Route {
   }
 
   export interface ComponentProps {
-    loaderData: {
-      message: string;
-    };
+    loaderData: LoaderData;
   }
 }

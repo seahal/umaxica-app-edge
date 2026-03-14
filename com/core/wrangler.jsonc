@@ -31,7 +31,6 @@
   "env": {
     "development": {
       "vars": {
-        "SENTRY_ENVIRONMENT": "development",
         "BRAND_NAME": "UMAXICA",
         "EDGE_CORPORATE_URL": "com.localhost",
         "EDGE_SERVICE_URL": "app.localhost",
@@ -103,7 +102,6 @@
         }
       },
       "vars": {
-        "SENTRY_ENVIRONMENT": "production",
         "BRAND_NAME": "UMAXICA",
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
