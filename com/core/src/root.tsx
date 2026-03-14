@@ -19,6 +19,8 @@ import { InternalServerErrorPage } from './components/InternalServerErrorPage';
 import { NotFoundPage } from './components/NotFoundPage';
 import { CloudflareContext, getEnv, getNonce } from './context';
 
+const COM_CORE_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_COM_CORE_SENTRY_DSN';
+
 // Local definition of MiddlewareFunction since it might not be exported from react-router
 type MiddlewareFunction = (
   args: {
@@ -40,7 +42,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { cspNonce, sentryDsn, sentryEnvironment } =
     useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
-  const publicEnv = { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
+  const publicEnv = { sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
   const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
@@ -152,6 +154,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): React.JSX.El
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context) as unknown as Record<string, string | undefined>;
   const cspNonce = getNonce(context);
+  const sentryDsn = env[COM_CORE_SENTRY_DSN_KEY] ?? '';
 
   return {
     codeName: env.BRAND_NAME ?? '',
@@ -159,7 +162,7 @@ export function loader({ context }: Route.LoaderArgs) {
     docsServiceUrl: env.DOCS_CORPORATE_URL ?? '',
     helpServiceUrl: env.HELP_CORPORATE_URL ?? '',
     newsServiceUrl: env.NEWS_CORPORATE_URL ?? '',
-    sentryDsn: env.SENTRY_DSN ?? '',
+    sentryDsn,
     sentryEnvironment: env.SENTRY_ENVIRONMENT ?? '',
   };
 }

@@ -21,6 +21,7 @@ void languageDetector;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
+const COM_APEX_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_COM_APEX_SENTRY_DSN';
 
 function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): string {
   void env;
@@ -32,11 +33,13 @@ function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): strin
 app.use(etag());
 app.use(logger());
 app.use(async (c, next) => {
+  const sentryDsn = c.env[COM_APEX_SENTRY_DSN_KEY as keyof typeof c.env] as string | undefined;
+
   // Temporary diagnostic log for deployed environment verification.
   console.error('Sentry DSN status', {
     service: 'com-apex',
-    hasSentryDsn: Boolean(c.env.SENTRY_DSN),
-    sentryDsnLength: c.env.SENTRY_DSN?.length ?? 0,
+    hasSentryDsn: Boolean(sentryDsn),
+    sentryDsnLength: sentryDsn?.length ?? 0,
     sentryEnvironment: c.env.SENTRY_ENVIRONMENT ?? null,
   });
 
@@ -208,8 +211,13 @@ app.notFound(async (c) => {
 });
 
 export default Sentry.withSentry(
-  (env?: AssetEnv & { SENTRY_DSN?: string; SENTRY_ENVIRONMENT?: string }) => ({
-    dsn: env?.SENTRY_DSN,
+  (
+    env?: AssetEnv & {
+      UMAXICA_APPS_EDGE_COM_APEX_SENTRY_DSN?: string;
+      SENTRY_ENVIRONMENT?: string;
+    },
+  ) => ({
+    dsn: env?.UMAXICA_APPS_EDGE_COM_APEX_SENTRY_DSN,
     environment: env?.SENTRY_ENVIRONMENT,
     sendDefaultPii: true,
     enableLogs: true,

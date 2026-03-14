@@ -41,12 +41,12 @@ For a free-tier setup, this app is wired for Sentry.
 Set these variables before starting the server:
 
 ```bash
-export SENTRY_DSN="https://<public-key>@o<org>.ingest.sentry.io/<project>"
+export UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN="https://<public-key>@o<org>.ingest.sentry.io/<project>"
 export SENTRY_ENVIRONMENT="local-dev"
 npm run dev
 ```
 
-If `SENTRY_DSN` is unset, Sentry stays disabled.
+If `UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN` is unset, Sentry stays disabled.
 
 ## Building for Production
 

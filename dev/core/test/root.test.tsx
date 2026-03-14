@@ -133,7 +133,7 @@ describe('dev_status root loader', () => {
           DOCS_SERVICE_URL: 'https://docs.test.com',
           HELP_SERVICE_URL: 'https://help.test.com',
           NEWS_SERVICE_URL: 'https://news.test.com',
-          SENTRY_DSN: 'https://public@example.ingest.sentry.io/1',
+          UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN: 'https://public@example.ingest.sentry.io/1',
           SENTRY_ENVIRONMENT: 'local-dev',
         },
       },

@@ -8,16 +8,16 @@ import { HydratedRouter } from 'react-router/dom';
 declare global {
   interface Window {
     ENV: {
-      SENTRY_DSN?: string;
+      sentryDsn?: string;
       SENTRY_ENVIRONMENT?: string;
     };
   }
 }
 
 // Sentry DSN が設定されている場合のみ初期化
-if (window.ENV?.SENTRY_DSN) {
+if (window.ENV?.sentryDsn) {
   Sentry.init({
-    dsn: window.ENV.SENTRY_DSN,
+    dsn: window.ENV.sentryDsn,
     environment: window.ENV.SENTRY_ENVIRONMENT,
     integrations: [Sentry.reactRouterTracingIntegration(), Sentry.browserProfilingIntegration()],
     sendDefaultPii: true,
