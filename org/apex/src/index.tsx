@@ -32,6 +32,14 @@ function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): strin
 app.use(etag());
 app.use(logger());
 app.use(async (c, next) => {
+  // Temporary diagnostic log for deployed environment verification.
+  console.error('Sentry DSN status', {
+    service: 'org-apex',
+    hasSentryDsn: Boolean(c.env.SENTRY_DSN),
+    sentryDsnLength: c.env.SENTRY_DSN?.length ?? 0,
+    sentryEnvironment: c.env.SENTRY_ENVIRONMENT ?? null,
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RATE_LIMITER binding from wrangler.jsonc
   const blocked = await checkRateLimit(c.req.raw, (c.env as any)?.RATE_LIMITER);
   if (blocked) return blocked;
