@@ -1,7 +1,7 @@
 const routeModule = await import('../../src/routes/catch-all');
 const { loader, meta, default: CatchAll } = routeModule;
 
-describe('Route: catch-all (dev/status)', () => {
+describe('Route: catch-all (dev/core)', () => {
   it('exposes 404 metadata with robots rules', () => {
     const entries = meta({} as never);
 

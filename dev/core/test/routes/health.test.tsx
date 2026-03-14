@@ -1,6 +1,6 @@
 import { loader, meta } from '../../src/routes/health';
 
-describe('dev/status health route', () => {
+describe('dev/core health route', () => {
   it('provides the health status page title', () => {
     expect(meta()).toStrictEqual([{ title: 'Health Status | UMAXICA (dev)' }]);
   });

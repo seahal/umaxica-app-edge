@@ -7,7 +7,6 @@
     "org/apex/**/*",
     "org/core/**/*",
     "dev/core/**/*",
-    "dev/status/**/*",
     "net/apex/**/*",
     "shared/**/*"
   ],
@@ -20,8 +19,8 @@
       "@com/test/*": ["./com/core/test/*"],
       "@org/*": ["./org/core/src/*"],
       "@org/test/*": ["./org/core/test/*"],
-      "@dev/*": ["./dev/status/src/*"],
-      "@dev/test/*": ["./dev/status/test/*"]
+      "@dev/*": ["./dev/core/src/*"],
+      "@dev/test/*": ["./dev/core/test/*"]
     },
     "module": "ESNext",
     "moduleResolution": "Bundler",

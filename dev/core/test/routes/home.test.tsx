@@ -10,7 +10,7 @@ afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe('Home route (dev/status)', () => {
+describe('Home route (dev/core)', () => {
   it('renders DocsViewer component', () => {
     render(<Home.default />);
 
@@ -22,11 +22,20 @@ describe('Home route (dev/status)', () => {
     const { meta } = Home;
     expect(meta).toBeDefined();
 
-    const metaResult = meta({} as never);
+    const metaResult = meta({ data: { codeName: 'UMAXICA' } } as never);
     expect(metaResult).toStrictEqual([
-      { title: 'Umaxica Developers - ドキュメント' },
+      { title: 'UMAXICA (dev)' },
       { content: 'React Aria Components のドキュメント', name: 'description' },
       { content: 'index, follow', name: 'robots' },
     ]);
+  });
+
+  it('exports loader that reads brand name from env', () => {
+    const { loader } = Home;
+    const result = loader({
+      context: { runtime: { env: { BRAND_NAME: 'UMAXICA' } } },
+    } as never);
+
+    expect(result).toStrictEqual({ codeName: 'UMAXICA' });
   });
 });

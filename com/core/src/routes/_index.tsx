@@ -58,8 +58,9 @@ const perspectives = [
 ];
 
 export function meta(_: Route.MetaArgs) {
+  const codeName = _.data?.codeName || 'Umaxica';
   return [
-    { title: 'Umaxica Commerce - Abstract Experience Sample' },
+    { title: `${codeName} (com)` },
     {
       content: '抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。',
       name: 'description',
@@ -70,7 +71,10 @@ export function meta(_: Route.MetaArgs) {
 
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  return { message: env.VALUE_FROM_CLOUDFLARE ?? '' };
+  return {
+    codeName: env.BRAND_NAME?.trim() || 'Umaxica',
+    message: env.VALUE_FROM_CLOUDFLARE ?? '',
+  };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
