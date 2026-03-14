@@ -32,7 +32,6 @@
   "env": {
     "development": {
       "vars": {
-        "SENTRY_ENVIRONMENT": "development",
         "BRAND_NAME": "UMAXICA"
       },
       "observability": {
@@ -69,7 +68,6 @@
     },
     "production": {
       "vars": {
-        "SENTRY_ENVIRONMENT": "production",
         "BRAND_NAME": "UMAXICA"
       },
       "observability": {

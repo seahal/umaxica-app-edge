@@ -20,7 +20,7 @@ const requestHandler = createRequestHandler(
 export default {
   async fetch(request, env, ctx) {
     const runtimeEnv = await withResolvedSecretValue(
-      env as Record<string, unknown>,
+      env as unknown as Record<string, unknown>,
       ORG_CORE_SENTRY_DSN_KEY,
     );
     const rateLimitResponse = await checkRateLimit(request, env.RATE_LIMITER);
@@ -30,7 +30,7 @@ export default {
 
     const contextProvider = new RouterContextProvider();
     contextProvider.set(CloudflareContext, {
-      cloudflare: { ctx, env: runtimeEnv as Env },
+      cloudflare: { ctx, env: runtimeEnv as unknown as Env },
       security: { nonce },
     });
 

@@ -29,7 +29,6 @@
   "env": {
     "development": {
       "vars": {
-        "SENTRY_ENVIRONMENT": "development",
         "EDGE_STAFF_URL": "org.localhost",
         "API_STAFF_URL": "api.org.localhost:3300",
         "WWW_STAFF_URL": "",
@@ -94,7 +93,6 @@
         }
       },
       "vars": {
-        "SENTRY_ENVIRONMENT": "production",
         "APEX_CORPORATE_URL": "umaxica.com",
         "APEX_SERVICE_URL": "umaxica.app",
         "APEX_STAFF_URL": "umaxica.org",

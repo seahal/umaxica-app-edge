@@ -108,7 +108,9 @@ describe('Route: Home (com)', () => {
 
   describe('Component', () => {
     it('should render the abstract corporate hero', () => {
-      const markup = renderToStaticMarkup(<Home loaderData={{ message: 'Edge Blueprint' }} />);
+      const markup = renderToStaticMarkup(
+        <Home loaderData={{ codeName: 'Umaxica', message: 'Edge Blueprint' }} />,
+      );
 
       expect(markup).toContain('Abstract Corporate Sample');
       expect(markup).toContain('Edge Blueprint');
@@ -116,7 +118,9 @@ describe('Route: Home (com)', () => {
     });
 
     it('should render focus areas and perspectives', () => {
-      const markup = renderToStaticMarkup(<Home loaderData={{ message: 'Hello' }} />);
+      const markup = renderToStaticMarkup(
+        <Home loaderData={{ codeName: 'Umaxica', message: 'Hello' }} />,
+      );
 
       expect(markup).toContain('Modular Platform');
       expect(markup).toContain('Experience Studio');
@@ -125,7 +129,9 @@ describe('Route: Home (com)', () => {
     });
 
     it('should handle empty message', () => {
-      const markup = renderToStaticMarkup(<Home loaderData={{ message: '' }} />);
+      const markup = renderToStaticMarkup(
+        <Home loaderData={{ codeName: 'Umaxica', message: '' }} />,
+      );
 
       expect(markup).toBeDefined();
       expect(markup.length).toBeGreaterThan(0);

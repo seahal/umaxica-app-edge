@@ -29,6 +29,7 @@ function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): strin
 
 app.use(etag());
 app.use(logger());
+app.use(languageDetector({ supportedLanguages: ['en', 'ja'], fallbackLanguage: 'en' }));
 app.use(async (c, next) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RATE_LIMITER binding from wrangler.jsonc
   const blocked = await checkRateLimit(c.req.raw, (c.env as any)?.RATE_LIMITER);
@@ -38,7 +39,6 @@ app.use(async (c, next) => {
 app.use('*', (c, next) =>
   apexCsrf(c as unknown as Parameters<typeof apexCsrf>[0], next as Parameters<typeof apexCsrf>[1]),
 );
-
 app.use('*', async (c, next) => {
   await next();
   if (c.res.status !== 400 && c.res.status !== 404) {
@@ -87,8 +87,6 @@ pageRoutes.get('/about', timeout(2000), (c) => {
     canonical: 'https://umaxica.net/about',
     robots: 'index,follow',
   });
-
-  throw new Error('Intentional /about error for Sentry DSN verification');
 
   return c.render(
     <div class="space-y-4">
@@ -229,11 +227,12 @@ const sentryHandler = Sentry.withSentry(
 );
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request: Request, env: AssetEnv, ctx: Parameters<typeof sentryHandler.fetch>[2]) {
     const runtimeEnv = await withResolvedSecretValue(
       env as Record<string, unknown>,
       NET_APEX_SENTRY_DSN_KEY,
     );
     return sentryHandler.fetch(request, runtimeEnv, ctx);
   },
+  request: app.request.bind(app),
 };
