@@ -14,16 +14,16 @@
 
 This repository is a pnpm workspace with 8 packages:
 
-| Package      | Role                                      | Dev Port |
-| ------------ | ----------------------------------------- | -------- |
-| `com/core`   | React Router app (`*.umaxica.com`)        | `5102`   |
-| `com/apex`   | Apex/static worker (`com`)                | `5101`   |
-| `app/core`   | React Router app (`*.umaxica.app`)        | `5402`   |
-| `app/apex`   | Apex/static worker (`app`)                | `5401`   |
-| `org/core`   | React Router app (`*.umaxica.org`)        | `5302`   |
-| `org/apex`   | Apex/static worker (`org`)                | `5301`   |
-| `dev/core`   | Core app (React Router + Vercel preset)   | `5502`   |
-| `net/apex`   | Network-facing apex worker                | `5201`   |
+| Package    | Role                                    | Dev Port |
+| ---------- | --------------------------------------- | -------- |
+| `com/core` | React Router app (`*.umaxica.com`)      | `5102`   |
+| `com/apex` | Apex/static worker (`com`)              | `5101`   |
+| `app/core` | React Router app (`*.umaxica.app`)      | `5402`   |
+| `app/apex` | Apex/static worker (`app`)              | `5401`   |
+| `org/core` | React Router app (`*.umaxica.org`)      | `5302`   |
+| `org/apex` | Apex/static worker (`org`)              | `5301`   |
+| `dev/core` | Core app (React Router + Vercel preset) | `5502`   |
+| `net/apex` | Network-facing apex worker              | `5201`   |
 
 Install dependencies once from the repo root:
 
