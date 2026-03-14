@@ -102,8 +102,8 @@ importers:
         specifier: ^10.42.0
         version: 10.42.0(@cloudflare/workers-types@4.20260305.1)
       hono:
-        specifier: ^4.12.5
-        version: 4.12.5
+        specifier: ^4.12.7
+        version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.26.1
@@ -230,8 +230,8 @@ importers:
         specifier: ^10.40.0
         version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
-        specifier: ^4.12.5
-        version: 4.12.5
+        specifier: ^4.12.7
+        version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.6
@@ -449,8 +449,8 @@ importers:
         specifier: ^10.40.0
         version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
-        specifier: ^4.12.5
-        version: 4.12.5
+        specifier: ^4.12.7
+        version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.6
@@ -486,8 +486,8 @@ importers:
         specifier: ^10.40.0
         version: 10.40.0(@cloudflare/workers-types@4.20260305.1)
       hono:
-        specifier: ^4.12.5
-        version: 4.12.5
+        specifier: ^4.12.7
+        version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.6
@@ -4293,10 +4293,6 @@ packages:
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
-
-  hono@4.12.5:
-    resolution: {integrity: sha512-3qq+FUBtlTHhtYxbxheZgY8NIFnkkC/MR8u5TTsr7YZ3wixryQ3cCwn3iZbg8p8B88iDBBAYSfZDS75t8MN7Vg==}
-    engines: {node: '>=16.9.0'}
 
   hono@4.12.7:
     resolution: {integrity: sha512-jq9l1DM0zVIvsm3lv9Nw9nlJnMNPOcAtsbsgiUhWcFzPE99Gvo6yRTlszSLLYacMeQ6quHD6hMfId8crVHvexw==}
@@ -9899,8 +9895,6 @@ snapshots:
       - utf-8-validate
 
   has-flag@4.0.0: {}
-
-  hono@4.12.5: {}
 
   hono@4.12.7: {}
 
