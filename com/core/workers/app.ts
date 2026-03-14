@@ -1,6 +1,9 @@
 import { RouterContextProvider, createRequestHandler } from 'react-router';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
+import { withResolvedSecretValue } from '../../../shared/cloudflare/secrets-store';
 import { CloudflareContext } from '../src/context';
+
+const COM_CORE_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_COM_CORE_SENTRY_DSN';
 
 function generateNonce(): string {
   const array = new Uint8Array(16);
@@ -16,6 +19,10 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
+    const runtimeEnv = await withResolvedSecretValue(
+      env as Record<string, unknown>,
+      COM_CORE_SENTRY_DSN_KEY,
+    );
     const rateLimitResponse = await checkRateLimit(request, env.RATE_LIMITER);
     if (rateLimitResponse) return rateLimitResponse;
 
@@ -23,7 +30,7 @@ export default {
 
     const contextProvider = new RouterContextProvider();
     contextProvider.set(CloudflareContext, {
-      cloudflare: { ctx, env },
+      cloudflare: { ctx, env: runtimeEnv as Env },
       security: { nonce },
     });
 
