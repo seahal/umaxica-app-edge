@@ -9,6 +9,7 @@ import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
 import { DEFAULT_BRAND_NAME, getBrandName } from '../../../shared/apex/brand';
+import { withResolvedSecretValue } from '../../../shared/cloudflare/secrets-store';
 import { setMeta } from '../../../shared/apex/seo';
 import {
   buildRegionErrorPayload,
@@ -33,16 +34,6 @@ function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): strin
 app.use(etag());
 app.use(logger());
 app.use(async (c, next) => {
-  const sentryDsn = c.env[COM_APEX_SENTRY_DSN_KEY as keyof typeof c.env] as string | undefined;
-
-  // Temporary diagnostic log for deployed environment verification.
-  console.error('Sentry DSN status', {
-    service: 'com-apex',
-    hasSentryDsn: Boolean(sentryDsn),
-    sentryDsnLength: sentryDsn?.length ?? 0,
-    sentryEnvironment: c.env.SENTRY_ENVIRONMENT ?? null,
-  });
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RATE_LIMITER binding from wrangler.jsonc
   const blocked = await checkRateLimit(c.req.raw, (c.env as any)?.RATE_LIMITER);
   if (blocked) return blocked;
@@ -210,7 +201,7 @@ app.notFound(async (c) => {
   });
 });
 
-export default Sentry.withSentry(
+const sentryHandler = Sentry.withSentry(
   (
     env?: AssetEnv & {
       UMAXICA_APPS_EDGE_COM_APEX_SENTRY_DSN?: string;
@@ -225,3 +216,13 @@ export default Sentry.withSentry(
   }),
   app,
 );
+
+export default {
+  async fetch(request, env, ctx) {
+    const runtimeEnv = await withResolvedSecretValue(
+      env as Record<string, unknown>,
+      COM_APEX_SENTRY_DSN_KEY,
+    );
+    return sentryHandler.fetch(request, runtimeEnv, ctx);
+  },
+};
