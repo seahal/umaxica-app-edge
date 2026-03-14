@@ -21,9 +21,9 @@ function createMockContext(data: { cloudflare?: { env?: Record<string, unknown> 
 describe('Route: Home (com)', () => {
   describe('Meta', () => {
     it('should return localized title and description', () => {
-      const result = meta({} as never);
+      const result = meta({ data: { codeName: 'UMAXICA' } } as never);
       expect(result).toStrictEqual([
-        { title: 'Umaxica Commerce - Abstract Experience Sample' },
+        { title: 'UMAXICA (com)' },
         {
           content: '抽象的なバリュープロポジションで魅せるコーポレートサイトのサンプル。',
           name: 'description',
@@ -47,7 +47,7 @@ describe('Route: Home (com)', () => {
         context: mockContext,
       } as never);
 
-      expect(result).toStrictEqual({ message: 'Test Message' });
+      expect(result).toStrictEqual({ codeName: 'Umaxica', message: 'Test Message' });
     });
 
     it('should throw error when Cloudflare context is missing', () => {
@@ -74,7 +74,7 @@ describe('Route: Home (com)', () => {
         context: mockContext,
       } as never);
 
-      expect(result).toStrictEqual({ message: '' });
+      expect(result).toStrictEqual({ codeName: 'Umaxica', message: '' });
     });
 
     it('should throw error when cloudflare object is undefined', () => {
@@ -87,6 +87,22 @@ describe('Route: Home (com)', () => {
           context: mockContext,
         } as never),
       ).toThrow('Cloudflare environment is not available');
+    });
+
+    it('should return brand name from Cloudflare env', () => {
+      const mockContext = createMockContext({
+        cloudflare: {
+          env: {
+            BRAND_NAME: 'UMAXICA',
+          },
+        },
+      });
+
+      const result = loader({
+        context: mockContext,
+      } as never);
+
+      expect(result).toStrictEqual({ codeName: 'UMAXICA', message: '' });
     });
   });
 

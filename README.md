@@ -22,7 +22,7 @@ This repository is a pnpm workspace with 8 packages:
 | `app/apex`   | Apex/static worker (`app`)                | `5401`   |
 | `org/core`   | React Router app (`*.umaxica.org`)        | `5302`   |
 | `org/apex`   | Apex/static worker (`org`)                | `5301`   |
-| `dev/status` | Status app (React Router + Vercel preset) | `5502`   |
+| `dev/core`   | Core app (React Router + Vercel preset)   | `5502`   |
 | `net/apex`   | Network-facing apex worker                | `5201`   |
 
 Install dependencies once from the repo root:
@@ -56,7 +56,7 @@ Run only the package(s) you need:
 pnpm run --filter com/core server
 pnpm run --filter app/core server
 pnpm run --filter org/core server
-pnpm run --filter dev/status server
+pnpm run --filter dev/core server
 pnpm run --filter com/apex server
 pnpm run --filter app/apex server
 pnpm run --filter org/apex server
@@ -66,7 +66,12 @@ pnpm run --filter net/apex server
 ## Environment Variables
 
 Cloudflare-targeted workspaces manage runtime values mainly through `wrangler.jsonc` (`vars` and environments).
-`dev/status` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
+`dev/core` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
+
+## Monitoring
+
+External monitoring is handled with Pulsetic.
+It is used for synthetic uptime checks and other external health monitoring against publicly reachable endpoints.
 
 ## Common Scripts
 
@@ -111,4 +116,4 @@ pnpm run --filter com/apex deploy:upload
 pnpm run --filter com/apex deploy:promote
 ```
 
-`dev/status` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
+`dev/core` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { Welcome } from '../src/welcome/welcome';
 
-describe('Welcome component (dev/status)', () => {
+describe('Welcome component (dev/core)', () => {
   it('renders welcome page with logo images', () => {
     render(<Welcome />);
 

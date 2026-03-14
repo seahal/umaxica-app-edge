@@ -8,7 +8,7 @@ import { logger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
-import { getBrandName } from '../../../shared/apex/brand';
+import { DEFAULT_BRAND_NAME, getBrandName } from '../../../shared/apex/brand';
 import { setMeta } from '../../../shared/apex/seo';
 import { renderer } from './renderer';
 
@@ -17,6 +17,13 @@ void timeout;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
+
+function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): string {
+  void env;
+  const brandName = DEFAULT_BRAND_NAME;
+  const baseTitle = `${brandName} (${domain}) - Apex`;
+  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
+}
 
 app.use(etag());
 app.use(logger());
@@ -41,7 +48,7 @@ pageRoutes.use(renderer);
 
 pageRoutes.get('/', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'UMAXICA (net) - Apex',
+    title: buildApexTitle(c.env, 'net'),
     canonical: 'https://umaxica.net/',
     robots: 'index,follow',
   });
@@ -72,12 +79,14 @@ pageRoutes.get('/', timeout(2000), (c) => {
 
 pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'Health Status | UMAXICA (net) - Apex',
+    title: buildApexTitle(c.env, 'net', 'About'),
     description:
       'umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
     canonical: 'https://umaxica.net/about',
     robots: 'index,follow',
   });
+
+  throw new Error('Intentional /about error for Sentry DSN verification');
 
   return c.render(
     <div class="space-y-4">

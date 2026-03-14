@@ -29,7 +29,7 @@ describe('Net Hono app', () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('About');
-    expect(body).toContain('<title>Health Status | UMAXICA (net) - Apex</title>');
+    expect(body).toContain('<title>About | UMAXICA (net) - Apex</title>');
     expect(body).toContain(
       '<meta name="description" content="umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
     );

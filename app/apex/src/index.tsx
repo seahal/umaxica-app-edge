@@ -8,7 +8,7 @@ import { logger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
-import { getBrandName } from '../../../shared/apex/brand';
+import { DEFAULT_BRAND_NAME, getBrandName } from '../../../shared/apex/brand';
 import { setMeta } from '../../../shared/apex/seo';
 import {
   buildRegionErrorPayload,
@@ -21,6 +21,13 @@ void languageDetector;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
+
+function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): string {
+  void env;
+  const brandName = DEFAULT_BRAND_NAME;
+  const baseTitle = `${brandName} (${domain}) - Apex`;
+  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
+}
 
 app.use(etag());
 app.use(logger());
@@ -61,12 +68,14 @@ pageRoutes.use(renderer as unknown as Parameters<typeof pageRoutes.use>[0]);
 
 pageRoutes.get('/about', timeout(2000), (c) => {
   setMeta(c, {
-    title: 'Health Status | UMAXICA (app) - Apex',
+    title: buildApexTitle(c.env, 'app', 'About'),
     description:
       'umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
     canonical: 'https://umaxica.app/about',
     robots: 'index,follow',
   });
+
+  throw new Error('Intentional /about error for Sentry DSN verification');
 
   return c.render(
     <div class="space-y-4">

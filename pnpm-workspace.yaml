@@ -6,7 +6,6 @@ packages:
   - org/apex
   - org/core
   - dev/core
-  - dev/status
   - net/apex
 
 ignoredBuiltDependencies:

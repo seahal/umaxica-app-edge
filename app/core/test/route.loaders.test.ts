@@ -49,7 +49,7 @@ async function runLoader<T extends (...args: unknown[]) => unknown>(
 describe('route loader coverage harness', () => {
   it('home loader returns empty message when VALUE_FROM_CLOUDFLARE is missing', async () => {
     const result = await runLoader(homeLoader as never, {});
-    expect(result).toStrictEqual({ message: '' });
+    expect(result).toStrictEqual({ codeName: 'Umaxica', message: '' });
   });
 
   it.each([
@@ -64,6 +64,10 @@ describe('route loader coverage harness', () => {
     async (_, loader, envKey) => {
       const message = `test-message:${envKey}`;
       const result = await runLoader(loader, { [envKey]: message });
+      if (loader === (homeLoader as never)) {
+        expect(result).toStrictEqual({ codeName: 'Umaxica', message });
+        return;
+      }
       expect(result).toStrictEqual({ message });
     },
   );
@@ -71,15 +75,20 @@ describe('route loader coverage harness', () => {
 
 describe('route meta implementations', () => {
   it('home meta advertises the Japanese homepage', () => {
-    const [title, description] = homeMeta({
+    const [title, description, robots] = homeMeta({
+      data: { codeName: 'Umaxica' },
       matches: [],
       params: {},
       request: new Request('https://example.com'),
     } as never);
-    expect(title).toMatchObject({ title: 'Umaxica - ホーム' });
+    expect(title).toMatchObject({ title: 'Umaxica (app)' });
     expect(description).toMatchObject({
       content: 'Umaxica - 今何してる？',
       name: 'description',
+    });
+    expect(robots).toMatchObject({
+      content: 'index, follow',
+      name: 'robots',
     });
   });
 
