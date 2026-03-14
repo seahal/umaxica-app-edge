@@ -40,7 +40,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { cspNonce, sentryDsn, sentryEnvironment } =
     useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
-  const publicEnv = { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
+  const publicEnv = { sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
   const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
@@ -84,7 +84,11 @@ export function loader({ context }: Route.LoaderArgs) {
   const helpServiceUrl = readEnv(context, 'HELP_SERVICE_URL', FALLBACK_SETTINGS.helpServiceUrl);
   const docsServiceUrl = readEnv(context, 'DOCS_SERVICE_URL', FALLBACK_SETTINGS.docsServiceUrl);
   const newsServiceUrl = readEnv(context, 'NEWS_SERVICE_URL', FALLBACK_SETTINGS.newsServiceUrl);
-  const sentryDsn = readEnv(context, 'SENTRY_DSN', FALLBACK_SETTINGS.sentryDsn);
+  const sentryDsn = readEnv(
+    context,
+    'UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN',
+    FALLBACK_SETTINGS.sentryDsn,
+  );
   const sentryEnvironment = readEnv(
     context,
     'SENTRY_ENVIRONMENT',

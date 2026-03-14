@@ -10,7 +10,7 @@ function readEnv(key: string): string | undefined {
 }
 
 export function initServerSentry() {
-  const dsn = readEnv('SENTRY_DSN');
+  const dsn = readEnv('UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN');
   if (sentryInitialized || !dsn) {
     return;
   }

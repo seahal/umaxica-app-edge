@@ -3,6 +3,7 @@ import type { RouteConfig } from '@react-router/dev/routes';
 
 export default [
   route('health', 'routes/health.tsx'),
+  route('about', 'routes/about.tsx'),
   route('sentry', 'routes/sentry.tsx'),
   layout('../src/layouts/decorated.tsx', [
     index('routes/_index.tsx'),

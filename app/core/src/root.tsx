@@ -7,6 +7,8 @@ import './app.css';
 import type { ReactNode } from 'react';
 import { CloudflareContext, getEnv, getNonce } from './context';
 
+const APP_CORE_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_APP_CORE_SENTRY_DSN';
+
 // Local definition of MiddlewareFunction since the export from react-router might not be picked up correctly by all tools
 type MiddlewareFunction = (
   args: {
@@ -25,7 +27,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const loaderData = useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = loaderData.cspNonce || undefined;
   const publicEnv = {
-    SENTRY_DSN: loaderData.sentryDsn,
+    sentryDsn: loaderData.sentryDsn,
     SENTRY_ENVIRONMENT: loaderData.sentryEnvironment,
   };
   const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
@@ -85,6 +87,7 @@ export const middleware: MiddlewareFunction[] = [securityContextMiddleware];
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context) as unknown as Record<string, string | undefined>;
   const cspNonce = getNonce(context);
+  const sentryDsn = env[APP_CORE_SENTRY_DSN_KEY] ?? '';
 
   return {
     apexServiceUrl: env.APEX_SERVICE_URL ?? '',
@@ -95,7 +98,7 @@ export function loader({ context }: Route.LoaderArgs) {
     edgeServiceUrl: env.EDGE_SERVICE_URL ?? '',
     helpServiceUrl: env.HELP_SERVICE_URL ?? '',
     newsServiceUrl: env.NEWS_SERVICE_URL ?? '',
-    sentryDsn: env.SENTRY_DSN ?? '',
+    sentryDsn,
     sentryEnvironment: env.SENTRY_ENVIRONMENT ?? '',
   };
 }
