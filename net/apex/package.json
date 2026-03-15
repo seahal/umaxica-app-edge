@@ -12,7 +12,8 @@
     "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
   },
   "dependencies": {
-    "hono": "^4.12.5"
+    "@sentry/cloudflare": "^10.40.0",
+    "hono": "^4.12.7"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.26.1",

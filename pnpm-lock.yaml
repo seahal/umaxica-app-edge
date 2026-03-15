@@ -108,7 +108,7 @@ importers:
   app/apex:
     dependencies:
       hono:
-        specifier: ^4.12.5
+        specifier: ^4.12.7
         version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
@@ -236,7 +236,7 @@ importers:
   com/apex:
     dependencies:
       hono:
-        specifier: ^4.12.5
+        specifier: ^4.12.7
         version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
@@ -455,7 +455,7 @@ importers:
   net/apex:
     dependencies:
       hono:
-        specifier: ^4.12.5
+        specifier: ^4.12.7
         version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
@@ -492,7 +492,7 @@ importers:
   org/apex:
     dependencies:
       hono:
-        specifier: ^4.12.5
+        specifier: ^4.12.7
         version: 4.12.7
     devDependencies:
       '@cloudflare/vite-plugin':
