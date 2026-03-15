@@ -1,5 +1,5 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
-import { ViteClient } from 'vite-ssr-components/hono';
+import { Link, ViteClient } from 'vite-ssr-components/hono';
 import { getBrandName } from '../../../shared/apex/brand';
 import { brandFromEnv } from '../../../shared/apex/title';
 import { SeoHead } from '../../../shared/apex/seo';
@@ -18,7 +18,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
           defaultMeta={{ description: 'This domain does not provide services for end users.' }}
         />
         <ViteClient />
-        <link href="/src/style.css" rel="stylesheet" />
+        <Link href="/src/style.css" rel="stylesheet" />
       </head>
       <body class="min-h-screen flex flex-col bg-gray-50">
         <header class="bg-white shadow-sm">
