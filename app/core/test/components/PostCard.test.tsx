@@ -134,4 +134,30 @@ describe('PostCard component', () => {
     expect(screen.getByRole('button', { name: /リポスト/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /いいね/ })).toBeInTheDocument();
   });
+
+  it('renders avatar with fallback when author is undefined', () => {
+    const postWithoutAuthor = {
+      ...basePost,
+      author: undefined,
+    };
+
+    render(<PostCard post={postWithoutAuthor as typeof basePost} />);
+
+    // Avatar should show fallback character
+    const avatar = screen.getByText('?');
+    expect(avatar).toBeInTheDocument();
+  });
+
+  it('renders avatar with fallback when author is empty string', () => {
+    const postWithEmptyAuthor = {
+      ...basePost,
+      author: '',
+    };
+
+    render(<PostCard post={postWithEmptyAuthor} />);
+
+    // Avatar should show fallback character for empty author
+    const avatar = screen.getByText('?');
+    expect(avatar).toBeInTheDocument();
+  });
 });
