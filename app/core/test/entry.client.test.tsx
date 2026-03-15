@@ -34,15 +34,6 @@ vi.mock('react-router/dom', async (importOriginal) => {
   };
 });
 
-vi.mock('@sentry/react-router', () => ({
-  browserProfilingIntegration: vi.fn(() => ({ name: 'BrowserProfiling' })),
-  captureException: vi.fn(() => {}),
-  captureReactException: vi.fn(() => {}),
-  captureMessage: vi.fn(() => {}),
-  init: vi.fn(() => {}),
-  reactRouterTracingIntegration: vi.fn(() => ({ name: 'ReactRouterTracingIntegration' })),
-}));
-
 await import('../src/entry.client');
 
 it('hydrates the app client entry without throwing', () => {

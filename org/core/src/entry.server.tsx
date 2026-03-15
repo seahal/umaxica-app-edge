@@ -1,24 +1,15 @@
-import * as Sentry from '@sentry/react-router';
 import { isbot } from 'isbot';
 // oxlint-disable no-console
 import { renderToReadableStream } from 'react-dom/server';
 import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
-
 import { getNonce } from './context';
 
-// Local definition of HandleErrorFunction since it might not be exported from react-router
-export type HandleErrorFunction = (
-  error: unknown,
-  args: { request: Request; params: unknown; context: AppLoadContext },
-) => void;
-
-export const handleError: HandleErrorFunction = (error, { request }) => {
+export function handleError(error: unknown, { request }: { request: Request }) {
   if (!request.signal.aborted) {
-    Sentry.captureException(error);
     console.error(error);
   }
-};
+}
 
 export default async function handleRequest(
   request: Request,
@@ -35,7 +26,6 @@ export default async function handleRequest(
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
-      ...(nonce ? { nonce } : {}),
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
@@ -45,6 +35,7 @@ export default async function handleRequest(
           console.error(error);
         }
       },
+      ...(nonce ? { nonce } : {}),
     },
   );
   shellRendered = true;
@@ -59,7 +50,7 @@ export default async function handleRequest(
   responseHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   responseHeaders.set(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+    `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   );
   responseHeaders.set(
     'Permissions-Policy',

@@ -49,8 +49,6 @@ const baseLoaderData: LoaderData = {
   docsUrl: 'jp.docs.umaxica.org' as const,
   helpUrl: 'jp.help.umaxica.org' as const,
   newsUrl: 'jp.news.umaxica.org' as const,
-  sentryDsn: '',
-  sentryEnvironment: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -125,7 +123,6 @@ describe('org root loader', () => {
     expect(result.newsUrl).toBe('https://news.example.com');
     expect(result.docsUrl).toBe('https://docs.example.com');
     expect(result.helpUrl).toBe('https://help.example.com');
-    expect(result.sentryDsn).toBe('');
   });
 });
 
@@ -169,11 +166,8 @@ describe('org root ErrorBoundary', () => {
     isRouteErrorResponseMock.mockReturnValue(true);
 
     const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
-    // Note: The code checks `status >= 500` before checking for 503,
-    // So 503 errors are handled as InternalServerErrorPage with statusText as details
-    // The details are only shown when showDetails is true, which is not the case here
-    expect(markup).toContain('サーバーエラー');
-    expect(markup).toContain('500');
+    expect(markup).toContain('メンテナンス中');
+    expect(markup).toContain('503');
   });
 
   it('renders generic ErrorPage for other route errors', () => {

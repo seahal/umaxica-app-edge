@@ -52,6 +52,15 @@ declare module 'react-router' {
     ...args: unknown[]
   ): (request: Request, context: unknown) => Promise<Response>;
 
+  export interface Cookie {
+    readonly name: string;
+    readonly isSigned: boolean;
+    parse(cookieHeader: string | null, options?: unknown): Promise<unknown>;
+    serialize(value: unknown, options?: unknown): Promise<string>;
+  }
+
+  export function createCookie(name: string, cookieOptions?: Record<string, unknown>): Cookie;
+
   export class RouterContextProvider {
     set(key: unknown, value: unknown): void;
   }

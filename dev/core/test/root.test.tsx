@@ -39,8 +39,6 @@ const baseLoaderData: LoaderData = {
   docsServiceUrl: '',
   helpServiceUrl: '',
   newsServiceUrl: '',
-  sentryDsn: '',
-  sentryEnvironment: 'development',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -72,19 +70,9 @@ describe('dev_status root layout', () => {
 });
 
 describe('dev_status root links', () => {
-  it('returns Google Fonts links', () => {
+  it('returns empty links array', () => {
     const result = links() as Awaited<ReturnType<typeof links>>;
-    expect(result).toHaveLength(3);
-    expect(result[0]).toStrictEqual({ href: 'https://fonts.googleapis.com', rel: 'preconnect' });
-    expect(result[1]).toStrictEqual({
-      crossOrigin: 'anonymous',
-      href: 'https://fonts.gstatic.com',
-      rel: 'preconnect',
-    });
-    expect(result[2]).toStrictEqual({
-      href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-      rel: 'stylesheet',
-    });
+    expect(result).toHaveLength(0);
   });
 });
 
@@ -144,8 +132,6 @@ describe('dev_status root loader', () => {
     expect(result.helpServiceUrl).toBe('https://help.test.com');
     expect(result.docsServiceUrl).toBe('https://docs.test.com');
     expect(result.newsServiceUrl).toBe('https://news.test.com');
-    expect(result.sentryDsn).toBe('https://public@example.ingest.sentry.io/1');
-    expect(result.sentryEnvironment).toBe('local-dev');
   });
 
   it('trims environment variable values', () => {

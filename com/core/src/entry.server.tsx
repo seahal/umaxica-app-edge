@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react-router';
 import { isbot } from 'isbot';
 // oxlint-disable no-console
 import { renderToReadableStream } from 'react-dom/server';
@@ -6,18 +5,11 @@ import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
 
-// Local definition of HandleErrorFunction
-export type HandleErrorFunction = (
-  error: unknown,
-  args: { request: Request; params: unknown; context: AppLoadContext },
-) => void;
-
-export const handleError: HandleErrorFunction = (error, { request }) => {
+export function handleError(error: unknown, { request }: { request: Request }) {
   if (!request.signal.aborted) {
-    Sentry.captureException(error);
     console.error(error);
   }
-};
+}
 
 export default async function handleRequest(
   request: Request,
@@ -34,7 +26,6 @@ export default async function handleRequest(
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
-      ...(nonce ? { nonce } : {}),
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
@@ -44,6 +35,7 @@ export default async function handleRequest(
           console.error(error);
         }
       },
+      ...(nonce ? { nonce } : {}),
     },
   );
   shellRendered = true;

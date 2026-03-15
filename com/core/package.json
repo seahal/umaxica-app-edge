@@ -13,11 +13,10 @@
     "deploy:promote": "pnpm exec wrangler versions deploy --yes",
     "server": "CLOUDFLARE_ENV=development react-router dev",
     "postinstall": "pnpm run cf-typegen || true",
-    "preview": "pnpm run build && vite preview",
+    "preview": "pnpm run build && vp preview",
     "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
   },
   "dependencies": {
-    "@sentry/react-router": "^10.39.0",
     "i18next": "^25.8.10",
     "isbot": "^5.1.35",
     "react": "^19.2.4",
@@ -43,9 +42,10 @@
     "@vitejs/plugin-react": "^5.1.4",
     "babel-plugin-react-compiler": "^1.0.0",
     "happy-dom": "^20.6.1",
-    "vite": "8.0.0-beta.16",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18",
+    "vitest": "catalog:",
     "wrangler": "^4.69.0"
   }
 }

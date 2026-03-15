@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=high
 
   outdated:
@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm outdated || true
 
   knip:
@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec knip --include unlisted,unresolved,binaries
 
   secret-scan:
@@ -74,7 +74,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec oxfmt --check .
 
   lint:
@@ -87,7 +87,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec oxlint .
 
   typecheck:
@@ -100,7 +100,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run type
 
   test:
@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run test:cov
 
   build-vite:
@@ -138,7 +138,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - if: ${{ startsWith(matrix.target, 'dev/') }}
         run: pnpm -C ${{ matrix.target }} run build
       - if: ${{ !startsWith(matrix.target, 'dev/') }}

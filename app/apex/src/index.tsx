@@ -1,6 +1,10 @@
-import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
 import { apexCsrf } from '../../../shared/apex/csrf';
+import {
+  createBadRequestFallback,
+  createNotFoundFallback,
+} from '../../../shared/apex/fallback-response';
+import { renderHealthPage } from '../../../shared/apex/health-page';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
@@ -8,8 +12,6 @@ import { logger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
-import { getBrandName } from '../../../shared/apex/brand';
-import { withResolvedSecretValue } from '../../../shared/cloudflare/secrets-store';
 import { setMeta } from '../../../shared/apex/seo';
 import {
   buildRegionErrorPayload,
@@ -21,13 +23,11 @@ import { renderer } from './renderer';
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
-const APP_APEX_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_APP_APEX_SENTRY_DSN';
 
 app.use(etag());
 app.use(logger());
 app.use(async (c, next) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RATE_LIMITER binding from wrangler.jsonc
-  const blocked = await checkRateLimit(c.req.raw, (c.env as any)?.RATE_LIMITER);
+  const blocked = await checkRateLimit(c.req.raw, c.env?.RATE_LIMITER);
   if (blocked) return blocked;
   await next();
 });
@@ -66,13 +66,11 @@ pageRoutes.get('/about', timeout(2000), (c) => {
 });
 
 app.onError(async (err, c) => {
-  Sentry.captureException(err);
-
   if (err instanceof HTTPException) {
     return err.getResponse();
   }
 
-  // eslint-disable-next-line no-console
+  // oxlint-disable-next-line no-console
   console.error('Unhandled apex error', {
     method: c.req.method,
     url: c.req.url,
@@ -80,114 +78,15 @@ app.onError(async (err, c) => {
     stack: err instanceof Error ? err.stack : undefined,
   });
 
-  if (!c.env.ASSETS) {
-    // eslint-disable-next-line no-console
-    console.error('ASSETS binding is missing for 400 fallback', { url: c.req.url });
-    return c.text('Bad Request', 400);
-  }
-
-  const url = new URL('/400.html', c.req.url);
-  const res = await c.env.ASSETS.fetch(new Request(url.toString()));
-  return new Response(res.body, {
-    status: 400,
-    headers: res.headers,
-  });
+  return createBadRequestFallback(c as unknown as Parameters<typeof createBadRequestFallback>[0]);
 });
 
-app.get('/health', timeout(2000), (c) => {
-  const timestampIso = new Date().toISOString();
-  const brandName = getBrandName(c.env);
-  try {
-    return c.html(
-      `<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charSet="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${brandName}</title>
-    <meta name="robots" content="noindex, nofollow" />
-    <link href="/src/style.css" rel="stylesheet" />
-  </head>
-  <body class="min-h-screen flex flex-col bg-gray-50">
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
-      <div class="space-y-4">
-        <p><strong>Status:</strong> OK</p>
-        <p><strong>Timestamp:</strong> ${timestampIso}</p>
-      </div>
-    </main>
-  </body>
-</html>`,
-      200,
-      { 'X-Robots-Tag': 'noindex, nofollow' },
-    );
-  } catch {
-    return c.html(
-      `<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charSet="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${brandName}</title>
-    <meta name="robots" content="noindex, nofollow" />
-  </head>
-  <body>
-    <main>
-      <p>status: error</p>
-      <p>timestamp: ${timestampIso}</p>
-    </main>
-  </body>
-</html>`,
-      503,
-      { 'X-Robots-Tag': 'noindex, nofollow' },
-    );
-  }
-});
-
-app.route('/', pageRoutes);
-app.notFound(async (c) => {
-  if (!c.env.ASSETS) {
-    // eslint-disable-next-line no-console
-    console.error('ASSETS binding is missing for 404 fallback', { url: c.req.url });
-    return c.text('Not Found', 404);
-  }
-
-  // Let the asset layer (and Vite in dev) handle static/dev paths first.
-  const assetRes = await c.env.ASSETS.fetch(c.req.raw);
-  if (assetRes.status !== 404) {
-    return assetRes;
-  }
-
-  const fallbackUrl = new URL('/404.html', c.req.url);
-  const fallbackRes = await c.env.ASSETS.fetch(new Request(fallbackUrl.toString()));
-  return new Response(fallbackRes.body, {
-    status: 404,
-    headers: fallbackRes.headers,
-  });
-});
-
-const sentryHandler = Sentry.withSentry(
-  (
-    env?: AssetEnv & {
-      UMAXICA_APPS_EDGE_APP_APEX_SENTRY_DSN?: string;
-      SENTRY_ENVIRONMENT?: string;
-    },
-  ) => ({
-    dsn: env?.UMAXICA_APPS_EDGE_APP_APEX_SENTRY_DSN,
-    environment: env?.SENTRY_ENVIRONMENT,
-    sendDefaultPii: true,
-    enableLogs: true,
-    tracesSampleRate: 1.0,
-  }),
-  app,
+app.get('/health', timeout(2000), (c) =>
+  renderHealthPage(c.env as unknown as Parameters<typeof renderHealthPage>[0]),
 );
 
-export default {
-  async fetch(request: Request, env: AssetEnv, ctx: Parameters<typeof sentryHandler.fetch>[2]) {
-    const runtimeEnv = await withResolvedSecretValue(
-      env as Record<string, unknown>,
-      APP_APEX_SENTRY_DSN_KEY,
-    );
-    return sentryHandler.fetch(request, runtimeEnv, ctx);
-  },
-  request: app.request.bind(app),
-};
+app.route('/', pageRoutes);
+app.notFound(createNotFoundFallback as unknown as Parameters<typeof app.notFound>[0]);
+
+// Sentry: to re-enable, wrap app with Sentry.withSentry() and export the handler.
+export default app;

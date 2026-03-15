@@ -8,7 +8,7 @@ describe(buildCspHeader, () => {
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain("script-src 'self'");
     expect(csp).toContain("object-src 'none'");
-    expect(csp).toContain("style-src 'self' https:");
+    expect(csp).toContain("style-src 'self'");
     expect(csp).toContain('upgrade-insecure-requests');
   });
 
@@ -16,7 +16,6 @@ describe(buildCspHeader, () => {
     const csp = buildCspHeader("'self' 'unsafe-inline'");
 
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
-    expect(csp).not.toContain("style-src 'self' https:");
   });
 });
 

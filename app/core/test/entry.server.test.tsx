@@ -60,6 +60,43 @@ afterAll(() => {
   vi.restoreAllMocks();
 });
 
+describe('entry.server handleError', () => {
+  let handleError: any;
+
+  beforeEach(async () => {
+    const module = await import('../src/entry.server');
+    handleError = module.handleError;
+  });
+
+  it('logs error when request is not aborted', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const error = new Error('test error');
+    const request = new Request('https://example.com', { signal: AbortSignal.timeout(1000) });
+
+    handleError(error, { request, params: {}, context: {} });
+
+    expect(consoleSpy).toHaveBeenCalledWith(error);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('does not log when request is aborted', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const error = new Error('test error');
+    const controller = new AbortController();
+    controller.abort();
+    const request = new Request('https://example.com', { signal: controller.signal });
+
+    handleError(error, { request, params: {}, context: {} });
+
+    expect(consoleSpy).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+});
+
 describe('entry.server handleRequest', () => {
   let headers: Headers;
 

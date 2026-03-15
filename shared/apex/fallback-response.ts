@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import type { AssetEnv } from '../../../shared/apex/security-headers';
+import type { AssetEnv } from './security-headers';
 
 type ApexContext = Context<{ Bindings: AssetEnv }>;
 type FallbackStatus = 400 | 404;
@@ -10,7 +10,7 @@ async function fetchHtmlFallback(
   status: FallbackStatus,
   fallbackText: string,
 ) {
-  if (!c.env.ASSETS) {
+  if (!c.env?.ASSETS) {
     // eslint-disable-next-line no-console
     console.error(`ASSETS binding is missing for ${status} fallback`, { url: c.req.url });
     return c.text(fallbackText, status);
@@ -29,7 +29,7 @@ export function createBadRequestFallback(c: ApexContext) {
 }
 
 export async function createNotFoundFallback(c: ApexContext) {
-  if (!c.env.ASSETS) {
+  if (!c.env?.ASSETS) {
     // eslint-disable-next-line no-console
     console.error('ASSETS binding is missing for 404 fallback', { url: c.req.url });
     return c.text('Not Found', 404);

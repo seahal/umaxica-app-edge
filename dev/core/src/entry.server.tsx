@@ -1,19 +1,15 @@
-import * as Sentry from '@sentry/react-router';
 import { isbot } from 'isbot';
 // oxlint-disable no-console
 import { renderToReadableStream } from 'react-dom/server';
-import type { AppLoadContext, EntryContext, HandleErrorFunction } from 'react-router';
+import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
-import { initServerSentry } from './sentry.server';
 
-export const handleError: HandleErrorFunction = (error, { request }) => {
-  initServerSentry();
+export function handleError(error: unknown, { request }: { request: Request }) {
   if (!request.signal.aborted) {
-    Sentry.captureException(error);
     console.error(error);
   }
-};
+}
 
 export default async function handleRequest(
   request: Request,
@@ -22,7 +18,6 @@ export default async function handleRequest(
   routerContext: EntryContext,
   loadContext: AppLoadContext,
 ) {
-  initServerSentry();
   let shellRendered = false;
   const userAgent = request.headers.get('user-agent');
   const nonce = getNonce(loadContext);
@@ -30,7 +25,6 @@ export default async function handleRequest(
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
     {
-      nonce: nonce || undefined,
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
@@ -40,7 +34,8 @@ export default async function handleRequest(
           console.error(error);
         }
       },
-    } as Parameters<typeof renderToReadableStream>[1],
+      ...(nonce ? { nonce } : {}),
+    },
   );
   shellRendered = true;
 
@@ -54,7 +49,7 @@ export default async function handleRequest(
   responseHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   responseHeaders.set(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+    `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   );
   responseHeaders.set(
     'Permissions-Policy',

@@ -3,7 +3,7 @@ import '../../test-setup.ts';
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Account from '../../src/routes/configurations/account';
+import Account, * as AccountModule from '../../src/routes/configurations/account';
 
 describe('Account configuration route', () => {
   it('renders account settings title and description', () => {
@@ -59,5 +59,39 @@ describe('Account configuration route', () => {
     await user.click(confirmDeleteButton);
 
     expect(window.alert).toHaveBeenCalledWith('アカウント削除機能は現在デモモードです');
+  });
+
+  it('meta function returns correct title and description', () => {
+    const result = AccountModule.meta({} as never);
+    expect(result).toContainEqual({ title: 'Umaxica - アカウント設定' });
+    expect(result).toContainEqual({ content: 'アカウント情報の管理', name: 'description' });
+  });
+
+  it('clicking cancel button goes back in history', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('alert', vi.fn());
+    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    vi.stubGlobal('history', { back: backSpy } as unknown as History);
+
+    render(<Account />);
+
+    const cancelButton = screen.getByRole('button', { name: 'キャンセル' });
+    await user.click(cancelButton);
+
+    expect(backSpy).toHaveBeenCalled();
+
+    backSpy.mockRestore();
+  });
+
+  it('clicking save button shows success alert', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('alert', vi.fn());
+
+    render(<Account />);
+
+    const saveButton = screen.getByRole('button', { name: '変更を保存' });
+    await user.click(saveButton);
+
+    expect(window.alert).toHaveBeenCalledWith('設定を保存しました！');
   });
 });

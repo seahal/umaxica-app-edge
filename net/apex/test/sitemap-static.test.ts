@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const testDir = dirname(fileURLToPath(import.meta.url));
 
 describe('net/apex public sitemap.xml', () => {
   it('contains the public URLs', () => {
-    const body = readFileSync(resolve(process.cwd(), 'net/apex/public/sitemap.xml'), 'utf8');
+    const body = readFileSync(resolve(testDir, '../public/sitemap.xml'), 'utf8');
 
     expect(body).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(body).toContain('<loc>https://umaxica.net/</loc>');

@@ -12,6 +12,13 @@ describe('apex CSRF config', () => {
     expect(isAllowedApexOrigin(undefined)).toBe(false);
   });
 
+  it('allows preview/staging origins on workers.dev', () => {
+    expect(isAllowedApexOrigin('https://abc123.com-apex.workers.dev')).toBe(true);
+    expect(isAllowedApexOrigin('https://preview-branch.app-apex.workers.dev')).toBe(true);
+    expect(isAllowedApexOrigin('http://abc123.com-apex.workers.dev')).toBe(false);
+    expect(isAllowedApexOrigin('https://workers.dev')).toBe(false);
+  });
+
   it('rejects cross-site form POST requests', async () => {
     const app = new Hono();
     app.use('*', apexCsrf);
