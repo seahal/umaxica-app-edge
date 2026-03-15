@@ -24,6 +24,11 @@ describe('Route: configure (org)', () => {
     expect(result).toStrictEqual({ message: 'org-value' });
   });
 
+  it('returns undefined message when context is missing', () => {
+    const result = loader({ context: {} } as never);
+    expect(result).toStrictEqual({ message: undefined });
+  });
+
   it('renders configuration content', () => {
     const markup = renderToStaticMarkup(<ConfigureRoute loaderData={{ message: 'org-value' }} />);
 

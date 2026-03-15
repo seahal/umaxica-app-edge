@@ -45,4 +45,17 @@ describe('Header component (com)', () => {
     renderHeader();
     expect(screen.getByRole('link', { name: /Explore/ })).toBeInTheDocument();
   });
+
+  it('applies active styles to explore link when active', () => {
+    const Stub = createRoutesStub([
+      {
+        Component: () => <Header />,
+        path: '/explore',
+      },
+    ]);
+    render(<Stub initialEntries={['/explore']} />);
+
+    const exploreLink = screen.getByRole('link', { name: /Explore/ });
+    expect(exploreLink.className).toContain('bg-blue-600');
+  });
 });

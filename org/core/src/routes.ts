@@ -7,6 +7,7 @@ export default [
   layout('../src/layouts/decorated.tsx', [
     index('routes/_index.tsx'),
     route('configure', 'routes/configure.tsx'),
+    route('sample', 'routes/sample.tsx'),
     route('*', 'routes/catch-all.tsx'),
   ]),
 ] satisfies RouteConfig;

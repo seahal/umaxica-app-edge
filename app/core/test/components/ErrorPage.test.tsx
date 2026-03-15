@@ -92,6 +92,14 @@ describe('ErrorPage component (app)', () => {
     );
     expect(markup).toContain('Try this');
   });
+
+  it('renders back button when showNavigation is true', () => {
+    const markup = renderToStaticMarkup(
+      <ErrorPage status={404} title="Title" message="msg" showNavigation={true} />,
+    );
+
+    expect(markup).toContain('前のページに戻る');
+  });
 });
 
 describe('Specialised error wrappers (app)', () => {

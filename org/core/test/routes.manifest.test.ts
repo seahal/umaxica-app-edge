@@ -40,6 +40,10 @@ describe('org route manifest', () => {
         file: 'routes/configure.tsx',
         path: 'configure',
       }),
+      expect.objectContaining({
+        file: 'routes/sample.tsx',
+        path: 'sample',
+      }),
       expect.objectContaining({ file: 'routes/catch-all.tsx', path: '*' }),
     ]);
   });
