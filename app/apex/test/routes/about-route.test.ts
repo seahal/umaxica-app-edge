@@ -20,6 +20,16 @@ describe('GET /about', () => {
     expect(body).toContain('https://umaxica.com');
   });
 
+  it('renders Japanese content when Accept-Language prefers ja', async () => {
+    const response = await requestFromApp('/about', {
+      headers: { 'Accept-Language': 'ja' },
+    });
+
+    const body = await response.text();
+    expect(body).toContain('このサイトについて');
+    expect(body).not.toContain('About this site.');
+  });
+
   it('uses BRAND_NAME from env in the page title', async () => {
     const response = await requestFromApp('/about', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await response.text();

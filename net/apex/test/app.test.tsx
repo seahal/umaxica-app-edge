@@ -18,10 +18,21 @@ describe('Net Hono app', () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('About this site.');
+    expect(body).not.toContain('このサイトについて');
     expect(body).toContain('umaxica.app');
     expect(body).toContain('<title>UMAXICA (net) - Apex</title>');
     expect(body).toContain('<link rel="canonical" href="https://umaxica.net/"');
     expect(body).toContain('<meta name="robots" content="index,follow"');
+  });
+
+  it('renders root page in Japanese when Accept-Language prefers ja', async () => {
+    const res = await app.request('/', {
+      headers: { 'Accept-Language': 'ja' },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain('このサイトについて');
+    expect(body).not.toContain('About this site.');
   });
 
   it('renders about page', async () => {
@@ -29,12 +40,23 @@ describe('Net Hono app', () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('About');
+    expect(body).not.toContain('このサイトについて');
     expect(body).toContain('<title>About | UMAXICA (net) - Apex</title>');
     expect(body).toContain(
       '<meta name="description" content="umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
     );
     expect(body).toContain('<link rel="canonical" href="https://umaxica.net/about"');
     expect(body).toContain('<meta name="robots" content="index,follow"');
+  });
+
+  it('renders about page in Japanese when Accept-Language prefers ja', async () => {
+    const res = await app.request('/about', {
+      headers: { 'Accept-Language': 'ja' },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain('このサイトについて');
+    expect(body).not.toContain('About this site.');
   });
 
   it('renders footer with current UTC year', async () => {

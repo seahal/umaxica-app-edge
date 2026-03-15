@@ -8,7 +8,7 @@ import { logger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { checkRateLimit } from '../../../shared/apex/rate-limit';
 import { applySecurityHeaders, type AssetEnv } from '../../../shared/apex/security-headers';
-import { DEFAULT_BRAND_NAME, getBrandName } from '../../../shared/apex/brand';
+import { getBrandName } from '../../../shared/apex/brand';
 import { withResolvedSecretValue } from '../../../shared/cloudflare/secrets-store';
 import { setMeta } from '../../../shared/apex/seo';
 import {
@@ -16,20 +16,12 @@ import {
   getDefaultRedirectUrl,
   resolveRedirectUrl,
 } from './root-redirect';
+import { getAboutMeta, renderAboutContent } from './page-content';
 import { renderer } from './renderer';
-
-void languageDetector;
 
 const app = new Hono<{ Bindings: AssetEnv }>();
 const pageRoutes = new Hono<{ Bindings: AssetEnv }>();
 const COM_APEX_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_COM_APEX_SENTRY_DSN';
-
-function buildApexTitle(env: AssetEnv, domain: string, pageName?: string): string {
-  void env;
-  const brandName = DEFAULT_BRAND_NAME;
-  const baseTitle = `${brandName} (${domain}) - Apex`;
-  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
-}
 
 app.use(etag());
 app.use(logger());
@@ -69,34 +61,8 @@ pageRoutes.get('/', (c) => {
 pageRoutes.use(renderer as unknown as Parameters<typeof pageRoutes.use>[0]);
 
 pageRoutes.get('/about', timeout(2000), (c) => {
-  setMeta(c, {
-    title: buildApexTitle(c.env, 'com', 'About'),
-    description:
-      'umaxica.com is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
-    canonical: 'https://umaxica.com/about',
-    robots: 'index,follow',
-  });
-
-  return c.render(
-    <div class="space-y-4">
-      <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
-      <p>
-        This domain (<a href="https://umaxica.com">umaxica.com</a>) is not operated as a
-        public-facing website. To access our services, please visit our official websites (
-        <a href="https://umaxica.app">umaxica.app</a>, <a href="https://umaxica.com">umaxica.com</a>
-        , <a href="https://umaxica.org">umaxica.org</a>).
-      </p>
-      <h2 class="text-3xl font-semibold text-gray-800">このサイトについて</h2>
-      <p>
-        本ドメイン（<a href="https://umaxica.com">umaxica.com</a>
-        ）は、一般向けのウェブサイトとして運用いたしておりません。弊社サービスの利用につきましては、
-        <a href="https://umaxica.app">umaxica.app</a>、{' '}
-        <a href="https://umaxica.com">umaxica.com</a>、{' '}
-        <a href="https://umaxica.org">umaxica.org</a>
-        の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
-      </p>
-    </div>,
-  );
+  setMeta(c, getAboutMeta(c.env));
+  return c.render(renderAboutContent(c.get('language')));
 });
 
 app.onError(async (err, c) => {
