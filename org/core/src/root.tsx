@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react-router';
 import {
   Links,
   Meta,
@@ -18,8 +17,6 @@ import type { ReactNode } from 'react';
 import type { Route } from './+types/root';
 import { CloudflareContext, getEnv, getNonce } from './context';
 
-const ORG_CORE_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_ORG_CORE_SENTRY_DSN';
-
 // Local definition of MiddlewareFunction since the export from react-router might not be picked up correctly by all tools
 type MiddlewareFunction = (
   args: {
@@ -37,11 +34,8 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { cspNonce, sentryDsn, sentryEnvironment } =
-    useLoaderData<Awaited<ReturnType<typeof loader>>>();
+  const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
-  const publicEnv = { sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
-  const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
     <html lang="en">
@@ -53,10 +47,6 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <script
-          nonce={nonce}
-          suppressHydrationWarning
-        >{`window.ENV=${serializedPublicEnv};`}</script>
         <ScrollRestoration {...(nonce ? { nonce } : {})} />
         <Scripts {...(nonce ? { nonce } : {})} />
       </body>
@@ -101,16 +91,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): React.JSX.El
       return <NotFoundPage />;
     }
 
+    if (rr.status === 503) {
+      return <ServiceUnavailablePage />;
+    }
+
     if (rr.status >= 500) {
       return (
         <InternalServerErrorPage
           details={rr.statusText || `HTTP ${rr.status} エラーが発生しました`}
         />
       );
-    }
-
-    if (rr.status === 503) {
-      return <ServiceUnavailablePage />;
     }
 
     return (
@@ -125,7 +115,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): React.JSX.El
   }
 
   if (error instanceof Error) {
-    Sentry.captureException(error);
     return <InternalServerErrorPage details={error.message} />;
   }
 
@@ -143,7 +132,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): React.JSX.El
 export function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context) as unknown as Record<string, string | undefined>;
   const cspNonce = getNonce(context);
-  const sentryDsn = env[ORG_CORE_SENTRY_DSN_KEY] ?? '';
 
   return {
     codeName: env.BRAND_NAME ?? '',
@@ -151,7 +139,5 @@ export function loader({ context }: Route.LoaderArgs) {
     docsUrl: env.DOCS_STAFF_URL ?? '',
     helpUrl: env.HELP_STAFF_URL ?? '',
     newsUrl: env.NEWS_STAFF_URL ?? '',
-    sentryDsn,
-    sentryEnvironment: env.SENTRY_ENVIRONMENT ?? '',
   };
 }

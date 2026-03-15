@@ -2,9 +2,9 @@
   "name": "umaxica-apps-edge-app-apex",
   "type": "module",
   "scripts": {
-    "server": "vite",
-    "build": "vite build --ssr src/index.tsx && rm -rf dist/client && mkdir -p dist/client && cp -a public/. dist/client/",
-    "preview": "$npm_execpath run build && vite preview",
+    "server": "vp dev",
+    "build": "vp build --ssr src/index.tsx && rm -rf dist/client && mkdir -p dist/client && cp -a public/. dist/client/",
+    "preview": "$npm_execpath run build && vp preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
     "deploy:upload": "$npm_execpath run build && wrangler versions upload",
     "deploy:promote": "wrangler versions deploy --yes",
@@ -23,7 +23,8 @@
     "postcss": "^8.5.8",
     "semgrep": "^0.0.1",
     "tailwindcss": "^4.2.1",
-    "vite": "8.0.0-beta.16",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
     "vite-ssr-components": "^0.5.2",
     "wrangler": "^4.71.0"
   }

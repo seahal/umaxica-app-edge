@@ -49,8 +49,7 @@ describe('ErrorPage component (app)', () => {
     );
 
     expect(markup).toContain('href="/"');
-    expect(markup).toContain('href="/sample"');
-    expect(markup).toContain('href="/configure"');
+    expect(markup).toContain('href="/about"');
   });
 
   it('respects showNavigation and renders diagnostic details when requested', () => {

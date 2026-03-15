@@ -1,5 +1,13 @@
 import { CloudflareContext } from '../src/context';
-import { loader } from '../src/root';
+
+vi.mock('../src/middleware/i18next', () => ({
+  getLocale: () => 'ja',
+  getInstance: () => undefined,
+  i18nextMiddleware: (_args: unknown, next: () => unknown) => next(),
+  localeCookie: { serialize: () => Promise.resolve('lng=ja') },
+}));
+
+const { loader } = await import('../src/root');
 
 interface LoaderContext {
   cloudflare?: { env?: Record<string, string> };
@@ -14,14 +22,19 @@ function createMockContext(data: LoaderContext) {
   };
 }
 
-function runLoader(context: LoaderContext) {
+async function runLoader(context: LoaderContext) {
   const mockContext = createMockContext(context);
-  return loader({ context: mockContext } as unknown as Parameters<typeof loader>[0]);
+  const result = await loader({ context: mockContext } as unknown as Parameters<typeof loader>[0]);
+  if (result instanceof Response) {
+    return result.json() as Promise<Record<string, unknown>>;
+  }
+  const wrapped = result as unknown as { data?: Record<string, unknown> };
+  return (wrapped.data ?? result) as unknown as Record<string, unknown>;
 }
 
 describe('root loader', () => {
-  it('maps Cloudflare env values into loader data', () => {
-    const result = runLoader({
+  it('maps Cloudflare env values into loader data', async () => {
+    const result = await runLoader({
       cloudflare: {
         env: {
           APEX_SERVICE_URL: 'umaxica.app',
@@ -43,6 +56,7 @@ describe('root loader', () => {
       docsServiceUrl: 'docs.umaxica.app',
       edgeServiceUrl: 'edge.umaxica.app',
       helpServiceUrl: 'support.umaxica.app',
+      locale: 'ja',
       newsServiceUrl: 'news.umaxica.app',
     });
   });

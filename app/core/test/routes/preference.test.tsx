@@ -3,7 +3,7 @@ import '../../test-setup.ts';
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Preference from '../../src/routes/configurations/preference';
+import Preference, * as PreferenceModule from '../../src/routes/configurations/preference';
 
 describe('Preference configuration route', () => {
   it('renders preference settings title and description', () => {
@@ -62,5 +62,26 @@ describe('Preference configuration route', () => {
     await user.click(saveButton);
 
     expect(window.alert).toHaveBeenCalledWith('設定を保存しました！');
+  });
+
+  it('meta function returns correct title and description', () => {
+    const result = PreferenceModule.meta({} as never);
+    expect(result).toContainEqual({ title: 'Umaxica - 環境設定' });
+    expect(result).toContainEqual({ content: '表示や動作に関する設定', name: 'description' });
+  });
+
+  it('clicking cancel button goes back in history', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('alert', vi.fn());
+    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+
+    render(<Preference />);
+
+    const cancelButton = screen.getByRole('button', { name: 'キャンセル' });
+    await user.click(cancelButton);
+
+    expect(backSpy).toHaveBeenCalled();
+
+    backSpy.mockRestore();
   });
 });

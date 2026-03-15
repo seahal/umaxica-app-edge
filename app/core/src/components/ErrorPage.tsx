@@ -83,15 +83,8 @@ export function ErrorPage({
             <div className="mt-8">
               <h3 className="text-sm font-medium text-gray-700 mb-3">よく見られるページ</h3>
               <div className="flex flex-wrap gap-2 justify-center">
-                <Link to="/sample" className="text-sm text-blue-600 hover:text-blue-800 underline">
-                  Sample
-                </Link>
-                <span className="text-gray-400">•</span>
-                <Link
-                  to="/configure"
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                >
-                  Configure
+                <Link to="/about" className="text-sm text-blue-600 hover:text-blue-800 underline">
+                  About
                 </Link>
               </div>
             </div>

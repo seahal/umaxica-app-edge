@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react-router';
 import {
   Links,
   Meta,
@@ -23,25 +22,11 @@ function isDevEnvironment(): boolean {
   return importMeta.env?.['DEV'] === true;
 }
 
-export const links: Route.LinksFunction = () => [
-  { href: 'https://fonts.googleapis.com', rel: 'preconnect' },
-  {
-    crossOrigin: 'anonymous',
-    href: 'https://fonts.gstatic.com',
-    rel: 'preconnect',
-  },
-  {
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-    rel: 'stylesheet',
-  },
-];
+export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { cspNonce, sentryDsn, sentryEnvironment } =
-    useLoaderData<Awaited<ReturnType<typeof loader>>>();
+  const { cspNonce } = useLoaderData<Awaited<ReturnType<typeof loader>>>();
   const nonce = cspNonce || undefined;
-  const publicEnv = { sentryDsn, SENTRY_ENVIRONMENT: sentryEnvironment };
-  const serializedPublicEnv = JSON.stringify(publicEnv).replace(/</g, '\\u003c');
 
   return (
     <html lang="en">
@@ -53,10 +38,6 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <script
-          nonce={nonce}
-          suppressHydrationWarning
-        >{`window.ENV=${serializedPublicEnv};`}</script>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -73,8 +54,6 @@ const FALLBACK_SETTINGS = {
   docsServiceUrl: '',
   helpServiceUrl: '',
   newsServiceUrl: '',
-  sentryDsn: '',
-  sentryEnvironment: 'development',
 } as const;
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -84,16 +63,6 @@ export function loader({ context }: Route.LoaderArgs) {
   const helpServiceUrl = readEnv(context, 'HELP_SERVICE_URL', FALLBACK_SETTINGS.helpServiceUrl);
   const docsServiceUrl = readEnv(context, 'DOCS_SERVICE_URL', FALLBACK_SETTINGS.docsServiceUrl);
   const newsServiceUrl = readEnv(context, 'NEWS_SERVICE_URL', FALLBACK_SETTINGS.newsServiceUrl);
-  const sentryDsn = readEnv(
-    context,
-    'UMAXICA_APPS_EDGE_DEV_CORE_SENTRY_DSN',
-    FALLBACK_SETTINGS.sentryDsn,
-  );
-  const sentryEnvironment = readEnv(
-    context,
-    'SENTRY_ENVIRONMENT',
-    FALLBACK_SETTINGS.sentryEnvironment,
-  );
 
   return {
     codeName,
@@ -101,8 +70,6 @@ export function loader({ context }: Route.LoaderArgs) {
     docsServiceUrl,
     helpServiceUrl,
     newsServiceUrl,
-    sentryDsn,
-    sentryEnvironment,
   };
 }
 
@@ -116,11 +83,8 @@ export function ErrorBoundary({ error }: RouteErrorBoundaryProps) {
     details =
       error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
   } else if (isDevEnvironment() && error && error instanceof Error) {
-    Sentry.captureException(error);
     details = error.message;
     ({ stack } = error);
-  } else if (error instanceof Error) {
-    Sentry.captureException(error);
   }
 
   return (

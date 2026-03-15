@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { CloudflareContext } from '../../src/context';
 
 vi.mock('../../src/components/EventList', async (importOriginal) => {
   const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
@@ -16,8 +17,9 @@ afterAll(() => {
 });
 
 function runLoader(env: Record<string, unknown>) {
+  const contextMap = new Map<unknown, unknown>([[CloudflareContext, { cloudflare: { env } }]]);
   return loader({
-    context: { cloudflare: { env } },
+    context: { get: (key: unknown) => contextMap.get(key) },
   } as never);
 }
 

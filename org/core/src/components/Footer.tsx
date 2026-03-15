@@ -148,7 +148,7 @@ export function Footer({ codeName = '' }: FooterProps) {
               </TooltipTrigger>
               <TooltipTrigger delay={200}>
                 <Link
-                  href="https://status.umaxica.dev/jp"
+                  href="https://status.umaxica.dev"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-600 transition-all duration-200 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"

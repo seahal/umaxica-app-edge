@@ -99,10 +99,10 @@ describe('route meta implementations', () => {
       request: new Request('https://example.com/authentication'),
     } as never);
     expect(metaEntries).toContainEqual({
-      title: 'Umaxica - ログイン',
+      title: 'Umaxica - 認証',
     });
     expect(metaEntries).toContainEqual({
-      content: 'Umaxica にログインまたは新規登録',
+      content: '認証ページ',
       name: 'description',
     });
   });

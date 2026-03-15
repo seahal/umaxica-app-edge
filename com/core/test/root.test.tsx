@@ -49,8 +49,6 @@ const baseLoaderData: LoaderData = {
   docsServiceUrl: 'docs.umaxica.com' as 'jp.docs.umaxica.com' | 'docs.umaxica.com',
   helpServiceUrl: 'help.umaxica.com' as 'jp.help.umaxica.com' | 'help.umaxica.com',
   newsServiceUrl: 'news.umaxica.com' as 'jp.news.umaxica.com' | 'news.umaxica.com',
-  sentryDsn: '',
-  sentryEnvironment: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -125,7 +123,6 @@ describe('com root loader', () => {
     expect(result.newsServiceUrl).toBe('https://news.example.com');
     expect(result.docsServiceUrl).toBe('https://docs.example.com');
     expect(result.helpServiceUrl).toBe('https://help.example.com');
-    expect(result.sentryDsn).toBe('');
   });
 });
 
@@ -169,10 +166,8 @@ describe('com root ErrorBoundary', () => {
     isRouteErrorResponseMock.mockReturnValue(true);
 
     const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
-    // Note: The code checks `status >= 500` before checking for 503,
-    // So 503 errors are handled as InternalServerErrorPage
-    expect(markup).toContain('サーバーエラー');
-    expect(markup).toContain('500');
+    expect(markup).toContain('メンテナンス中');
+    expect(markup).toContain('503');
   });
 
   it('renders generic ErrorPage for other route errors', () => {
@@ -201,18 +196,13 @@ describe('com root ErrorBoundary', () => {
     (import.meta.env as { DEV: boolean }).DEV = originalDev;
   });
 
-  it('shows stack trace in DEV mode for Error instances', () => {
+  it('renders InternalServerErrorPage for Error instances with message', () => {
     const error = new Error('Test error message');
-    error.stack = 'Error: Test error message\n    at test.ts:1:1';
     isRouteErrorResponseMock.mockReturnValue(false);
-    const originalDev = import.meta.env.DEV;
-    (import.meta.env as { DEV: boolean }).DEV = true;
 
     const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
-    expect(markup).toContain('Test error message');
-    expect(markup).toContain('at test.ts:1:1');
-
-    (import.meta.env as { DEV: boolean }).DEV = originalDev;
+    expect(markup).toContain('サーバーエラー');
+    expect(markup).toContain('500');
   });
 
   it('renders fallback ErrorPage for unknown errors', () => {

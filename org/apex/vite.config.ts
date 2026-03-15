@@ -1,5 +1,5 @@
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite-plus';
 import ssrPlugin from 'vite-ssr-components/plugin';
 
 import tailwindcss from '@tailwindcss/vite';

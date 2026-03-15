@@ -4,6 +4,7 @@ import { withResolvedSecretValue } from '../../../shared/cloudflare/secrets-stor
 import { CloudflareContext } from '../src/context';
 
 const ORG_CORE_SENTRY_DSN_KEY = 'UMAXICA_APPS_EDGE_ORG_CORE_SENTRY_DSN';
+const serverMode = (import.meta as ImportMeta & { env?: { MODE?: string } }).env?.MODE;
 
 function generateNonce(): string {
   const array = new Uint8Array(16);
@@ -13,7 +14,7 @@ function generateNonce(): string {
 
 const requestHandler = createRequestHandler(
   () => import('virtual:react-router/server-build'),
-  (import.meta as unknown as { env: { MODE: string } }).env.MODE,
+  serverMode,
   () => new RouterContextProvider(),
 );
 

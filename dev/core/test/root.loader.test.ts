@@ -31,8 +31,6 @@ describe('dev root loader', () => {
       docsServiceUrl: 'docs.dev.umaxica.app',
       helpServiceUrl: 'help.dev.umaxica.app',
       newsServiceUrl: 'news.dev.umaxica.app',
-      sentryDsn: 'https://public@example.ingest.sentry.io/1',
-      sentryEnvironment: 'preview',
     });
   });
 
@@ -66,8 +64,6 @@ describe('dev root loader', () => {
       docsServiceUrl: 'https://docs.runtime.dev',
       helpServiceUrl: 'https://help.runtime.dev',
       newsServiceUrl: 'https://news.runtime.dev',
-      sentryDsn: 'https://public@example.ingest.sentry.io/2',
-      sentryEnvironment: 'staging',
     });
   });
 });

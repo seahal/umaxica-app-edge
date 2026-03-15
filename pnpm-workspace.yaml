@@ -8,9 +8,36 @@ packages:
   - dev/core
   - net/apex
 
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite-plus: ^0.1.11
+  vitest: npm:@voidzero-dev/vite-plus-test@^0.1.11
+
 ignoredBuiltDependencies:
   - esbuild
   - sharp
   - workerd
 
 minimumReleaseAge: 4320
+
+minimumReleaseAgeExclude:
+  - vite-plus
+  - '@voidzero-dev/*'
+  - oxlint
+  - '@oxlint/*'
+  - oxlint-tsgolint
+  - '@oxlint-tsgolint/*'
+  - oxfmt
+  - '@oxfmt/*'
+
+overrides:
+  vite: 'catalog:'
+  vitest: 'catalog:'
+
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'

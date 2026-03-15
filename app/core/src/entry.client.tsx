@@ -1,43 +1,34 @@
-import * as Sentry from '@sentry/react-router';
+import i18next from 'i18next';
 import { StrictMode, startTransition } from 'react';
-import type { ErrorInfo } from 'react';
 import { hydrateRoot } from 'react-dom/client';
+import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { HydratedRouter } from 'react-router/dom';
+import resources from './locales';
 
-// サーバーから埋め込まれた環境変数を取得
-declare global {
-  interface Window {
-    ENV: {
-      sentryDsn?: string;
-      SENTRY_ENVIRONMENT?: string;
-    };
-  }
-}
+async function main() {
+  await i18next.use(initReactI18next).init({
+    fallbackLng: 'ja',
+    detection: { order: ['htmlTag'], caches: [] },
+    resources,
+  });
 
-// Sentry DSN が設定されている場合のみ初期化
-if (window.ENV?.sentryDsn) {
-  Sentry.init({
-    dsn: window.ENV.sentryDsn,
-    environment: window.ENV.SENTRY_ENVIRONMENT,
-    integrations: [Sentry.reactRouterTracingIntegration(), Sentry.browserProfilingIntegration()],
-    sendDefaultPii: true,
-    enableLogs: true,
-    profilesSampleRate: 1.0,
-    tracesSampleRate: 1.0,
+  startTransition(() => {
+    hydrateRoot(
+      document,
+      <I18nextProvider i18n={i18next}>
+        <StrictMode>
+          <HydratedRouter />
+        </StrictMode>
+      </I18nextProvider>,
+    );
   });
 }
 
-startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter
-        {...({
-          unstable_onError: (error: unknown, errorInfo: ErrorInfo) => {
-            Sentry.captureReactException(error, errorInfo);
-          },
-        } as Record<string, unknown>)}
-      />
-    </StrictMode>,
-  );
+main().catch((error: unknown) => {
+  if (typeof reportError === 'function') {
+    reportError(error);
+    return;
+  }
+
+  throw error;
 });

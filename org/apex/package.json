@@ -2,9 +2,9 @@
   "name": "umaxica-apps-edge-org-apex",
   "type": "module",
   "scripts": {
-    "server": "vite",
-    "build": "vite build --ssr src/index.tsx && rm -rf dist/client && mkdir -p dist/client && cp -a public/. dist/client/",
-    "preview": "$npm_execpath run build && vite preview",
+    "server": "vp dev",
+    "build": "vp build --ssr src/index.tsx && rm -rf dist/client && mkdir -p dist/client && cp -a public/. dist/client/",
+    "preview": "$npm_execpath run build && vp preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
     "deploy:upload": "$npm_execpath run build && wrangler versions upload",
     "deploy:promote": "wrangler versions deploy --yes",
@@ -16,14 +16,15 @@
     "hono": "^4.12.7"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.25.6",
+    "@cloudflare/vite-plugin": "^1.26.1",
     "@tailwindcss/vite": "^4.2.1",
     "@types/react": "^19.2.14",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^4.1.17",
-    "vite": "8.0.0-beta.16",
-    "vite-ssr-components": "^0.5.1",
-    "wrangler": "^4.69.0"
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vite-ssr-components": "^0.5.2",
+    "wrangler": "^4.71.0"
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { getCookie } from './cookie';
 import { parseConsentedCookie, shouldShowCookieBanner } from './consentState';
 import { acceptCookieConsent } from './cookieConsentApi';

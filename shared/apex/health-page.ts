@@ -1,5 +1,5 @@
-import { getBrandName } from '../../../shared/apex/brand';
-import type { AssetEnv } from '../../../shared/apex/security-headers';
+import { getBrandName } from './brand';
+import type { AssetEnv } from './security-headers';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 

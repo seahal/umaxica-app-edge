@@ -1,23 +1,17 @@
-import * as Sentry from '@sentry/react-router';
 import { isbot } from 'isbot';
 // oxlint-disable no-console
 import { renderToReadableStream } from 'react-dom/server';
+import { I18nextProvider } from 'react-i18next';
 import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
+import { getInstance } from './middleware/i18next';
 
-// Local definition of HandleErrorFunction
-export type HandleErrorFunction = (
-  error: unknown,
-  args: { request: Request; params: unknown; context: AppLoadContext },
-) => void;
-
-export const handleError: HandleErrorFunction = (error, { request }) => {
+export function handleError(error: unknown, { request }: { request: Request }) {
   if (!request.signal.aborted) {
-    Sentry.captureException(error);
     console.error(error);
   }
-};
+}
 
 export default async function handleRequest(
   request: Request,
@@ -30,11 +24,17 @@ export default async function handleRequest(
   const userAgent = request.headers.get('user-agent');
 
   const nonce = getNonce(loadContext);
+  const i18nInstance = getInstance(loadContext as Parameters<typeof getInstance>[0]);
+
+  const serverRouter = <ServerRouter context={routerContext} url={request.url} />;
 
   const body = await renderToReadableStream(
-    <ServerRouter context={routerContext} url={request.url} />,
+    i18nInstance ? (
+      <I18nextProvider i18n={i18nInstance}>{serverRouter}</I18nextProvider>
+    ) : (
+      serverRouter
+    ),
     {
-      ...(nonce ? { nonce } : {}),
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
@@ -44,6 +44,7 @@ export default async function handleRequest(
           console.error(error);
         }
       },
+      ...(nonce ? { nonce } : {}),
     },
   );
   shellRendered = true;
@@ -58,7 +59,7 @@ export default async function handleRequest(
   responseHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   responseHeaders.set(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
+    `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   );
   responseHeaders.set(
     'Permissions-Policy',

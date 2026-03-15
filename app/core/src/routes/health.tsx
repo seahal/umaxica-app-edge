@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 // Implementation of data helper as the one from react-router might not be picked up by linting tools
 function data<T>(body: T, init?: number | ResponseInit): Response {
   const responseInit = typeof init === 'number' ? { status: init } : init;
@@ -32,10 +34,17 @@ export function loader() {
 }
 
 export default function Health({ loaderData }: { loaderData: HealthLoaderData }) {
+  const { t } = useTranslation('health');
+
   return (
     <main>
-      <p>status: {loaderData.status}</p>
-      <p>timestamp: {loaderData.timestamp}</p>
+      <h1>{t('title')}</h1>
+      <p>
+        {t('status')}: {loaderData.status === 'ok' ? t('ok') : t('error')}
+      </p>
+      <p>
+        {t('timestamp')}: {loaderData.timestamp}
+      </p>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { EventList } from '../components/EventList';
+import { getEnv } from '../context';
 import type { Route } from './+types/_index';
 
 export function meta(_: Route.MetaArgs) {
@@ -11,9 +12,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  const env =
-    (context as unknown as { cloudflare?: { env?: Record<string, string> } })?.cloudflare?.env ??
-    {};
+  const env = getEnv(context) as unknown as Record<string, string | undefined>;
   return {
     codeName: env.BRAND_NAME?.trim() || 'Umaxica',
     message: env.VALUE_FROM_CLOUDFLARE,

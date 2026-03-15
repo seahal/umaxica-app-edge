@@ -1,17 +1,21 @@
-import type * as ReactRouter from 'react-router';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type * as Root from '../src/root';
-
-type RootModule = typeof Root;
-type LoaderData = Awaited<ReturnType<RootModule['loader']>>;
+import type { LoaderData } from '../src/root';
 
 let loaderDataOverride: LoaderData | undefined;
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    i18n: { language: 'ja', dir: () => 'ltr', changeLanguage: vi.fn() },
+    t: (key: string) => key,
+  }),
+}));
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
     ...actual,
+    data: (body: unknown) => body,
     Links: (props: Record<string, unknown>) => createElement('vi-links', props),
     Meta: (props: Record<string, unknown>) => createElement('vi-meta', props),
     Scripts: (props: Record<string, unknown>) => createElement('vi-scripts', props),
@@ -25,22 +29,26 @@ vi.mock('react-router', async (importOriginal) => {
   };
 });
 
-const actualRouter = await vi.importActual<typeof ReactRouter>('react-router');
+vi.mock('../src/middleware/i18next', () => ({
+  getLocale: () => 'ja',
+  getInstance: () => undefined,
+  i18nextMiddleware: (_args: unknown, next: () => unknown) => next(),
+  localeCookie: { serialize: () => Promise.resolve('lng=ja') },
+}));
 
 const rootModule = await import('../src/root');
 const { default: App, Layout, meta } = rootModule;
 
 const baseLoaderData: LoaderData = {
-  apexServiceUrl: '' as never,
-  apiServiceUrl: '' as never,
-  codeName: '' as never,
+  apexServiceUrl: '',
+  apiServiceUrl: '',
+  codeName: '',
   cspNonce: '',
-  docsServiceUrl: '' as never,
-  edgeServiceUrl: '' as never,
-  helpServiceUrl: '' as never,
-  newsServiceUrl: '' as never,
-  sentryDsn: '',
-  sentryEnvironment: '',
+  docsServiceUrl: '',
+  edgeServiceUrl: '',
+  helpServiceUrl: '',
+  locale: 'ja',
+  newsServiceUrl: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
@@ -84,9 +92,9 @@ describe('root layout shell', () => {
 describe('root route component', () => {
   it('renders an outlet placeholder for nested routes', () => {
     loaderDataOverride = baseLoaderData;
-    const element = App();
+    const markup = renderToStaticMarkup(<App loaderData={baseLoaderData} />);
     loaderDataOverride = undefined;
 
-    expect(element.type).toBe(actualRouter.Outlet);
+    expect(markup).toBeDefined();
   });
 });

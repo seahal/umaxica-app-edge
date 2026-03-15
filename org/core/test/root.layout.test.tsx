@@ -33,8 +33,6 @@ const baseLoaderData: LoaderData = {
   docsUrl: 'jp.docs.umaxica.org' as const,
   helpUrl: 'jp.help.umaxica.org' as const,
   newsUrl: 'jp.news.umaxica.org' as const,
-  sentryDsn: '',
-  sentryEnvironment: '',
 };
 
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
