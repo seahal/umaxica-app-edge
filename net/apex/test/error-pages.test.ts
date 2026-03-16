@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Hono } from 'hono';
-import { HTTPException } from 'hono/http-exception';
 import app from '../src/index';
 
 const notFoundHtml = readFileSync(resolve(__dirname, '../public/404.html'), 'utf-8');
