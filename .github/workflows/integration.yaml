@@ -19,39 +19,36 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --audit-level=high
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp pm audit --audit-level=high
 
   outdated:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm outdated || true
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp outdated || true
 
   knip:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec knip --include unlisted,unresolved,binaries
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp dlx knip --include unlisted,unresolved,binaries
 
   secret-scan:
     runs-on: ubuntu-slim
@@ -64,57 +61,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  format:
+  check:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec oxfmt --check .
-
-  lint:
-    runs-on: ubuntu-slim
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec oxlint .
-
-  typecheck:
-    runs-on: ubuntu-slim
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run type
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp check
 
   test:
     runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:cov
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp test --coverage
 
   build-vite:
     runs-on: ubuntu-slim
@@ -133,12 +102,11 @@ jobs:
           - org/core
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+          cache: true
+      - run: vp install --frozen-lockfile
       - if: ${{ startsWith(matrix.target, 'dev/') }}
         run: pnpm -C ${{ matrix.target }} run build
       - if: ${{ !startsWith(matrix.target, 'dev/') }}
