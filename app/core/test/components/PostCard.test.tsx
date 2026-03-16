@@ -141,7 +141,7 @@ describe('PostCard component', () => {
       author: undefined,
     };
 
-    render(<PostCard post={postWithoutAuthor as typeof basePost} />);
+    render(<PostCard post={postWithoutAuthor as unknown as typeof basePost} />);
 
     // Avatar should show fallback character
     const avatar = screen.getByText('?');
