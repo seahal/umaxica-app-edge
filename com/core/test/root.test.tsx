@@ -74,6 +74,14 @@ describe('com root layout', () => {
     expect(markup).toContain('<vi-meta');
     expect(markup).toContain('child route');
   });
+
+  it('omits nonce attributes when no CSP nonce is present', () => {
+    const markup = renderLayoutWithData({ cspNonce: '' });
+
+    expect(markup).not.toContain('nonce=""');
+    expect(markup).not.toContain('<vi-scroll nonce=');
+    expect(markup).not.toContain('<vi-scripts nonce=');
+  });
 });
 
 describe('com root route component', () => {

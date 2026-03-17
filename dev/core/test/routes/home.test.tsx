@@ -30,6 +30,11 @@ describe('Home route (dev/core)', () => {
     ]);
   });
 
+  it('falls back to the default code name in meta when data is missing', () => {
+    const { meta } = Home;
+    expect(meta({} as never)).toContainEqual({ title: 'Umaxica (dev)' });
+  });
+
   it('exports loader that reads brand name from env', () => {
     const { loader } = Home;
     const result = loader({
@@ -37,5 +42,10 @@ describe('Home route (dev/core)', () => {
     } as never);
 
     expect(result).toStrictEqual({ codeName: 'UMAXICA' });
+  });
+
+  it('falls back to the default brand name when env is missing', () => {
+    const { loader } = Home;
+    expect(loader({ context: {} } as never)).toStrictEqual({ codeName: 'Umaxica' });
   });
 });

@@ -35,6 +35,13 @@ describe('getNonce', () => {
     expect(result).not.toBeUndefined();
     expect((context.security as Record<string, string>)?.nonce).toBe(result);
   });
+
+  it('generates a nonce even when context is undefined', () => {
+    const result = getNonce(undefined);
+
+    expect(result).toBeDefined();
+    expect(result.length).toBeGreaterThan(0);
+  });
 });
 
 describe('readEnv', () => {
@@ -77,5 +84,31 @@ describe('readEnv', () => {
     const result = readEnv(context, 'NON_EXISTENT_KEY', 'default-value');
 
     expect(result).toBe('default-value');
+  });
+
+  it('reads VITE-prefixed values from process.env', () => {
+    const context = {};
+    const originalEnv = globalThis.process?.env;
+
+    (globalThis as { process?: { env?: Record<string, string> } }).process = {
+      env: { VITE_MY_KEY: 'prefixed-process-value' },
+    };
+
+    const result = readEnv(context, 'MY_KEY');
+
+    expect(result).toBe('prefixed-process-value');
+
+    if (originalEnv) {
+      (globalThis as { process?: { env?: Record<string, string> } }).process = {
+        env: originalEnv as Record<string, string>,
+      };
+      return;
+    }
+
+    delete (globalThis as { process?: { env?: Record<string, string> } }).process;
+  });
+
+  it('trims fallback values before returning them', () => {
+    expect(readEnv({}, 'NON_EXISTENT_KEY', '  default-value  ')).toBe('default-value');
   });
 });

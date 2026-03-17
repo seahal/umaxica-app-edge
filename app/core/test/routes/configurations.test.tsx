@@ -3,6 +3,7 @@ import '../../test-setup.ts';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
+import { CloudflareContext } from '../../src/context';
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
@@ -37,7 +38,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 const configModule = await import('../../src/routes/configurations/_index');
-const ConfigurationIndex = configModule.default;
+const { default: ConfigurationIndex, loader } = configModule;
+
+function createMockContext(env: Record<string, unknown>) {
+  const contextMap = new Map<unknown, unknown>([[CloudflareContext, { cloudflare: { env } }]]);
+
+  return {
+    get: (key: unknown) => contextMap.get(key),
+  };
+}
 
 describe('Configurations route', () => {
   it('renders settings page title and description', () => {
@@ -104,5 +113,15 @@ describe('Configurations route', () => {
     const result = configModule.meta({} as never);
     expect(result).toContainEqual({ title: 'Umaxica - 設定' });
     expect(result).toContainEqual({ content: 'アカウントと環境設定', name: 'description' });
+  });
+
+  it('returns an empty loader message when SECRET_SAMPLE is missing', () => {
+    expect(loader({ context: createMockContext({}) } as never)).toStrictEqual({ message: '' });
+  });
+
+  it('returns the loader message from SECRET_SAMPLE when present', () => {
+    expect(
+      loader({ context: createMockContext({ SECRET_SAMPLE: 'debug-secret' }) } as never),
+    ).toStrictEqual({ message: 'debug-secret' });
   });
 });

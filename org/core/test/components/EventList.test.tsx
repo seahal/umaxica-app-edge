@@ -85,6 +85,29 @@ describe('EventList component (org)', () => {
     expect(screen.queryByRole('heading', { name: 'イベント参加申し込み' })).toBeNull();
   });
 
+  it('filters events by category and restores all results', () => {
+    render(<EventList />);
+
+    const workshopFilter = screen.getAllByRole('radio', { name: 'ワークショップ' })[0];
+    if (!workshopFilter) {
+      throw new Error('workshop filter not found');
+    }
+    fireEvent.click(workshopFilter);
+    expect(getRenderedEventTitles()).toStrictEqual(['React Aria ハンズオンワークショップ']);
+
+    const allFilter = screen.getAllByRole('radio', { name: 'すべて' })[0];
+    if (!allFilter) {
+      throw new Error('all filter not found');
+    }
+    fireEvent.click(allFilter);
+    expect(getRenderedEventTitles()).toStrictEqual([
+      'React Aria ハンズオンワークショップ',
+      'Web アクセシビリティカンファレンス 2025',
+      'フロントエンド開発者ミートアップ',
+      'デザインシステム構築ウェビナー',
+    ]);
+  });
+
   it('shows remaining slots for events', () => {
     render(<EventList />);
 
