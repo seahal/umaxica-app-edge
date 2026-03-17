@@ -2,26 +2,26 @@ pre-commit:
   parallel: true
   commands:
     format:
-      run: pnpm run format
+      run: vp run format
       stage_fixed: true
       glob: '*.{js,jsx,ts,tsx,json,jsonc,yaml,yml,toml,md,mdx,css,scss,graphql}'
     lint:
-      run: pnpm run lint
+      run: vp run lint
       stage_fixed: true
       glob: '*.{js,jsx,ts,tsx}'
     typecheck:
-      run: pnpm run typecheck
+      run: vp run typecheck
       glob: '*.{ts,tsx}'
     audit:
-      run: pnpm audit
+      run: vp pm audit
       skip:
         - merge
         - rebase
     #    secret-scan:
     #      run: gitleaks protect
     test:
-      run: pnpm test
+      run: vp test
     apex-build:
-      run: pnpm run build:apex:check
+      run: vp run build:apex:check
     outdated:
-      run: pnpm outdated
+      run: vp outdated

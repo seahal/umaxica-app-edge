@@ -24,7 +24,7 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install --frozen-lockfile
-      - run: vp pm audit --audit-level=high
+      - run: vp pm audit -- --audit-level=high
 
   outdated:
     runs-on: ubuntu-slim
@@ -107,10 +107,7 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install --frozen-lockfile
-      - if: ${{ startsWith(matrix.target, 'dev/') }}
-        run: pnpm -C ${{ matrix.target }} run build
-      - if: ${{ !startsWith(matrix.target, 'dev/') }}
-        run: pnpm --dir ${{ matrix.target }} run build
+      - run: vp pm --dir ${{ matrix.target }} run build
       - name: Report asset sizes
         run: |
           case "${{ matrix.target }}" in

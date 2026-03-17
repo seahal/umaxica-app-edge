@@ -1,28 +1,7 @@
+import { buildApexTitle, createPageContent } from '../../../shared/apex/page-content';
 import type { AssetEnv } from '../../../shared/apex/security-headers';
-import { DEFAULT_BRAND_NAME } from '../../../shared/apex/brand';
 
-const ABOUT_DESCRIPTION =
-  'umaxica.com is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains';
-
-export const ABOUT_CANONICAL_URL = 'https://umaxica.com/about';
-export const ABOUT_ROBOTS = 'index,follow';
-
-export function buildApexTitle(_env: AssetEnv, domain: string, pageName?: string): string {
-  const brandName = DEFAULT_BRAND_NAME;
-  const baseTitle = `${brandName} (${domain}) - Apex`;
-  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
-}
-
-export function getAboutMeta(env: AssetEnv) {
-  return {
-    title: buildApexTitle(env, 'com', 'About'),
-    description: ABOUT_DESCRIPTION,
-    canonical: ABOUT_CANONICAL_URL,
-    robots: ABOUT_ROBOTS,
-  };
-}
-
-export function renderAboutContent(language: string | undefined) {
+function renderAboutContent(language: string | undefined) {
   if (language === 'ja') {
     return (
       <div class="space-y-4">
@@ -51,3 +30,18 @@ export function renderAboutContent(language: string | undefined) {
     </div>
   );
 }
+
+const pageContent = createPageContent({
+  domain: 'com',
+  tld: 'umaxica.com',
+  aboutDescription:
+    'umaxica.com is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
+  aboutCanonicalUrl: 'https://umaxica.com/about',
+  aboutRobots: 'index,follow',
+  renderAboutContent,
+});
+
+const { ABOUT_CANONICAL_URL, ABOUT_ROBOTS, getAboutMeta } = pageContent;
+
+export { buildApexTitle, ABOUT_CANONICAL_URL, ABOUT_ROBOTS, getAboutMeta, renderAboutContent };
+export type { AssetEnv };
