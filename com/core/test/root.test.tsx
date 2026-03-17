@@ -41,7 +41,7 @@ vi.mock('react-router', async (importOriginal) => {
 const actualRouter = await vi.importActual<typeof ReactRouter>('react-router');
 
 const rootModule = await import('../src/root');
-const { default: App, Layout, meta, ErrorBoundary, loader } = rootModule;
+const { default: App, Layout, meta, ErrorBoundary, loader, middleware } = rootModule;
 
 const baseLoaderData: LoaderData = {
   codeName: 'UMAXICA' as const,
@@ -124,6 +124,136 @@ describe('com root loader', () => {
     expect(result.docsServiceUrl).toBe('https://docs.example.com');
     expect(result.helpServiceUrl).toBe('https://help.example.com');
   });
+
+  it('falls back to empty strings when optional env values are missing', () => {
+    const contextMap = new Map<unknown, unknown>([
+      [
+        CloudflareContext,
+        {
+          cloudflare: {
+            env: {},
+          },
+        },
+      ],
+    ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const result = loader({ context: loadContext } as never);
+
+    expect(result).toStrictEqual({
+      codeName: '',
+      cspNonce: '',
+      docsServiceUrl: '',
+      helpServiceUrl: '',
+      newsServiceUrl: '',
+    });
+  });
+});
+
+describe('com root middleware', () => {
+  const securityMiddleware = middleware[0];
+
+  it('adds a CSP nonce when one is missing', () => {
+    if (!securityMiddleware) {
+      throw new Error('security middleware not found');
+    }
+
+    const existingContext = {
+      cloudflare: {
+        env: {
+          BRAND_NAME: 'TestBrand',
+        },
+      },
+    };
+    const set = vi.fn();
+    const next = vi.fn(() => new Response(null, { status: 204 }));
+    const context = {
+      get: () => existingContext,
+      set,
+    };
+
+    const response = securityMiddleware(
+      {
+        context,
+        request: new Request('https://example.com'),
+      } as never,
+      next,
+    );
+
+    expect(set).toHaveBeenCalledWith(
+      CloudflareContext,
+      expect.objectContaining({
+        cloudflare: existingContext.cloudflare,
+        security: {
+          nonce: expect.any(String),
+        },
+      }),
+    );
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(response).toBeInstanceOf(Response);
+  });
+
+  it('creates security context when Cloudflare context is absent', () => {
+    if (!securityMiddleware) {
+      throw new Error('security middleware not found');
+    }
+
+    const set = vi.fn();
+    const next = vi.fn(() => new Response(null, { status: 204 }));
+    const context = {
+      get: () => undefined,
+      set,
+    };
+
+    void securityMiddleware(
+      {
+        context,
+        request: new Request('https://example.com'),
+      } as never,
+      next,
+    );
+
+    expect(set).toHaveBeenCalledWith(
+      CloudflareContext,
+      expect.objectContaining({
+        security: {
+          nonce: expect.any(String),
+        },
+      }),
+    );
+  });
+
+  it('reuses an existing CSP nonce', () => {
+    if (!securityMiddleware) {
+      throw new Error('security middleware not found');
+    }
+
+    const set = vi.fn();
+    const next = vi.fn(() => new Response(null, { status: 204 }));
+    const context = {
+      get: () => ({
+        security: {
+          nonce: 'existing-nonce',
+        },
+      }),
+      set,
+    };
+
+    const response = securityMiddleware(
+      {
+        context,
+        request: new Request('https://example.com'),
+      } as never,
+      next,
+    );
+
+    expect(set).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(response).toBeInstanceOf(Response);
+  });
 });
 
 describe('com root ErrorBoundary', () => {
@@ -181,6 +311,30 @@ describe('com root ErrorBoundary', () => {
     const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
     expect(markup).toContain('400 エラー');
     expect(markup).toContain('Bad Request');
+  });
+
+  it('uses default details when a 5xx route error has no status text', () => {
+    const error = {
+      data: null,
+      status: 502,
+    };
+    isRouteErrorResponseMock.mockReturnValue(true);
+
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    expect(markup).toContain('サーバーエラー');
+    expect(markup).toContain('500');
+  });
+
+  it('uses default details when a non-5xx route error has no status text', () => {
+    const error = {
+      data: null,
+      status: 418,
+    };
+    isRouteErrorResponseMock.mockReturnValue(true);
+
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    expect(markup).toContain('418 エラー');
+    expect(markup).toContain('リクエストの処理中にエラーが発生しました。');
   });
 
   it('renders InternalServerErrorPage for Error instances', () => {

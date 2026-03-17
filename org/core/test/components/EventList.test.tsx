@@ -66,6 +66,25 @@ describe('EventList component (org)', () => {
     expect(screen.queryByRole('heading', { name: 'イベント参加申し込み' })).toBeNull();
   });
 
+  it('submits registration from the modal', () => {
+    render(<EventList />);
+
+    const registerButtons = screen.getAllByRole('button', { name: '参加申し込み' });
+    const firstRegisterButton = registerButtons[0];
+    expect(firstRegisterButton).toBeDefined();
+    if (!firstRegisterButton) {
+      throw new Error('register button not found');
+    }
+    fireEvent.click(firstRegisterButton);
+
+    fireEvent.click(screen.getByRole('button', { name: '申し込む' }));
+
+    expect(window.alert).toHaveBeenCalledWith(
+      'React Aria ハンズオンワークショップ に参加申し込みをしました！',
+    );
+    expect(screen.queryByRole('heading', { name: 'イベント参加申し込み' })).toBeNull();
+  });
+
   it('shows remaining slots for events', () => {
     render(<EventList />);
 

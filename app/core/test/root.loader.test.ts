@@ -60,4 +60,24 @@ describe('root loader', () => {
       newsServiceUrl: 'news.umaxica.app',
     });
   });
+
+  it('falls back to empty strings when optional env values are missing', async () => {
+    const result = await runLoader({
+      cloudflare: {
+        env: {},
+      },
+    });
+
+    expect(result).toMatchObject({
+      apexServiceUrl: '',
+      apiServiceUrl: '',
+      codeName: '',
+      cspNonce: '',
+      docsServiceUrl: '',
+      edgeServiceUrl: '',
+      helpServiceUrl: '',
+      locale: 'ja',
+      newsServiceUrl: '',
+    });
+  });
 });
