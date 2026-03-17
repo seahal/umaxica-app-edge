@@ -17,7 +17,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
-    "hono": "^4.12.7",
+    "hono": "^4.12.8",
     "jose": "^6.2.1",
     "tailwindcss": "^4.2.1"
   },
@@ -31,7 +31,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.5.0",
-    "@typescript/native-preview": "7.0.0-dev.20260313.1",
+    "@typescript/native-preview": "7.0.0-dev.20260314.1",
     "@vercel/react-router": "^1.2.6",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "4.1.0",

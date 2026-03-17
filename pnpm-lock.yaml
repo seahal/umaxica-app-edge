@@ -26,8 +26,8 @@ importers:
   .:
     dependencies:
       hono:
-        specifier: ^4.12.7
-        version: 4.12.7
+        specifier: ^4.12.8
+        version: 4.12.8
       jose:
         specifier: ^6.2.1
         version: 6.2.1
@@ -63,8 +63,8 @@ importers:
         specifier: ^25.5.0
         version: 25.5.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260313.1
-        version: 7.0.0-dev.20260313.1
+        specifier: 7.0.0-dev.20260314.1
+        version: 7.0.0-dev.20260314.1
       '@vercel/react-router':
         specifier: ^1.2.6
         version: 1.2.6(@react-router/dev@7.13.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.0-beta.16(@types/node@25.5.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))(wrangler@4.73.0(@cloudflare/workers-types@4.20260305.1))(yaml@2.8.2))(@react-router/node@7.13.1(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3597,43 +3597,43 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-/fU2IvlRQWOy63xSzkejW7tTQpsL5dQ/ATIsJFlK75vS941CnNJY8dAx3iQYLkHMhS45hhCIR+bbJPRaacq/fw==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-PlDvhms3QsLOkXNnCoQGJXjcZG7G5QMnhpSOmtO5toZ93VhU1qaUdvDlxtbacCYxGXcs6qZiJnGUgcedfqn5cg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-oy7Ew1J3+YtO9QsqVGkncQ8bCwVPxNk8nSO2q1sHLccyYq0f4eDaZTlJ+u9Ynry548NwNucLh9wE+DWfWhzU3Q==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-EEL6sN1kWor4yPCaowFdPOu/5o0puiudCLWTpDXzkbhFDR0sak/g+2VmtRuNiUi4JOKdJ6bJQKiXFrATAJWDYw==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-KkbAweTnBpmQ8wCGHjrLzPX+FuwhSrVERNqyGPaq/267Sxt0UwbIO3rZduXlq5UUln1+/z7uT/BNJiuoFW3iLw==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-qllNIMVM+kNH/ivL4AMelDs1C8J9NzUFzO6tmJ6hoXD5jUrvc38agcO+DnrXwrxR1Wd7mS7iDujAeSoZkeWWfQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-IAx0ajfEiL1tJg1N6+/nHXJKebNe72yanY2N5bicwIB3t2BmydnrEPG+/OFVqc+prfJngxSx/61mvkXScZePzg==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-7tahKAxuJvjVmtORpecEtWWJmYVRmYL3t3U+PXaFKwPOBmoa38zWjlmbrBHodTqfO5XSpCp9wUbWC3k83DsCsw==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-9LCNgXVNoArHlMuL6yFKJxSdshiiadTfW/pU4tz4Vbg+Dg9La1VE9mLlBdijy5ZIg4nsOFpR8JTDURcA1RoHXw==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-vdqd/swfZTN7EN85QON0e/2fpDbYNP6ZFPjBbZ78BISPy3nsv+DR0t5vAlfRB9wA86zpExfTgVJ4ZUnoUQpTkw==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-cP2y5hb2xhfEDIgxdhxhPXa/D5Lq3yj6zxVuhh9ZkUariF+ZAmF4pySlIA+7NdprgTQqvNY5Mp70cPUiYD3yUg==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-ukLU9r2/H4oMIw8+JHfmraavREotyt9/5Z2X1F5EksefOvfb0Fpb6j6TWastQFZIFuAlvpr8tXHThq7rZwIdPg==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-8KDfi7U1enFo4z6F0qe4Rd5QzBhk+4cwpZtOGAT9lgyR4pF/mo8zQd0t+Hlkj6d87W057RP8lgCGTGfclGWxUg==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-kkl27prdWvxiRzS8n7/trlVrHTOrrY8AdGZgKnE07C4kUqk/FeIudp5DaOsYeFD9GWO32vUU7KXCfpFqvFrK3A==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20260313.1':
-    resolution: {integrity: sha512-x+ZrFAEq+c7bF4Ml8+abYZ9vW6mzu22fmcPbDcBmUl/4uGFCYXXww0FS3+me9MfdSOCAPtqcZtwApx1RQO2X/w==}
+  '@typescript/native-preview@7.0.0-dev.20260314.1':
+    resolution: {integrity: sha512-XOVmR59UL6r2dmcdZD6SV4nhX5u4e34onMv7XSz9zKBp9mb8/v8kKPgGy9adp9at24FpAeBYNN5HKIViSeHtpQ==}
     hasBin: true
 
   '@vercel/react-router@1.2.6':
@@ -4127,6 +4127,10 @@ packages:
 
   hono@4.12.7:
     resolution: {integrity: sha512-jq9l1DM0zVIvsm3lv9Nw9nlJnMNPOcAtsbsgiUhWcFzPE99Gvo6yRTlszSLLYacMeQ6quHD6hMfId8crVHvexw==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.12.8:
+    resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -8977,36 +8981,36 @@ snapshots:
     dependencies:
       '@types/node': 25.5.0
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260313.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260314.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20260313.1':
+  '@typescript/native-preview@7.0.0-dev.20260314.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260313.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260313.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260314.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260314.1
 
   '@vercel/react-router@1.2.6(@react-router/dev@7.13.1(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.11(@types/node@25.5.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(tsx@4.21.0)(typescript@5.9.3)(wrangler@4.73.0(@cloudflare/workers-types@4.20260305.1))(yaml@2.8.2))(@react-router/node@7.13.1(react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(isbot@5.1.35)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -9529,6 +9533,8 @@ snapshots:
   has-flag@4.0.0: {}
 
   hono@4.12.7: {}
+
+  hono@4.12.8: {}
 
   html-escaper@2.0.2: {}
 
