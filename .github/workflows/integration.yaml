@@ -96,7 +96,7 @@ jobs:
           - app/core
           - com/apex
           - com/core
-          - dev/status
+          - dev/core
           - net/apex
           - org/apex
           - org/core
@@ -107,7 +107,7 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install --frozen-lockfile
-      - run: vp pm --dir ${{ matrix.target }} run build
+      - run: vp run --filter ./${{ matrix.target }} build
       - name: Report asset sizes
         run: |
           case "${{ matrix.target }}" in
