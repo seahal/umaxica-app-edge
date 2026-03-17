@@ -49,12 +49,6 @@
           "persist": true
         }
       },
-      "kv_namespaces": [
-        {
-          "binding": "BREAKER_KV",
-          "id": "c6e6da19377c4d878faefac24e2a1b42"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -85,12 +79,6 @@
           "persist": true
         }
       },
-      "kv_namespaces": [
-        {
-          "binding": "BREAKER_KV",
-          "id": "c6e6da19377c4d878faefac24e2a1b42"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -104,12 +92,6 @@
     }
   },
   "placement": { "mode": "smart" },
-  "kv_namespaces": [
-    {
-      "binding": "BREAKER_KV",
-      "id": "c6e6da19377c4d878faefac24e2a1b42"
-    }
-  ],
   /**
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/

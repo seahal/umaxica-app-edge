@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "server": "vp dev",
-    "build": "vp build && mkdir -p dist/client/src && cp dist/client/assets/style-*.css dist/client/src/style.css",
+    "build": "vp build && mkdir -p dist/client/src && find dist/client/assets -name 'style-*.css' -exec cp {} dist/client/src/style.css \\;",
     "preview": "$npm_execpath run build && vp preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
     "deploy:upload": "$npm_execpath run build && wrangler versions upload",

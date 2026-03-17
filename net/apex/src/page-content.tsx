@@ -1,34 +1,15 @@
+import { buildApexTitle, createPageContent } from '../../../shared/apex/page-content';
 import type { AssetEnv } from '../../../shared/apex/security-headers';
-import { DEFAULT_BRAND_NAME } from '../../../shared/apex/brand';
 
 const ROOT_CANONICAL_URL = 'https://umaxica.net/';
-const ABOUT_DESCRIPTION =
-  'umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains';
 
 export const ROOT_ROBOTS = 'index,follow';
-export const ABOUT_CANONICAL_URL = 'https://umaxica.net/about';
-export const ABOUT_ROBOTS = 'index,follow';
-
-export function buildApexTitle(_env: AssetEnv, domain: string, pageName?: string): string {
-  const brandName = DEFAULT_BRAND_NAME;
-  const baseTitle = `${brandName} (${domain}) - Apex`;
-  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
-}
 
 export function getRootMeta(env: AssetEnv) {
   return {
     title: buildApexTitle(env, 'net'),
     canonical: ROOT_CANONICAL_URL,
     robots: ROOT_ROBOTS,
-  };
-}
-
-export function getAboutMeta(env: AssetEnv) {
-  return {
-    title: buildApexTitle(env, 'net', 'About'),
-    description: ABOUT_DESCRIPTION,
-    canonical: ABOUT_CANONICAL_URL,
-    robots: ABOUT_ROBOTS,
   };
 }
 
@@ -62,7 +43,7 @@ export function renderRootContent(language: string | undefined) {
   );
 }
 
-export function renderAboutContent(language: string | undefined) {
+function renderAboutContent(language: string | undefined) {
   if (language === 'ja') {
     return (
       <div class="space-y-4">
@@ -91,3 +72,17 @@ export function renderAboutContent(language: string | undefined) {
     </div>
   );
 }
+
+const pageContent = createPageContent({
+  domain: 'net',
+  tld: 'umaxica.net',
+  aboutDescription:
+    'umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains',
+  aboutCanonicalUrl: 'https://umaxica.net/about',
+  aboutRobots: 'index,follow',
+  renderAboutContent,
+});
+
+const { ABOUT_CANONICAL_URL, ABOUT_ROBOTS, getAboutMeta } = pageContent;
+
+export { buildApexTitle, ABOUT_CANONICAL_URL, ABOUT_ROBOTS, getAboutMeta, renderAboutContent };

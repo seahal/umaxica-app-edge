@@ -66,12 +66,6 @@
           "persist": true
         }
       },
-      "kv_namespaces": [
-        {
-          "binding": "BINDING_NAME",
-          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -122,12 +116,6 @@
         "HELP_STAFF_URL": "jp.help.umaxica.org",
         "BRAND_NAME": "UMAXICA"
       },
-      "kv_namespaces": [
-        {
-          "binding": "BINDING_NAME",
-          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -168,12 +156,6 @@
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
    */
   // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
-  "kv_namespaces": [
-    {
-      "binding": "BINDING_NAME",
-      "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-    }
-  ],
   /**
    * Rate Limiting
    * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/

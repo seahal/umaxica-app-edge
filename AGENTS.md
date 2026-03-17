@@ -1,3 +1,54 @@
+# Umaxica App (EDGE)
+
+Multi-domain monorepo deploying React Router v7 SSR apps and Hono API services to Cloudflare Workers.
+
+## Commands
+
+Run from repo root using `pnpm`:
+
+| Task                       | Command                                     |
+| -------------------------- | ------------------------------------------- |
+| Install deps               | `pnpm install`                              |
+| Format                     | `pnpm run format`                           |
+| Lint                       | `pnpm run lint`                             |
+| Type check                 | `pnpm run type`                             |
+| Run all tests              | `pnpm test`                                 |
+| Run single test file       | `pnpm exec vitest run path/to/file.test.ts` |
+| Run tests by name          | `pnpm exec vitest run -t "test name"`       |
+| Dev server (per workspace) | `pnpm run --filter <workspace> server`      |
+| Deploy (per workspace)     | `pnpm run --filter <workspace> deploy`      |
+
+> Do not modify configs for oxlint, oxfmt, tsgo, or vitest without explicit user permission.
+
+## Architecture
+
+Each domain has two workspaces: `<domain>/apex` (Hono backend on Cloudflare Workers) and `<domain>/core` (React Router v7 SSR frontend on Cloudflare Workers):
+
+| Backend    | Frontend   | Domain               |
+| ---------- | ---------- | -------------------- |
+| `app/apex` | `app/core` | umaxica.app          |
+| `com/apex` | `com/core` | umaxica.com          |
+| `org/apex` | `org/core` | umaxica.org          |
+| —          | `dev/core` | umaxica.dev (Vercel) |
+| `net/apex` | —          | Network renderer     |
+
+**Apex backends** (`*/apex`): Hono apps built via the `createApexApp()` factory in `shared/apex/create-apex-app.tsx`. This factory wires up common middleware (CSRF, rate limiting, security headers, language detection, ETags). Each apex workspace adds its own route handlers and renderer on top.
+
+**Core frontends** (`*/core`): React Router v7 with SSR. Entry is `workers/app.ts`, which generates a CSP nonce per request and passes Cloudflare `env`/`ctx` into the app via `RouterContextProvider` using `CloudflareContext`. Routes access the environment with `getEnv(context)` and `getNonce(context)` from `src/context.ts`.
+
+**Shared code** lives in `shared/apex/` (common Hono middleware and utilities) and `shared/cloudflare/` (Cloudflare-specific helpers like secrets store).
+
+## Key Conventions
+
+- **Zod**: Import from `src/lib/zod.ts` (re-exports zod with a `parseWithZod` helper), not directly from `zod`.
+- **Route handles**: Routes export `export const handle = { breadcrumb, titleName }` for breadcrumb/title wiring.
+- **Route types**: Use generated `+types/` types — e.g. `import type { Route } from './+types/_index'`.
+- **tsconfig**: Each `*/core` workspace has three tsconfig files: `tsconfig.json`, `tsconfig.node.json`, `tsconfig.cloudflare.json`. TypeScript strict mode with `noUncheckedIndexedAccess`, `noImplicitOverride`, `exactOptionalPropertyTypes`.
+- **Path aliases**: `@app/*` → `app/core/src/*`, `@com/*` → `com/core/src/*`, `@org/*` → `org/core/src/*`.
+- **Sentry mock**: `app/core/__mocks__/@sentry/react-router.ts` stubs Sentry for tests. Use the alias in `vitest.config.ts` to resolve it.
+- **Inline lint suppression**: Use `// oxlint-disable-next-line <rule>` (not eslint-disable).
+- **Tests**: Located in `<workspace>/test/` directories or inline as `*.test.ts` files. Vitest globals are enabled; no need to import `describe`/`it`/`expect`.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

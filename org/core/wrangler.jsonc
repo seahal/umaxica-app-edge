@@ -59,12 +59,6 @@
           "persist": true
         }
       },
-      "kv_namespaces": [
-        {
-          "binding": "BINDING_NAME",
-          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -116,12 +110,6 @@
         "BRAND_NAME": "UMAXICA",
         "WWW_STAFF_URL": ""
       },
-      "kv_namespaces": [
-        {
-          "binding": "BINDING_NAME",
-          "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -157,12 +145,6 @@
     "directory": "./public/",
     "binding": "ASSETS"
   },
-  "kv_namespaces": [
-    {
-      "binding": "BINDING_NAME",
-      "id": "5a9428637f2545c3971a1d13bcf5ba5a"
-    }
-  ],
   /**
    * Service Bindings (communicate between multiple Workers)
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
