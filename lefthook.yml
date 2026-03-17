@@ -9,8 +9,8 @@ pre-commit:
       run: vp run lint
       stage_fixed: true
       glob: '*.{js,jsx,ts,tsx}'
-    typecheck:
-      run: vp run typecheck
+    check:
+      run: vp check
       glob: '*.{ts,tsx}'
     audit:
       run: vp pm audit

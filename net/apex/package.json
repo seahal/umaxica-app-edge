@@ -9,7 +9,7 @@
     "deploy:upload": "$npm_execpath run build && wrangler versions upload",
     "deploy:promote": "wrangler versions deploy --yes",
     "cf-typegen": "pnpm wrangler types --env-interface CloudflareBindings",
-    "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
+    "type": "pnpm run cf-typegen && vp exec tsc --noEmit"
   },
   "dependencies": {
     "@sentry/cloudflare": "^10.40.0",

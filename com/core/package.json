@@ -14,7 +14,7 @@
     "server": "CLOUDFLARE_ENV=development react-router dev",
     "postinstall": "pnpm run cf-typegen || true",
     "preview": "pnpm run build && vp preview",
-    "type": "pnpm run cf-typegen && pnpm exec tsgo --noEmit"
+    "type": "pnpm run cf-typegen && vp exec tsc -b"
   },
   "dependencies": {
     "i18next": "^25.8.10",

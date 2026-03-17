@@ -8,7 +8,7 @@
     "server": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typegen": "react-router typegen",
-    "type": "pnpm exec tsgo --noEmit"
+    "type": "vp exec tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/lib-dynamodb": "^3.926.0",
