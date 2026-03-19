@@ -31,6 +31,11 @@ describe('Route: Home (com)', () => {
         { content: 'index, follow', name: 'robots' },
       ]);
     });
+
+    it('should fall back to Umaxica when codeName is missing', () => {
+      const result = meta({} as never);
+      expect(result).toContainEqual({ title: 'Umaxica (com)' });
+    });
   });
 
   describe('Loader', () => {

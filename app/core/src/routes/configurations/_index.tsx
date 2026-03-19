@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { SettingLayout } from '../../components/SettingComponents';
 import { getEnv } from '../../context';
 import type { Route } from '../+types/home';

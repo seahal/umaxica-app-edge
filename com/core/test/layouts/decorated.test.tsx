@@ -4,6 +4,16 @@ import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import DecoratedLayout from '../../src/layouts/decorated';
 
+let rootLoaderDataOverride: {
+  codeName?: string;
+  newsServiceUrl?: string;
+  docsServiceUrl?: string;
+  helpServiceUrl?: string;
+} | null = {
+  codeName: 'MOCK_BRAND',
+  newsServiceUrl: 'news.mock.com',
+};
+
 vi.mock('react-router', async (importOriginal) => {
   const actual = await (importOriginal as () => Promise<Record<string, unknown>>)();
   return {
@@ -11,10 +21,7 @@ vi.mock('react-router', async (importOriginal) => {
     Outlet: () => <div data-testid="outlet">Outlet Content</div>,
     useRouteLoaderData: (id: string) => {
       if (id === 'root') {
-        return {
-          codeName: 'MOCK_BRAND',
-          newsServiceUrl: 'news.mock.com',
-        };
+        return rootLoaderDataOverride;
       }
       return null;
     },
@@ -23,6 +30,11 @@ vi.mock('react-router', async (importOriginal) => {
 
 describe('DecoratedLayout (com)', () => {
   it('renders header and footer with loader data', () => {
+    rootLoaderDataOverride = {
+      codeName: 'MOCK_BRAND',
+      newsServiceUrl: 'news.mock.com',
+    };
+
     const Stub = createRoutesStub([
       {
         Component: DecoratedLayout,
@@ -37,5 +49,20 @@ describe('DecoratedLayout (com)', () => {
       'href',
       'https://news.mock.com',
     );
+  });
+
+  it('falls back to empty root loader data when it is unavailable', () => {
+    rootLoaderDataOverride = null;
+
+    const Stub = createRoutesStub([
+      {
+        Component: DecoratedLayout,
+        path: '*',
+      },
+    ]);
+    render(<Stub initialEntries={['/']} />);
+
+    expect(screen.getByTestId('outlet')).toBeInTheDocument();
+    expect(screen.queryByText('MOCK_BRAND')).toBeNull();
   });
 });

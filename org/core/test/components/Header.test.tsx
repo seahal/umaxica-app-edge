@@ -1,6 +1,6 @@
 import '../../test-setup.ts';
 
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { Header } from '../../src/components/Header';
 
 const { render, screen } = await import('@testing-library/react');

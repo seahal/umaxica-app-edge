@@ -53,6 +53,17 @@ describe('route loader coverage harness', () => {
   });
 
   it.each([
+    ['messages index', messagesLoader as never],
+    ['notifications index', notificationsLoader as never],
+  ] as const)(
+    '%s loader returns an empty message when VALUE_FROM_CLOUDFLARE is missing',
+    async (_, loader) => {
+      const result = await runLoader(loader, {});
+      expect(result).toStrictEqual({ message: '' });
+    },
+  );
+
+  it.each([
     ['home index', homeLoader as never, 'VALUE_FROM_CLOUDFLARE'],
     ['authentication index', authenticationLoader as never, 'VALUE_FROM_CLOUDFLARE'],
     ['configuration index', configurationLoader as never, 'SECRET_SAMPLE'],
