@@ -2,10 +2,9 @@ import { DocsViewer } from '../components/DocsViewer';
 import { readEnv } from '../context';
 import type { Route } from './+types/home';
 
-export const meta: Route.MetaFunction = (args) => {
-  const data = (args as { data?: { codeName?: string } })?.data;
+export const meta: Route.MetaFunction = () => {
   return [
-    { title: `${data?.codeName || 'Umaxica'} (dev)` },
+    { title: 'UMAXICA (dev)' },
     { content: 'React Aria Components のドキュメント', name: 'description' },
     { content: 'index, follow', name: 'robots' },
   ];
