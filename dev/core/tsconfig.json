@@ -11,6 +11,7 @@
       "~/*": ["./*"]
     },
     "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+    "types": ["vite/client", "node"],
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,

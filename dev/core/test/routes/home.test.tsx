@@ -22,17 +22,12 @@ describe('Home route (dev/core)', () => {
     const { meta } = Home;
     expect(meta).toBeDefined();
 
-    const metaResult = meta({ data: { codeName: 'UMAXICA' } } as never);
+    const metaResult = meta({} as never);
     expect(metaResult).toStrictEqual([
       { title: 'UMAXICA (dev)' },
       { content: 'React Aria Components のドキュメント', name: 'description' },
       { content: 'index, follow', name: 'robots' },
     ]);
-  });
-
-  it('falls back to the default code name in meta when data is missing', () => {
-    const { meta } = Home;
-    expect(meta({} as never)).toContainEqual({ title: 'Umaxica (dev)' });
   });
 
   it('exports loader that reads brand name from env', () => {

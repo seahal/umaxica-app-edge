@@ -1,7 +1,7 @@
 name: 'edge-devcontainer'
 services:
   core:
-    ports: [] # ← base compose.yml の ports: [ "5170:5170", ... ] を打ち消す
+    ports: [] # ← base compose.yaml の ports: [ "5170:5170", ... ] を打ち消す
     environment:
       - DEVCONTAINER=1
       # プロキシ変数を明示的にクリア（空文字列を防ぐ）

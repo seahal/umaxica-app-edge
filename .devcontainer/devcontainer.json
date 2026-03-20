@@ -1,6 +1,6 @@
 {
   "name": "umaxica-app-edge",
-  "dockerComposeFile": ["../compose.yml", "./compose.override.yml"],
+  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml"],
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",
@@ -69,7 +69,7 @@
         "files.insertFinalNewline": true,
         "files.eol": "\n",
         "files.associations": {
-          "compose.yml": "yaml",
+          "compose.yaml": "yaml",
           "*.yml": "yaml"
         },
         "terminal.integrated.defaultProfile.linux": "bash",
