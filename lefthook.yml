@@ -17,8 +17,11 @@ pre-commit:
       skip:
         - merge
         - rebase
-    #    secret-scan:
-    #      run: gitleaks protect
+    secret-scan:
+      run: gitleaks protect
+      skip:
+        - merge
+        - rebase
     test:
       run: vp test
     apex-build:

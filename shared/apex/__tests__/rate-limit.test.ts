@@ -1,5 +1,5 @@
 import { vi, describe, it, expect } from 'vite-plus/test';
-import { checkRateLimit } from './rate-limit';
+import { checkRateLimit } from '../rate-limit';
 
 describe(checkRateLimit, () => {
   it('returns null when rateLimiter is undefined', async () => {

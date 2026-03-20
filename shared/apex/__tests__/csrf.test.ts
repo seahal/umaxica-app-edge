@@ -1,5 +1,6 @@
+// TODO: move to test folder.
 import { Hono } from 'hono';
-import { apexCsrf, isAllowedApexOrigin } from './csrf';
+import { apexCsrf, isAllowedApexOrigin } from '../csrf';
 
 describe('apex CSRF config', () => {
   it('validates production and localhost apex origins', () => {
