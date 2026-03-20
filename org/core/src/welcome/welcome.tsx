@@ -1,6 +1,4 @@
-// @ts-expect-error - SVG imports are handled by Vite
 import logoDark from './logo-dark.svg';
-// @ts-expect-error - SVG imports are handled by Vite
 import logoLight from './logo-light.svg';
 
 export function Welcome({ message }: { message: string }) {
