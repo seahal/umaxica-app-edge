@@ -49,6 +49,8 @@ jobs:
           cache: true
       - run: vp install --frozen-lockfile
       - run: vp dlx knip --include unlisted,unresolved,binaries
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
 
   secret-scan:
     runs-on: ubuntu-slim
