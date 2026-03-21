@@ -9,7 +9,7 @@ packages:
   - net/apex
 
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite: npm:@voidzero-dev/vite-plus-core@^0.1.12
   vite-plus: ^0.1.12
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.12
 

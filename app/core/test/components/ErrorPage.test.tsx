@@ -1,6 +1,7 @@
 // @ts-ignore
 import '../../test-setup.ts';
 
+import { fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('react-router', async (importOriginal) => {
@@ -99,6 +100,19 @@ describe('ErrorPage component (app)', () => {
     );
 
     expect(markup).toContain('前のページに戻る');
+  });
+
+  it('calls window.history.back when back button is clicked', () => {
+    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+
+    render(<ErrorPage status={404} title="Title" message="msg" showNavigation={true} />);
+
+    const backButton = screen.getByText('← 前のページに戻る');
+    fireEvent.click(backButton);
+
+    expect(backSpy).toHaveBeenCalledTimes(1);
+
+    backSpy.mockRestore();
   });
 });
 

@@ -1,5 +1,6 @@
 import '../../test-setup.ts';
 
+import { fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('react-router', async (importOriginal) => {
@@ -69,6 +70,27 @@ describe('ErrorPage component (org)', () => {
     expect(markup).not.toContain('href="/"');
     expect(markup).toContain('Database timeout');
     expect(markup).toContain('STACK_TRACE');
+  });
+
+  it('renders back button when showNavigation is true', () => {
+    const markup = renderToStaticMarkup(
+      <ErrorPage status={404} title="Title" message="msg" showNavigation={true} />,
+    );
+
+    expect(markup).toContain('前のページに戻る');
+  });
+
+  it('calls window.history.back when back button is clicked', () => {
+    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+
+    render(<ErrorPage status={404} title="Title" message="msg" showNavigation={true} />);
+
+    const backButton = screen.getByText('← 前のページに戻る');
+    fireEvent.click(backButton);
+
+    expect(backSpy).toHaveBeenCalledTimes(1);
+
+    backSpy.mockRestore();
   });
 });
 

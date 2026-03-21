@@ -100,4 +100,24 @@ describe('Explore route (com)', () => {
 
     expect(screen.getByText(/検索条件に一致する結果が見つかりません/)).toBeInTheDocument();
   });
+
+  it('filters by category only with empty query', async () => {
+    const user = userEvent.setup();
+    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+
+    // Select 'products' category without typing any query
+    await user.click(screen.getByRole('gridcell', { name: 'プロダクト' }));
+
+    // Should show only products (2 items)
+    expect(screen.getByText('Atlas Console')).toBeInTheDocument();
+    expect(screen.getByText('Edge Discovery Kit')).toBeInTheDocument();
+    expect(screen.queryByText('Client Liaison Squad')).not.toBeInTheDocument();
+  });
+
+  it('returns all items when both filter is all and query is empty', () => {
+    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+
+    // Default state - should show all items
+    expect(screen.getAllByRole('article')).toHaveLength(6);
+  });
 });

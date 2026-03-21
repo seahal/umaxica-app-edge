@@ -1,5 +1,6 @@
-import { buildSitemapXml } from './sitemap';
-import type { SitemapEntry } from './sitemap';
+// TODO: move to test folder.
+import { buildSitemapXml } from '../sitemap';
+import type { SitemapEntry } from '../sitemap';
 
 describe('buildSitemapXml', () => {
   it('generates valid XML with a single entry', () => {

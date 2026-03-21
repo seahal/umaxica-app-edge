@@ -1,5 +1,6 @@
+// TODO: move to test folder
 import { Hono } from 'hono';
-import { applySecurityHeaders, buildCspHeader } from './security-headers';
+import { applySecurityHeaders, buildCspHeader } from '../security-headers';
 
 describe(buildCspHeader, () => {
   it('returns a CSP header with default style-src', () => {

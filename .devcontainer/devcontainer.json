@@ -91,8 +91,7 @@
     "ghcr.io/devcontainers/features/copilot-cli:1": {},
     "ghcr.io/stu-bell/devcontainer-features/gemini-cli:0": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
-    "ghcr.io/devcontainers/features/sshd:latest": {},
+    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {},
     "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
     "ghcr.io/jasonthedeveloper/features/trivy:1": {}
   },
@@ -108,7 +107,8 @@
     "source=${localEnv:HOME}/.config/gh,target=/home/edge/.config/gh,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/git,target=/home/edge/.config/git,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/home/edge/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/edge/.config/opencode,type=bind,consistency=cached"
   ],
   "updateRemoteUserUID": true,
   "postCreateCommand": "sudo chown -R 1000:1000 /home/edge/"
