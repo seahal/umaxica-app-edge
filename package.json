@@ -1,5 +1,5 @@
 {
-  "name": "umaxica-app-edge",
+  "name": "umaxica-apps-edge",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,21 +12,20 @@
     "lint:check": "pnpm exec oxlint --type-aware --type-check .",
     "type": "pnpm -r --if-present --filter ./app/apex --filter ./app/core --filter ./com/apex --filter ./com/core --filter ./org/apex --filter ./org/core --filter ./net/apex run type",
     "typecheck": "pnpm run type",
-    "test": "vp test run",
-    "test:cov": "vp test run --coverage",
+    "test": "vp test run --coverage",
     "prepare": "vp config"
   },
   "dependencies": {
     "hono": "^4.12.8",
-    "jose": "^6.2.1",
-    "tailwindcss": "^4.2.1"
+    "jose": "^6.2.2",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.29.1",
     "@react-router/cloudflare": "^7.13.1",
     "@sentry/react-router": "^10.44.0",
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/vite": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

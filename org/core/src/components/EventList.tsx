@@ -317,6 +317,7 @@ function EventCard({ event }: { event: Event }) {
                         </Button>
                         <Button
                           onPress={() => {
+                            // oxlint-disable-next-line no-alert
                             alert(`${event.title} に参加申し込みをしました！`);
                             close();
                           }}

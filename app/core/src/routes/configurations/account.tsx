@@ -23,6 +23,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 function handleDeleteAccountDemo() {
+  // oxlint-disable-next-line no-alert
   alert('アカウント削除機能は現在デモモードです');
 }
 
@@ -31,6 +32,7 @@ export default function Account() {
   const [region, setRegion] = useState('ja');
 
   const handleEmailChange = () => {
+    // oxlint-disable-next-line no-alert
     alert(`メールアドレスを ${email} に変更しました！`);
   };
 
@@ -160,7 +162,10 @@ export default function Account() {
           キャンセル
         </Button>
         <Button
-          onPress={() => alert('設定を保存しました！')}
+          onPress={() => {
+            // oxlint-disable-next-line no-alert
+            alert('設定を保存しました！');
+          }}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-lg hover:shadow-xl"
         >
           変更を保存

@@ -19,6 +19,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 function handleSaveSettings() {
+  // oxlint-disable-next-line no-alert
   alert('設定を保存しました！');
 }
 

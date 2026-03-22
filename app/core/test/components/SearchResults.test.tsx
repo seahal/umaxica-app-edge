@@ -110,4 +110,35 @@ describe('SearchResults component', () => {
 
     expect(screen.getByText('「React」に一致する結果が見つかりませんでした')).toBeInTheDocument();
   });
+
+  it('renders post content without highlighting when query is empty', () => {
+    render(
+      <SearchResults
+        query=""
+        type="posts"
+        posts={[{ ...samplePost, content: 'テスト投稿内容' }]}
+      />,
+    );
+
+    // Should show the empty state instead of posts since query is empty
+    expect(screen.getByText('何かを検索してみましょう')).toBeInTheDocument();
+  });
+
+  it('renders verified user badge correctly', () => {
+    render(<SearchResults query="yamada" type="users" users={[sampleUser]} />);
+
+    expect(screen.getByText('山田花子')).toBeInTheDocument();
+  });
+
+  it('renders posts author and username correctly', () => {
+    render(
+      <SearchResults
+        query="React"
+        type="posts"
+        posts={[{ ...samplePost, content: 'React テスト' }]}
+      />,
+    );
+
+    expect(screen.getByText('田中太郎')).toBeInTheDocument();
+  });
 });

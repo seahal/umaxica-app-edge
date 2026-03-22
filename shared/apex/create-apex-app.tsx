@@ -194,6 +194,7 @@ function buildHealthPageHtml(brandName: string, timestampIso: string): string {
 </html>`;
 }
 
+// oxlint-disable-next-line no-unused-vars
 function buildHealthErrorHtml(brandName: string, timestampIso: string): string {
   return `<!doctype html>
 <html lang="ja">
@@ -220,23 +221,13 @@ function renderHealthPage(env: AssetEnv): Response {
   const timestampIso = new Date().toISOString();
   const brandName = getBrandName(env);
 
-  try {
-    return new Response(buildHealthPageHtml(brandName, timestampIso), {
-      status: 200,
-      headers: {
-        'content-type': 'text/html; charset=UTF-8',
-        'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
-      },
-    });
-  } catch {
-    return new Response(buildHealthErrorHtml(brandName, timestampIso), {
-      status: 503,
-      headers: {
-        'content-type': 'text/html; charset=UTF-8',
-        'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
-      },
-    });
-  }
+  return new Response(buildHealthPageHtml(brandName, timestampIso), {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=UTF-8',
+      'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
+    },
+  });
 }
 
 export function createApexApp(config: ApexConfig): Hono<ApexBindings> {
@@ -303,7 +294,12 @@ export function createApexApp(config: ApexConfig): Hono<ApexBindings> {
       stack: err instanceof Error ? err.stack : undefined,
     });
 
-    return createBadRequestFallback(c);
+    // For health endpoint errors, return 400 Bad Request with fallback page
+    if (c.req.path === '/health') {
+      return createBadRequestFallback(c);
+    }
+
+    return c.text('Internal Server Error', 500);
   });
 
   app.get('/health', timeout(2000), (c) => renderHealthPage(c.env));
