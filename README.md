@@ -4,116 +4,103 @@
 
 （ ＾ν＾） Hello, World!
 
+Multi-domain monorepo deploying React Router v7 SSR apps and Hono API services to Cloudflare Workers.
+
 ## Prerequisites
 
-- Node.js 24.x (project Docker image uses `node:24-trixie`)
-- [pnpm](https://pnpm.io/) 10.29+ (verify with `pnpm -v`)
+- Node.js 24.x (`node:24-trixie`)
+- [pnpm](https://pnpm.io/) 10.29+
 - Docker & Docker Compose (optional)
 
-## Workspace Overview
+## Workspaces
 
-This repository is a pnpm workspace with 8 packages:
+| Package | Role | Domain | Dev Port |
+|---------|------|--------|----------|
+| `com/core` | React Router SSR | `*.umaxica.com` | 5102 |
+| `com/apex` | Apex/static worker | `umaxica.com` | 5101 |
+| `app/core` | React Router SSR | `*.umaxica.app` | 5402 |
+| `app/apex` | Apex/static worker | `umaxica.app` | 5401 |
+| `org/core` | React Router SSR | `*.umaxica.org` | 5302 |
+| `org/apex` | Apex/static worker | `umaxica.org` | 5301 |
+| `dev/core` | React Router + Vercel | `umaxica.dev` | 5502 |
+| `net/apex` | Network apex worker | — | 5201 |
 
-| Package    | Role                                    | Dev Port |
-| ---------- | --------------------------------------- | -------- |
-| `com/core` | React Router app (`*.umaxica.com`)      | `5102`   |
-| `com/apex` | Apex/static worker (`com`)              | `5101`   |
-| `app/core` | React Router app (`*.umaxica.app`)      | `5402`   |
-| `app/apex` | Apex/static worker (`app`)              | `5401`   |
-| `org/core` | React Router app (`*.umaxica.org`)      | `5302`   |
-| `org/apex` | Apex/static worker (`org`)              | `5301`   |
-| `dev/core` | Core app (React Router + Vercel preset) | `5502`   |
-| `net/apex` | Network-facing apex worker              | `5201`   |
-
-Install dependencies once from the repo root:
+## Quick Start
 
 ```bash
-pnpm install
+vp install
+
+# Run a specific workspace
+vp run --filter <workspace> server   # e.g. com/core, app/apex
+
+# Docker (optional)
+docker compose up && docker compose exec core bash
 ```
 
-## Local Development
+## Scripts
 
-### Docker Compose
-
-Start containerized development shell:
+Toolchain is [Vite+](https://vite.plus/) (`vp` CLI).
 
 ```bash
-docker compose up
-docker compose exec core bash
+vp check                  # format + lint + type-check
+vp fmt                    # oxfmt
+vp lint                   # oxlint
+vp test                   # vitest
+vp run --filter <ws> <script>
 ```
 
-Stop with:
+## Development Environment
+
+### Toolchain
+
+| Tool | Role | Version |
+|------|------|---------|
+| [Vite+](https://vite.plus/) (`vp`) | Unified CLI (dev, build, test, lint, fmt) | 0.1.x |
+| [pnpm](https://pnpm.io/) | Package manager (wrapped by `vp`) | 10.32.x |
+| [Oxfmt](https://oxc.rs/) | Formatter (`vp fmt`) | bundled |
+| [Oxlint](https://oxc.rs/) | Linter (`vp lint`) | bundled |
+| [tsgo](https://github.com/nicolo-ribaudo/tsgo) | Type checker (`vp check`) | bundled |
+| [Vitest](https://vitest.dev/) | Test runner (`vp test`) | bundled |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | 4.x |
+
+Oxfmt, Oxlint, tsgo, and Vitest are bundled with Vite+ — no separate installation required.
+
+### Docker / DevContainer
+
+The development environment can be set up via Docker + VS Code DevContainer.
+
+- **Base image**: `node:24-trixie` with pnpm (corepack) and Vite+ pre-installed
+- **DevContainer**: configured in `.devcontainer/devcontainer.json`
+  - Extensions: Claude Code, Oxc, Playwright
+  - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
+  - Security: Trivy, Gitleaks (via Lefthook pre-commit hooks)
 
 ```bash
-docker compose down
+# VS Code: use "Reopen in Container" for automatic setup
+
+# Or start manually with Docker Compose
+docker compose up && docker compose exec core bash
 ```
 
-### pnpm + Wrangler (bare metal)
+## Production Environment
 
-Run only the package(s) you need:
+| Platform | Workspaces | Domains |
+|----------|-----------|---------|
+| [Cloudflare Workers](https://workers.cloudflare.com/) | `com/*`, `app/*`, `org/*`, `net/*` | `umaxica.com`, `umaxica.app`, `umaxica.org` |
+| [Vercel](https://vercel.com/) | `dev/*` | `umaxica.dev` |
+
+### Deployment
 
 ```bash
-pnpm run --filter com/core server
-pnpm run --filter app/core server
-pnpm run --filter org/core server
-pnpm run --filter dev/core server
-pnpm run --filter com/apex server
-pnpm run --filter app/apex server
-pnpm run --filter org/apex server
-pnpm run --filter net/apex server
+vp run --filter <workspace> deploy            # direct deploy
+vp run --filter <workspace> deploy:upload      # versioned: upload then promote
+vp run --filter <workspace> deploy:promote
 ```
 
-## Environment Variables
+### Environment Variables
 
-Cloudflare-targeted workspaces manage runtime values mainly through `wrangler.jsonc` (`vars` and environments).
-`dev/core` can also read runtime values from Vercel environment variables (`process.env`) and `VITE_`-prefixed variables.
+Cloudflare workspaces use `wrangler.jsonc` (`vars` + environments). `dev/core` reads from Vercel env vars (`process.env` / `VITE_*`).
 
 ## Monitoring
 
-External monitoring is handled with Pulsetic.
-It is used for synthetic uptime checks and other external health monitoring against publicly reachable endpoints.
-
-## Common Scripts
-
-- Format code: `pnpm run format`
-- Lint code: `pnpm run lint`
-- Type-check: `pnpm run type`
-- Run tests: `pnpm run test`
-- Workspace-specific tasks: `pnpm run --filter <workspace> <script>`
-
-Examples:
-
-```bash
-pnpm run --filter app/core preview
-pnpm run --filter com/apex deploy
-pnpm run --filter net/apex cf-typegen
-```
-
-## Deployment
-
-This project uses two hosting platforms:
-
-- **Cloudflare Workers** — `com/*`, `app/*`, `org/*`, `net/*` packages are deployed as Workers
-- **Vercel** — `dev/*` packages are deployed via the Vercel React Router preset
-
-For Cloudflare Workers packages, use the `deploy` script.
-For versioned rollout, use `deploy:upload` then `deploy:promote`.
-
-```bash
-pnpm run --filter com/core deploy
-pnpm run --filter app/core deploy
-pnpm run --filter org/core deploy
-pnpm run --filter com/apex deploy
-pnpm run --filter app/apex deploy
-pnpm run --filter org/apex deploy
-pnpm run --filter net/apex deploy
-```
-
-Versioned workflow example:
-
-```bash
-pnpm run --filter com/apex deploy:upload
-pnpm run --filter com/apex deploy:promote
-```
-
-`dev/core` does not currently provide a `deploy` script in `package.json` (Vercel preset is configured in `react-router.config.ts`).
+Uptime checks via [Pulsetic](https://pulsetic.com/).

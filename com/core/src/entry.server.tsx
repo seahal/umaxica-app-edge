@@ -6,9 +6,11 @@ import { ServerRouter } from 'react-router';
 import { getNonce } from './context';
 
 export function handleError(error: unknown, { request }: { request: Request }) {
-  if (!request.signal.aborted) {
-    console.error(error);
+  if (request.signal.aborted) {
+    return;
   }
+
+  console.error(error);
 }
 
 export default async function handleRequest(

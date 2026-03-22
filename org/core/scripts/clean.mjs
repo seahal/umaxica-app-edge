@@ -36,9 +36,13 @@ for (const dir of ['build', 'dist']) {
           if (statSync(fp).isFile() && f.endsWith('.map')) {
             toDelete.push(fp);
           }
-        } catch {}
+        } catch {
+          // Ignore stat errors on individual files
+        }
       }
-    } catch {}
+    } catch {
+      // Ignore directory access errors
+    }
   }
 }
 

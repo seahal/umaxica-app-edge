@@ -1,4 +1,5 @@
 import { CloudflareContext } from '../src/context';
+import { loader as healthLoader, meta as healthMeta } from '../src/routes/health';
 import { loader as homeLoader, meta as homeMeta } from '../src/routes/_index';
 import {
   loader as authenticationLoader,
@@ -9,9 +10,12 @@ import {
   loader as configurationLoader,
   meta as configurationMeta,
 } from '../src/routes/configurations/_index';
-import { loader as exploreLoader } from '../src/routes/explore/_index';
-import { loader as messagesLoader } from '../src/routes/messages/_index';
-import { loader as notificationsLoader } from '../src/routes/notifications/_index';
+import { loader as exploreLoader, meta as exploreMeta } from '../src/routes/explore/_index';
+import { loader as messagesLoader, meta as messagesMeta } from '../src/routes/messages/_index';
+import {
+  loader as notificationsLoader,
+  meta as notificationsMeta,
+} from '../src/routes/notifications/_index';
 
 function createMockContext(env: Record<string, unknown>) {
   const contextMap = new Map<unknown, unknown>([
@@ -82,6 +86,40 @@ describe('route loader coverage harness', () => {
       expect(result).toStrictEqual({ message });
     },
   );
+
+  it('health loader returns ok status with timestamp', async () => {
+    const response = (await runLoader(healthLoader as never, {})) as Response;
+    expect(response).toBeInstanceOf(Response);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { status: string; timestamp: string };
+    expect(body.status).toBe('ok');
+    expect(body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
+
+  it('health loader handles errors in data serialization', async () => {
+    // Mock JSON.stringify to throw an error for this test
+    const originalStringify = JSON.stringify;
+    let callCount = 0;
+    // oxlint-disable-next-line no-explicit-any
+    (JSON as any).stringify = function (...args: unknown[]) {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error('Test serialization error');
+      }
+      return originalStringify.apply(this, args as Parameters<typeof JSON.stringify>);
+    };
+
+    try {
+      const response = (await runLoader(healthLoader as never, {})) as Response;
+      expect(response).toBeInstanceOf(Response);
+      expect(response.status).toBe(503);
+      const body = (await response.json()) as { status: string };
+      expect(body.status).toBe('error');
+    } finally {
+      // oxlint-disable-next-line no-explicit-any
+      (JSON as any).stringify = originalStringify;
+    }
+  });
 });
 
 describe('route meta implementations', () => {
@@ -143,6 +181,50 @@ describe('route meta implementations', () => {
     expect(metaEntries).toContainEqual({
       content: 'noindex, nofollow',
       name: 'robots',
+    });
+  });
+
+  it('health meta sets correct title', () => {
+    const metaEntries = healthMeta();
+    expect(metaEntries).toContainEqual({
+      title: 'Health Status | UMAXICA (app)',
+    });
+  });
+
+  it('explore meta sets title and description', () => {
+    const metaEntries = exploreMeta({
+      matches: [],
+      params: {},
+      request: new Request('https://example.com/explore'),
+    } as never);
+    expect(metaEntries).toContainEqual({ title: 'Umaxica - 探索' });
+    expect(metaEntries).toContainEqual({
+      content: 'ユーザー、投稿、トレンドを探索',
+      name: 'description',
+    });
+  });
+
+  it('messages meta sets description', () => {
+    const metaEntries = messagesMeta({
+      matches: [],
+      params: {},
+      request: new Request('https://example.com/messages'),
+    } as never);
+    expect(metaEntries).toContainEqual({
+      content: 'Welcome to React Router!',
+      name: 'description',
+    });
+  });
+
+  it('notifications meta sets description', () => {
+    const metaEntries = notificationsMeta({
+      matches: [],
+      params: {},
+      request: new Request('https://example.com/notifications'),
+    } as never);
+    expect(metaEntries).toContainEqual({
+      content: 'Welcome to React Router!',
+      name: 'description',
     });
   });
 });

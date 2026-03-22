@@ -8,9 +8,11 @@ import { getNonce } from './context';
 import { getInstance } from './middleware/i18next';
 
 export function handleError(error: unknown, { request }: { request: Request }) {
-  if (!request.signal.aborted) {
-    console.error(error);
+  if (request.signal.aborted) {
+    return;
   }
+
+  console.error(error);
 }
 
 export default async function handleRequest(

@@ -36,4 +36,17 @@ describe('apex CSRF config', () => {
 
     expect(response.status).toBe(403);
   });
+
+  it('allows requests without content-type for GET requests', async () => {
+    const app = new Hono();
+    app.use('*', apexCsrf);
+    app.get('/data', (c) => c.text('data'));
+
+    const response = await app.request('/data', {
+      method: 'GET',
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('data');
+  });
 });

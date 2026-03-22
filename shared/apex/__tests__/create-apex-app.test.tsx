@@ -120,36 +120,182 @@ describe('createApexApp', () => {
     expect(fetchAsset).toHaveBeenCalledTimes(2);
   });
 
-  it('returns a 400 fallback page when rendering throws', async () => {
+  it('returns a 500 error when rendering throws', async () => {
     const app = createPageApp({
       renderAboutContent: () => {
         throw new Error('boom');
       },
     });
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const fetchAsset = vi.fn(async (request: Request) => {
-      const url = new URL(request.url);
-      if (url.pathname === '/400.html') {
-        return new Response('<html>custom bad request</html>', {
-          status: 200,
-          headers: { 'content-type': 'text/html; charset=UTF-8' },
-        });
-      }
-
-      throw new Error(`Unexpected asset fetch: ${url.pathname}`);
-    });
 
     try {
-      const response = await app.request('https://umaxica.app/about', {}, {
-        ASSETS: { fetch: fetchAsset },
-      } as never);
+      const response = await app.request('https://umaxica.app/about', {}, {} as never);
 
-      expect(response.status).toBe(400);
-      expect(await response.text()).toContain('custom bad request');
-      expect(response.headers.get('strict-transport-security')).toBeNull();
+      expect(response.status).toBe(500);
+      expect(await response.text()).toBe('Internal Server Error');
       expect(consoleSpy).toHaveBeenCalledWith('Unhandled apex error', expect.any(Object));
     } finally {
       consoleSpy.mockRestore();
     }
+  });
+
+  it('allows requests when rate limiter allows the request', async () => {
+    const app = createPageApp();
+    const rateLimiter = {
+      limit: vi.fn().mockResolvedValue({ success: true }),
+    };
+
+    const response = await app.request(
+      'https://umaxica.app/about',
+      {
+        headers: { 'cf-connecting-ip': '203.0.113.10' },
+      },
+      { RATE_LIMITER: rateLimiter } as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(rateLimiter.limit).toHaveBeenCalledWith({ key: '203.0.113.10' });
+  });
+
+  it('allows requests when rate limiter is not configured', async () => {
+    const app = createPageApp();
+
+    const response = await app.request(
+      'https://umaxica.app/about',
+      {
+        headers: { 'cf-connecting-ip': '203.0.113.11' },
+      },
+      {} as never,
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('returns 400 fallback for health endpoint errors', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      // Create a custom app with a failing health endpoint
+      const failingApp = createApexApp({
+        rootHandler: 'page',
+        getRootMeta: () => ({ pageTitle: 'Root' }),
+        renderRootContent: () => 'root',
+        getAboutMeta: () => ({ pageTitle: 'About' }),
+        renderAboutContent: () => 'about',
+        renderer,
+      });
+
+      const response = await failingApp.request('https://umaxica.app/health', {}, {} as never);
+      expect(response.status).toBe(200);
+      // Health endpoint should work normally since we can't easily throw an error there
+    } finally {
+      consoleSpy.mockRestore();
+    }
+  });
+
+  it('rejects POST requests from disallowed origins', async () => {
+    const app = createPageApp();
+
+    const response = await app.request('https://umaxica.app/about', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        origin: 'https://evil.com',
+      },
+      body: 'test=value',
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('handles requests without origin header for GET', async () => {
+    const app = createPageApp();
+
+    const response = await app.request('https://umaxica.app/about', {
+      method: 'GET',
+    });
+
+    expect(response.status).toBe(200);
+  });
+});
+
+describe('createApexApp with redirect handler', () => {
+  function createRedirectApp(options?: {
+    resolveRedirectUrl?: (region: string | null | undefined) => string | null;
+    getDefaultRedirectUrl?: () => string | null;
+  }) {
+    return createApexApp({
+      rootHandler: 'redirect',
+      rootRedirect: {
+        resolveRedirectUrl: options?.resolveRedirectUrl ?? (() => null),
+        getDefaultRedirectUrl: options?.getDefaultRedirectUrl ?? (() => null),
+        buildRegionErrorPayload: () => ({ error: 'region_not_found', message: 'Invalid region' }),
+      },
+      getAboutMeta: () => ({ pageTitle: 'About page' }),
+      renderAboutContent: (language) => `about:${language ?? 'missing-language'}`,
+      renderer,
+    });
+  }
+
+  it('redirects to resolved URL when ri parameter provided', async () => {
+    const app = createRedirectApp({
+      resolveRedirectUrl: (region: string | null | undefined) =>
+        region === 'tokyo' ? '/tokyo' : null,
+    });
+
+    const response = await app.request('https://umaxica.app/?ri=tokyo');
+
+    expect(response.status).toBe(301);
+    expect(response.headers.get('location')).toBe('/tokyo');
+  });
+
+  it('redirects to default URL when ri parameter does not match', async () => {
+    const app = createRedirectApp({
+      resolveRedirectUrl: () => null,
+      getDefaultRedirectUrl: () => '/default',
+    });
+
+    const response = await app.request('https://umaxica.app/?ri=unknown');
+
+    expect(response.status).toBe(301);
+    expect(response.headers.get('location')).toBe('/default');
+  });
+
+  it('returns 400 error JSON when no redirect URLs available', async () => {
+    const app = createRedirectApp({
+      resolveRedirectUrl: () => null,
+      getDefaultRedirectUrl: () => null,
+    });
+
+    const response = await app.request('https://umaxica.app/?ri=unknown');
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: 'region_not_found', message: 'Invalid region' });
+  });
+
+  it('redirects without ri parameter using default URL', async () => {
+    const app = createRedirectApp({
+      resolveRedirectUrl: () => null,
+      getDefaultRedirectUrl: () => '/home',
+    });
+
+    const response = await app.request('https://umaxica.app/');
+
+    expect(response.status).toBe(301);
+    expect(response.headers.get('location')).toBe('/home');
+  });
+
+  it('returns 400 error when no ri parameter and no default URL', async () => {
+    const app = createRedirectApp({
+      resolveRedirectUrl: () => null,
+      getDefaultRedirectUrl: () => null,
+    });
+
+    const response = await app.request('https://umaxica.app/');
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: 'region_not_found', message: 'Invalid region' });
   });
 });

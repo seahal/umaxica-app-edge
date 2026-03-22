@@ -38,6 +38,12 @@ export default defineConfig({
       include: ['**/*.{ts,tsx,js,jsx}'],
       provider: 'v8',
       reporter: ['text', 'text-summary'],
+      thresholds: {
+        branches: 93,
+        functions: 95,
+        lines: 95,
+        statements: 95,
+      },
     },
     deps: {
       interopDefault: true,
