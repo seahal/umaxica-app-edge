@@ -11,7 +11,6 @@ export function handleError(error: unknown, { request }: { request: Request }) {
   }
 
   console.error(error);
-  throw error;
 }
 
 export default async function handleRequest(

@@ -31,6 +31,8 @@ minimumReleaseAgeExclude:
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'
+  undici: '>=7.24.0'
+  fast-xml-parser: '>=5.5.7'
 
 peerDependencyRules:
   allowAny:

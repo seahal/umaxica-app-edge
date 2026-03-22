@@ -23,7 +23,7 @@ pre-commit:
         - merge
         - rebase
     test:
-      run: vp test --coverage
+      run: vp test
     apex-build:
       run: vp run build:apex:check
     outdated:

@@ -5,6 +5,9 @@ on:
       - main
       - develop
   pull_request:
+    branches:
+      - main
+      - develop
 defaults:
   run:
     shell: bash
@@ -109,12 +112,16 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install --frozen-lockfile
-      - run: vp run --filter ./${{ matrix.target }} build
+      - run: vp run --filter ./$TARGET build
+        env:
+          TARGET: ${{ matrix.target }}
       - name: Report asset sizes
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          case "${{ matrix.target }}" in
-            */apex) asset_dir="${{ matrix.target }}/dist/client" ;;
-            *) asset_dir="${{ matrix.target }}/build/client" ;;
+          case "$TARGET" in
+            */apex) asset_dir="$TARGET/dist/client" ;;
+            *) asset_dir="$TARGET/build/client" ;;
           esac
 
           if [[ ! -d "$asset_dir" ]]; then
