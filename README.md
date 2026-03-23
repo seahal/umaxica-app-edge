@@ -14,16 +14,16 @@ Multi-domain monorepo deploying React Router v7 SSR apps and Hono API services t
 
 ## Workspaces
 
-| Package | Role | Domain | Dev Port |
-|---------|------|--------|----------|
-| `com/core` | React Router SSR | `*.umaxica.com` | 5102 |
-| `com/apex` | Apex/static worker | `umaxica.com` | 5101 |
-| `app/core` | React Router SSR | `*.umaxica.app` | 5402 |
-| `app/apex` | Apex/static worker | `umaxica.app` | 5401 |
-| `org/core` | React Router SSR | `*.umaxica.org` | 5302 |
-| `org/apex` | Apex/static worker | `umaxica.org` | 5301 |
-| `dev/core` | React Router + Vercel | `umaxica.dev` | 5502 |
-| `net/apex` | Network apex worker | — | 5201 |
+| Package    | Role                  | Domain          | Dev Port |
+| ---------- | --------------------- | --------------- | -------- |
+| `com/core` | React Router SSR      | `*.umaxica.com` | 5102     |
+| `com/apex` | Apex/static worker    | `umaxica.com`   | 5101     |
+| `app/core` | React Router SSR      | `*.umaxica.app` | 5402     |
+| `app/apex` | Apex/static worker    | `umaxica.app`   | 5401     |
+| `org/core` | React Router SSR      | `*.umaxica.org` | 5302     |
+| `org/apex` | Apex/static worker    | `umaxica.org`   | 5301     |
+| `dev/core` | React Router + Vercel | `umaxica.dev`   | 5502     |
+| `net/apex` | Network apex worker   | —               | 5201     |
 
 ## Quick Start
 
@@ -53,15 +53,15 @@ vp run --filter <ws> <script>
 
 ### Toolchain
 
-| Tool | Role | Version |
-|------|------|---------|
-| [Vite+](https://vite.plus/) (`vp`) | Unified CLI (dev, build, test, lint, fmt) | 0.1.x |
-| [pnpm](https://pnpm.io/) | Package manager (wrapped by `vp`) | 10.32.x |
-| [Oxfmt](https://oxc.rs/) | Formatter (`vp fmt`) | bundled |
-| [Oxlint](https://oxc.rs/) | Linter (`vp lint`) | bundled |
-| [tsgo](https://github.com/nicolo-ribaudo/tsgo) | Type checker (`vp check`) | bundled |
-| [Vitest](https://vitest.dev/) | Test runner (`vp test`) | bundled |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | 4.x |
+| Tool                                                            | Role                                      | Version |
+| --------------------------------------------------------------- | ----------------------------------------- | ------- |
+| [Vite+](https://vite.plus/) (`vp`)                              | Unified CLI (dev, build, test, lint, fmt) | 0.1.x   |
+| [pnpm](https://pnpm.io/)                                        | Package manager (wrapped by `vp`)         | 10.32.x |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`vp fmt`)                      | bundled |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`vp lint`)                        | bundled |
+| [tsgo](https://github.com/nicolo-ribaudo/tsgo)                  | Type checker (`vp check`)                 | bundled |
+| [Vitest](https://vitest.dev/)                                   | Test runner (`vp test`)                   | bundled |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI                    | 4.x     |
 
 Oxfmt, Oxlint, tsgo, and Vitest are bundled with Vite+ — no separate installation required.
 
@@ -84,10 +84,10 @@ docker compose up && docker compose exec core bash
 
 ## Production Environment
 
-| Platform | Workspaces | Domains |
-|----------|-----------|---------|
+| Platform                                              | Workspaces                         | Domains                                     |
+| ----------------------------------------------------- | ---------------------------------- | ------------------------------------------- |
 | [Cloudflare Workers](https://workers.cloudflare.com/) | `com/*`, `app/*`, `org/*`, `net/*` | `umaxica.com`, `umaxica.app`, `umaxica.org` |
-| [Vercel](https://vercel.com/) | `dev/*` | `umaxica.dev` |
+| [Vercel](https://vercel.com/)                         | `dev/*`                            | `umaxica.dev`                               |
 
 ### Deployment
 
