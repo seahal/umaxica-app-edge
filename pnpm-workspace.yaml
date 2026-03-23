@@ -9,7 +9,7 @@ packages:
   - net/apex
 
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@^0.1.12
+  vite: npm:@voidzero-dev/vite-plus-core@^0.1.13
   vite-plus: ^0.1.13
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.13
 
@@ -30,6 +30,7 @@ minimumReleaseAgeExclude:
 
 overrides:
   fast-xml-parser: '>=5.5.7'
+  rolldown: '1.0.0-rc.10'
   undici: '>=7.24.0'
   vite: 'catalog:'
   vitest: 'catalog:'
