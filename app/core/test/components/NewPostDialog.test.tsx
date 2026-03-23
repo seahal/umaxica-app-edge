@@ -3,7 +3,7 @@ import '../../test-setup.ts';
 
 import { NewPostDialog } from '../../src/components/NewPostDialog';
 
-const { render, screen } = await import('@testing-library/react');
+const { render, screen, fireEvent, waitFor } = await import('@testing-library/react');
 const userEvent = (await import('@testing-library/user-event')).default;
 
 describe('NewPostDialog component', () => {
@@ -59,10 +59,28 @@ describe('NewPostDialog component', () => {
     expect(screen.getByText('/ 280')).toBeInTheDocument();
   });
 
-  it.skip('disables submit button when content exceeds max length', async () => {
-    // Skipped: React Aria Button disabled state is difficult to test
-    // The component correctly implements the logic but testing library
-    // cannot properly detect the disabled state of React Aria components
+  it('disables submit button when content exceeds max length', async () => {
+    const user = userEvent.setup();
+
+    render(<NewPostDialog />);
+
+    await user.click(screen.getByRole('button', { name: '新規投稿' }));
+
+    const textarea = await screen.findByLabelText('投稿内容');
+
+    // First type some valid content to verify button is enabled
+    await user.type(textarea, 'Hello');
+    let submitButton = await screen.findByRole('button', { name: '投稿する' });
+    expect(submitButton).not.toBeDisabled();
+
+    // Now set value directly to exceed limit (browser maxLength prevents typing, but we can set it directly)
+    fireEvent.change(textarea, { target: { value: 'a'.repeat(281) } });
+
+    // Wait for state update and re-query for button
+    await waitFor(async () => {
+      submitButton = await screen.findByRole('button', { name: '投稿する' });
+      expect(submitButton).toBeDisabled();
+    });
   });
 
   it('closes dialog when close button is clicked', async () => {

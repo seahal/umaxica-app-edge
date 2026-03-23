@@ -9,40 +9,40 @@ const ReactCompilerConfig = {
   target: '19',
 };
 
-export default defineConfig(({ command }) => {
-  const configuredPort = Number.parseInt(process.env.PORT ?? '5302', 10);
-  const serverPort = Number.isNaN(configuredPort) ? 5302 : configuredPort;
+const configuredPort = Number.parseInt(process.env.PORT ?? '5302', 10);
+const serverPort = Number.isNaN(configuredPort) ? 5302 : configuredPort;
 
-  return {
-    oxc: {
-      jsx: {
-        runtime: 'automatic',
-        development: command !== 'build',
-      },
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error - Cloudflare and Tailwind plugins have incompatible types with vite-plus
+export default defineConfig(({ command }) => ({
+  oxc: {
+    jsx: {
+      runtime: 'automatic',
+      development: command !== 'build',
     },
-    plugins: [
-      tailwindcss(),
-      cloudflare({
-        inspectorPort: false,
-        viteEnvironment: { name: 'ssr' },
-      }),
-      reactRouter(),
-      react({
-        babel: {
-          plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
-          presets: ['@babel/preset-typescript'],
-        },
-        include: /\.[jt]sx?$/,
-      }),
-      tsconfigPaths(),
-    ],
-    server: {
-      host: true,
-      port: serverPort,
-      strictPort: false,
-      watch: {
-        usePolling: true,
+  },
+  plugins: [
+    tailwindcss(),
+    cloudflare({
+      inspectorPort: false,
+      viteEnvironment: { name: 'ssr' },
+    }),
+    reactRouter(),
+    react({
+      babel: {
+        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
+        presets: ['@babel/preset-typescript'],
       },
+      include: /\.[jt]sx?$/,
+    }),
+    tsconfigPaths(),
+  ],
+  server: {
+    host: true,
+    port: serverPort,
+    strictPort: false,
+    watch: {
+      usePolling: true,
     },
-  };
-});
+  },
+}));
