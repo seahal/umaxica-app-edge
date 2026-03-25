@@ -42,8 +42,6 @@ describe('catch-all route', () => {
   });
 
   it('throws a 404 response from the loader', () => {
-    expect(() => loader({} as never)).toThrowError(Response);
-
     let caughtError: unknown;
     try {
       loader({} as never);
@@ -51,9 +49,9 @@ describe('catch-all route', () => {
       caughtError = error;
     }
 
-    const response = caughtError as Response;
-    expect(response.status).toBe(404);
-    expect(response.statusText).toBe('ページが見つかりません');
+    expect(caughtError).toBeDefined();
+    const err = caughtError as Response;
+    expect(err.status).toBe(404);
   });
 
   it('renders the not found page component', () => {

@@ -14,10 +14,7 @@ export function meta(_: Route.MetaArgs) {
 }
 
 export function loader(_: Route.LoaderArgs) {
-  throw new Response('Not Found', {
-    status: 404,
-    statusText: 'ページが見つかりません',
-  });
+  throw new Response(null, { status: 404 });
 }
 
 export default function CatchAll() {
