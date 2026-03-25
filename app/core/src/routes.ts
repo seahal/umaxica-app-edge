@@ -14,5 +14,6 @@ export default [
     ...prefix('notification', [index('routes/notifications/_index.tsx')]),
     ...prefix('explore', [index('routes/explore/_index.tsx')]),
     ...prefix('authentication', [index('routes/authentication/_index.tsx')]),
+    route('*', 'routes/catch-all.tsx'),
   ]),
 ] satisfies RouteConfig;

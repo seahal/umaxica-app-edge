@@ -29,6 +29,7 @@ services:
       - '5301:5301'
       - '5501:5501'
       - '5201:5201'
+      - '5403:5403'
     command: sleep infinity
     tty: true
     stdin_open: true
