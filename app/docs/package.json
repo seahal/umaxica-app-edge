@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "server": "astro dev --port 5174",
+    "server": "astro dev --port 5403",
     "build": "astro build",
     "preview": "astro preview",
-    "deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
+    "deploy": "astro build && wrangler versions upload --config dist/server/wrangler.json",
     "cf-typegen": "wrangler types",
     "astro": "astro"
   },

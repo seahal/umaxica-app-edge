@@ -36,6 +36,8 @@ describe('com route manifest', () => {
     expect(decorated).toMatchObject({ file: '../src/layouts/decorated.tsx' });
     expect(decorated?.children ?? []).toStrictEqual([
       expect.objectContaining({ file: 'routes/_index.tsx', index: true }),
+      expect.objectContaining({ file: 'routes/explore/_index.tsx', index: true, path: 'explore' }),
+      expect.objectContaining({ file: 'routes/catch-all.tsx', path: '*' }),
     ]);
   });
 
