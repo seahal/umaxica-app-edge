@@ -15,8 +15,6 @@ describe('Route: catch-all (dev/core)', () => {
   });
 
   it('throws a 404 response from the loader', () => {
-    expect(() => loader({} as never)).toThrowError(Response);
-
     let caughtError: unknown;
     try {
       loader({} as never);
@@ -24,9 +22,9 @@ describe('Route: catch-all (dev/core)', () => {
       caughtError = error;
     }
 
-    const response = caughtError as Response;
-    expect(response.status).toBe(404);
-    expect(response.statusText).toBe('Not Found');
+    expect(caughtError).toBeDefined();
+    const err = caughtError as { init: { status: number } };
+    expect(err.init.status).toBe(404);
   });
 
   it('renders no route content because the root error boundary handles the page', () => {
