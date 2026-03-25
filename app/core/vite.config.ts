@@ -12,8 +12,6 @@ const ReactCompilerConfig = {
 const configuredPort = Number.parseInt(process.env.PORT ?? '5402', 10);
 const serverPort = Number.isNaN(configuredPort) ? 5402 : configuredPort;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error - Cloudflare and Tailwind plugins have incompatible types with vite-plus
 export default defineConfig(({ command }) => ({
   oxc: {
     jsx: {
