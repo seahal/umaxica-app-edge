@@ -36,6 +36,7 @@ describe('Footer component (com)', () => {
 
     expect(markup).toContain('???');
     expect(markup).toContain(new Date().getFullYear().toString());
+    expect(markup).toContain('法人番号: 0000000000000');
   });
 
   it('renders provided code name and quick links', () => {
