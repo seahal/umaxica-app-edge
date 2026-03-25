@@ -3,6 +3,9 @@
   "name": "umaxica-apps-edge-app-docs",
   "compatibility_date": "2026-02-27",
   "compatibility_flags": ["nodejs_als"],
+  "build": {
+    "command": "pnpm astro build"
+  },
   "keep_vars": true,
   "workers_dev": false,
   "preview_urls": true,
