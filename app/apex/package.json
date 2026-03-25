@@ -26,6 +26,6 @@
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vite-ssr-components": "^0.5.2",
-    "wrangler": "^4.71.0"
+    "wrangler": "^4.76.0"
   }
 }

@@ -1,6 +1,7 @@
 packages:
   - app/apex
   - app/core
+  - app/docs
   - com/apex
   - com/core
   - org/apex

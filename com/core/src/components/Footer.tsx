@@ -120,9 +120,14 @@ export function Footer({ codeName = '' }: FooterProps) {
         {/* Bottom bar */}
         <div className="mt-12 animate-in fade-in duration-700 delay-500 border-t border-gray-200 pt-8 dark:border-gray-800">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              © {currentYear} {codeName || 'Umaxica'}.
-            </p>
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400 sm:text-left">
+              <p>
+                © {currentYear} {codeName || 'Umaxica'}.
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                法人番号: 0000000000000
+              </p>
+            </div>
             <div className="flex flex-wrap justify-center gap-6">
               <TooltipTrigger delay={200}>
                 <Link
