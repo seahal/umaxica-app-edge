@@ -7,6 +7,7 @@ import {
   isRouteErrorResponse,
   useLoaderData,
 } from 'react-router';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import type { RouterContextProvider } from './context';
 
 import type { Route } from './+types/root';
@@ -55,7 +56,11 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  );
 }
 
 function generateNonce(): string {

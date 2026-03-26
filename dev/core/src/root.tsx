@@ -8,6 +8,7 @@ import {
   useLoaderData,
 } from 'react-router';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import './app.css';
 import type { ReactNode } from 'react';
 import type { Route } from './+types/root';
@@ -47,7 +48,11 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  );
 }
 
 const FALLBACK_SETTINGS = {

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import {
   Links,
   Meta,
@@ -79,7 +80,11 @@ export default function App({ loaderData }: { loaderData: LoaderData }) {
     }
   }, [locale, i18n]);
 
-  return <Outlet />;
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  );
 }
 
 function generateNonce(): string {

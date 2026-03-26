@@ -77,9 +77,9 @@ describe('org root layout', () => {
 });
 
 describe('org root route component', () => {
-  it('renders an outlet placeholder for nested routes', () => {
+  it('wraps the outlet placeholder for nested routes', () => {
     const element = App();
-    expect(element.type).toBe(actualRouter.Outlet);
+    expect(element.props.children.type).toBe(actualRouter.Outlet);
   });
 });
 
