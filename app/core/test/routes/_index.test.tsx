@@ -6,7 +6,9 @@ describe('Home component', () => {
   it('renders Timeline component', () => {
     const Stub = createRoutesStub([
       {
-        Component: () => <Home loaderData={{ codeName: 'Test', message: '' }} params={{}} matches={[]} />,
+        Component: () => (
+          <Home loaderData={{ codeName: 'Test', message: '' }} params={{}} matches={[]} />
+        ),
         path: '*',
       },
     ]);

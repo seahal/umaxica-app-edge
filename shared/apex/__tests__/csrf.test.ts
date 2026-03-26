@@ -113,6 +113,29 @@ describe('apex CSRF config', () => {
     expect(response.status).toBe(200);
     expect(await response.text()).toBe('data');
   });
+
+  it('triggers origin callback in apexCsrf', async () => {
+    const app = new Hono();
+    // For testing only: set the origin header since we can't set it in Request due to CORS restrictions
+    app.use('*', async (c, next) => {
+      // eslint-disable-next-line no-param-reassign
+      c.req.raw.headers.set('origin', 'https://umaxica.com');
+      await next();
+    });
+    app.use('*', apexCsrf);
+    app.post('/submit', (c) => c.text('ok'));
+
+    const response = await app.request('/submit', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: 'a=1',
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('ok');
+  });
 });
 
 describe('apexCsrf export', () => {

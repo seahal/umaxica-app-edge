@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import {
-  createHealthRoute,
-  handleHealthError,
-  createAboutRoute,
-  createRootRoute,
-} from './index';
+import { createHealthRoute, handleHealthError, createAboutRoute, createRootRoute } from './index';
 import type {
   HealthBindings,
   HealthContext,
