@@ -29,7 +29,10 @@ export function loader() {
     const timestamp = new Date().toISOString();
     return data<HealthLoaderData>({ status: 'ok', timestamp }, { status: 200, headers });
   } catch {
-    return data<HealthLoaderData>({ status: 'error', timestamp: String(Date.now()) }, { status: 503, headers });
+    return data<HealthLoaderData>(
+      { status: 'error', timestamp: String(Date.now()) },
+      { status: 503, headers },
+    );
   }
 }
 

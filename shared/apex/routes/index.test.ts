@@ -29,16 +29,19 @@ describe('routes index exports', () => {
 
   it('type exports are respected (compilation test)', () => {
     // These are just type compilation checks
-    const _checkHealthBindings: HealthBindings = { BRAND_NAME: 'test' };
+    const _checkHealthBindings: HealthBindings = { Bindings: { BRAND_NAME: 'test' } };
     const _checkHealthContext: HealthContext = {} as HealthContext;
     const _checkAboutBindings: AboutBindings = {} as AboutBindings;
     const _checkAboutContext: AboutContext = {} as AboutContext;
-    const _checkAboutConfig: AboutConfig = { renderContent: () => '' };
+    const _checkAboutConfig: AboutConfig = {
+      getAboutMeta: () => ({}),
+      renderAboutContent: () => '',
+    };
     const _checkMeta: Meta = { pageTitle: 'test' };
     const _checkRootBindings: RootBindings = {} as RootBindings;
     const _checkRootContext: RootContext = {} as RootContext;
     const _checkRootRedirectConfig: RootRedirectConfig = {} as RootRedirectConfig;
-    const _checkPageConfig: PageConfig = { renderRootContent: () => '' };
+    const _checkPageConfig: PageConfig = { getRootMeta: () => ({}), renderRootContent: () => '' };
 
     expect(_checkHealthBindings).toBeDefined();
     expect(_checkAboutConfig).toBeDefined();

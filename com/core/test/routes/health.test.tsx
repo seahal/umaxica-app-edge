@@ -28,28 +28,19 @@ describe('com/core health route', () => {
   });
 
   it('returns error response when loader throws', async () => {
-    // Mock data function to throw
-    const originalDate = Date;
-    // oxlint-disable-next-line no-global-assign
-    Date = class extends Date {
-      constructor() {
-        super();
-      }
-      toISOString() {
-        throw new Error('Date error');
-      }
-    } as typeof Date;
+    const toISOStringSpy = vi.spyOn(Date.prototype, 'toISOString').mockImplementation(() => {
+      throw new Error('Date error');
+    });
 
     try {
       const response = loader();
       expect(response.status).toBe(503);
       expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
-      const body = await response.json();
+      const body = (await response.json()) as { status: string; timestamp: string };
       expect(body.status).toBe('error');
       expect(body.timestamp).toBeDefined();
     } finally {
-      // oxlint-disable-next-line no-global-assign
-      Date = originalDate;
+      toISOStringSpy.mockRestore();
     }
   });
 
