@@ -2,6 +2,7 @@ packages:
   - app/apex
   - app/core
   - app/docs
+  - app/news
   - com/apex
   - com/core
   - org/apex
