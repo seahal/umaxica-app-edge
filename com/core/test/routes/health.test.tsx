@@ -27,6 +27,32 @@ describe('com/core health route', () => {
     expect(screen.getByText(/error/)).toBeInTheDocument();
   });
 
+  it('returns error response when loader throws', async () => {
+    // Mock data function to throw
+    const originalDate = Date;
+    // oxlint-disable-next-line no-global-assign
+    Date = class extends Date {
+      constructor() {
+        super();
+      }
+      toISOString() {
+        throw new Error('Date error');
+      }
+    } as typeof Date;
+
+    try {
+      const response = loader();
+      expect(response.status).toBe(503);
+      expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+      const body = await response.json();
+      expect(body.status).toBe('error');
+      expect(body.timestamp).toBeDefined();
+    } finally {
+      // oxlint-disable-next-line no-global-assign
+      Date = originalDate;
+    }
+  });
+
   it('renders timestamp', () => {
     render(<Health loaderData={{ status: 'ok', timestamp: '2024-01-01T00:00:00.000Z' }} />);
 

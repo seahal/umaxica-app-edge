@@ -3,7 +3,7 @@ import '../../test-setup.ts';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CloudflareContext } from '../../src/context';
-import Explore, { loader } from '../../src/routes/explore/_index';
+import Explore, { loader, handle } from '../../src/routes/explore/_index';
 
 function createMockContext(env: Record<string, unknown>) {
   const contextMap = new Map<unknown, unknown>([
@@ -119,5 +119,12 @@ describe('Explore route (com)', () => {
 
     // Default state - should show all items
     expect(screen.getAllByRole('article')).toHaveLength(6);
+  });
+});
+
+describe('Explore handle export', () => {
+  it('exports breadcrumb function', () => {
+    expect(handle.breadcrumb()).toBe('Explore');
+    expect(handle.titleName).toBe('Explore');
   });
 });
