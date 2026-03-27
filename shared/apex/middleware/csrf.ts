@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from 'hono';
 
 const PRODUCTION_APEX_ORIGIN = /^https:\/\/umaxica\.(com|org|app|net)$/;
 const LOCAL_APEX_ORIGIN = /^http:\/\/(com|org|app|net)\.localhost(?::\d+)?$/;
-const PREVIEW_APEX_ORIGIN = /^https:\/[\w-]+\.[\w-]+\.workers\.dev$/;
+const PREVIEW_APEX_ORIGIN = /^https:\/\/[\w-]+\.workers\.dev$/;
 
 export function isAllowedApexOrigin(origin?: string): boolean {
   if (!origin) {

@@ -141,4 +141,54 @@ describe('SearchResults component', () => {
 
     expect(screen.getByText('田中太郎')).toBeInTheDocument();
   });
+
+  it('renders fallback "?" when user name or post author is missing', () => {
+    const userWithNoName = { ...sampleUser, id: 'user-2', name: '' };
+    const postWithNoAuthor = { ...samplePost, id: 'post-2', author: '' };
+
+    render(
+      <SearchResults query="test" type="all" users={[userWithNoName]} posts={[postWithNoAuthor]} />,
+    );
+
+    // Should find '?' in the avatar areas
+    expect(screen.getAllByText('?')).toHaveLength(2);
+  });
+
+  it('limits results to 3 in "all" view', () => {
+    const manyUsers = Array.from({ length: 5 }, (_, i) => ({
+      ...sampleUser,
+      id: `user-${i}`,
+      name: `User ${i}`,
+      username: `user${i}`,
+    }));
+    const manyPosts = Array.from({ length: 5 }, (_, i) => ({
+      ...samplePost,
+      id: `post-${i}`,
+      author: `Author ${i}`,
+    }));
+    const manyTrends = Array.from({ length: 5 }, (_, i) => ({
+      ...sampleTrend,
+      id: `trend-${i}`,
+      topic: `Topic ${i}`,
+    }));
+
+    render(
+      <SearchResults
+        query="test"
+        type="all"
+        users={manyUsers}
+        posts={manyPosts}
+        trends={manyTrends}
+      />,
+    );
+
+    // Only 3 of each should be rendered
+    expect(screen.queryByText('User 3')).not.toBeInTheDocument();
+    expect(screen.queryByText('Author 3')).not.toBeInTheDocument();
+    expect(screen.queryByText('Topic 3')).not.toBeInTheDocument();
+
+    expect(screen.getByText('User 2')).toBeInTheDocument();
+    expect(screen.getByText('Author 2')).toBeInTheDocument();
+    expect(screen.getByText('Topic 2')).toBeInTheDocument();
+  });
 });

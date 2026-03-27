@@ -27,6 +27,23 @@ describe('com/core health route', () => {
     expect(screen.getByText(/error/)).toBeInTheDocument();
   });
 
+  it('returns error response when loader throws', async () => {
+    const toISOStringSpy = vi.spyOn(Date.prototype, 'toISOString').mockImplementation(() => {
+      throw new Error('Date error');
+    });
+
+    try {
+      const response = loader();
+      expect(response.status).toBe(503);
+      expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+      const body = (await response.json()) as { status: string; timestamp: string };
+      expect(body.status).toBe('error');
+      expect(body.timestamp).toBeDefined();
+    } finally {
+      toISOStringSpy.mockRestore();
+    }
+  });
+
   it('renders timestamp', () => {
     render(<Health loaderData={{ status: 'ok', timestamp: '2024-01-01T00:00:00.000Z' }} />);
 

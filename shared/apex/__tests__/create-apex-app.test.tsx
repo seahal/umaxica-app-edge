@@ -105,6 +105,39 @@ describe('createApexApp', () => {
           status: 200,
           headers: { 'content-type': 'text/html; charset=UTF-8' },
         });
+
+        describe('createApexApp with page handler without root meta', () => {
+          it('works when page handler is specified but getRootMeta is missing', async () => {
+            const app = createApexApp({
+              rootHandler: 'page' as const,
+              getRootMeta: undefined,
+              renderRootContent: undefined,
+              getAboutMeta: () => ({ pageTitle: 'About page' }),
+              renderAboutContent: () => 'about content',
+              renderer: jsxRenderer(({ children }) => <div>{children}</div>),
+            });
+
+            // Should still have about route
+            const aboutResponse = await app.request('https://umaxica.app/about');
+            expect(aboutResponse.status).toBe(200);
+          });
+
+          it('works with page handler having all required fields', async () => {
+            const app = createApexApp({
+              rootHandler: 'page' as const,
+              getRootMeta: () => ({ pageTitle: 'Root page' }),
+              renderRootContent: () => 'root content',
+              getAboutMeta: () => ({ pageTitle: 'About page' }),
+              renderAboutContent: () => 'about content',
+              renderer: jsxRenderer(({ children }) => <div>{children}</div>),
+            });
+
+            const rootResponse = await app.request('https://umaxica.app/');
+            expect(rootResponse.status).toBe(200);
+            const body = await rootResponse.text();
+            expect(body).toContain('root content');
+          });
+        });
       }
 
       throw new Error(`Unexpected asset fetch: ${url.pathname}`);

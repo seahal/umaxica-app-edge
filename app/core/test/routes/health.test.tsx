@@ -36,4 +36,17 @@ describe('app/core health route', () => {
 
     expect(screen.getByText(/2024-01-01T00:00:00.000Z/)).toBeInTheDocument();
   });
+
+  it('returns 503 if data generation fails in loader', () => {
+    const toISOStringSpy = vi.spyOn(Date.prototype, 'toISOString').mockImplementation(() => {
+      throw new Error('Test forced failure');
+    });
+
+    try {
+      const response = loader();
+      expect(response.status).toBe(503);
+    } finally {
+      toISOStringSpy.mockRestore();
+    }
+  });
 });
