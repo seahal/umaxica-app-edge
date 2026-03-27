@@ -9,16 +9,13 @@ catalogs:
     vite-plus:
       specifier: ^0.1.14
       version: 0.1.14
-    vitest:
-      specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
-      version: 0.1.14
 
 overrides:
   fast-xml-parser: '>=5.5.7'
   rolldown: 1.0.0-rc.10
   undici: '>=7.24.0'
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.13
-  vitest: npm:@voidzero-dev/vite-plus-test@^0.1.13
+  vitest: npm:@voidzero-dev/vite-plus-test@^0.1.14
 
 importers:
 
@@ -98,7 +95,7 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1(typescript@5.9.3)(vite@8.0.0-beta.16(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.3))
       vitest:
-        specifier: 'catalog:'
+        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
         version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(esbuild@0.27.4)(happy-dom@20.8.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.0-beta.16(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.3))(yaml@2.8.3)'
       wrangler:
         specifier: ^4.77.0
@@ -232,8 +229,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(typescript@5.9.3)
       vitest:
-        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.13
-        version: '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
+        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
+        version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
       wrangler:
         specifier: ^4.76.0
         version: 4.76.0(@cloudflare/workers-types@4.20260305.1)
@@ -421,8 +418,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(typescript@5.9.3)
       vitest:
-        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.13
-        version: '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
+        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
+        version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
       wrangler:
         specifier: ^4.76.0
         version: 4.76.0(@cloudflare/workers-types@4.20260305.1)
@@ -521,8 +518,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(typescript@5.9.3)
       vitest:
-        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.13
-        version: '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
+        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
+        version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
 
   net/apex:
     dependencies:
@@ -689,8 +686,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(typescript@5.9.3)
       vitest:
-        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.13
-        version: '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
+        specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
+        version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
       wrangler:
         specifier: ^4.76.0
         version: 4.76.0(@cloudflare/workers-types@4.20260305.1)
@@ -5460,31 +5457,6 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [musl]
-
-  '@voidzero-dev/vite-plus-test@0.1.13':
-    resolution: {integrity: sha512-P3n9adJZsaIUGlgbzyT2YvlA1yr2lCYhNjrZsiLAKMVyQzk2D++ptTre3SnYf9j1TQeMP1VonRXGjtZhTf8wHg==}
-    engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
-    peerDependencies:
-      '@edge-runtime/vm': '*'
-      '@opentelemetry/api': ^1.9.0
-      '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
-      '@vitest/ui': 4.1.0
-      happy-dom: '*'
-      jsdom: '*'
-      vite: ^6.0.0 || ^7.0.0 || ^8.0.0-0
-    peerDependenciesMeta:
-      '@edge-runtime/vm':
-        optional: true
-      '@opentelemetry/api':
-        optional: true
-      '@types/node':
-        optional: true
-      '@vitest/ui':
-        optional: true
-      happy-dom:
-        optional: true
-      jsdom:
-        optional: true
 
   '@voidzero-dev/vite-plus-test@0.1.14':
     resolution: {integrity: sha512-rjF+qpYD+5+THOJZ3gbE3+cxsk5sW7nJ0ODK7y6ZKeS4amREUMedEDYykzKBwR7OZDC/WwE90A0iLWCr6qAXhA==}
@@ -14973,88 +14945,6 @@ snapshots:
 
   '@voidzero-dev/vite-plus-linux-x64-musl@0.1.14':
     optional: true
-
-  '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)':
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      '@types/chai': 5.2.3
-      '@voidzero-dev/vite-plus-core': 0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
-      es-module-lexer: 1.7.0
-      obug: 2.1.1
-      pixelmatch: 7.1.0
-      pngjs: 7.0.0
-      sirv: 3.0.2
-      std-env: 4.0.0
-      tinybench: 2.9.0
-      tinyexec: 1.0.4
-      tinyglobby: 0.2.15
-      vite: '@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
-      ws: 8.20.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      '@types/node': 25.5.0
-      happy-dom: 20.8.3
-    transitivePeerDependencies:
-      - '@arethetypeswrong/core'
-      - '@tsdown/css'
-      - '@tsdown/exe'
-      - '@vitejs/devtools'
-      - bufferutil
-      - esbuild
-      - jiti
-      - less
-      - publint
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - typescript
-      - unplugin-unused
-      - utf-8-validate
-      - yaml
-
-  '@voidzero-dev/vite-plus-test@0.1.13(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)':
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      '@types/chai': 5.2.3
-      '@voidzero-dev/vite-plus-core': 0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
-      es-module-lexer: 1.7.0
-      obug: 2.1.1
-      pixelmatch: 7.1.0
-      pngjs: 7.0.0
-      sirv: 3.0.2
-      std-env: 4.0.0
-      tinybench: 2.9.0
-      tinyexec: 1.0.4
-      tinyglobby: 0.2.15
-      vite: '@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
-      ws: 8.20.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      '@types/node': 25.5.0
-      happy-dom: 20.8.4
-    transitivePeerDependencies:
-      - '@arethetypeswrong/core'
-      - '@tsdown/css'
-      - '@tsdown/exe'
-      - '@vitejs/devtools'
-      - bufferutil
-      - esbuild
-      - jiti
-      - less
-      - publint
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - typescript
-      - unplugin-unused
-      - utf-8-validate
-      - yaml
 
   '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.13(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(happy-dom@20.8.3)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)':
     dependencies:
