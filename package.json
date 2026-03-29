@@ -37,7 +37,7 @@
     "vite-plus": "catalog:",
     "vite-ssr-components": "^0.5.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "catalog:",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@^0.1.14",
     "wrangler": "^4.77.0"
   },
   "packageManager": "pnpm@10.32.1"
