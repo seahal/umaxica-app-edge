@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "preserveSymlinks": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
@@ -15,5 +16,5 @@
     "esModuleInterop": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "*.d.ts"]
+  "include": ["src/**/*", "*.d.ts", "vite.config.ts"]
 }
