@@ -141,6 +141,16 @@ describe('route meta implementations', () => {
     });
   });
 
+  it('home meta uses default codeName when data is undefined', () => {
+    const [title] = homeMeta({
+      data: undefined,
+      matches: [],
+      params: {},
+      request: new Request('https://example.com'),
+    } as never);
+    expect(title).toMatchObject({ title: 'Umaxica (app)' });
+  });
+
   it('authentication meta opts users into login copy', () => {
     const metaEntries = authenticationMeta({
       matches: [],

@@ -191,4 +191,19 @@ describe('SearchResults component', () => {
     expect(screen.getByText('Author 2')).toBeInTheDocument();
     expect(screen.getByText('Topic 2')).toBeInTheDocument();
   });
+
+  it('returns null for invalid type', () => {
+    const { container } = render(
+      <SearchResults
+        query="test"
+        // @ts-expect-error - testing invalid type
+        type="invalid"
+        users={[sampleUser]}
+        posts={[samplePost]}
+        trends={[sampleTrend]}
+      />,
+    );
+
+    expect(container.firstChild).toBeNull();
+  });
 });
