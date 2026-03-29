@@ -9,6 +9,10 @@ vi.mock('react-dom/server', async (importOriginal) => {
     ...actual,
     renderToReadableStream: (...args: unknown[]) => {
       renderCalls.push(args);
+      const options = args[1] as { onError?: (error: unknown) => void };
+      if (options?.onError) {
+        options.onError(new Error('streaming error'));
+      }
       const stream = new ReadableStream({
         start(controller) {
           controller.close();
@@ -21,31 +25,132 @@ vi.mock('react-dom/server', async (importOriginal) => {
   };
 });
 
+vi.mock('isbot', () => ({
+  isbot: () => false,
+}));
+
 const handleRequest = (await import('../src/entry.server')).default;
+const handleError = (await import('../src/entry.server')).handleError;
 
-it('handles com server entry requests', async () => {
-  const request = new Request('https://com.example', {
-    headers: {
-      'user-agent': 'Mozilla/5.0',
-    },
+describe('com entry.server handleError', () => {
+  it('logs error when request is not aborted', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const error = new Error('test error');
+    const request = new Request('https://example.com', { signal: AbortSignal.timeout(1000) });
+
+    handleError(error, { request });
+
+    expect(consoleSpy).toHaveBeenCalledWith(error);
+
+    consoleSpy.mockRestore();
   });
-  const responseHeaders = new Headers();
-  const routerContext = { isSpaMode: false } as unknown as EntryContext;
 
-  const contextMap = new Map<unknown, unknown>([
-    [CloudflareContext, { security: { nonce: 'xyz789' } }],
-  ]);
+  it('does not log when request is aborted', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const loadContext = {
-    get: (key: unknown) => contextMap.get(key),
-  } as unknown as AppLoadContext;
+    const error = new Error('test error');
+    const controller = new AbortController();
+    controller.abort();
+    const request = new Request('https://example.com', { signal: controller.signal });
 
-  const response = await handleRequest(request, 200, responseHeaders, routerContext, loadContext);
+    handleError(error, { request });
 
-  expect(renderCalls.length).toBe(1);
-  expect(response).toBeInstanceOf(Response);
-  expect(responseHeaders.get('Content-Type')).toBe('text/html');
-  expect(responseHeaders.get('Content-Security-Policy')).toContain('nonce-xyz789');
+    expect(consoleSpy).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('com entry.server handleRequest', () => {
+  let headers: Headers;
+
+  beforeEach(() => {
+    headers = new Headers();
+  });
+
+  it('handles com server entry requests', async () => {
+    const request = new Request('https://com.example', {
+      headers: {
+        'user-agent': 'Mozilla/5.0',
+      },
+    });
+    const routerContext = { isSpaMode: false } as unknown as EntryContext;
+
+    const contextMap = new Map<unknown, unknown>([
+      [CloudflareContext, { security: { nonce: 'xyz789' } }],
+    ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+
+    expect(renderCalls.length).toBe(1);
+    expect(response).toBeInstanceOf(Response);
+    expect(headers.get('Content-Type')).toBe('text/html');
+    expect(headers.get('Content-Security-Policy')).toContain('nonce-xyz789');
+  });
+
+  it('handles requests without user-agent', async () => {
+    const request = new Request('https://com.example');
+    const routerContext = { isSpaMode: false } as unknown as EntryContext;
+
+    const contextMap = new Map<unknown, unknown>([
+      [CloudflareContext, { security: { nonce: 'abc123' } }],
+    ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+
+    expect(response).toBeInstanceOf(Response);
+  });
+
+  it('handles SPA mode requests', async () => {
+    const request = new Request('https://com.example/app', {
+      headers: { 'user-agent': 'Mozilla/5.0' },
+    });
+    const routerContext = { isSpaMode: true } as unknown as EntryContext;
+
+    const contextMap = new Map<unknown, unknown>([
+      [CloudflareContext, { security: { nonce: 'spa123' } }],
+    ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+
+    expect(response).toBeInstanceOf(Response);
+  });
+
+  it('handles bot user-agent requests', async () => {
+    vi.mock('isbot', () => ({
+      isbot: () => true,
+    }));
+
+    const request = new Request('https://com.example', {
+      headers: { 'user-agent': 'Googlebot' },
+    });
+    const routerContext = { isSpaMode: false } as unknown as EntryContext;
+
+    const contextMap = new Map<unknown, unknown>([
+      [CloudflareContext, { security: { nonce: 'bot123' } }],
+    ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+
+    expect(response).toBeInstanceOf(Response);
+  });
 });
 
 afterAll(() => {

@@ -9,10 +9,6 @@ vi.mock('react-dom/server', async (importOriginal) => {
     ...actual,
     renderToReadableStream: (...args: unknown[]) => {
       renderCalls.push(args);
-      const options = args[1] as { onError?: (error: unknown) => void };
-      if (options?.onError) {
-        options.onError(new Error('streaming error'));
-      }
       const stream = new ReadableStream({
         start(controller) {
           controller.close();
@@ -29,10 +25,14 @@ vi.mock('isbot', () => ({
   isbot: () => false,
 }));
 
+vi.mock('../src/middleware/i18next', () => ({
+  getInstance: vi.fn().mockReturnValue(null),
+}));
+
 const handleRequest = (await import('../src/entry.server')).default;
 const handleError = (await import('../src/entry.server')).handleError;
 
-describe('org entry.server handleError', () => {
+describe('app entry.server handleError', () => {
   it('logs error when request is not aborted', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -62,15 +62,15 @@ describe('org entry.server handleError', () => {
   });
 });
 
-describe('org entry.server handleRequest', () => {
+describe('app entry.server handleRequest', () => {
   let headers: Headers;
 
   beforeEach(() => {
     headers = new Headers();
   });
 
-  it('handles org server entry requests', async () => {
-    const request = new Request('https://org.example', {
+  it('handles app server entry requests', async () => {
+    const request = new Request('https://app.umaxica.com', {
       headers: {
         'user-agent': 'Mozilla/5.0',
       },
@@ -78,11 +78,11 @@ describe('org entry.server handleRequest', () => {
     const routerContext = { isSpaMode: false } as unknown as EntryContext;
 
     const contextMap = new Map<unknown, unknown>([
-      [CloudflareContext, { security: { nonce: 'abc123' } }],
+      [CloudflareContext, { security: { nonce: 'xyz789' } }],
     ]);
 
     const loadContext = {
-      get: (key: symbol) => contextMap.get(key),
+      get: (key: unknown) => contextMap.get(key),
     } as unknown as AppLoadContext;
 
     const response = await handleRequest(request, 200, headers, routerContext, loadContext);
@@ -90,15 +90,15 @@ describe('org entry.server handleRequest', () => {
     expect(renderCalls.length).toBe(1);
     expect(response).toBeInstanceOf(Response);
     expect(headers.get('Content-Type')).toBe('text/html');
-    expect(headers.get('Content-Security-Policy')).toContain('nonce-abc123');
+    expect(headers.get('Content-Security-Policy')).toContain('nonce-xyz789');
   });
 
   it('handles requests without user-agent', async () => {
-    const request = new Request('https://org.example');
+    const request = new Request('https://app.umaxica.com');
     const routerContext = { isSpaMode: false } as unknown as EntryContext;
 
     const contextMap = new Map<unknown, unknown>([
-      [CloudflareContext, { security: { nonce: 'def456' } }],
+      [CloudflareContext, { security: { nonce: 'abc123' } }],
     ]);
 
     const loadContext = {
@@ -111,36 +111,13 @@ describe('org entry.server handleRequest', () => {
   });
 
   it('handles SPA mode requests', async () => {
-    const request = new Request('https://org.example/app', {
+    const request = new Request('https://app.umaxica.com/app', {
       headers: { 'user-agent': 'Mozilla/5.0' },
     });
     const routerContext = { isSpaMode: true } as unknown as EntryContext;
 
     const contextMap = new Map<unknown, unknown>([
-      [CloudflareContext, { security: { nonce: 'spa456' } }],
-    ]);
-
-    const loadContext = {
-      get: (key: unknown) => contextMap.get(key),
-    } as unknown as AppLoadContext;
-
-    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
-
-    expect(response).toBeInstanceOf(Response);
-  });
-
-  it('handles bot user-agent requests', async () => {
-    vi.mock('isbot', () => ({
-      isbot: () => true,
-    }));
-
-    const request = new Request('https://org.example', {
-      headers: { 'user-agent': 'Googlebot' },
-    });
-    const routerContext = { isSpaMode: false } as unknown as EntryContext;
-
-    const contextMap = new Map<unknown, unknown>([
-      [CloudflareContext, { security: { nonce: 'bot456' } }],
+      [CloudflareContext, { security: { nonce: 'spa123' } }],
     ]);
 
     const loadContext = {

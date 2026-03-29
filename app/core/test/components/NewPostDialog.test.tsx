@@ -188,4 +188,28 @@ describe('NewPostDialog component', () => {
     const textarea = await screen.findByPlaceholderText('今何してる？');
     expect(textarea).toBeInTheDocument();
   });
+
+  it('does not submit when content is only whitespace', async () => {
+    const user = userEvent.setup();
+    const submissions: string[] = [];
+
+    render(
+      <NewPostDialog
+        onSubmit={(content) => {
+          submissions.push(content);
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: '新規投稿' }));
+
+    const textarea = await screen.findByLabelText('投稿内容');
+    await user.type(textarea, '   ');
+
+    const submitButton = screen.getByRole('button', { name: '投稿する' });
+    expect(submitButton).toBeDisabled();
+
+    await user.click(submitButton);
+    expect(submissions).toHaveLength(0);
+  });
 });
