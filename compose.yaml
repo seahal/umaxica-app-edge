@@ -47,6 +47,13 @@ services:
       - no_proxy
       - all_proxy
     restart: unless-stopped
+    networks:
+      outer:
+        aliases:
+          - edge
+networks:
+  outer:
+    external: true
 volumes:
   node-volume:
     driver: local
