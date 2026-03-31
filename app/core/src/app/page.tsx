@@ -1,4 +1,4 @@
-export default function IndexPage() {
+export default function RootPage() {
   return (
     <main>
       <h1>hello,world!</h1>

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'UMAXICA News',
-  description: 'Latest news from UMAXICA',
+  title: 'UMAXICA (app)',
+  description: 'UMAXICA Service Application',
 };
 
 export default function RootLayout({

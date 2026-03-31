@@ -22,7 +22,7 @@ ignoredBuiltDependencies:
   - unrs-resolver
   - workerd
 
-minimumReleaseAge: 4320
+minimumReleaseAge: 10080
 
 minimumReleaseAgeExclude:
   - vite-plus
@@ -31,6 +31,14 @@ minimumReleaseAgeExclude:
   - '@oxlint/*'
   - oxfmt
   - '@oxfmt/*'
+  - oxlint-tsgolint
+  - '@oxlint-tsgolint/*'
+  - wrangler
+  - '@opentelemetry/*'
+  - happy-dom
+  - next
+  - '@next/*'
+  - '@opennextjs/*'
 
 overrides:
   fast-xml-parser: '>=5.5.7'

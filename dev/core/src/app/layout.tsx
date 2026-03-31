@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'UMAXICA News',
-  description: 'Latest news from UMAXICA',
+  title: 'Umaxica Dev',
+  description: 'Fresh Next.js app for umaxica.dev',
 };
 
 export default function RootLayout({
@@ -10,5 +11,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return children;
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
 }

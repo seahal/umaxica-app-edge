@@ -2,47 +2,21 @@
   "name": "umaxica-apps-edge-dev-core",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "server": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
-    "typegen": "react-router typegen",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "type": "vp exec tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/lib-dynamodb": "^3.1011.0",
-    "@aws-sdk/lib-storage": "^3.1011.0",
-    "@vercel/speed-insights": "^1.3.1",
-    "i18next": "^25.8.18",
-    "isbot": "^5.1.36",
-    "nuqs": "^2.6.0",
-    "react": "^19.2.4",
-    "react-aria-components": "^1.16.0",
-    "react-dom": "^19.2.4",
-    "react-i18next": "^16.5.8",
-    "react-router": "^7.13.1",
-    "react-router-dom": "^7.13.1",
-    "remix-i18next": "^7.4.2",
-    "zod": "^4.3.6"
+    "next": "16.1.5",
+    "react": "19.1.5",
+    "react-dom": "19.1.5"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.28.5",
-    "@react-router/dev": "^7.13.1",
-    "@react-router/node": "^7.13.1",
-    "@tailwindcss/vite": "^4.2.2",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vercel/react-router": "^1.2.6",
-    "@vitejs/plugin-react": "^5.2.0",
-    "babel-plugin-react-compiler": "^1.0.0",
-    "happy-dom": "^20.8.4",
-    "vite": "catalog:",
-    "vite-plus": "catalog:",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "catalog:"
+    "@types/node": "^20",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.7.4"
   }
 }
