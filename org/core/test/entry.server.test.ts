@@ -10,9 +10,11 @@ vi.mock('react-dom/server', async (importOriginal) => {
     renderToReadableStream: (...args: unknown[]) => {
       renderCalls.push(args);
       const options = args[1] as { onError?: (error: unknown) => void };
-      if (options?.onError) {
-        options.onError(new Error('streaming error'));
-      }
+      queueMicrotask(() => {
+        if (options?.onError) {
+          options.onError(new Error('streaming error'));
+        }
+      });
       const stream = new ReadableStream({
         start(controller) {
           controller.close();

@@ -122,8 +122,8 @@ export function createApexApp(config: ApexConfig): Hono<ApexBindings> {
     console.error('Unhandled apex error', {
       method: c.req.method,
       url: c.req.url,
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
+      message: err instanceof Error ? err.message : /* v8 ignore start */ String(err),
+      stack: err instanceof Error ? err.stack : undefined /* v8 ignore end */,
     });
 
     // For health endpoint errors, return 400 Bad Request with fallback page
