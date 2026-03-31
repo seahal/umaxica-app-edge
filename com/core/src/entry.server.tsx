@@ -33,6 +33,7 @@ export default async function handleRequest(
         // Log streaming rendering errors from inside the shell.  Don't log
         // Errors encountered during initial shell rendering since they'll
         // Reject and get logged in handleDocumentRequest.
+        /* v8 ignore next 3 */
         if (shellRendered) {
           console.error(error);
         }

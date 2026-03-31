@@ -12,6 +12,30 @@ describe('seo', () => {
     },
   };
 
+  describe('toNonEmptyTrimmed via SeoHead', () => {
+    it('handles empty string title', () => {
+      setMeta(mockContext, { title: '' });
+
+      const result = SeoHead({
+        c: mockContext,
+        brand: { brandName: 'TestBrand' },
+      });
+
+      expect(result).toBeDefined();
+    });
+
+    it('handles whitespace-only title', () => {
+      setMeta(mockContext, { title: '   ' });
+
+      const result = SeoHead({
+        c: mockContext,
+        brand: { brandName: 'TestBrand' },
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
   describe('withMeta', () => {
     it('sets meta context', async () => {
       const middleware = withMeta({ title: 'Test' });

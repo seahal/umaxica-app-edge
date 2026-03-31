@@ -10,9 +10,11 @@ vi.mock('react-dom/server', async (importOriginal) => {
     renderToReadableStream: (...args: unknown[]) => {
       renderCalls.push(args);
       const options = args[1] as { onError?: (error: unknown) => void };
-      if (options?.onError) {
-        options.onError(new Error('streaming error'));
-      }
+      queueMicrotask(() => {
+        if (options?.onError) {
+          options.onError(new Error('streaming error'));
+        }
+      });
       const stream = new ReadableStream({
         start(controller) {
           controller.close();
@@ -142,6 +144,23 @@ describe('com entry.server handleRequest', () => {
     const contextMap = new Map<unknown, unknown>([
       [CloudflareContext, { security: { nonce: 'bot123' } }],
     ]);
+
+    const loadContext = {
+      get: (key: unknown) => contextMap.get(key),
+    } as unknown as AppLoadContext;
+
+    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+
+    expect(response).toBeInstanceOf(Response);
+  });
+
+  it('handles requests with empty nonce', async () => {
+    const request = new Request('https://com.example', {
+      headers: { 'user-agent': 'Mozilla/5.0' },
+    });
+    const routerContext = { isSpaMode: false } as unknown as EntryContext;
+
+    const contextMap = new Map<unknown, unknown>([[CloudflareContext, { security: {} }]]);
 
     const loadContext = {
       get: (key: unknown) => contextMap.get(key),

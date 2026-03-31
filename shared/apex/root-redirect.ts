@@ -13,6 +13,8 @@ export function createRootRedirect(siteUrl: string) {
     return allowedUrls[normalizedRegion as AllowedRegion] ?? null;
   };
 
+  // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  /* v8 ignore next */
   const getDefaultRedirectUrl = () => allowedUrls[DEFAULT_REGION] ?? null;
 
   const buildRegionErrorPayload = () => ({
