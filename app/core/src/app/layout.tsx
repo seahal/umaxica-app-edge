@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { defaultLocale } from '@/i18n/config';
 
 export const metadata: Metadata = {
-  title: 'UMAXICA News',
-  description: 'Latest news from UMAXICA',
+  title: 'UMAXICA (app)',
+  description: 'UMAXICA Service Application',
 };
 
 export default function RootLayout({
@@ -12,7 +11,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang={defaultLocale}>
+    <html lang="ja">
       <body>{children}</body>
     </html>
   );

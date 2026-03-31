@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { defaultLocale } from '@/i18n/config';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'UMAXICA News',
-  description: 'Latest news from UMAXICA',
+  title: 'Umaxica Dev',
+  description: 'Fresh Next.js app for umaxica.dev',
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang={defaultLocale}>
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
