@@ -10,7 +10,7 @@ export default async function PageLayout({
   const dict = await getDictionary(defaultLocale);
 
   const links = [
-    { href: '/home', label: dict.home.title },
+    { href: '/', label: dict.home.title },
     { href: '/explore', label: dict.explore.title },
     { href: '/messages', label: dict.messages.title },
     { href: '/notifications', label: dict.notifications.title },
