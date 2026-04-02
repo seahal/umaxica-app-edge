@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export const maxDuration = 5;
-
-export default function RootPage() {
+export default function PageIndex() {
   redirect('/home');
 }

@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  typedRoutes: true,
+};
 
 export default nextConfig;
-
-import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 void initOpenNextCloudflareForDev();

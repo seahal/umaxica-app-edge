@@ -49,6 +49,15 @@ Each domain has two workspaces: `<domain>/apex` (Hono backend on Cloudflare Work
 - **Inline lint suppression**: Use `// oxlint-disable-next-line <rule>` (not eslint-disable).
 - **Tests**: Located in `<workspace>/test/` directories or inline as `*.test.ts` files. Vitest globals are enabled; no need to import `describe`/`it`/`expect`.
 
+## Design Principles
+
+- **Single Responsibility**: Keep modules, components, and functions focused on one job.
+- **Open/Closed**: Extend behavior with composition or new modules instead of piling branching logic into existing code.
+- **Liskov Substitution**: Preserve contracts so replacements behave the same way as the original abstraction.
+- **Interface Segregation**: Prefer small, focused interfaces over broad ones with unused members.
+- **Dependency Inversion**: Depend on abstractions and shared boundaries, not concrete implementation details.
+- **Practicality**: Apply SOLID where it improves clarity and changeability; avoid over-engineering tiny, stable code paths.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

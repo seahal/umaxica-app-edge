@@ -1,11 +1,11 @@
-export default function RootNotFound() {
+import Link from 'next/link';
+
+export default function NotFound() {
   return (
-    <html lang="ja">
-      <body>
-        <main>
-          <h1>404 - Not Found</h1>
-        </main>
-      </body>
-    </html>
+    <main className="status-page">
+      <h1>404</h1>
+      <p>Page not found.</p>
+      <Link href="/">Go home</Link>
+    </main>
   );
 }
