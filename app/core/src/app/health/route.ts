@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -8,7 +8,10 @@ export async function GET() {
       { status: 'ok', timestamp: new Date().toISOString() },
       {
         status: 200,
-        headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-Robots-Tag': 'noindex, nofollow',
+        },
       },
     );
   } catch {
@@ -16,7 +19,10 @@ export async function GET() {
       { status: 'error', timestamp: new Date().toISOString() },
       {
         status: 503,
-        headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-Robots-Tag': 'noindex, nofollow',
+        },
       },
     );
   }
