@@ -16,7 +16,7 @@ export default async function PageLayout({
     { href: '/notifications', label: dict.notifications.title },
     { href: '/configuration', label: dict.configuration.title },
     { href: '/about', label: dict.about.title },
-  ];
+  ] as const;
 
   return (
     <div className="page-shell">
