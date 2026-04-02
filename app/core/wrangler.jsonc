@@ -3,7 +3,7 @@
   "name": "umaxica-apps-edge-app-core",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-03-17",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "assets": {
     "binding": "ASSETS",
     "directory": ".open-next/assets"

@@ -1,13 +1,5 @@
-import { defaultLocale } from '@/i18n/config';
-import { getDictionary } from '@/i18n/dictionaries';
+import { redirect } from 'next/navigation';
 
-export default async function Home() {
-  const dict = await getDictionary(defaultLocale);
-
-  return (
-    <main className="page-main">
-      <h1>{dict.home.title}</h1>
-      <p>{dict.home.description}</p>
-    </main>
-  );
+export default function Home() {
+  redirect('/');
 }
