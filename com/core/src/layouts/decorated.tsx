@@ -6,15 +6,19 @@ import type { loader as rootLoader } from '../root';
 
 type RootLoaderData = Awaited<ReturnType<typeof rootLoader>>;
 
+const DEFAULT_LOADER_DATA: RootLoaderData = {
+  codeName: '',
+  cspNonce: '',
+  newsServiceUrl: '',
+  docsServiceUrl: '',
+  helpServiceUrl: '',
+};
+
 export default function DecoratedLayout() {
   const loaderData = useRouteLoaderData('root') as RootLoaderData | undefined;
 
-  const {
-    codeName = '',
-    newsServiceUrl = '',
-    docsServiceUrl = '',
-    helpServiceUrl = '',
-  } = loaderData ?? {};
+  const { codeName, newsServiceUrl, docsServiceUrl, helpServiceUrl } =
+    loaderData ?? DEFAULT_LOADER_DATA;
 
   return (
     <>

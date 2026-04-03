@@ -45,11 +45,11 @@ vi.mock('react-aria-components', async (importOriginal) => {
 
 const { default: Home } = await import('../../src/routes/_index');
 
+const homeLoaderData = { codeName: 'Umaxica', message: 'Hello' };
+
 describe('Route: Home (com) focus-visible styling', () => {
   it('adds focus-visible styles to perspective tabs', () => {
-    const markup = renderToStaticMarkup(
-      <Home loaderData={{ codeName: 'Umaxica', message: 'Hello' }} />,
-    );
+    const markup = renderToStaticMarkup(<Home loaderData={homeLoaderData} />);
 
     expect(markup).toContain('ring-2 ring-offset-2 ring-blue-400');
   });

@@ -8,6 +8,13 @@ interface HeaderProps {
   newsServiceUrl?: string;
 }
 
+const getExploreNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4 sm:text-sm ${
+    isActive
+      ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+      : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200'
+  }`;
+
 export function Header({
   codeName = '',
   helpServiceUrl = '',
@@ -97,16 +104,7 @@ export function Header({
 
           {/* Search and Login - Right Side */}
           <div className="ml-auto flex flex-wrap items-center gap-3">
-            <NavLink
-              to="/explore"
-              className={({ isActive }: { isActive: boolean }) =>
-                `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4 sm:text-sm ${
-                  isActive
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
-                    : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200'
-                }`
-              }
-            >
+            <NavLink to="/explore" className={getExploreNavLinkClass}>
               <svg
                 className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                 fill="none"

@@ -132,9 +132,12 @@ describe('org entry.server handleRequest', () => {
   });
 
   it('handles bot user-agent requests', async () => {
-    vi.mock('isbot', () => ({
+    vi.resetModules();
+    vi.doMock('isbot', () => ({
       isbot: () => true,
     }));
+
+    const { default: botHandleRequest } = await import('../src/entry.server');
 
     const request = new Request('https://org.example', {
       headers: { 'user-agent': 'Googlebot' },
@@ -149,7 +152,7 @@ describe('org entry.server handleRequest', () => {
       get: (key: unknown) => contextMap.get(key),
     } as unknown as AppLoadContext;
 
-    const response = await handleRequest(request, 200, headers, routerContext, loadContext);
+    const response = await botHandleRequest(request, 200, headers, routerContext, loadContext);
 
     expect(response).toBeInstanceOf(Response);
   });

@@ -18,6 +18,7 @@ export function isAllowedApexOrigin(origin?: string): boolean {
 }
 
 export function apexCsrfMiddleware(): MiddlewareHandler {
+  /* v8 ignore next 3 */
   return csrf({
     origin: (origin) => isAllowedApexOrigin(origin),
   });

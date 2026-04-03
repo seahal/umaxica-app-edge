@@ -18,6 +18,10 @@ function createMockContext(data: { cloudflare?: { env?: Record<string, unknown> 
   };
 }
 
+const heroLoaderData = { codeName: 'Umaxica', message: 'Edge Blueprint' };
+const focusLoaderData = { codeName: 'Umaxica', message: 'Hello' };
+const emptyLoaderData = { codeName: 'Umaxica', message: '' };
+
 describe('Route: Home (com)', () => {
   describe('Meta', () => {
     it('should return localized title and description', () => {
@@ -113,9 +117,7 @@ describe('Route: Home (com)', () => {
 
   describe('Component', () => {
     it('should render the abstract corporate hero', () => {
-      const markup = renderToStaticMarkup(
-        <Home loaderData={{ codeName: 'Umaxica', message: 'Edge Blueprint' }} />,
-      );
+      const markup = renderToStaticMarkup(<Home loaderData={heroLoaderData} />);
 
       expect(markup).toContain('Abstract Corporate Sample');
       expect(markup).toContain('Edge Blueprint');
@@ -123,9 +125,7 @@ describe('Route: Home (com)', () => {
     });
 
     it('should render focus areas and perspectives', () => {
-      const markup = renderToStaticMarkup(
-        <Home loaderData={{ codeName: 'Umaxica', message: 'Hello' }} />,
-      );
+      const markup = renderToStaticMarkup(<Home loaderData={focusLoaderData} />);
 
       expect(markup).toContain('Modular Platform');
       expect(markup).toContain('Experience Studio');
@@ -134,9 +134,7 @@ describe('Route: Home (com)', () => {
     });
 
     it('should handle empty message', () => {
-      const markup = renderToStaticMarkup(
-        <Home loaderData={{ codeName: 'Umaxica', message: '' }} />,
-      );
+      const markup = renderToStaticMarkup(<Home loaderData={emptyLoaderData} />);
 
       expect(markup).toBeDefined();
       expect(markup.length).toBeGreaterThan(0);

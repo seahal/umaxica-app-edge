@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -188,6 +188,10 @@ export function EventList() {
   );
 }
 
+function progressBarStyle(fillRate: number): React.CSSProperties {
+  return { width: `${fillRate}%` };
+}
+
 // イベントカードコンポーネント
 function EventCard({ event }: { event: Event }) {
   const remaining = event.capacity - event.registered;
@@ -266,7 +270,7 @@ function EventCard({ event }: { event: Event }) {
                 className={`h-full ${
                   fillRate >= 90 ? 'bg-red-500' : fillRate >= 70 ? 'bg-yellow-500' : 'bg-green-500'
                 }`}
-                style={{ width: `${fillRate}%` }}
+                style={progressBarStyle(fillRate)}
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">残り {remaining} 枠</p>
@@ -285,49 +289,52 @@ function EventCard({ event }: { event: Event }) {
             <ModalOverlay className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <Modal className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full">
                 <Dialog className="outline-none p-6">
-                  {({ close }: { close: () => void }) => (
-                    <>
-                      <Heading
-                        slot="title"
-                        className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4"
-                      >
-                        イベント参加申し込み
-                      </Heading>
-                      <div className="space-y-4 mb-6">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                            {event.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {event.date} {event.time}
+                  {({ close }: { close: () => void }) => {
+                    const handleSubmit = useCallback(() => {
+                      // oxlint-disable-next-line no-alert
+                      alert(`${event.title} に参加申し込みをしました！`);
+                      close();
+                    }, [close]);
+                    return (
+                      <>
+                        <Heading
+                          slot="title"
+                          className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4"
+                        >
+                          イベント参加申し込み
+                        </Heading>
+                        <div className="space-y-4 mb-6">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                              {event.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {event.date} {event.time}
+                            </p>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            このイベントに参加申し込みをしますか？
+                            <br />
+                            確認メールが送信されます。
                           </p>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          このイベントに参加申し込みをしますか？
-                          <br />
-                          確認メールが送信されます。
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button
-                          onPress={close}
-                          className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
-                        >
-                          キャンセル
-                        </Button>
-                        <Button
-                          onPress={() => {
-                            // oxlint-disable-next-line no-alert
-                            alert(`${event.title} に参加申し込みをしました！`);
-                            close();
-                          }}
-                          className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                        >
-                          申し込む
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                        <div className="flex gap-3">
+                          <Button
+                            onPress={close}
+                            className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+                          >
+                            キャンセル
+                          </Button>
+                          <Button
+                            onPress={handleSubmit}
+                            className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                          >
+                            申し込む
+                          </Button>
+                        </div>
+                      </>
+                    );
+                  }}
                 </Dialog>
               </Modal>
             </ModalOverlay>

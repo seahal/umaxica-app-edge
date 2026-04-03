@@ -20,6 +20,11 @@ function createMockContext(env: Record<string, unknown>) {
   };
 }
 
+const exploreTitleLoaderData = { message: 'test message' };
+const exploreEmptyLoaderData = { message: '' };
+const exploreParams: Record<string, string> = {};
+const exploreMatches: unknown[] = [];
+
 describe('Explore route (com)', () => {
   it('uses the fallback helper message when env is missing the Cloudflare value', () => {
     const result = loader({ context: createMockContext({}) } as never);
@@ -30,7 +35,13 @@ describe('Explore route (com)', () => {
   });
 
   it('renders explore page title', () => {
-    render(<Explore loaderData={{ message: 'test message' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreTitleLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     expect(
       screen.getByText('Umaxica を横断検索し、静かなシグナルをすぐに捉える'),
@@ -40,7 +51,13 @@ describe('Explore route (com)', () => {
 
   it('filters results based on query', async () => {
     const user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     const input = screen.getByPlaceholderText('例: onboarding, account liaison, latency');
     await user.type(input, 'Atlas');
@@ -51,7 +68,13 @@ describe('Explore route (com)', () => {
 
   it('clears the query and restores the full result list', async () => {
     const user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     const input = screen.getByPlaceholderText('例: onboarding, account liaison, latency');
     await user.type(input, 'Atlas');
@@ -66,7 +89,13 @@ describe('Explore route (com)', () => {
 
   it('filters results based on tags/categories', async () => {
     const user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     const productsTag = screen.getByRole('gridcell', { name: 'プロダクト' });
     await user.click(productsTag);
@@ -77,7 +106,13 @@ describe('Explore route (com)', () => {
 
   it('combines category and query filtering', async () => {
     const user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     await user.click(screen.getByRole('gridcell', { name: 'シグナル' }));
     expect(screen.getAllByRole('article')).toHaveLength(1);
@@ -92,7 +127,13 @@ describe('Explore route (com)', () => {
 
   it('shows no results message when no matches found', async () => {
     const _user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     const input = screen.getByPlaceholderText('例: onboarding, account liaison, latency');
     const { fireEvent } = await import('@testing-library/react');
@@ -103,7 +144,13 @@ describe('Explore route (com)', () => {
 
   it('filters by category only with empty query', async () => {
     const user = userEvent.setup();
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     // Select 'products' category without typing any query
     await user.click(screen.getByRole('gridcell', { name: 'プロダクト' }));
@@ -115,7 +162,13 @@ describe('Explore route (com)', () => {
   });
 
   it('returns all items when both filter is all and query is empty', () => {
-    render(<Explore loaderData={{ message: '' }} params={{}} matches={[]} />);
+    render(
+      <Explore
+        loaderData={exploreEmptyLoaderData}
+        params={exploreParams}
+        matches={exploreMatches}
+      />,
+    );
 
     // Default state - should show all items
     expect(screen.getAllByRole('article')).toHaveLength(6);

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Button,
   Input,
@@ -189,6 +189,8 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
     [activeFilter, normalizedQuery],
   );
 
+  const handleClearQuery = useCallback(() => setQuery(''), []);
+
   const helperMessage = loaderData?.message?.trim();
 
   return (
@@ -240,7 +242,7 @@ export default function Explore({ loaderData }: Route.ComponentProps) {
               <div className="absolute right-3 flex gap-1">
                 {query && (
                   <Button
-                    onPress={() => setQuery('')}
+                    onPress={handleClearQuery}
                     className="rounded-full px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-200 dark:text-slate-200 dark:hover:bg-gray-700"
                   >
                     クリア

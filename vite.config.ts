@@ -1,6 +1,18 @@
 import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
+  tasks: {
+    e2e: {
+      command: 'vp test',
+      cwd: 'app/apex/test',
+    },
+  },
+  run: {
+    cache: {
+      scripts: true,
+      tasks: true,
+    },
+  },
   staged: {
     '*': 'vp check --fix',
   },
@@ -44,7 +56,18 @@ export default defineConfig({
     ],
   },
   lint: {
-    plugins: ['typescript', 'react', 'import', 'jsx-a11y'],
+    plugins: [
+      'eslint',
+      'typescript',
+      'unicorn',
+      'oxc',
+      'react',
+      'import',
+      'jsx-a11y',
+      'promise',
+      'react-perf',
+      'vitest',
+    ],
     env: {
       browser: true,
       es2024: true,
@@ -53,6 +76,9 @@ export default defineConfig({
     settings: {
       react: {
         version: '19',
+      },
+      vitest: {
+        typecheck: true,
       },
     },
     rules: {
@@ -66,11 +92,28 @@ export default defineConfig({
       'no-debugger': 'error',
       'no-alert': 'error',
       'no-empty': 'error',
+      'react/react-in-jsx-scope': 'off',
       'react/no-danger': 'error',
       'typescript/no-explicit-any': 'error',
       'typescript/no-non-null-assertion': 'error',
       'typescript/consistent-type-imports': 'error',
+      'typescript/no-misused-promises': 'error',
+      'import/no-cycle': 'error',
+      'import/no-unassigned-import': 'off',
+      'promise/catch-or-return': 'error',
+      'react-perf/jsx-no-new-function-as-prop': 'warn',
+      'react-perf/jsx-no-new-object-as-prop': 'warn',
+      'vitest/no-conditional-tests': 'error',
+      'vitest/warn-todo': 'warn',
     },
+    overrides: [
+      {
+        files: ['**/*.test.*', '**/*.spec.*', '**/test/**'],
+        rules: {
+          'no-console': 'off',
+        },
+      },
+    ],
     ignorePatterns: [
       '**/.wrangler/**',
       '**/dist/**',
@@ -81,6 +124,7 @@ export default defineConfig({
       '**/build/**',
     ],
     options: {
+      reportUnusedDisableDirectives: 'warn',
       typeAware: true,
       typeCheck: true,
     },

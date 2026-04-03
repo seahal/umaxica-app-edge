@@ -1,4 +1,3 @@
-/* eslint-disable import/no-named-export, func-style, exports-last, group-exports */
 function getDomainType(host: string): string {
   const [cleanHost = ''] = host.split(':');
   if (

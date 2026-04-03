@@ -9,6 +9,8 @@ function runLoader(env: Record<string, unknown>) {
   } as never);
 }
 
+const configureLoaderData = { message: 'org-value' };
+
 describe('Route: configure (org)', () => {
   it('declares expected metadata', () => {
     const entries = meta({} as never);
@@ -30,7 +32,7 @@ describe('Route: configure (org)', () => {
   });
 
   it('renders configuration content', () => {
-    const markup = renderToStaticMarkup(<ConfigureRoute loaderData={{ message: 'org-value' }} />);
+    const markup = renderToStaticMarkup(<ConfigureRoute loaderData={configureLoaderData} />);
 
     expect(markup).toContain('Configuration');
     expect(markup).toContain('acccount');

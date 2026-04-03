@@ -1,4 +1,3 @@
-/* eslint-disable import/no-named-export */
 import { ErrorPage } from './ErrorPage';
 
 interface Props {

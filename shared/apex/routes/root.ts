@@ -69,7 +69,6 @@ export function createRootRoute(
   renderer: unknown,
   config: PageConfig,
 ): Hono<RootBindings>;
-// oxlint-disable-next-line no-unused-vars
 export function createRootRoute(
   type: 'redirect' | 'page',
   renderer: unknown,

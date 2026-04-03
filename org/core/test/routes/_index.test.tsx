@@ -23,6 +23,8 @@ function runLoader(env: Record<string, unknown>) {
   } as never);
 }
 
+const homeLoaderData = { codeName: 'Umaxica', message: '' };
+
 describe('Route: home (org)', () => {
   it('defines localized metadata', () => {
     const entries = meta({ data: { codeName: 'UMAXICA' } } as never);
@@ -62,9 +64,7 @@ describe('Route: home (org)', () => {
   });
 
   it('renders the event list component', () => {
-    const markup = renderToStaticMarkup(
-      <HomeRoute loaderData={{ codeName: 'Umaxica', message: '' }} />,
-    );
+    const markup = renderToStaticMarkup(<HomeRoute loaderData={homeLoaderData} />);
     expect(markup).toContain('data-testid="event-list"');
   });
 });

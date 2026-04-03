@@ -4,6 +4,8 @@ import { getBrandName } from '../../../shared/apex/brand';
 import { brandFromEnv } from '../../../shared/apex/title';
 import { SeoHead } from '../../../shared/apex/seo';
 
+const DEFAULT_META = { description: 'This domain does not provide services for end users.' };
+
 export const renderer = jsxRenderer(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
   const brandName = getBrandName(c.env);
@@ -12,11 +14,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <SeoHead
-          c={c}
-          brand={brandFromEnv(c)}
-          defaultMeta={{ description: 'This domain does not provide services for end users.' }}
-        />
+        <SeoHead c={c} brand={brandFromEnv(c)} defaultMeta={DEFAULT_META} />
         <ViteClient />
         <Link href="/src/style.css" rel="stylesheet" />
       </head>
