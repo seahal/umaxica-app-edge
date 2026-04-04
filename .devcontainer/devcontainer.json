@@ -92,8 +92,9 @@
     "ghcr.io/stu-bell/devcontainer-features/gemini-cli:0": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
     "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {},
-    "ghcr.io/devcontainers-extra/features/lefthook-asdf:1": {},
-    "ghcr.io/jasonthedeveloper/features/trivy:1": {}
+    "ghcr.io/jasonthedeveloper/features/trivy:1": {},
+    "ghcr.io/audacioustux/devcontainers/bun:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096"

@@ -51,6 +51,13 @@ const baseLoaderData: LoaderData = {
   newsUrl: 'jp.news.umaxica.org' as const,
 };
 
+const error404 = { data: null, status: 404, statusText: 'Not Found' };
+const error500 = { data: null, status: 500, statusText: 'Internal Server Error' };
+const error503 = { data: null, status: 503, statusText: 'Service Unavailable' };
+const error400 = { data: null, status: 400, statusText: 'Bad Request' };
+const error502 = { data: null, status: 502 };
+const error418 = { data: null, status: 418 };
+
 function renderLayoutWithData(data: Partial<LoaderData> = {}) {
   loaderDataOverride = { ...baseLoaderData, ...data };
   const markup = renderToStaticMarkup(
@@ -80,6 +87,13 @@ describe('org root route component', () => {
   it('wraps the outlet placeholder for nested routes', () => {
     const element = App();
     expect(element.props.children.type).toBe(actualRouter.Outlet);
+  });
+});
+
+describe('org root links', () => {
+  it('returns empty array for links', () => {
+    const { links } = rootModule;
+    expect(links()).toStrictEqual([]);
   });
 });
 
@@ -262,77 +276,49 @@ describe('org root ErrorBoundary', () => {
   });
 
   it('renders NotFoundPage for 404 errors', () => {
-    const error = {
-      data: null,
-      status: 404,
-      statusText: 'Not Found',
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error404} />);
     expect(markup).toContain('ページが見つかりません');
     expect(markup).toContain('404');
   });
 
   it('renders InternalServerErrorPage for 500 errors', () => {
-    const error = {
-      data: null,
-      status: 500,
-      statusText: 'Internal Server Error',
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error500} />);
     expect(markup).toContain('サーバーエラー');
     expect(markup).toContain('500');
   });
 
   it('renders ServiceUnavailablePage for 503 errors', () => {
-    const error = {
-      data: null,
-      status: 503,
-      statusText: 'Service Unavailable',
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error503} />);
     expect(markup).toContain('メンテナンス中');
     expect(markup).toContain('503');
   });
 
   it('renders generic ErrorPage for other route errors', () => {
-    const error = {
-      data: null,
-      status: 400,
-      statusText: 'Bad Request',
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error400} />);
     expect(markup).toContain('400 エラー');
     expect(markup).toContain('Bad Request');
   });
 
   it('uses default details when a 5xx route error has no status text', () => {
-    const error = {
-      data: null,
-      status: 502,
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error502} />);
     expect(markup).toContain('サーバーエラー');
     expect(markup).toContain('500');
   });
 
   it('uses default details when a non-5xx route error has no status text', () => {
-    const error = {
-      data: null,
-      status: 418,
-    };
     isRouteErrorResponseMock.mockReturnValue(true);
 
-    const markup = renderToStaticMarkup(<ErrorBoundary error={error} />);
+    const markup = renderToStaticMarkup(<ErrorBoundary error={error418} />);
     expect(markup).toContain('418 エラー');
     expect(markup).toContain('リクエストの処理中にエラーが発生しました。');
   });

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-named-export */
 import type { JSX } from 'react';
 import { ErrorPage } from './ErrorPage';
 

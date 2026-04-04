@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp pm audit -- --audit-level=high
 
   outdated:
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp outdated || true
 
   knip:
@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp dlx knip --include unlisted,unresolved,binaries
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -75,7 +75,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp check
 
   test:
@@ -87,7 +87,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp test --coverage
 
   build-vite:
@@ -111,7 +111,7 @@ jobs:
         with:
           node-version: '24'
           cache: true
-      - run: vp install --frozen-lockfile
+      - run: vp install
       - run: vp run --filter ./$TARGET build
         env:
           TARGET: ${{ matrix.target }}

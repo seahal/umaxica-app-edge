@@ -1,6 +1,9 @@
 import { loader, meta, default as Health } from '../../src/routes/health';
 import { render, screen } from '@testing-library/react';
 
+const healthOkData = { status: 'ok' as const, timestamp: '2024-01-01T00:00:00.000Z' };
+const healthErrorData = { status: 'error' as const, timestamp: '2024-01-01T00:00:00.000Z' };
+
 describe('com/core health route', () => {
   it('provides the health status page title', () => {
     expect(meta()).toStrictEqual([{ title: 'Health Status | UMAXICA (com)' }]);
@@ -14,14 +17,14 @@ describe('com/core health route', () => {
   });
 
   it('renders health page with ok status', () => {
-    render(<Health loaderData={{ status: 'ok', timestamp: '2024-01-01T00:00:00.000Z' }} />);
+    render(<Health loaderData={healthOkData} />);
 
     expect(screen.getByText(/status:/)).toBeInTheDocument();
     expect(screen.getByText(/ok/)).toBeInTheDocument();
   });
 
   it('renders health page with error status', () => {
-    render(<Health loaderData={{ status: 'error', timestamp: '2024-01-01T00:00:00.000Z' }} />);
+    render(<Health loaderData={healthErrorData} />);
 
     expect(screen.getByText(/status:/)).toBeInTheDocument();
     expect(screen.getByText(/error/)).toBeInTheDocument();
@@ -45,7 +48,7 @@ describe('com/core health route', () => {
   });
 
   it('renders timestamp', () => {
-    render(<Health loaderData={{ status: 'ok', timestamp: '2024-01-01T00:00:00.000Z' }} />);
+    render(<Health loaderData={healthOkData} />);
 
     expect(screen.getByText(/2024-01-01T00:00:00.000Z/)).toBeInTheDocument();
   });

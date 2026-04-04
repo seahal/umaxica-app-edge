@@ -77,6 +77,21 @@ export function loader({ context }: Route.LoaderArgs) {
   };
 }
 
+const getTabClass = ({
+  isSelected,
+  isFocusVisible,
+}: {
+  isSelected: boolean;
+  isFocusVisible: boolean;
+}) =>
+  [
+    'flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 outline-none',
+    isSelected
+      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
+      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white',
+    isFocusVisible ? 'ring-2 ring-offset-2 ring-blue-400 dark:ring-offset-slate-950' : '',
+  ].join(' ');
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   const headline = loaderData?.message || 'Sculpting Calm & Capable Experiences';
 
@@ -178,21 +193,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               className="flex gap-2 rounded-2xl border border-slate-100 bg-white/80 p-2 shadow-sm shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-950/40 dark:shadow-none"
             >
               {perspectives.map((item) => (
-                <Tab
-                  key={item.id}
-                  id={item.id}
-                  className={({ isSelected, isFocusVisible }) =>
-                    [
-                      'flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 outline-none',
-                      isSelected
-                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
-                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white',
-                      isFocusVisible
-                        ? 'ring-2 ring-offset-2 ring-blue-400 dark:ring-offset-slate-950'
-                        : '',
-                    ].join(' ')
-                  }
-                >
+                <Tab key={item.id} id={item.id} className={getTabClass}>
                   {item.label}
                 </Tab>
               ))}

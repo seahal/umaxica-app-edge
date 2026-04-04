@@ -28,6 +28,8 @@ function getErrorIcon(status: number): string {
   }
 }
 
+const handleGoBack = () => window.history.back();
+
 export function ErrorPage({
   status,
   title,
@@ -73,7 +75,7 @@ export function ErrorPage({
 
               <button
                 type="button"
-                onClick={() => window.history.back()}
+                onClick={handleGoBack}
                 className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
               >
                 ← 前のページに戻る

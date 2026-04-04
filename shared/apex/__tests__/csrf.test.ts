@@ -118,7 +118,6 @@ describe('apex CSRF config', () => {
     const app = new Hono();
     // For testing only: set the origin header since we can't set it in Request due to CORS restrictions
     app.use('*', async (c, next) => {
-      // eslint-disable-next-line no-param-reassign
       c.req.raw.headers.set('origin', 'https://umaxica.com');
       await next();
     });

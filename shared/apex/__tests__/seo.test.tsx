@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import { renderToString } from 'hono/jsx/dom/server';
 import { Layout, getMeta, setMeta, withMeta, type Meta } from '../seo';
 
+const seoBrand = { brandName: 'Umaxica' };
+
 describe('seo helpers', () => {
   it('withMeta makes metadata available via getMeta', async () => {
     const app = new Hono();
@@ -39,7 +41,7 @@ describe('seo helpers', () => {
       });
 
       const html = renderToString(
-        <Layout c={c} brand={{ brandName: 'Umaxica' }}>
+        <Layout c={c} brand={seoBrand}>
           <main>Pricing page</main>
         </Layout>,
       );
@@ -69,7 +71,7 @@ describe('seo helpers', () => {
 
     app.get('/brand-only', (c) => {
       const html = renderToString(
-        <Layout c={c} brand={{ brandName: 'Umaxica' }}>
+        <Layout c={c} brand={seoBrand}>
           <main>Top page</main>
         </Layout>,
       );
