@@ -12,6 +12,6 @@ describe('dev/core health page', () => {
 
   it('has edge runtime configuration', async () => {
     const pageModule = await import('../../src/app/health/page');
-    expect(pageModule.config).toEqual({ runtime: 'edge' });
+    expect(pageModule.runtime).toBe('edge');
   });
 });
