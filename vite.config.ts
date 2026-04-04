@@ -1,12 +1,6 @@
 import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
-  tasks: {
-    e2e: {
-      command: 'vp test',
-      cwd: 'app/apex/test',
-    },
-  },
   run: {
     cache: {
       scripts: true,
