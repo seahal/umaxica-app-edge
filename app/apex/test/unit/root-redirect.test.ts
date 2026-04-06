@@ -1,8 +1,7 @@
-import {
-  buildRegionErrorPayload,
-  getDefaultRedirectUrl,
-  resolveRedirectUrl,
-} from '../src/root-redirect';
+import { createRootRedirect } from '../../../../shared/apex/root-redirect';
+
+const { resolveRedirectUrl, getDefaultRedirectUrl, buildRegionErrorPayload } =
+  createRootRedirect('umaxica.app');
 
 describe('root-redirect utilities', () => {
   describe(resolveRedirectUrl, () => {

@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-export const runtime = 'edge';
-
 export const metadata: Metadata = {
   title: 'Umaxica Dev',
   description: 'Fresh Next.js app for umaxica.dev',

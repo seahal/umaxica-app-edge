@@ -1,4 +1,4 @@
-import { buildApexTitle, getAboutMeta, renderAboutContent } from '../src/page-content';
+import { buildApexTitle, getAboutMeta, renderAboutContent } from '../../src/page-content';
 
 describe('page-content', () => {
   describe('buildApexTitle', () => {

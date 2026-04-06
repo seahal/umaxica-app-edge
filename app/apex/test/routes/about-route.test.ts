@@ -9,6 +9,7 @@ describe('GET /about', () => {
 
     const body = await response.text();
 
+    expect(body).toContain('<html lang="en"');
     expect(body).toContain('<title>About | UMAXICA (app) - Apex</title>');
     expect(body).toContain(
       '<meta name="description" content="umaxica.app is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
@@ -26,6 +27,7 @@ describe('GET /about', () => {
     });
 
     const body = await response.text();
+    expect(body).toContain('<html lang="ja"');
     expect(body).toContain('このサイトについて');
     expect(body).not.toContain('About this site.');
   });

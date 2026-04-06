@@ -48,7 +48,6 @@
         "ms-vscode-remote.remote-containers",
         "nicolo-ribaudo.oxfmt-vscode",
         "nicolo-ribaudo.oxc-vscode",
-        "ms-playwright.playwright",
 
         "-dbaeumer.vscode-eslint",
         "-esbenp.prettier-vscode",

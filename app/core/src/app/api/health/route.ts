@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-
 function getTimestamp() {
   return new Date().toISOString();
 }
@@ -42,9 +40,4 @@ export async function GET() {
       },
     );
   }
-}
-
-// Healthz endpoint for compatibility
-export async function GET_healthz() {
-  return GET();
 }

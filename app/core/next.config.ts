@@ -6,6 +6,16 @@ const nextConfig: NextConfig = {
     globalNotFound: true,
     authInterrupts: true,
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/health',
+          destination: '/api/health',
+        },
+      ],
+    };
+  },
   typedRoutes: true,
   allowedDevOrigins: ['localhost', '*.localhost', '172.18.0.2'],
   logging: {

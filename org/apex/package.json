@@ -12,8 +12,9 @@
     "type": "pnpm run cf-typegen && vp exec tsc --noEmit"
   },
   "dependencies": {
+    "@hono/otel": "^1.1.1",
     "@sentry/cloudflare": "^10.40.0",
-    "hono": "^4.12.7"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.26.1",

@@ -11,7 +11,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
-    "hono": "^4.12.9",
+    "hono": "catalog:",
     "jose": "^6.2.2",
     "tailwindcss": "^4.2.2"
   },
