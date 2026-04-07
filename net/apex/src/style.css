@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+@view-transition {
+  navigation: auto;
+}
+
 @layer base {
   a {
     @apply text-blue-600 underline;

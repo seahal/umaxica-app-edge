@@ -8,6 +8,7 @@ services:
         - DOCKER_GID=${GID:-1000}
         - DOCKER_USER=edge
         - DOCKER_GROUP=group
+        - VITE_GIT_HOOKS=0
     working_dir: /home/edge/workspace
     volumes:
       - type: bind
