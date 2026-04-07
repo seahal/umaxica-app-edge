@@ -18,7 +18,15 @@
     "enabled": true
   },
   "env": {
-    "development": {}
+    "development": {
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "umaxica-apps-edge-org-core"
+        }
+      ]
+    },
+    "production": {}
   },
   "upload_source_maps": true
 }
