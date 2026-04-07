@@ -1,9 +1,11 @@
 /** @jsxImportSource hono/jsx */
 import { Hono } from 'hono';
+import { i18nMiddleware } from '../../../shared/apex/middleware';
 import { renderer } from '../src/renderer';
 
 describe('Renderer layout', () => {
   const app = new Hono();
+  app.use(i18nMiddleware());
   app.use(renderer);
   app.get('/', (c) => c.render(<p>Test content</p>));
 

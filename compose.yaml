@@ -8,7 +8,6 @@ services:
         - DOCKER_GID=${GID:-1000}
         - DOCKER_USER=edge
         - DOCKER_GROUP=group
-        - VITE_GIT_HOOKS=0
     working_dir: /home/edge/workspace
     volumes:
       - type: bind
@@ -38,6 +37,7 @@ services:
     user: edge:group
     environment:
       - CLOUDFLARE_ENV=development
+      - VITE_GIT_HOOKS=0
       - NODE_OPTIONS=--max-old-space-size=4096
       - HTTP_PROXY
       - HTTPS_PROXY
