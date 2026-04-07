@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { GET } from '../../src/app/health/route';
+import { GET } from '../../src/app/api/health/route';
 
 describe('app/core health route', () => {
   beforeEach(() => {

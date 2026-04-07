@@ -8,6 +8,11 @@ export default defineConfig({
     alias: {
       '@sentry/react-router': new URL('app/core/__mocks__/@sentry/react-router.ts', import.meta.url)
         .pathname,
+      '@microlabs/otel-cf-workers': new URL(
+        'app/apex/__mocks__/@microlabs/otel-cf-workers.ts',
+        import.meta.url,
+      ).pathname,
+      '@hono/otel': new URL('app/apex/__mocks__/@hono/otel.ts', import.meta.url).pathname,
     },
   },
   test: {

@@ -1,4 +1,6 @@
-import { buildRegionErrorPayload } from '../../src/root-redirect';
+import { createRootRedirect } from '../../../../shared/apex/root-redirect';
+
+const { buildRegionErrorPayload } = createRootRedirect('umaxica.app');
 import { requestFromApp } from '../utils/request';
 
 const SITE_URL = 'umaxica.app';
