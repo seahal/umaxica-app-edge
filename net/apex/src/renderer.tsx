@@ -10,7 +10,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
   const brandName = getBrandName(c.env);
   return (
-    <html lang="ja">
+    <html lang={c.get('language') ?? 'en'}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

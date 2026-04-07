@@ -45,8 +45,16 @@ describe('Renderer layout', () => {
     expect(body).toContain(`© ${currentYear} UMAXICA`);
   });
 
-  it('sets lang attribute to ja', async () => {
+  it('sets lang attribute to en by default', async () => {
     const res = await app.request('/');
+    const body = await res.text();
+    expect(body).toContain('lang="en"');
+  });
+
+  it('sets lang attribute to ja when Accept-Language prefers ja', async () => {
+    const res = await app.request('/', {
+      headers: { 'Accept-Language': 'ja' },
+    });
     const body = await res.text();
     expect(body).toContain('lang="ja"');
   });
