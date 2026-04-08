@@ -20,16 +20,27 @@ services:
         volume:
           nocopy: true
     ports:
-      - '5102:5102'
-      - '5402:5402'
-      - '5302:5302'
-      - '5502:5502'
-      - '5101:5101'
-      - '5401:5401'
-      - '5301:5301'
-      - '5501:5501'
-      - '5201:5201'
-      - '5403:5403'
+      # Hono apex
+      - '5101:5101' # com/apex
+      - '5201:5201' # net/apex
+      - '5301:5301' # org/apex
+      - '5401:5401' # app/apex
+      # Next.js core
+      - '5170:5170' # com/core
+      - '5171:5171' # app/core
+      - '5172:5172' # org/core
+      # Next.js docs
+      - '5174:5174' # app/docs
+      - '5177:5177' # com/docs
+      - '5180:5180' # org/docs
+      # Next.js help
+      - '5175:5175' # app/help
+      - '5178:5178' # com/help
+      - '5181:5181' # org/help
+      # Next.js news
+      - '5176:5176' # app/news
+      - '5179:5179' # com/news
+      - '5182:5182' # org/news
     command: sleep infinity
     tty: true
     stdin_open: true
