@@ -1,98 +1,24 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "umaxica-apps-edge-app-docs",
-  "compatibility_date": "2026-02-27",
-  "compatibility_flags": ["nodejs_als"],
-  "keep_vars": true,
-  "workers_dev": false,
-  "preview_urls": true,
-  "upload_source_maps": true,
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
-      "invocation_logs": true
-    },
-    "traces": {
-      "enabled": true,
-      "persist": true,
-      "head_sampling_rate": 1
-    }
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-03-17",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
   },
-  "env": {
-    "development": {
-      "vars": {
-        "BRAND_NAME": "UMAXICA"
-      },
-      "observability": {
-        "enabled": true,
-        "head_sampling_rate": 1,
-        "logs": {
-          "enabled": true,
-          "invocation_logs": true,
-          "head_sampling_rate": 1,
-          "persist": true
-        },
-        "traces": {
-          "enabled": true,
-          "head_sampling_rate": 1,
-          "persist": true
-        }
-      },
-      "ratelimits": [
-        {
-          "name": "RATE_LIMITER",
-          "namespace_id": "3001",
-          "simple": {
-            "limit": 2000,
-            "period": 60
-          }
-        }
-      ]
-    },
-    "production": {
-      "vars": {
-        "BRAND_NAME": "UMAXICA"
-      },
-      "observability": {
-        "enabled": true,
-        "head_sampling_rate": 0.2,
-        "logs": {
-          "enabled": true,
-          "invocation_logs": true,
-          "head_sampling_rate": 0.2,
-          "persist": true
-        },
-        "traces": {
-          "enabled": true,
-          "head_sampling_rate": 0.05,
-          "persist": true
-        }
-      },
-      "ratelimits": [
-        {
-          "name": "RATE_LIMITER",
-          "namespace_id": "3001",
-          "simple": {
-            "limit": 2000,
-            "period": 60
-          }
-        }
-      ]
-    }
+  "images": {
+    "binding": "IMAGES"
   },
-  "placement": { "mode": "smart" },
-  "ratelimits": [
+  "services": [
     {
-      "name": "RATE_LIMITER",
-      "namespace_id": "3001",
-      "simple": {
-        "limit": 2000,
-        "period": 60
-      }
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "umaxica-apps-edge-app-docs"
     }
-  ]
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true
 }

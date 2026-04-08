@@ -6,7 +6,7 @@
   "scripts": {
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "build:apex:check": "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-/tmp} vp run --filter ./app/apex --filter ./com/apex --filter ./net/apex --filter ./org/apex build",
-    "type": "pnpm -r --if-present --filter ./app/apex --filter ./app/core --filter ./com/apex --filter ./com/core --filter ./org/apex --filter ./org/core --filter ./net/apex run type",
+    "type": "pnpm -r --if-present run type",
     "typecheck": "pnpm run type",
     "prepare": "vp config"
   },

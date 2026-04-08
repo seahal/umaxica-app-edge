@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Umaxica App (EDGE) — a multi-domain monorepo deploying React Router v7 SSR apps and Hono API services to Cloudflare Workers. Three domain families: umaxica.com (corporate), umaxica.app (service), umaxica.org (staff), plus a dev status dashboard on Vercel.
+Umaxica App (EDGE) — a multi-domain monorepo deploying Next.js SSR apps (via opennextjs-cloudflare) and Hono API services to Cloudflare Workers. Three domain families: umaxica.com (corporate), umaxica.app (service), umaxica.org (staff), plus a dev status dashboard on Vercel.
 
 ## Commands
 
@@ -29,35 +29,56 @@ All commands run from the repo root using **pnpm** (not Bun — the README refer
 
 ### Workspace Layout
 
-Each domain has a **backend** (Hono on Workers) and **frontend** (React Router v7 SSR on Workers):
+Each domain has an **apex** backend (Hono on Workers) and **core** frontend (Next.js SSR on Workers), plus **docs**, **help**, and **news** sub-apps (Next.js):
 
-| Backend | Frontend      | Domain               | Dev Port |
-| ------- | ------------- | -------------------- | -------- |
-| `app/`  | `app_www/`    | umaxica.app          | 5171     |
-| `com/`  | `com_www/`    | umaxica.com          | 5170     |
-| `org/`  | `org_www/`    | umaxica.org          | 5172     |
-| —       | `dev_status/` | umaxica.dev (Vercel) | 5173     |
-| —       | `net/`        | Network renderer     | —        |
+| Apex (Hono) | Core (Next.js) | Docs       | Help       | News       | Domain               |
+| ----------- | -------------- | ---------- | ---------- | ---------- | -------------------- |
+| `app/apex`  | `app/core`     | `app/docs` | `app/help` | `app/news` | umaxica.app          |
+| `com/apex`  | `com/core`     | `com/docs` | `com/help` | `com/news` | umaxica.com          |
+| `org/apex`  | `org/core`     | `org/docs` | `org/help` | `org/news` | umaxica.org          |
+| `net/apex`  | —              | —          | —          | —          | umaxica.net          |
+| —           | `dev/core`     | —          | —          | —          | umaxica.dev (Vercel) |
 
-### Frontend Pattern (app_www, com_www, org_www)
+### Dev Server Ports
 
-- Entry: `workers/app.ts` — creates a request handler from React Router, generates a CSP nonce per request, passes Cloudflare env/ctx via `RouterContextProvider`
-- React Router v7 with file-based routing and SSR
-- i18next for internationalization (remix-i18next for SSR)
-- Sentry integration for error tracking
-- Three tsconfig files per workspace: `tsconfig.json`, `tsconfig.node.json`, `tsconfig.cloudflare.json`
+| Workspace  | Port | Dev URL                      |
+| ---------- | ---- | ---------------------------- |
+| `app/apex` | 5401 | `app.localhost:5401`         |
+| `com/apex` | 5101 | `com.localhost:5101`         |
+| `org/apex` | 5301 | `org.localhost:5301`         |
+| `net/apex` | 5201 | `net.localhost:5201`         |
+| `app/core` | 5171 | `jp.app.localhost:5171`      |
+| `com/core` | 5170 | `jp.com.localhost:5170`      |
+| `org/core` | 5172 | `jp.org.localhost:5172`      |
+| `app/docs` | 5174 | `docs.jp.app.localhost:5174` |
+| `app/help` | 5175 | `help.jp.app.localhost:5175` |
+| `app/news` | 5176 | `news.jp.app.localhost:5176` |
+| `com/docs` | 5177 | `docs.jp.com.localhost:5177` |
+| `com/help` | 5178 | `help.jp.com.localhost:5178` |
+| `com/news` | 5179 | `news.jp.com.localhost:5179` |
+| `org/docs` | 5180 | `docs.jp.org.localhost:5180` |
+| `org/help` | 5181 | `help.jp.org.localhost:5181` |
+| `org/news` | 5182 | `news.jp.org.localhost:5182` |
 
-### Backend Pattern (app, com, org)
+### Frontend Pattern (Next.js on Cloudflare Workers)
+
+- Next.js with App Router and SSR, deployed via **opennextjs-cloudflare**
+- i18n via middleware-based locale routing (`middleware.ts`)
+- `next.config.ts` with `allowedDevOrigins: ['localhost', '*.localhost']`
+- `wrangler.jsonc` for Cloudflare Workers deployment config
+
+### Backend Pattern (Hono apex)
 
 - Hono v4 web framework on Cloudflare Workers
-- Ports 8780-8782 for local dev
+- Shared middleware via `shared/apex/create-apex-app.tsx`
+- Vite dev server with `@cloudflare/vite-plugin`
 
 ### Key Dependencies
 
-- **React 19** + React Router v7 + React Aria Components
+- **React 19** + Next.js 16
 - **Hono v4** for API services
-- **Vite** (via rolldown-vite) for builds
-- **Zod v4** for validation
+- **Vite** (via rolldown-vite) for apex builds
+- **opennextjs-cloudflare** for Next.js on Workers
 - **Wrangler v4** for Cloudflare deployment
 
 ## Testing
@@ -65,7 +86,7 @@ Each domain has a **backend** (Hono on Workers) and **frontend** (React Router v
 - **Vitest** with happy-dom environment, globals enabled
 - Tests located in `<workspace>/test/` directories
 - Setup file: `vitest.setup.ts` (imports @testing-library/jest-dom)
-- Sentry is mocked via `app_www/__mocks__/@sentry/react-router.ts`
+- Sentry is mocked via `app/core/__mocks__/@sentry/react-router.ts`
 - Testing libraries: @testing-library/react, @testing-library/user-event
 
 ## Tooling

@@ -17,15 +17,15 @@
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.26.1",
-    "@tailwindcss/vite": "^4.2.1",
-    "@types/react": "^19.2.14",
+    "@cloudflare/vite-plugin": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "catalog:",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vite-ssr-components": "^0.5.2",
-    "wrangler": "^4.76.0"
+    "wrangler": "catalog:"
   }
 }
