@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "src/index.ts": {
+      "runtime": "edge"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/src/index.ts"
+    }
+  ]
+}

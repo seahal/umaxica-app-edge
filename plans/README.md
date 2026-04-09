@@ -10,8 +10,13 @@ This directory contains pending implementation plans.
 
 ## Active Plans
 
-| Plan                                    | Issue                                                          | Title                                              |
-| --------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
-| [001](./001-rails-health-check.md)      | [#247](https://github.com/seahal/umaxica-apps-edge/issues/247) | Rails backend health check integration             |
-| [002](./002-dev-apex-vercel.md)         | [#248](https://github.com/seahal/umaxica-apps-edge/issues/248) | Create `dev/apex` — Vite + Hono on Vercel          |
-| [003](./003-apex-direct-composition.md) | [#249](https://github.com/seahal/umaxica-apps-edge/issues/249) | Migrate apex workspaces to direct Hono composition |
+| Plan                               | Issue                                                          | Title                                  |
+| ---------------------------------- | -------------------------------------------------------------- | -------------------------------------- |
+| [001](./001-rails-health-check.md) | [#247](https://github.com/seahal/umaxica-apps-edge/issues/247) | Rails backend health check integration |
+
+## Completed Plans (moved to /adr)
+
+| Plan                                         | Issue                                                          | Title                                              |
+| -------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| [002](../adr/002-dev-apex-vercel.md)         | [#248](https://github.com/seahal/umaxica-apps-edge/issues/248) | Create `dev/apex` — Vite + Hono on Vercel          |
+| [003](../adr/003-apex-direct-composition.md) | [#249](https://github.com/seahal/umaxica-apps-edge/issues/249) | Migrate apex workspaces to direct Hono composition |

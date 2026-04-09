@@ -14,6 +14,7 @@ packages:
   - org/docs
   - org/help
   - org/news
+  - dev/apex
   - dev/core
   - net/apex
 

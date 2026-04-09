@@ -104,3 +104,9 @@ Cloudflare workspaces use `wrangler.jsonc` (`vars` + environments). `dev/core` r
 ## Monitoring
 
 Uptime checks via [Pulsetic](https://pulsetic.com/).
+
+## Acknowledgement
+
+- Secrets must stay in Rails credentials; do not commit plaintext secrets.
+- WebAuthn origins are controlled by `TRUSTED_ORIGINS`.
+- Public availability of this repository is not guaranteed permanently.
