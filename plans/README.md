@@ -1,0 +1,17 @@
+# Plans
+
+This directory contains pending implementation plans.
+
+## Workflow
+
+1. A plan file is created here when a feature or refactor is scoped.
+2. A corresponding GitHub issue is opened, referencing the plan file.
+3. When implementation is complete and merged, the plan file is **moved to `/adr/`** and a `## Outcome` section is appended documenting what was done.
+
+## Active Plans
+
+| Plan                                    | Issue                                                          | Title                                              |
+| --------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| [001](./001-rails-health-check.md)      | [#247](https://github.com/seahal/umaxica-apps-edge/issues/247) | Rails backend health check integration             |
+| [002](./002-dev-apex-vercel.md)         | [#248](https://github.com/seahal/umaxica-apps-edge/issues/248) | Create `dev/apex` — Vite + Hono on Vercel          |
+| [003](./003-apex-direct-composition.md) | [#249](https://github.com/seahal/umaxica-apps-edge/issues/249) | Migrate apex workspaces to direct Hono composition |
