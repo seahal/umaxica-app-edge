@@ -13,21 +13,21 @@
   "dependencies": {
     "hono": "catalog:",
     "jose": "^6.2.2",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.31.0",
     "@react-router/cloudflare": "^7.14.0",
     "@sentry/react-router": "^10.47.0",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "catalog:",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.5.2",
     "@vercel/react-router": "^1.2.6",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "4.1.1",
+    "@vitest/coverage-v8": "4.1.2",
     "babel-plugin-react-compiler": "^1.0.0",
     "gitleaks": "^1.0.0",
     "happy-dom": "^20.8.9",

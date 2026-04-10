@@ -4,7 +4,6 @@
 
 （ ＾ν＾） Hello, World!
 
-
 ## Prerequisites
 
 - Node.js 24.x (`node:24-trixie`)
