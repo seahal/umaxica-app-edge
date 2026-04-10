@@ -17,6 +17,7 @@ describe('GET /about', () => {
     expect(body).toContain('About this site.');
     expect(body).toContain('https://umaxica.com');
     expect(body).toContain('https://umaxica.app');
+    expect(body).toContain('https://umaxica.org');
   });
 
   it('renders Japanese content when Accept-Language prefers ja', async () => {

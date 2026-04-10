@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
 import { buildHealthPageHtml, getBrandName } from '../html';
 import { createBadRequestFallback } from '../html/fallback-pages';
-import type { Context } from 'hono';
+import type { Context, ErrorHandler } from 'hono';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
@@ -34,6 +34,12 @@ export function createHealthRoute(): Hono<HealthBindings> {
     const brandName = getBrandName(c.env);
     return renderHealthResponse(brandName);
   });
+
+  // Propagate errors to parent app so onError handlers work correctly
+  const errorHandler: ErrorHandler<HealthBindings> = (err) => {
+    throw err;
+  };
+  route.onError(errorHandler);
 
   return route;
 }

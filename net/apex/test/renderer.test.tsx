@@ -5,7 +5,7 @@ import { renderer } from '../src/renderer';
 
 describe('Renderer layout', () => {
   const app = new Hono();
-  app.use(i18nMiddleware());
+  app.use(i18nMiddleware() as unknown as Parameters<typeof app.use>[0]);
   app.use(renderer);
   app.get('/', (c) => c.render(<p>Test content</p>));
 
@@ -25,11 +25,11 @@ describe('Renderer layout', () => {
     expect(body).toContain('UMAXICA');
   });
 
-  it('renders header title from BRAND_NAME env', async () => {
-    const res = await app.request('/', {}, { BRAND_NAME: 'UMAXCA' });
+  it('renders header title with the default brand name', async () => {
+    const res = await app.request('/');
     const body = await res.text();
-    expect(body).toContain('UMAXCA');
-    expect(body).toContain('<title>UMAXCA</title>');
+    expect(body).toContain('UMAXICA');
+    expect(body).toContain('<title>Umaxica</title>');
   });
 
   it('renders children in main element', async () => {

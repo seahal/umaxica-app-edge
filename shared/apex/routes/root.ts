@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
-import type { Context } from 'hono';
+import type { Context, ErrorHandler } from 'hono';
 
 export interface Meta {
   title?: string;
@@ -83,6 +83,12 @@ export function createRootRoute(
     route.use(renderer as any);
     route.get('/', timeout(2000), createPageHandler(config as PageConfig));
   }
+
+  // Propagate errors to parent app so onError handlers work correctly
+  const errorHandler: ErrorHandler<RootBindings> = (err) => {
+    throw err;
+  };
+  route.onError(errorHandler);
 
   return route;
 }
