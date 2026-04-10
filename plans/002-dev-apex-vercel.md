@@ -1,4 +1,4 @@
-# Plan 002: Create `dev/apex` — Vite + Hono on Vercel
+# Plan 002: Create `dev/apex` — Hono on Vercel
 
 ## Status: Pending
 
@@ -14,40 +14,25 @@ https://github.com/seahal/umaxica-apps-edge/issues/248
 - Health check (`/health`) → proxy and display Rails `/edge/v0/health` JSON
 - About page (`/about`) → domain description
 
-Previously, attempts to combine Vite + Hono for Vercel failed. This plan targets a minimal, working setup.
+This plan targets a minimal, working setup that Vercel can deploy as a function without emitting a static JavaScript bundle.
 
 ## Approach
 
 ### Runtime Target: Vercel Edge Functions
 
-Use Hono's `hono/vercel` adapter, which exports a `handle(app)` function compatible with Vercel's Edge Runtime.
+Export the Hono app directly from `src/index.ts` so Vercel can treat it as a function entrypoint.
 
 ```ts
 // src/index.ts
-import { handle } from 'hono/vercel';
 import { app } from './app';
 
 export const runtime = 'edge';
-export default handle(app);
+export default app;
 ```
 
-### Vite Config
+### Build Setup
 
-No `@cloudflare/vite-plugin`. Use a plain Vite config that builds to a Node-compatible ESM bundle. The entry point is `src/index.ts`.
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite-plus';
-export default defineConfig({
-  build: {
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-    },
-    rollupOptions: { external: ['hono', 'hono/vercel'] },
-  },
-});
-```
+No Vite build is needed. Keep the package build step limited to type-checking so the deployed output stays function-based.
 
 ### App Structure (`src/app.ts`)
 
@@ -75,7 +60,7 @@ export { app };
 
 ### Vercel Config
 
-No `vercel.json` is needed. Vercel auto-detects `src/index.ts` and the `export const runtime = 'edge'` entrypoint.
+No `vercel.json` is needed. Vercel should auto-detect `src/index.ts` as the entrypoint and deploy it as a function.
 
 ### Environment Variables
 
@@ -90,10 +75,9 @@ No `vercel.json` is needed. Vercel auto-detects `src/index.ts` and the `export c
 dev/apex/
   src/
     app.ts          # Hono app, direct composition
-    index.ts        # Vercel Edge entry: export default handle(app)
+    index.ts        # Vercel entry: export default app
     health.ts       # /health route handler
     about.ts        # /about route handler
-  vite.config.ts
   package.json
   tsconfig.json
 ```
@@ -110,8 +94,6 @@ dev/apex/
     "hono": "catalog:"
   },
   "devDependencies": {
-    "vite": "catalog:",
-    "vite-plus": "catalog:",
     "typescript": "catalog:",
     "@types/node": "catalog:"
   }
@@ -120,7 +102,6 @@ dev/apex/
 
 ## Notes
 
-- `hono/vercel` requires Edge Runtime; do not use Node.js-only APIs.
 - Keep the app stateless — no KV, no rate limiting (Vercel handles that at the CDN layer).
 - Health route must not crash the worker when Rails is unreachable; it should return 200 with an error payload.
 - No Tailwind, no JSX renderer — responses are plain HTML strings to keep the bundle tiny.

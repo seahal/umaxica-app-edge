@@ -1,9 +1,8 @@
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/seahal/umaxica-app-edge/main)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/seahal/umaxica-apps-edge/main)
 
 # Umaxica App (EDGE)
 
 （ ＾ν＾） Hello, World!
-
 
 ## Prerequisites
 

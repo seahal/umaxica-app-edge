@@ -56,7 +56,7 @@ RUN set -eux; \
   usermod --gid "${DOCKER_GID}" "${target_user}"; \
   usermod --append --groups sudo "${target_user}"; \
   install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces; \
-  install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces/umaxica-app-edge
+  install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces/umaxica-apps-edge
 
 RUN printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${DOCKER_USER}" > /etc/sudoers.d/devcontainer \
   && chmod 0440 /etc/sudoers.d/devcontainer
