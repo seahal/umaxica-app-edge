@@ -4,7 +4,6 @@
 
 （ ＾ν＾） Hello, World!
 
-Multi-domain monorepo deploying React Router v7 SSR apps and Hono API services to Cloudflare Workers.
 
 ## Prerequisites
 
@@ -107,6 +106,4 @@ Uptime checks via [Pulsetic](https://pulsetic.com/).
 
 ## Acknowledgement
 
-- Secrets must stay in Rails credentials; do not commit plaintext secrets.
-- WebAuthn origins are controlled by `TRUSTED_ORIGINS`.
 - Public availability of this repository is not guaranteed permanently.

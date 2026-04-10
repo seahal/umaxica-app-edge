@@ -73,18 +73,9 @@ export { app };
 | `GET /health` | Fetch `${RAILS_API_URL}/edge/v0/health`, display JSON or error               |
 | `GET /about`  | Static HTML describing the umaxica.dev apex domain                           |
 
-### Vercel Config (`vercel.json`)
+### Vercel Config
 
-Route all requests through the Edge Function:
-
-```json
-{
-  "functions": {
-    "src/index.ts": { "runtime": "edge" }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/src/index.ts" }]
-}
-```
+No `vercel.json` is needed. Vercel auto-detects `src/index.ts` and the `export const runtime = 'edge'` entrypoint.
 
 ### Environment Variables
 
@@ -105,7 +96,6 @@ dev/apex/
   vite.config.ts
   package.json
   tsconfig.json
-  vercel.json
 ```
 
 ## Changes to Repo Root

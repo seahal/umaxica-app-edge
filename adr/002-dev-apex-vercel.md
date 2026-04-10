@@ -73,18 +73,9 @@ export { app };
 | `GET /health` | Fetch `${RAILS_API_URL}/edge/v0/health`, display JSON or error               |
 | `GET /about`  | Static HTML describing the umaxica.dev apex domain                           |
 
-### Vercel Config (`vercel.json`)
+### Vercel Config
 
-Route all requests through the Edge Function:
-
-```json
-{
-  "functions": {
-    "src/index.ts": { "runtime": "edge" }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/src/index.ts" }]
-}
-```
+No `vercel.json` is required. Vercel auto-detects `src/index.ts` as the Hono entrypoint, and `export const runtime = 'edge'` keeps the deployment on the Edge Runtime.
 
 ### Environment Variables
 
@@ -105,7 +96,6 @@ dev/apex/
   vite.config.ts
   package.json
   tsconfig.json
-  vercel.json
 ```
 
 ## Changes to Repo Root
@@ -143,10 +133,11 @@ dev/apex/
 
 ### Changes Made
 
-- `dev/apex/` workspace created with `src/app.ts`, `src/index.ts`, `vite.config.ts`, `vercel.json`, `package.json`, `tsconfig.json`
+- `dev/apex/` workspace created with `src/app.ts`, `src/index.ts`, `vite.config.ts`, `package.json`, `tsconfig.json`
 - `pnpm-workspace.yaml` — added `dev/apex`
 - Uses `hono/vercel` Edge adapter (`export const runtime = 'edge'`)
 - Routes: `GET /` → 301 redirect to `process.env.DEV_CORE_URL ?? 'https://umaxica.dev/'`; `GET /about` → bilingual HTML; `GET /health` → Worker's own health JSON
+- Removed `dev/apex/vercel.json` after Vercel rejected the `functions.runtime = "edge"` schema
 
 ### Deviation from Plan
 
@@ -158,8 +149,9 @@ No test files added for `dev/apex`. Consider adding smoke tests if the workspace
 
 ### Verification
 
-- `vp check`: ✅ All files formatted, lint/type clean
-- `vp test`: ✅ 363 tests passed, no regressions
+- `./node_modules/.bin/tsc --noEmit` in `dev/apex`: ✅ passes
+- `pnpm dlx vercel build --yes`: blocked locally because the Vercel token is not valid in this environment
+- `vp check` / `vp test`: not rerun here because the local `vp` wrapper currently fails to resolve `vite-plus/bin/vp`
 
 ### Closes
 
