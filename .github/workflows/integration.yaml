@@ -101,12 +101,21 @@ jobs:
         target:
           - app/apex
           - app/core
+          - app/docs
+          - app/help
+          - app/news
           - com/apex
           - com/core
+          - com/docs
+          - com/help
+          - com/news
           - dev/core
           - net/apex
           - org/apex
           - org/core
+          - org/docs
+          - org/help
+          - org/news
     steps:
       - uses: actions/checkout@v5
       - uses: voidzero-dev/setup-vp@v1
@@ -123,8 +132,14 @@ jobs:
         run: |
           case "$TARGET" in
             */apex) asset_dir="$TARGET/dist/client" ;;
-            *) asset_dir="$TARGET/build/client" ;;
+            dev/core) asset_dir="" ;;
+            *) asset_dir="$TARGET/.open-next/assets" ;;
           esac
+
+          if [[ -z "$asset_dir" ]]; then
+            echo "No asset directory for $TARGET (skipped)"
+            exit 0
+          fi
 
           if [[ ! -d "$asset_dir" ]]; then
             echo "Asset directory not found: $asset_dir" >&2
