@@ -2,15 +2,17 @@
   "name": "umaxica-apps-edge-dev-apex",
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit",
-    "dev": "tsc --noEmit --watch",
-    "type": "tsc --noEmit"
+    "build": "vp build",
+    "dev": "vp dev",
+    "type": "vp exec tsc --noEmit"
   },
   "dependencies": {
     "hono": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   }
 }
