@@ -9,7 +9,7 @@ describe('GET /health', () => {
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
 
     const body = await response.text();
-    expect(body).toContain('<title>UMAXICA</title>');
+    expect(body).toContain('<title>UMAXICA (com) - Apex</title>');
     expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
     expect(body).toContain('<strong>Status:</strong> OK');
     expect(body).toContain('Timestamp:');
@@ -17,10 +17,11 @@ describe('GET /health', () => {
     expect(body).not.toContain('<footer');
   });
 
-  it('uses BRAND_NAME from env in the health page title', async () => {
-    const response = await requestFromComApp('/health', {}, { BRAND_NAME: 'UMAXCA' });
+  it('uses the default BRAND_NAME in the health page body', async () => {
+    const response = await requestFromComApp('/health');
     const body = await response.text();
-    expect(body).toContain('<title>UMAXCA</title>');
+    expect(body).toContain('UMAXICA');
+    expect(body).toContain('<title>UMAXICA (com) - Apex</title>');
   });
 
   it('applies security headers to the health response', async () => {

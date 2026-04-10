@@ -1,5 +1,10 @@
-import { buildApexTitle, createPageContent } from '../../../shared/apex/page-content';
+import { createPageContent } from '../../../shared/apex/page-content';
 import type { AssetEnv } from '../../../shared/apex/security-headers';
+import { buildApexTitle as buildSiteTitle } from './site';
+
+function buildApexTitle(_env: AssetEnv, _domain: string, pageName?: string) {
+  return buildSiteTitle(pageName);
+}
 
 function renderAboutContent(language: string | undefined) {
   if (language === 'ja') {
@@ -11,7 +16,8 @@ function renderAboutContent(language: string | undefined) {
           ）は、一般向けのウェブサイトとして運用いたしております。
         </p>
         <p>
-          他のドメインもご訪問ください: <a href="https://umaxica.app">umaxica.app</a>。
+          他のドメインもご訪問ください: <a href="https://umaxica.app">umaxica.app</a>、{' '}
+          <a href="https://umaxica.com">umaxica.com</a>。
         </p>
       </div>
     );
@@ -25,7 +31,8 @@ function renderAboutContent(language: string | undefined) {
         public-facing website.
       </p>
       <p>
-        You may also visit our other domains: <a href="https://umaxica.app">umaxica.app</a>.
+        You may also visit our other domains: <a href="https://umaxica.app">umaxica.app</a>,{' '}
+        <a href="https://umaxica.com">umaxica.com</a>.
       </p>
     </div>
   );

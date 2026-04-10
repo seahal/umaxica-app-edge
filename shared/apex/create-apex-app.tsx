@@ -65,6 +65,10 @@ interface ApexBindings {
  * Hono application for apex domains. It supports both redirect and page handlers
  * for the root route.
  *
+ * @deprecated This factory function is deprecated. Use direct route composition instead
+ * (see app/apex/src/app.tsx for the reference implementation). This function will be
+ * removed in a future cleanup.
+ *
  * @example
  * ```typescript
  * const app = createApexApp({

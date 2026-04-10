@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
-import type { Context } from 'hono';
+import type { Context, ErrorHandler } from 'hono';
 
 export interface Meta {
   title?: string;
@@ -52,6 +52,12 @@ export function createAboutRoute(renderer: unknown, config: AboutConfig): Hono<A
     setMeta(c, config.getAboutMeta(c.env));
     return c.render(config.renderAboutContent(c.get('language')) as string);
   });
+
+  // Propagate errors to parent app so onError handlers work correctly
+  const errorHandler: ErrorHandler<AboutBindings> = (err) => {
+    throw err;
+  };
+  route.onError(errorHandler);
 
   return route;
 }

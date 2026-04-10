@@ -4,7 +4,6 @@
 
 （ ＾ν＾） Hello, World!
 
-Multi-domain monorepo deploying React Router v7 SSR apps and Hono API services to Cloudflare Workers.
 
 ## Prerequisites
 
@@ -104,3 +103,7 @@ Cloudflare workspaces use `wrangler.jsonc` (`vars` + environments). `dev/core` r
 ## Monitoring
 
 Uptime checks via [Pulsetic](https://pulsetic.com/).
+
+## Acknowledgement
+
+- Public availability of this repository is not guaranteed permanently.

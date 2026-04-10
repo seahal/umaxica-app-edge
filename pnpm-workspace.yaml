@@ -14,6 +14,7 @@ packages:
   - org/docs
   - org/help
   - org/news
+  - dev/apex
   - dev/core
   - net/apex
 
@@ -25,7 +26,7 @@ catalog:
   '@types/node': ^20
   '@types/react': ^19.1.5
   '@types/react-dom': ^19.1.5
-  hono: ^4.12.9
+  hono: ^4.12.10
   next: 16.2.1
   nuqs: ^2.8.9
   react: 19.1.5
@@ -33,7 +34,7 @@ catalog:
   tailwindcss: ^4.2.2
   typescript: ^5.7.4
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.13
-  vite-plus: ^0.1.14
+  vite-plus: ^0.1.15
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.14
   wrangler: ^4.78.0
 
@@ -45,29 +46,6 @@ ignoredBuiltDependencies:
   - workerd
 
 minimumReleaseAge: 10080
-
-minimumReleaseAgeExclude:
-  - vite-plus
-  - '@voidzero-dev/*'
-  - oxlint
-  - '@oxlint/*'
-  - oxfmt
-  - '@oxfmt/*'
-  - oxlint-tsgolint
-  - '@oxlint-tsgolint/*'
-  - wrangler
-  - '@opentelemetry/*'
-  - happy-dom
-  - next
-  - '@next/*'
-  - '@opennextjs/*'
-
-overrides:
-  fast-xml-parser: '>=5.5.7'
-  rolldown: '1.0.0-rc.10'
-  undici: '>=7.24.0'
-  vite: 'catalog:'
-  vitest: 'catalog:'
 
 peerDependencyRules:
   allowAny:

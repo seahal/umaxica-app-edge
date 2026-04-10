@@ -39,7 +39,7 @@ describe('seo', () => {
   describe('withMeta', () => {
     it('sets meta context', async () => {
       const middleware = withMeta({ title: 'Test' });
-      const next = vi.fn();
+      const next = vi.fn<() => void>();
 
       // @ts-expect-error mock context
       await middleware(mockContext, next);
