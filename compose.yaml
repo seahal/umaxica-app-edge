@@ -20,24 +20,19 @@ services:
         volume:
           nocopy: true
     ports:
-      # Hono apex
       - '5101:5101' # com/apex
       - '5201:5201' # net/apex
       - '5301:5301' # org/apex
       - '5401:5401' # app/apex
-      # Next.js core
       - '5170:5170' # com/core
       - '5171:5171' # app/core
       - '5172:5172' # org/core
-      # Next.js docs
       - '5174:5174' # app/docs
       - '5177:5177' # com/docs
       - '5180:5180' # org/docs
-      # Next.js help
       - '5175:5175' # app/help
       - '5178:5178' # com/help
       - '5181:5181' # org/help
-      # Next.js news
       - '5176:5176' # app/news
       - '5179:5179' # com/news
       - '5182:5182' # org/news
@@ -48,16 +43,20 @@ services:
     user: edge:group
     environment:
       - CLOUDFLARE_ENV=development
+      - JIT_APP_CORE_URL=http://app.localhost:5171
+      - JIT_APP_DOCS_URL=http://app.localhost:5174
+      - JIT_APP_HELP_URL=http://app.localhost:5175
+      - JIT_APP_NEWS_URL=http://app.localhost:5176
+      - JIT_COM_CORE_URL=http://com.localhost:5170
+      - JIT_COM_DOCS_URL=http://com.localhost:5177
+      - JIT_COM_HELP_URL=http://com.localhost:5178
+      - JIT_COM_NEWS_URL=http://com.localhost:5179
+      - JIT_ORG_CORE_URL=http://org.localhost:5172
+      - JIT_ORG_DOCS_URL=http://org.localhost:5180
+      - JIT_ORG_HELP_URL=http://org.localhost:5181
+      - JIT_ORG_NEWS_URL=http://org.localhost:5182
       - VITE_GIT_HOOKS=0
       - NODE_OPTIONS=--max-old-space-size=4096
-      - HTTP_PROXY
-      - HTTPS_PROXY
-      - NO_PROXY
-      - ALL_PROXY
-      - http_proxy
-      - https_proxy
-      - no_proxy
-      - all_proxy
     restart: unless-stopped
     networks:
       outer:

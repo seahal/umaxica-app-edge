@@ -4906,8 +4906,8 @@ packages:
   caniuse-lite@1.0.30001777:
     resolution: {integrity: sha512-tmN+fJxroPndC74efCdp12j+0rk0RHwV5Jwa1zWaFVyw2ZxAuPeG8ZgWC3Wz7uSjT3qMRQ5XHZ4COgQmsCMJAQ==}
 
-  caniuse-lite@1.0.30001784:
-    resolution: {integrity: sha512-WU346nBTklUV9YfUl60fqRbU5ZqyXlqvo1SgigE1OAXK5bFL8LL9q1K7aap3N739l4BvNqnkm3YrGHiY9sfUQw==, tarball: https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001784.tgz}
+  caniuse-lite@1.0.30001785:
+    resolution: {integrity: sha512-blhOL/WNR+Km1RI/LCVAvA73xplXA7ZbjzI4YkMK9pa6T/P3F2GxjNpEkyw5repTw9IvkyrjyHpwjnhZ5FOvYQ==, tarball: https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001785.tgz}
 
   chalk@5.6.2:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==, tarball: https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz}
@@ -10665,7 +10665,7 @@ snapshots:
   browserslist@4.28.2:
     dependencies:
       baseline-browser-mapping: 2.10.14
-      caniuse-lite: 1.0.30001784
+      caniuse-lite: 1.0.30001785
       electron-to-chromium: 1.5.331
       node-releases: 2.0.37
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
@@ -10690,7 +10690,7 @@ snapshots:
 
   caniuse-lite@1.0.30001777: {}
 
-  caniuse-lite@1.0.30001784: {}
+  caniuse-lite@1.0.30001785: {}
 
   chalk@5.6.2: {}
 
