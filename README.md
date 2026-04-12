@@ -99,6 +99,20 @@ vp run --filter <workspace> deploy:promote
 
 Cloudflare workspaces use `wrangler.jsonc` (`vars` + environments). `dev/core` reads from Vercel env vars (`process.env` / `VITE_*`).
 
+For local Docker Compose development, the Next.js workspace URL convention is:
+
+```text
+JIT_{COM,ORG,APP}_{CORE,DOCS,NEWS,HELP}_URL
+```
+
+The current Compose defaults map those names to the local dev ports for each workspace, for example:
+
+- `JIT_APP_CORE_URL=http://localhost:5171`
+- `JIT_COM_CORE_URL=http://localhost:5170`
+- `JIT_ORG_CORE_URL=http://localhost:5172`
+
+Use the same naming pattern in other workspaces when you need a self URL or cross-workspace link target.
+
 ## Monitoring
 
 Uptime checks via [Pulsetic](https://pulsetic.com/).

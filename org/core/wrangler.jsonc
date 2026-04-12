@@ -15,8 +15,16 @@
     }
   ],
   "observability": {
-    "enabled": true
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true
+    }
   },
+  "upload_source_maps": true,
+  "placement": { "mode": "smart" },
   "env": {
     "development": {
       "services": [
@@ -34,6 +42,5 @@
         }
       ]
     }
-  },
-  "upload_source_maps": true
+  }
 }
