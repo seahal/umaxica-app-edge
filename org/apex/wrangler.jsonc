@@ -17,10 +17,12 @@
   "observability": {
     "logs": {
       "enabled": true,
-      "invocation_logs": true
+      "invocation_logs": true,
+      "head_sampling_rate": 0.2
     },
     "traces": {
-      "enabled": true
+      "enabled": true,
+      "head_sampling_rate": 0.2
     }
   },
   "placement": { "mode": "smart" },
@@ -32,10 +34,12 @@
       "observability": {
         "logs": {
           "enabled": true,
-          "invocation_logs": true
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2
         },
         "traces": {
-          "enabled": true
+          "enabled": true,
+          "head_sampling_rate": 0.2
         }
       }
     },
@@ -46,10 +50,12 @@
       "observability": {
         "logs": {
           "enabled": true,
-          "invocation_logs": true
+          "invocation_logs": true,
+          "head_sampling_rate": 0.2
         },
         "traces": {
-          "enabled": true
+          "enabled": true,
+          "head_sampling_rate": 0.2
         }
       }
     }

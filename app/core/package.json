@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 5171",
+    "dev": "next dev --port 5402",
     "build": "opennextjs-cloudflare build",
     "build:next": "next build",
-    "start": "next start --port 5171",
+    "start": "next start --port 5402",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

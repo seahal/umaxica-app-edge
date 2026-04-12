@@ -47,18 +47,20 @@ Each domain has an **apex** backend (Hono on Workers) and **core** frontend (Nex
 | `com/apex` | 5101 | `com.localhost:5101`         |
 | `org/apex` | 5301 | `org.localhost:5301`         |
 | `net/apex` | 5201 | `net.localhost:5201`         |
-| `app/core` | 5171 | `jp.app.localhost:5171`      |
-| `com/core` | 5170 | `jp.com.localhost:5170`      |
-| `org/core` | 5172 | `jp.org.localhost:5172`      |
-| `app/docs` | 5174 | `docs.jp.app.localhost:5174` |
-| `app/help` | 5175 | `help.jp.app.localhost:5175` |
-| `app/news` | 5176 | `news.jp.app.localhost:5176` |
-| `com/docs` | 5177 | `docs.jp.com.localhost:5177` |
-| `com/help` | 5178 | `help.jp.com.localhost:5178` |
-| `com/news` | 5179 | `news.jp.com.localhost:5179` |
-| `org/docs` | 5180 | `docs.jp.org.localhost:5180` |
-| `org/help` | 5181 | `help.jp.org.localhost:5181` |
-| `org/news` | 5182 | `news.jp.org.localhost:5182` |
+| `app/core` | 5402 | `jp.app.localhost:5402`      |
+| `com/core` | 5102 | `jp.com.localhost:5102`      |
+| `org/core` | 5302 | `jp.org.localhost:5302`      |
+| `dev/apex` | 5501 | `umaxica.dev:5501`           |
+| `dev/core` | 5502 | `umaxica.dev:5502`           |
+| `app/docs` | 5403 | `docs.jp.app.localhost:5403` |
+| `app/help` | 5404 | `help.jp.app.localhost:5404` |
+| `app/news` | 5405 | `news.jp.app.localhost:5405` |
+| `com/docs` | 5103 | `docs.jp.com.localhost:5103` |
+| `com/help` | 5104 | `help.jp.com.localhost:5104` |
+| `com/news` | 5105 | `news.jp.com.localhost:5105` |
+| `org/docs` | 5303 | `docs.jp.org.localhost:5303` |
+| `org/help` | 5304 | `help.jp.org.localhost:5304` |
+| `org/news` | 5305 | `news.jp.org.localhost:5305` |
 
 ### Frontend Pattern (Next.js on Cloudflare Workers)
 
