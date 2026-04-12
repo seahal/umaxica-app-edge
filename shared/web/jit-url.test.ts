@@ -11,9 +11,9 @@ describe('shared/web/jit-url', () => {
   it('normalizes the workspace url', () => {
     expect(
       getJitWorkspaceUrl('APP', 'CORE', {
-        JIT_APP_CORE_URL: 'http://localhost:5171/',
+        JIT_APP_CORE_URL: 'http://localhost:5402/',
       }),
-    ).toBe('http://localhost:5171');
+    ).toBe('http://localhost:5402');
   });
 
   it('returns null when the workspace url is missing', () => {
