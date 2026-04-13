@@ -15,8 +15,8 @@
     }
   ],
   "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.2,
+    "enabled": false,
+    "head_sampling_rate": 1,
     "logs": {
       "enabled": true,
       "head_sampling_rate": 0.2,
@@ -29,10 +29,15 @@
       "head_sampling_rate": 0.2
     }
   },
-  "upload_source_maps": true,
+  "upload_source_maps": false,
   "placement": { "mode": "smart" },
   "env": {
     "development": {
+      "vars": {
+        "CLOUDFLARE_ENV": "development",
+        "NODE_ENV": "development",
+        "BRAND_NAME": "UMAXICA"
+      },
       "services": [
         {
           "binding": "WORKER_SELF_REFERENCE",
@@ -41,6 +46,11 @@
       ]
     },
     "production": {
+      "vars": {
+        "CLOUDFLARE_ENV": "production",
+        "NODE_ENV": "production",
+        "BRAND_NAME": "UMAXICA"
+      },
       "services": [
         {
           "binding": "WORKER_SELF_REFERENCE",
@@ -48,5 +58,20 @@
         }
       ]
     }
-  }
+  },
+  /**
+   * Rate Limiting
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+   */
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 2000,
+        "period": 60
+      }
+    }
+  ]
+}
 }
