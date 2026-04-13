@@ -36,14 +36,14 @@
         "CLOUDFLARE_ENV": "development",
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
-      },
+      }
     },
     "production": {
       "vars": {
         "CLOUDFLARE_ENV": "production",
         "NODE_ENV": "production",
         "BRAND_NAME": "UMAXICA"
-      },
+      }
     }
   },
   /**
