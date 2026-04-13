@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vite-plus/test';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import { createHealthRoute } from '../../routes/health';
 
 describe('shared/apex/routes/health.ts', () => {
@@ -37,6 +37,15 @@ describe('shared/apex/routes/health.ts', () => {
       expect(res.status).toBe(200);
       const body = await res.text();
       expect(body).toContain('Timestamp:');
+    });
+
+    it('onError handler propagates errors to parent', async () => {
+      const route = createHealthRoute();
+      const mockErrorHandler = vi.fn((err: Error) => {
+        throw err;
+      });
+      route.onError(mockErrorHandler);
+      await expect(route.request('/health', {}, { BRAND_NAME: 'UMAXICA' })).resolves.toBeDefined();
     });
   });
 

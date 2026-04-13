@@ -18,14 +18,12 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.31.0",
-    "@react-router/cloudflare": "^7.14.0",
-    "@sentry/react-router": "^10.47.0",
+    "@cloudflare/workers-types": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.5.2",
-    "@vercel/react-router": "^1.2.6",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "4.1.2",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -38,7 +36,7 @@
     "vite-ssr-components": "^0.5.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "npm:@voidzero-dev/vite-plus-test@^0.1.15",
-    "wrangler": "^4.80.0"
+    "wrangler": "catalog:"
   },
   "packageManager": "pnpm@10.32.1"
 }

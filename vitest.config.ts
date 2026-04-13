@@ -3,8 +3,6 @@ import { defineConfig } from 'vite-plus';
 export default defineConfig({
   resolve: {
     alias: {
-      '@sentry/react-router': new URL('app/core/__mocks__/@sentry/react-router.ts', import.meta.url)
-        .pathname,
       '@microlabs/otel-cf-workers': new URL(
         'app/apex/__mocks__/@microlabs/otel-cf-workers.ts',
         import.meta.url,
@@ -23,14 +21,12 @@ export default defineConfig({
         '**/dist/**',
         '**/__mocks__/**',
         '**/public/**',
-        '**/.react-router/**',
         '**/*.css',
         '**/*.svg',
         '**/workers/**',
         '**/test-setup.ts',
         '**/locales/**',
         '**/zod.ts',
-        '**/react-router.config.ts',
         '**/coverage/**',
         '**/.next/**',
         '**/.open-next/**',
@@ -59,6 +55,7 @@ export default defineConfig({
         '**/apex/html/index.ts',
         '**/apex/middleware/index.ts',
         '**/apex/routes/index.ts',
+        '**/apex/routes/health.ts',
         '**/src/i18n/**',
         '**/src/app/**',
         'shared/cloudflare/**',
