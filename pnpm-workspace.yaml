@@ -27,7 +27,7 @@ catalog:
   '@types/node': ^20.19.39
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
-  hono: ^4.12.11
+  hono: ^4.12.12
   next: 16.2.2
   nuqs: ^2.8.9
   react: 19.1.5
@@ -35,7 +35,7 @@ catalog:
   tailwindcss: ^4.2.2
   typescript: ^5.9.3
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.13
-  vite-plus: ^0.1.15
+  vite-plus: ^0.1.16
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.14
   wrangler: ^4.80.0
 
