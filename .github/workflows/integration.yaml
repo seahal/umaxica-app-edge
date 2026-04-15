@@ -27,7 +27,7 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install
-      - run: vp pm audit -- --audit-level=high
+      - run: vp pm audit -- --audit-level=high --registry https://registry.npmjs.org
 
   outdated:
     runs-on: ubuntu-slim
@@ -51,7 +51,7 @@ jobs:
           node-version: '24'
           cache: true
       - run: vp install
-      - run: vp dlx knip --include unlisted,unresolved,binaries
+      - run: vp exec knip --include unlisted,unresolved,binaries
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
 
