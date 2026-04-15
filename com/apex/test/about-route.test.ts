@@ -14,7 +14,7 @@ describe('GET /about', () => {
     );
     expect(body).toContain('<link rel="canonical" href="https://umaxica.com/about"');
     expect(body).toContain('<meta name="robots" content="index,follow"');
-    expect(body).toContain('About this site.');
+    expect(body).toContain('About this site');
     expect(body).toContain('https://umaxica.com');
     expect(body).toContain('https://umaxica.app');
     expect(body).toContain('https://umaxica.org');
@@ -27,7 +27,7 @@ describe('GET /about', () => {
 
     const body = await response.text();
     expect(body).toContain('このサイトについて');
-    expect(body).not.toContain('About this site.');
+    expect(body).not.toContain('About this site');
   });
 
   it('uses BRAND_NAME from env in the page title', async () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vite-plus/test';
+import { vi } from 'vite-plus/test';
 import { createHealthRoute } from '../../routes/health';
 
 describe('shared/apex/routes/health.ts', () => {
@@ -39,13 +39,26 @@ describe('shared/apex/routes/health.ts', () => {
       expect(body).toContain('Timestamp:');
     });
 
-    it('onError handler propagates errors to parent', async () => {
+    it('errors propagate to parent app onError', async () => {
+      const { Hono } = await import('hono');
+
+      const parentApp = new Hono<{ Bindings: { BRAND_NAME?: string } }>();
+      const mockParentOnError = vi.fn().mockReturnValue(new Response('caught', { status: 500 }));
+      parentApp.onError(mockParentOnError);
+
       const route = createHealthRoute();
-      const mockErrorHandler = vi.fn((err: Error) => {
-        throw err;
+      // Add a route that throws to verify error propagation via the re-throw pattern
+      route.get('/test-throw', () => {
+        throw new Error('propagation test');
       });
-      route.onError(mockErrorHandler);
-      await expect(route.request('/health', {}, { BRAND_NAME: 'UMAXICA' })).resolves.toBeDefined();
+      parentApp.route('/', route);
+
+      const res = await parentApp.request('/test-throw', {}, {});
+      expect(mockParentOnError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'propagation test' }),
+        expect.anything(),
+      );
+      expect(res.status).toBe(500);
     });
   });
 

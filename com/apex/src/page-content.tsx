@@ -25,7 +25,7 @@ function renderAboutContent(language: string | undefined) {
 
   return (
     <div class="space-y-4">
-      <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
+      <h2 class="text-3xl font-semibold text-gray-800">About this site</h2>
       <p>
         This domain (<a href="https://umaxica.com">umaxica.com</a>) is not operated as a
         public-facing website.
