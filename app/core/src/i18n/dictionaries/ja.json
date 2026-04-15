@@ -1,6 +1,5 @@
 {
   "home": { "title": "ホーム", "description": "UMAXICAへようこそ" },
-  "authentication": { "title": "認証" },
   "configuration": { "title": "設定" },
   "configuration_account": { "title": "アカウント設定" },
   "configuration_preference": { "title": "環境設定" },

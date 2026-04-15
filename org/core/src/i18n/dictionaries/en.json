@@ -1,6 +1,5 @@
 {
   "home": { "title": "Home", "description": "Welcome to UMAXICA" },
-  "authentication": { "title": "Authentication" },
   "configuration": { "title": "Configuration" },
   "configuration_account": { "title": "Account Settings" },
   "configuration_preference": { "title": "Preferences" },
