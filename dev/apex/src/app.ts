@@ -10,7 +10,7 @@ function buildApexTitle(pageName?: string): string {
 }
 
 function detectLanguage(request: Request): 'ja' | 'en' {
-  const url = new URL(request.url);
+  const url = new URL(request.url, 'http://localhost');
   const language =
     url.searchParams.get('lang') ??
     request.headers.get('accept-language')?.split(',')[0]?.split('-')[0];
@@ -74,7 +74,14 @@ function htmlResponse(html: string, status = 200, extraHeaders?: Record<string, 
 }
 
 export function handleRequest(request: Request): Response {
-  const url = new URL(request.url);
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: { Allow: 'GET, HEAD' },
+    });
+  }
+
+  const url = new URL(request.url, 'http://localhost');
   const { pathname } = url;
 
   if (pathname === '/health') {

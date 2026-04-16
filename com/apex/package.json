@@ -12,7 +12,7 @@
     "type": "pnpm run cf-typegen && vp exec tsc --noEmit"
   },
   "dependencies": {
-    "@sentry/cloudflare": "^10.40.0",
+    "@sentry/cloudflare": "^10.48.0",
     "hono": "catalog:"
   },
   "devDependencies": {
@@ -21,7 +21,7 @@
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.9",
     "tailwindcss": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",

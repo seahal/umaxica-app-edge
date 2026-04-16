@@ -8,5 +8,6 @@
   "notifications": { "title": "通知", "wip": "準備中" },
   "about": { "title": "概要" },
   "sentry": { "title": "Sentryテスト" },
+  "doctor": { "title": "ドクター" },
   "notFound": { "title": "ページが見つかりません", "message": "お探しのページは存在しません。" }
 }

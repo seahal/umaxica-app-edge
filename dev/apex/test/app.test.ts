@@ -81,6 +81,10 @@ describe('dev/apex/src/app.ts', () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   describe('GET /', () => {
     it('redirects to DEV_CORE_URL with 301', async () => {
       const res = handleRequest(new Request(`${BASE}/`));
@@ -99,7 +103,6 @@ describe('dev/apex/src/app.ts', () => {
       const res = handleRequest(new Request(`${BASE}/`));
       expect(res.status).toBe(301);
       expect(res.headers.get('location')).toBe('https://custom.example.com/');
-      vi.unstubAllEnvs();
     });
   });
 
@@ -119,6 +122,39 @@ describe('dev/apex/src/app.ts', () => {
       expect(body).toContain('umaxica.app');
       expect(body).toContain('umaxica.com');
       expect(body).toContain('umaxica.org');
+    });
+  });
+
+  describe('non-GET/HEAD methods', () => {
+    it('returns 405 Method Not Allowed for POST', async () => {
+      const res = handleRequest(new Request(`${BASE}/about`, { method: 'POST' }));
+      expect(res.status).toBe(405);
+      expect(res.headers.get('allow')).toBe('GET, HEAD');
+    });
+
+    it('returns 405 Method Not Allowed for PUT', async () => {
+      const res = handleRequest(new Request(`${BASE}/health`, { method: 'PUT' }));
+      expect(res.status).toBe(405);
+      expect(res.headers.get('allow')).toBe('GET, HEAD');
+    });
+
+    it('returns 405 Method Not Allowed for DELETE', async () => {
+      const res = handleRequest(new Request(`${BASE}/`, { method: 'DELETE' }));
+      expect(res.status).toBe(405);
+    });
+  });
+
+  describe('404 Not Found', () => {
+    it('returns 404 for unknown routes', async () => {
+      const res = handleRequest(new Request(`${BASE}/unknown`));
+      expect(res.status).toBe(404);
+      const body = await res.text();
+      expect(body).toBe('Not Found');
+    });
+
+    it('returns 404 for /nonexistent', async () => {
+      const res = handleRequest(new Request(`${BASE}/nonexistent`));
+      expect(res.status).toBe(404);
     });
   });
 });
