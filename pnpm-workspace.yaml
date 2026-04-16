@@ -1,19 +1,10 @@
 packages:
   - app/apex
   - app/core
-  - app/docs
-  - app/help
-  - app/news
   - com/apex
   - com/core
-  - com/docs
-  - com/help
-  - com/news
   - org/apex
   - org/core
-  - org/docs
-  - org/help
-  - org/news
   - dev/apex
   - dev/core
   - net/apex
