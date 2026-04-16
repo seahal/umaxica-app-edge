@@ -10,7 +10,7 @@
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "types": ["node"],
     "esModuleInterop": true,
     "noEmit": true
