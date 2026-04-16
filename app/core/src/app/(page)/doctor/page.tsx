@@ -1,7 +1,12 @@
-export default function DoctorPage() {
+import { defaultLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/dictionaries';
+
+export default async function DoctorPage() {
+  const dict = await getDictionary(defaultLocale);
+
   return (
-    <main>
-      <p>hello</p>
+    <main className="page-main">
+      <h1>{dict.doctor.title}</h1>
     </main>
   );
 }
