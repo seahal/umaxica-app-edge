@@ -1,12 +1,13 @@
-import '@testing-library/jest-dom/vitest';
 import { describe, expect, it } from 'vite-plus/test';
-import { render, screen } from '@testing-library/react';
-import HealthPage from '../../src/app/health/page';
+import { GET } from '../../src/app/health/route';
 
-describe('dev/core health page', () => {
-  it('renders health page with OK status', () => {
-    render(<HealthPage />);
+describe('dev/core health route', () => {
+  it('returns OK with status 200', async () => {
+    const response = await GET();
+    const text = await response.text();
 
-    expect(screen.getByText('OK')).toBeInTheDocument();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/plain');
+    expect(text).toBe('OK');
   });
 });

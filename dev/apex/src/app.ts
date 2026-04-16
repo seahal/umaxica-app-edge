@@ -1,6 +1,3 @@
-import { Hono } from 'hono';
-import type { Context } from 'hono';
-
 const BRAND_NAME = process.env.BRAND_NAME ?? 'UMAXICA';
 const TITLE_BRAND_NAME = 'UMAXICA';
 const DOMAIN = 'dev';
@@ -12,9 +9,11 @@ function buildApexTitle(pageName?: string): string {
   return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
 }
 
-function detectLanguage(c: Context): 'ja' | 'en' {
+function detectLanguage(request: Request): 'ja' | 'en' {
+  const url = new URL(request.url);
   const language =
-    c.req.query('lang') ?? c.req.header('accept-language')?.split(',')[0]?.split('-')[0];
+    url.searchParams.get('lang') ??
+    request.headers.get('accept-language')?.split(',')[0]?.split('-')[0];
   return language === 'ja' ? 'ja' : 'en';
 }
 
@@ -64,29 +63,34 @@ function buildHealthPageHtml(brandName: string, timestampIso: string): string {
 </html>`;
 }
 
-const app = new Hono();
-
-app.get('/health', (_c) => {
-  const timestampIso = new Date().toISOString();
-  const html = buildHealthPageHtml(BRAND_NAME, timestampIso);
-
+function htmlResponse(html: string, status = 200, extraHeaders?: Record<string, string>): Response {
   return new Response(html, {
-    status: 200,
+    status,
     headers: {
       'content-type': 'text/html; charset=UTF-8',
-      'X-Robots-Tag': 'noindex, nofollow',
+      ...extraHeaders,
     },
   });
-});
+}
 
-app.get('/about', (c) => {
-  const lang = detectLanguage(c);
-  const isJapanese = lang === 'ja';
-  const title = isJapanese ? 'このサイトについて' : 'About';
-  const description = isJapanese ? `${SITE_URL} について` : `About ${SITE_URL}`;
-  const canonical = `https://${SITE_URL}/about`;
-  const body = isJapanese
-    ? `
+export function handleRequest(request: Request): Response {
+  const url = new URL(request.url);
+  const { pathname } = url;
+
+  if (pathname === '/health') {
+    const timestampIso = new Date().toISOString();
+    const html = buildHealthPageHtml(BRAND_NAME, timestampIso);
+    return htmlResponse(html, 200, { 'X-Robots-Tag': 'noindex, nofollow' });
+  }
+
+  if (pathname === '/about') {
+    const lang = detectLanguage(request);
+    const isJapanese = lang === 'ja';
+    const title = isJapanese ? 'このサイトについて' : 'About';
+    const description = isJapanese ? `${SITE_URL} について` : `About ${SITE_URL}`;
+    const canonical = `https://${SITE_URL}/about`;
+    const body = isJapanese
+      ? `
   <h1>このサイトについて</h1>
   <p>本ドメイン（<strong>${SITE_URL}</strong>）は、一般向けのウェブサイトとして運用いたしておりません。</p>
   <p>他のドメインもご訪問ください: <a href="https://umaxica.app">umaxica.app</a>、 <a href="https://umaxica.com">umaxica.com</a>、 <a href="https://umaxica.org">umaxica.org</a>。</p>
@@ -94,7 +98,7 @@ app.get('/about', (c) => {
     <p>&copy; ${new Date().getUTCFullYear()} ${BRAND_NAME}</p>
   </footer>
 `
-    : `
+      : `
   <h1>About this site.</h1>
   <p>This domain (<strong>${SITE_URL}</strong>) is not operated as a public-facing website.</p>
   <p>You may also visit our other domains: <a href="https://umaxica.app">umaxica.app</a>, <a href="https://umaxica.com">umaxica.com</a>, <a href="https://umaxica.org">umaxica.org</a>.</p>
@@ -103,21 +107,22 @@ app.get('/about', (c) => {
   </footer>
 `;
 
-  const html = buildPageShell({
-    lang,
-    title: buildApexTitle(title),
-    description,
-    canonical,
-    robots: 'index,follow',
-    body,
-  });
+    const html = buildPageShell({
+      lang,
+      title: buildApexTitle(title),
+      description,
+      canonical,
+      robots: 'index,follow',
+      body,
+    });
 
-  return c.html(html);
-});
+    return htmlResponse(html);
+  }
 
-app.get('/', (c) => {
-  const redirectUrl = process.env.DEV_CORE_URL ?? 'https://umaxica.dev/';
-  return c.redirect(redirectUrl, 301);
-});
+  if (pathname === '/') {
+    const redirectUrl = process.env.DEV_CORE_URL ?? 'https://umaxica.dev/';
+    return Response.redirect(redirectUrl, 301);
+  }
 
-export { app };
+  return new Response('Not Found', { status: 404 });
+}

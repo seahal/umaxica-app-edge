@@ -20,7 +20,7 @@ packages:
 
 catalog:
   '@cloudflare/vite-plugin': ^1.26.1
-  '@cloudflare/workers-types': ^4.20260408.1
+  '@cloudflare/workers-types': ^4.20260409.1
   '@opennextjs/cloudflare': ^1.18.0
   '@tailwindcss/postcss': ^4.2.2
   '@tailwindcss/vite': ^4.2.2
@@ -37,7 +37,7 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.13
   vite-plus: ^0.1.16
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.14
-  wrangler: ^4.81.0
+  wrangler: ^4.81.1
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
