@@ -1,9 +1,12 @@
 packages:
   - app/apex
+  - app/jump
   - app/core
   - com/apex
+  - com/jump
   - com/core
   - org/apex
+  - org/jump
   - org/core
   - dev/apex
   - dev/core
@@ -11,7 +14,7 @@ packages:
 
 catalog:
   '@cloudflare/vite-plugin': ^1.31.2
-  '@cloudflare/workers-types': ^4.20260409.1
+  '@cloudflare/workers-types': ^4.20260411.1
   '@opennextjs/cloudflare': ^1.19.0
   '@tailwindcss/postcss': ^4.2.2
   '@tailwindcss/vite': ^4.2.2
