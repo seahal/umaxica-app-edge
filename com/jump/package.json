@@ -1,0 +1,16 @@
+{
+  "name": "umaxica-apps-edge-com-jump",
+  "type": "module",
+  "scripts": {
+    "server": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "type": "vp exec tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

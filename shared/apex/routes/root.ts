@@ -42,7 +42,7 @@ function createRedirectHandler(config: RootRedirectConfig) {
     const regionParam = c.req.query('ri');
     const redirectUrl = config.resolveRedirectUrl(regionParam);
     if (redirectUrl) {
-      return c.redirect(redirectUrl, 301);
+      return c.redirect(redirectUrl, 307);
     }
     const defaultRedirectUrl = config.getDefaultRedirectUrl();
     if (defaultRedirectUrl) {

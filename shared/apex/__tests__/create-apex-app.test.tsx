@@ -278,7 +278,7 @@ describe('createApexApp with redirect handler', () => {
 
     const response = await app.request('https://umaxica.app/?ri=tokyo');
 
-    expect(response.status).toBe(301);
+    expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('/tokyo');
   });
 
