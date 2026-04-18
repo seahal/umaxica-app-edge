@@ -3,7 +3,11 @@
   "type": "module",
   "scripts": {
     "server": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "build": "pnpm run type",
+    "deploy": "pnpm run build && wrangler deploy",
+    "deploy:upload": "pnpm run build && wrangler versions upload",
+    "deploy:promote": "wrangler versions deploy --yes",
+    "cf-typegen": "pnpm wrangler types --env-interface CloudflareBindings",
     "type": "vp exec tsc --noEmit"
   },
   "dependencies": {
