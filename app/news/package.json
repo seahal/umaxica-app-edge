@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 5405",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
+    "build:next": "next build",
     "start": "next start --port 5405"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "catalog:",
     "next": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",

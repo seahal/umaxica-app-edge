@@ -18,5 +18,9 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  return children;
+  return (
+    <html lang={locale}>
+      <body>{children}</body>
+    </html>
+  );
 }
