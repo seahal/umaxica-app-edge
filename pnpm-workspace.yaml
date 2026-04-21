@@ -13,8 +13,8 @@ packages:
   - net/apex
 
 catalog:
-  '@cloudflare/vite-plugin': ^1.31.2
-  '@cloudflare/workers-types': ^4.20260413.1
+  '@cloudflare/vite-plugin': ^1.32.2
+  '@cloudflare/workers-types': ^4.20260414.1
   '@opennextjs/cloudflare': ^1.19.0
   '@tailwindcss/postcss': ^4.2.2
   '@tailwindcss/vite': ^4.2.2
@@ -31,7 +31,7 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.16
   vite-plus: ^0.1.16
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.16
-  wrangler: ^4.81.1
+  wrangler: ^4.82.2
 
 ignoredBuiltDependencies:
   - '@sentry/cli'

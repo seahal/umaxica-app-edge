@@ -11,6 +11,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.14",
     "hono": "catalog:",
     "jose": "^6.2.2",
     "tailwindcss": "catalog:"
@@ -28,7 +29,7 @@
     "@vitest/coverage-v8": "4.1.4",
     "babel-plugin-react-compiler": "^1.0.0",
     "gitleaks": "^1.0.0",
-    "happy-dom": "^20.8.9",
+    "happy-dom": "^20.9.0",
     "knip": "^6.4.1",
     "miniflare": "^4.20260410.0",
     "preact-render-to-string": "^6.6.7",

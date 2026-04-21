@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { defaultLocale } from '@/i18n/config';
 
 export const metadata: Metadata = {
   title: 'UMAXICA News',
@@ -10,5 +11,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <body>{children}</body>;
+  return (
+    <html lang={defaultLocale}>
+      <body>{children}</body>
+    </html>
+  );
 }
