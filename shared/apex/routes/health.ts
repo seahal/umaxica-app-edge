@@ -9,14 +9,22 @@ const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 export interface HealthBindings {
   Bindings: {
     BRAND_NAME?: string;
+    REVISION?: {
+      id: string;
+      tag: string;
+      timestamp: string;
+    };
   };
 }
 
 export type HealthContext = Context<HealthBindings>;
 
-function renderHealthResponse(brandName: string): Response {
+function renderHealthResponse(
+  brandName: string,
+  revision?: HealthBindings['Bindings']['REVISION'],
+): Response {
   const timestampIso = new Date().toISOString();
-  const html = buildHealthPageHtml(brandName, timestampIso);
+  const html = buildHealthPageHtml(brandName, timestampIso, revision);
 
   return new Response(html, {
     status: 200,
@@ -32,7 +40,7 @@ export function createHealthRoute(): Hono<HealthBindings> {
 
   route.get('/health', timeout(2000), (c: HealthContext) => {
     const brandName = getBrandName(c.env);
-    return renderHealthResponse(brandName);
+    return renderHealthResponse(brandName, c.env.REVISION);
   });
 
   // Propagate errors to parent app so onError handlers work correctly

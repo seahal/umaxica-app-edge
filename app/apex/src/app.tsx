@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { httpInstrumentationMiddleware } from '@hono/otel';
+import { requestId } from 'hono/request-id';
+import { structuredLogger } from '@hono/structured-logger';
 import {
   etagMiddleware,
   rateLimitMiddleware,
@@ -15,7 +16,7 @@ import { getAboutMeta, renderAboutContent } from './page-content';
 import { buildHealthPageHtml } from './site';
 import { renderer } from './renderer';
 
-import type { ApexBindings } from '../../../shared/apex/create-apex-app';
+import type { ApexBindings } from '../../../shared/apex/bindings';
 
 const BRAND_NAME = process.env.BRAND_NAME ?? 'UMAXICA';
 
@@ -24,8 +25,47 @@ const { resolveRedirectUrl, getDefaultRedirectUrl, buildRegionErrorPayload } =
 
 const app = new Hono<ApexBindings>();
 
-// OpenTelemetry — outermost middleware to trace the full request lifecycle
-app.use(httpInstrumentationMiddleware());
+app.use('*', requestId());
+app.use(
+  '*',
+  structuredLogger({
+    createLogger: () => console,
+    onRequest: (logger, c) => {
+      logger.info(
+        {
+          method: c.req.method,
+          path: c.req.path,
+          requestId: c.get('requestId'),
+        },
+        'request start',
+      );
+    },
+    onResponse: (logger, c, elapsedMs) => {
+      logger.info(
+        {
+          method: c.req.method,
+          path: c.req.path,
+          status: c.res.status,
+          requestId: c.get('requestId'),
+          elapsedMs,
+        },
+        'request end',
+      );
+    },
+    onError: (logger, err, c) => {
+      logger.error(
+        {
+          err,
+          method: c.req.method,
+          path: c.req.path,
+          status: c.res.status,
+          requestId: c.get('requestId'),
+        },
+        'request error',
+      );
+    },
+  }),
+);
 
 // Shared middleware
 app.use(etagMiddleware() as unknown as Parameters<typeof app.use>[0]);
@@ -38,7 +78,7 @@ app.use(i18nMiddleware() as unknown as Parameters<typeof app.use>[0]);
 app.get('/health', (c) => {
   const timestampIso = new Date().toISOString();
   const brandName = c.env?.BRAND_NAME ?? BRAND_NAME;
-  const html = buildHealthPageHtml(brandName, timestampIso);
+  const html = buildHealthPageHtml(brandName, timestampIso, c.env?.REVISION);
 
   return new Response(html, {
     status: 200,

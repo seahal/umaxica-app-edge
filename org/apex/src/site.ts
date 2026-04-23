@@ -7,7 +7,17 @@ export function buildApexTitle(pageName?: string): string {
   return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
 }
 
-export function buildHealthPageHtml(brandName: string, timestampIso: string): string {
+export function buildHealthPageHtml(
+  brandName: string,
+  timestampIso: string,
+  revision?: { id: string; tag: string; timestamp: string },
+): string {
+  const revisionHtml = revision
+    ? `<p><strong>Revision ID:</strong> ${revision.id}</p>
+      <p><strong>Revision Tag:</strong> ${revision.tag}</p>
+      <p><strong>Revision Time:</strong> ${revision.timestamp}</p>`
+    : '';
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -22,6 +32,7 @@ export function buildHealthPageHtml(brandName: string, timestampIso: string): st
       <p><strong>Status:</strong> OK</p>
       <p><strong>Timestamp:</strong> ${timestampIso}</p>
       <p><strong>Domain:</strong> ${SITE_URL}</p>
+      ${revisionHtml}
     </main>
   </body>
 </html>`;

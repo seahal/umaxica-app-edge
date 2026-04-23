@@ -15,6 +15,7 @@ packages:
 catalog:
   '@cloudflare/vite-plugin': ^1.32.2
   '@cloudflare/workers-types': ^4.20260414.1
+  '@hono/structured-logger': ^0.1.0
   '@opennextjs/cloudflare': ^1.19.0
   '@tailwindcss/postcss': ^4.2.2
   '@tailwindcss/vite': ^4.2.2
@@ -41,6 +42,9 @@ ignoredBuiltDependencies:
   - workerd
 
 minimumReleaseAge: 10080
+
+minimumReleaseAgeExclude:
+  - '@hono/structured-logger'
 
 peerDependencyRules:
   allowAny:

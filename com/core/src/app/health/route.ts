@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+export const runtime = 'edge';
 
 function getTimestamp() {
   return new Date().toISOString();
@@ -17,9 +20,15 @@ function getFallbackTimestamp() {
 export async function GET() {
   try {
     const timestamp = getTimestamp();
+    const context = getCloudflareContext() as { env: CloudflareEnv };
+    const { id, tag, timestamp: revisionTimestamp } = context.env.REVISION ?? {};
 
     return NextResponse.json(
-      { status: 'ok', timestamp },
+      {
+        status: 'ok',
+        timestamp,
+        version: { id, tag, timestamp: revisionTimestamp },
+      },
       {
         status: 200,
         headers: {

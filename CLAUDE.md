@@ -10,7 +10,7 @@ Umaxica App (EDGE) — a multi-domain monorepo deploying Next.js SSR apps (via o
 
 ## Commands
 
-All commands run from the repo root using **pnpm** (not Bun — the README references Bun but the project has migrated to pnpm).
+All commands run from the repo root using **pnpm**.
 
 | Task                       | Command                                     |
 | -------------------------- | ------------------------------------------- |
@@ -72,7 +72,7 @@ Each domain has an **apex** backend (Hono on Workers) and **core** frontend (Nex
 ### Backend Pattern (Hono apex)
 
 - Hono v4 web framework on Cloudflare Workers
-- Shared middleware via `shared/apex/create-apex-app.tsx`
+- Shared middleware and types via `shared/apex/` (e.g., `shared/apex/bindings.ts`)
 - Vite dev server with `@cloudflare/vite-plugin`
 
 ### Key Dependencies
@@ -190,5 +190,8 @@ For GitHub Actions, consider using [`voidzero-dev/setup-vp`](https://github.com/
 ## Review Checklist for Agents
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to validate changes.
+  <!--VITE PLUS END-->
+  arted.
 - [ ] Run `vp check` and `vp test` to validate changes.
 <!--VITE PLUS END-->
