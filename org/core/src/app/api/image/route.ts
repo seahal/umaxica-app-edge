@@ -1,0 +1,73 @@
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+export const runtime = 'edge';
+
+/**
+ * Image transformation API route using Cloudflare Images binding.
+ * This route is used by next/image via the custom loader in src/image-loader.ts.
+ */
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const url = searchParams.get('url');
+  const width = searchParams.get('w');
+  const quality = searchParams.get('q');
+
+  if (!url) {
+    return new NextResponse('Missing url parameter', { status: 400 });
+  }
+
+  // Fetch the source image
+  const sourceImage = await fetch(url);
+  if (!sourceImage.ok) {
+    return new NextResponse('Failed to fetch source image', { status: sourceImage.status });
+  }
+
+  if (!sourceImage.body) {
+    return new NextResponse('Source image body is empty', { status: 500 });
+  }
+
+  const { env } = getCloudflareContext() as { env: CloudflareEnv };
+
+  // If IMAGES binding is missing (e.g. local dev without binding configured),
+  // fallback to returning the original image.
+  if (!env.IMAGES) {
+    return new NextResponse(sourceImage.body, {
+      headers: sourceImage.headers,
+    });
+  }
+
+  try {
+    // Transform using Cloudflare Images binding
+    // oxlint-disable-next-line typescript-eslint/no-explicit-any
+    const image = (env.IMAGES as any).input(sourceImage.body);
+
+    const options: { width?: number; quality?: number } = {};
+    if (width) {
+      options.width = parseInt(width, 10);
+    }
+    if (quality) {
+      options.quality = parseInt(quality, 10);
+    }
+
+    image.transform(options);
+
+    // Default to webp for optimization
+    const output = await image.output({ format: 'image/webp' });
+
+    return new NextResponse(output.body, {
+      headers: {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+  } catch (error) {
+    // oxlint-disable-next-line no-console
+    console.error('Image transformation failed:', error);
+    // Fallback to original image on transformation error
+    return new NextResponse(sourceImage.body, {
+      headers: sourceImage.headers,
+    });
+  }
+}

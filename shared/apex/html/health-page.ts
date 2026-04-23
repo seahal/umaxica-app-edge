@@ -2,7 +2,19 @@ import { DEFAULT_BRAND_NAME } from '../brand';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
-export function buildHealthPageHtml(brandName: string, timestampIso: string): string {
+export function buildHealthPageHtml(
+  brandName: string,
+  timestampIso: string,
+  revision?: { id: string; tag: string; timestamp: string },
+): string {
+  const revisionInfo = revision
+    ? `<div class="pt-4 border-t border-gray-200">
+        <p><strong>Revision ID:</strong> ${revision.id}</p>
+        <p><strong>Revision Tag:</strong> ${revision.tag}</p>
+        <p><strong>Revision Time:</strong> ${revision.timestamp}</p>
+      </div>`
+    : '';
+
   return `<!doctype html>
 <html lang="ja">
   <head>
@@ -17,6 +29,7 @@ export function buildHealthPageHtml(brandName: string, timestampIso: string): st
       <div class="space-y-4">
         <p><strong>Status:</strong> OK</p>
         <p><strong>Timestamp:</strong> ${timestampIso}</p>
+        ${revisionInfo}
       </div>
     </main>
   </body>

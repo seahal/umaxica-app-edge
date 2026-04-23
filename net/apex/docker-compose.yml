@@ -23,8 +23,8 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: bun-cache
-        target: /home/apex/.bun
+        source: pnpm-cache
+        target: /home/apex/.pnpm-store
         volume:
           nocopy: true
     ports:
@@ -43,7 +43,7 @@ services:
       - https_proxy
       - no_proxy
       - all_proxy
-    command: bun run server
+    command: pnpm run server
     tty: true
     stdin_open: true
     init: true
@@ -72,8 +72,8 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: bun-cache
-        target: /home/apex/.bun
+        source: pnpm-cache
+        target: /home/apex/.pnpm-store
         volume:
           nocopy: true
     environment:
@@ -86,7 +86,7 @@ services:
       - https_proxy
       - no_proxy
       - all_proxy
-    command: bun run build
+    command: pnpm run build
     user: apex:group
     profiles:
       - build
@@ -113,8 +113,8 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: bun-cache
-        target: /home/apex/.bun
+        source: pnpm-cache
+        target: /home/apex/.pnpm-store
         volume:
           nocopy: true
     ports:
@@ -130,7 +130,7 @@ services:
       - https_proxy
       - no_proxy
       - all_proxy
-    command: bunx wrangler dev --ip 0.0.0.0 --port 8787
+    command: pnpm dlx wrangler dev --ip 0.0.0.0 --port 8787
     tty: true
     stdin_open: true
     init: true
@@ -142,5 +142,5 @@ services:
 volumes:
   node-modules:
     driver: local
-  bun-cache:
+  pnpm-cache:
     driver: local

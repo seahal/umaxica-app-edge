@@ -71,7 +71,7 @@ The development environment can be set up via Docker + VS Code DevContainer.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
-  - Security: Trivy, Gitleaks (via Lefthook pre-commit hooks)
+  - Security: Trivy, Gitleaks (via pre-commit hooks)
 
 ```bash
 # VS Code: use "Reopen in Container" for automatic setup

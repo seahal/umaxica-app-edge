@@ -32,7 +32,7 @@ Each domain has workspaces: `<domain>/apex` (Hono backend), `<domain>/core` (Nex
 | `net/apex`  | —          | —          | —          | —          | umaxica.net          |
 | —           | `dev/core` | —          | —          | —          | umaxica.dev (Vercel) |
 
-**Apex backends** (`*/apex`): Hono apps built via the `createApexApp()` factory in `shared/apex/create-apex-app.tsx`. This factory wires up common middleware (CSRF, rate limiting, security headers, language detection, ETags). Each apex workspace adds its own route handlers and renderer on top.
+**Apex backends** (`*/apex`): Hono apps built via direct route composition (see `app/apex/src/app.tsx` for reference). They wire up common middleware (CSRF, rate limiting, security headers, language detection, ETags) and shared route factories from `shared/apex/`.
 
 **Next.js frontends** (`*/core`, `*/docs`, `*/help`, `*/news`): Next.js with App Router and SSR, deployed to Cloudflare Workers via **opennextjs-cloudflare**. i18n handled by middleware-based locale routing (`middleware.ts`).
 
@@ -40,7 +40,6 @@ Each domain has workspaces: `<domain>/apex` (Hono backend), `<domain>/core` (Nex
 
 ## Key Conventions
 
-- **Zod**: Import from `src/lib/zod.ts` (re-exports zod with a `parseWithZod` helper), not directly from `zod`.
 - **tsconfig**: TypeScript strict mode with `noUncheckedIndexedAccess`, `noImplicitOverride`, `exactOptionalPropertyTypes`.
 - **Path aliases**: `@app/*` → `app/core/src/*`, `@com/*` → `com/core/src/*`, `@org/*` → `org/core/src/*`.
 - **Sentry mock**: `app/core/__mocks__/@sentry/react-router.ts` stubs Sentry for tests. Use the alias in `vitest.config.ts` to resolve it.

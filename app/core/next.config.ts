@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
   typedRoutes: true,
+  images: {
+    loader: 'custom',
+    loaderFile: './src/image-loader.ts',
+  },
   allowedDevOrigins: ['localhost', '*.localhost', '172.18.0.2'],
   logging: {
     fetches: {

@@ -1,6 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { GET } from '../../src/app/health/route';
 
+vi.mock('@opennextjs/cloudflare', () => ({
+  getCloudflareContext: vi.fn().mockReturnValue({
+    env: {
+      REVISION: {
+        id: 'test-id',
+        tag: 'test-tag',
+        timestamp: '2024-01-01T00:00:00.000Z',
+      },
+    },
+  }),
+}));
+
 describe('org/core health route', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -21,6 +33,11 @@ describe('org/core health route', () => {
     expect(json).toEqual({
       status: 'ok',
       timestamp: '2024-01-01T00:00:00.000Z',
+      version: {
+        id: 'test-id',
+        tag: 'test-tag',
+        timestamp: '2024-01-01T00:00:00.000Z',
+      },
     });
   });
 

@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "server": "vp dev",
-    "build": "vp build && mkdir -p dist/client/src && find dist/client/assets -name 'style-*.css' -exec cp {} dist/client/src/style.css \\;",
+    "build": "vp build && sh -c 'mkdir -p dist/client/src && cp dist/client/assets/style-*.css dist/client/src/style.css'",
     "preview": "$npm_execpath run build && vp preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
     "deploy:upload": "$npm_execpath run build && wrangler versions upload",
@@ -12,8 +12,7 @@
     "type": "pnpm run cf-typegen && vp exec tsc --noEmit"
   },
   "dependencies": {
-    "@hono/otel": "^1.1.1",
-    "@microlabs/otel-cf-workers": "1.0.0-rc.52",
+    "@hono/structured-logger": "catalog:",
     "hono": "catalog:"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "dev": "tsc --noEmit --watch",
+    "deploy": "vercel deploy --prod",
     "type": "tsc --noEmit"
   },
   "devDependencies": {

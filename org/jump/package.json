@@ -11,6 +11,7 @@
     "type": "vp exec tsc --noEmit"
   },
   "dependencies": {
+    "@hono/structured-logger": "catalog:",
     "hono": "catalog:"
   },
   "devDependencies": {
