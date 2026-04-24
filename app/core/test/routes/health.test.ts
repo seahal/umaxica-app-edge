@@ -2,15 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { GET } from '../../src/app/health/route';
 
 vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi.fn().mockReturnValue({
-    env: {
-      REVISION: {
-        id: 'test-id',
-        tag: 'test-tag',
-        timestamp: '2024-01-01T00:00:00.000Z',
+  getCloudflareContext: vi
+    .fn<() => { env: { REVISION: { id: string; tag: string; timestamp: string } } }>()
+    .mockReturnValue({
+      env: {
+        REVISION: {
+          id: 'test-id',
+          tag: 'test-tag',
+          timestamp: '2024-01-01T00:00:00.000Z',
+        },
       },
-    },
-  }),
+    }),
 }));
 
 describe('app/core health route', () => {

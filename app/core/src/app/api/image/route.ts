@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { validateImageUrl } from '../../../../../../shared/cloudflare/image';
 
 export const runtime = 'edge';
 
@@ -18,8 +19,13 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Missing url parameter', { status: 400 });
   }
 
+  const validatedUrl = validateImageUrl(url, request.url);
+  if (!validatedUrl) {
+    return new NextResponse('Invalid or disallowed url parameter', { status: 400 });
+  }
+
   // Fetch the source image
-  const sourceImage = await fetch(url);
+  const sourceImage = await fetch(validatedUrl);
   if (!sourceImage.ok) {
     return new NextResponse('Failed to fetch source image', { status: sourceImage.status });
   }

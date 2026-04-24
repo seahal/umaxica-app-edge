@@ -43,7 +43,9 @@ describe('shared/apex/routes/health.ts', () => {
       const { Hono } = await import('hono');
 
       const parentApp = new Hono<{ Bindings: { BRAND_NAME?: string } }>();
-      const mockParentOnError = vi.fn().mockReturnValue(new Response('caught', { status: 500 }));
+      const mockParentOnError = vi
+        .fn<() => Response>()
+        .mockReturnValue(new Response('caught', { status: 500 }));
       parentApp.onError(mockParentOnError);
 
       const route = createHealthRoute();

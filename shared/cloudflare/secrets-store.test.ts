@@ -34,7 +34,9 @@ describe('shared/cloudflare/secrets-store', () => {
     it('returns binding value when direct value is invalid and binding is valid secret store', async () => {
       const secretValue = 'binding-value';
       const mockBinding: SecretStoreSecret = {
-        get: vi.fn(() => Promise.resolve(secretValue)) as unknown as () => Promise<string>,
+        get: vi.fn<() => Promise<string>>(() =>
+          Promise.resolve(secretValue),
+        ) as unknown as () => Promise<string>,
       };
       const env = { TEST_KEY: '', SECRET_BINDING: mockBinding };
 
@@ -46,7 +48,7 @@ describe('shared/cloudflare/secrets-store', () => {
 
     it('returns undefined when both direct and binding values are invalid', async () => {
       const mockBinding = {
-        get: vi.fn().mockResolvedValue(''),
+        get: vi.fn<() => Promise<string>>().mockResolvedValue(''),
       };
       const env = { TEST_KEY: '', SECRET_BINDING: mockBinding };
 
@@ -64,7 +66,9 @@ describe('shared/cloudflare/secrets-store', () => {
     it('uses default binding key when not provided', async () => {
       const secretValue = 'sentry-dsn-value';
       const mockBinding: SecretStoreSecret = {
-        get: vi.fn(() => Promise.resolve(secretValue)) as unknown as () => Promise<string>,
+        get: vi.fn<() => Promise<string>>(() =>
+          Promise.resolve(secretValue),
+        ) as unknown as () => Promise<string>,
       };
       const env = { TEST_KEY: '', SENTRY_DSN: mockBinding };
 
@@ -89,7 +93,9 @@ describe('shared/cloudflare/secrets-store', () => {
     it('overrides env key with resolved value', async () => {
       const secretValue = 'resolved-value';
       const mockBinding: SecretStoreSecret = {
-        get: vi.fn(() => Promise.resolve(secretValue)) as unknown as () => Promise<string>,
+        get: vi.fn<() => Promise<string>>(() =>
+          Promise.resolve(secretValue),
+        ) as unknown as () => Promise<string>,
       };
       const env = { TEST_KEY: '', SECRET_BINDING: mockBinding };
 
