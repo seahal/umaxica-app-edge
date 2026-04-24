@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { validateImageUrl } from './image';
+import { DEFAULT_ALLOWED_IMAGE_HOSTS, validateImageUrl } from './image';
 
 describe('shared/cloudflare/image', () => {
   it('resolves relative urls against the request url', () => {
@@ -22,6 +22,13 @@ describe('shared/cloudflare/image', () => {
         'images.unsplash.com, avatars.githubusercontent.com',
       ),
     ).toBe('https://images.unsplash.com/photo-1.jpg');
+  });
+
+  it('allows default external image hostnames', () => {
+    expect(
+      validateImageUrl('https://avatars.githubusercontent.com/u/1', 'https://example.com/app'),
+    ).toBe('https://avatars.githubusercontent.com/u/1');
+    expect(DEFAULT_ALLOWED_IMAGE_HOSTS).toContain('avatars.githubusercontent.com');
   });
 
   it('rejects disallowed hostnames', () => {

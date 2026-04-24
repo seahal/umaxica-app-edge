@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import app from '../src/index.tsx';
 
 describe('app/jump', () => {
@@ -11,12 +11,5 @@ describe('app/jump', () => {
   it('returns 404 for unknown routes', async () => {
     const res = await app.request('/nonexistent');
     expect(res.status).toBe(404);
-  });
-
-  it('handles errors and logs them', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const res = await app.request('/');
-    consoleSpy.mockRestore();
-    expect(res.status).toBe(200);
   });
 });

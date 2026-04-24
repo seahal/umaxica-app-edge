@@ -1,4 +1,6 @@
-function normalizeHostnames(rawHostnames: string | undefined): Set<string> {
+export const DEFAULT_ALLOWED_IMAGE_HOSTS = 'images.unsplash.com, avatars.githubusercontent.com';
+
+export function normalizeHostnames(rawHostnames: string | undefined): Set<string> {
   const hostnames = rawHostnames
     ? rawHostnames
         .split(',')
@@ -23,7 +25,8 @@ function isAllowedOrigin(requestUrl: string, parsedUrl: URL): boolean {
 export function validateImageUrl(
   rawUrl: string,
   requestUrl: string,
-  allowedHostnamesValue: string | undefined = process.env.ALLOWED_IMAGE_HOSTS,
+  allowedHostnamesValue: string | undefined = process.env.ALLOWED_IMAGE_HOSTS ??
+    DEFAULT_ALLOWED_IMAGE_HOSTS,
 ): string | null {
   let parsed: URL;
   try {
@@ -50,4 +53,25 @@ export function validateImageUrl(
   }
 
   return parsed.toString();
+}
+
+export function isAllowedImageFetchTarget(
+  candidateUrl: string,
+  requestUrl: string,
+  allowedHostnamesValue: string | undefined = process.env.ALLOWED_IMAGE_HOSTS ??
+    DEFAULT_ALLOWED_IMAGE_HOSTS,
+): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(candidateUrl);
+  } catch {
+    return false;
+  }
+
+  if (isAllowedOrigin(requestUrl, parsed)) {
+    return true;
+  }
+
+  const allowedHostnames = normalizeHostnames(allowedHostnamesValue);
+  return allowedHostnames.has(parsed.hostname.toLowerCase());
 }

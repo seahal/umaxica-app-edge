@@ -1,7 +1,11 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { validateImageUrl } from '../../../../../../shared/cloudflare/image';
+import {
+  DEFAULT_ALLOWED_IMAGE_HOSTS,
+  isAllowedImageFetchTarget,
+  validateImageUrl,
+} from '../../../../../../shared/cloudflare/image';
 
 export const runtime = 'edge';
 
@@ -19,8 +23,13 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Missing url parameter', { status: 400 });
   }
 
-  const validatedUrl = validateImageUrl(url, request.url);
+  const allowedHosts = process.env.ALLOWED_IMAGE_HOSTS ?? DEFAULT_ALLOWED_IMAGE_HOSTS;
+
+  const validatedUrl = validateImageUrl(url, request.url, allowedHosts);
   if (!validatedUrl) {
+    return new NextResponse('Invalid or disallowed url parameter', { status: 400 });
+  }
+  if (!isAllowedImageFetchTarget(validatedUrl, request.url, allowedHosts)) {
     return new NextResponse('Invalid or disallowed url parameter', { status: 400 });
   }
 
