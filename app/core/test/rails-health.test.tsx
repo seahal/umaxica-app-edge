@@ -19,7 +19,7 @@ const unreachableResult = {
 } as const;
 
 describe('app/core rails health', () => {
-  const fetchMock = vi.fn();
+  const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
     vi.stubGlobal('fetch', fetchMock);

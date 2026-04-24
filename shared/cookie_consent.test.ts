@@ -76,7 +76,7 @@ describe('Cookie and Consent State', () => {
     const originalFetch = global.fetch;
 
     beforeEach(() => {
-      global.fetch = vi.fn();
+      global.fetch = vi.fn<typeof fetch>();
     });
 
     afterEach(() => {

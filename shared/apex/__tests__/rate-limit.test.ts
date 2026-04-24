@@ -13,7 +13,7 @@ describe(checkRateLimit, () => {
       headers: { 'cf-connecting-ip': '192.168.1.1' },
     });
     const mockRateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
+      limit: vi.fn<() => Promise<{ success: boolean }>>().mockResolvedValue({ success: true }),
     };
     const result = await checkRateLimit(request, mockRateLimiter);
     expect(result).toBeNull();
@@ -25,7 +25,7 @@ describe(checkRateLimit, () => {
       headers: { 'cf-connecting-ip': '192.168.1.1' },
     });
     const mockRateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: false }),
+      limit: vi.fn<() => Promise<{ success: boolean }>>().mockResolvedValue({ success: false }),
     };
     const result = await checkRateLimit(request, mockRateLimiter);
     expect(result).not.toBeNull();
@@ -36,7 +36,7 @@ describe(checkRateLimit, () => {
   it('uses "unknown" as fallback IP when cf-connecting-ip is missing', async () => {
     const request = new Request('http://localhost/');
     const mockRateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
+      limit: vi.fn<() => Promise<{ success: boolean }>>().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
     expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'unknown' });
