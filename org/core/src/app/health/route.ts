@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-export const runtime = 'edge';
-
 function getTimestamp() {
   return new Date().toISOString();
 }
