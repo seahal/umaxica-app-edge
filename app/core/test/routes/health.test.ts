@@ -63,7 +63,9 @@ describe('app/core health route', () => {
 
   it('returns OK status even when Cloudflare context is missing', async () => {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
-    vi.mocked(getCloudflareContext).mockReturnValueOnce({} as any);
+    vi.mocked(getCloudflareContext).mockReturnValueOnce(
+      {} as unknown as ReturnType<typeof getCloudflareContext>,
+    );
 
     const response = await GET();
     const json = await response.json();
