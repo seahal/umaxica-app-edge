@@ -86,6 +86,7 @@ RUN apt-get update \
     bash \
     curl \
     wget \
+    bubblewrap \
     python3 \
   && rm -rf /var/lib/apt/lists/*
 
