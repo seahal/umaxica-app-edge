@@ -21,7 +21,7 @@
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.10",
     "semgrep": "^0.0.1",
     "tailwindcss": "catalog:",
     "vite": "catalog:",
