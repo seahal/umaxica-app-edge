@@ -8,7 +8,6 @@ packages:
   - org/apex
   - org/jump
   - org/core
-  - dev/apex
   - dev/core
   - net/apex
 
