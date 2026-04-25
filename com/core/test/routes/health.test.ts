@@ -60,4 +60,23 @@ describe('com/core health route', () => {
       timestamp: expect.any(String),
     });
   });
+
+  it('returns OK status even when Cloudflare context is missing', async () => {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    vi.mocked(getCloudflareContext).mockReturnValueOnce({} as any);
+
+    const response = await GET();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json).toEqual({
+      status: 'ok',
+      timestamp: '2024-01-01T00:00:00.000Z',
+      version: {
+        id: undefined,
+        tag: undefined,
+        timestamp: undefined,
+      },
+    });
+  });
 });

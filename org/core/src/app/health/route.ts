@@ -20,8 +20,8 @@ function getFallbackTimestamp() {
 export async function GET() {
   try {
     const timestamp = getTimestamp();
-    const context = getCloudflareContext() as { env: CloudflareEnv };
-    const { id, tag, timestamp: revisionTimestamp } = context.env.REVISION ?? {};
+    const context = getCloudflareContext() as { env?: CloudflareEnv };
+    const { id, tag, timestamp: revisionTimestamp } = context?.env?.REVISION ?? {};
 
     return NextResponse.json(
       {
