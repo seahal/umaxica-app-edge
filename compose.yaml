@@ -1,4 +1,5 @@
-name: 'edge'
+name: umaxica-apps-edge
+
 services:
   core:
     build:

@@ -1,4 +1,4 @@
-name: 'edge-devcontainer'
+name: umaxica-apps-edge-dc
 services:
   core:
     ports: [] # ← base compose.yaml の ports: [ "5170:5170", ... ] を打ち消す
