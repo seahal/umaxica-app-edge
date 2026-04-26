@@ -8,10 +8,10 @@ catalogs:
   default:
     '@cloudflare/vite-plugin':
       specifier: ^1.32.3
-      version: 1.32.3
+      version: 1.31.2
     '@cloudflare/workers-types':
       specifier: ^4.20260418.1
-      version: 4.20260418.1
+      version: 4.20260409.1
     '@hono/structured-logger':
       specifier: ^0.1.0
       version: 0.1.0
@@ -32,7 +32,7 @@ catalogs:
       version: 19.2.3
     hono:
       specifier: ^4.12.14
-      version: 4.12.14
+      version: 4.12.12
     next:
       specifier: 16.2.2
       version: 16.2.2
@@ -56,13 +56,13 @@ catalogs:
       version: 0.1.18
     vite-plus:
       specifier: ^0.1.18
-      version: 0.1.18
+      version: 0.1.16
     vitest:
       specifier: npm:@voidzero-dev/vite-plus-test@^0.1.18
-      version: 0.1.18
+      version: 0.1.16
     wrangler:
       specifier: ^4.83.0
-      version: 4.83.0
+      version: 4.81.1
 
 importers:
 
@@ -159,7 +159,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 'catalog:'
-        version: 1.31.2(@voidzero-dev/vite-plus-core@0.1.18(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(workerd@1.20260409.1)(wrangler@4.81.1(@cloudflare/workers-types@4.20260409.1))
+        version: 1.31.2(@voidzero-dev/vite-plus-core@0.1.18(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(workerd@1.20260415.1)(wrangler@4.81.1(@cloudflare/workers-types@4.20260409.1))
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 4.20260409.1
@@ -199,6 +199,9 @@ importers:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
         version: 1.19.0(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.5(react@19.1.5))(react@19.1.5))(wrangler@4.81.1(@cloudflare/workers-types@4.20260409.1))
+      client-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       next:
         specifier: 'catalog:'
         version: 16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
@@ -211,6 +214,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.1.5(react@19.1.5)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
@@ -4785,6 +4791,9 @@ packages:
     resolution: {integrity: sha512-xRXBn0pPqQTVQiC8wyQrKs2MOlX24zQ0POGaj0kultvoOCstBQM5yvOhAVSUwOMjQtTvsPWoNCHfPGwaaQJhTw==, tarball: https://registry.npmjs.org/serve-static/-/serve-static-2.2.1.tgz}
     engines: {node: '>= 18'}
 
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==, tarball: https://registry.npmjs.org/server-only/-/server-only-0.0.1.tgz}
+
   set-cookie-parser@2.7.2:
     resolution: {integrity: sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==, tarball: https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-2.7.2.tgz}
 
@@ -6189,19 +6198,6 @@ snapshots:
       unenv: 2.0.0-rc.24
     optionalDependencies:
       workerd: 1.20260415.1
-
-  '@cloudflare/vite-plugin@1.31.2(@voidzero-dev/vite-plus-core@0.1.18(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(workerd@1.20260409.1)(wrangler@4.81.1(@cloudflare/workers-types@4.20260409.1))':
-    dependencies:
-      '@cloudflare/unenv-preset': 2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260409.1)
-      miniflare: 4.20260409.0
-      unenv: 2.0.0-rc.24
-      vite: '@voidzero-dev/vite-plus-core@0.1.18(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
-      wrangler: 4.81.1(@cloudflare/workers-types@4.20260409.1)
-      ws: 8.18.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-      - workerd
 
   '@cloudflare/vite-plugin@1.31.2(@voidzero-dev/vite-plus-core@0.1.18(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(workerd@1.20260415.1)(wrangler@4.81.1(@cloudflare/workers-types@4.20260409.1))':
     dependencies:
@@ -9441,6 +9437,8 @@ snapshots:
       send: 1.2.1
     transitivePeerDependencies:
       - supports-color
+
+  server-only@0.0.1: {}
 
   set-cookie-parser@2.7.2:
     optional: true
