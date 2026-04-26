@@ -7,8 +7,6 @@ import {
   validateImageUrl,
 } from '../../../../../../shared/cloudflare/image';
 
-export const runtime = 'edge';
-
 /**
  * Image transformation API route using Cloudflare Images binding.
  * This route is used by next/image via the custom loader in src/image-loader.ts.
