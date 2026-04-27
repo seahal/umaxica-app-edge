@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  cacheComponents: false,
+  cacheComponents: true,
 };
 
 export default nextConfig;

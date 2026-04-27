@@ -14,10 +14,12 @@
     "@opentelemetry/instrumentation": "^0.214.0",
     "@opentelemetry/sdk-logs": "^0.214.0",
     "@vercel/otel": "^2.1.2",
+    "client-only": "^0.0.1",
     "next": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

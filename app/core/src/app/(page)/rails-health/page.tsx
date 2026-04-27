@@ -1,8 +1,6 @@
 import { RailsHealthView, loadRailsHealthResult } from './rails-health';
 import { getJitWorkspaceUrl } from '@/lib/jit-url';
 
-export const dynamic = 'force-dynamic';
-
 export default async function RailsHealthPage() {
   const result = await loadRailsHealthResult(process.env.RAILS_API_URL);
   const workspaceUrl = getJitWorkspaceUrl('APP', 'CORE');
