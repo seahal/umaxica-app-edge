@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "catalog:",
+    "client-only": "^0.0.1",
     "next": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
