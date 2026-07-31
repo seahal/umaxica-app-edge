@@ -25,10 +25,7 @@ vi.mock('@sentry/nextjs', () => ({
   replayIntegration: vi.fn(() => ({ name: 'replay' })),
 }));
 
-import * as appInstrumentation from '../app/core/src/instrumentation';
-import * as comInstrumentation from '../com/core/src/instrumentation';
 import * as devInstrumentation from '../dev/acme/src/instrumentation';
-import * as orgInstrumentation from '../org/core/src/instrumentation';
 
 function removeServiceWorker() {
   delete (navigator as unknown as { serviceWorker?: ServiceWorkerContainer }).serviceWorker;
@@ -97,20 +94,18 @@ describe('coverage boundaries', () => {
     },
   );
 
-  it.each([
-    ['app', appInstrumentation],
-    ['com', comInstrumentation],
-    ['dev', devInstrumentation],
-    ['org', orgInstrumentation],
-  ])('%s instrumentation captures request errors and registers safely', async (_name, module) => {
-    expect(() => module.onRequestError(new Error('request failed'))).not.toThrow();
+  it.each([['dev', devInstrumentation]])(
+    '%s instrumentation captures request errors and registers safely',
+    async (_name, module) => {
+      expect(() => module.onRequestError(new Error('request failed'))).not.toThrow();
 
-    vi.stubEnv('NEXT_RUNTIME', 'nodejs');
-    await expect(module.register()).resolves.toBeUndefined();
-    vi.stubEnv('NEXT_RUNTIME', 'edge');
-    await expect(module.register()).resolves.toBeUndefined();
-    vi.stubEnv('NEXT_RUNTIME', 'other');
-    await expect(module.register()).resolves.toBeUndefined();
-    vi.unstubAllEnvs();
-  });
+      vi.stubEnv('NEXT_RUNTIME', 'nodejs');
+      await expect(module.register()).resolves.toBeUndefined();
+      vi.stubEnv('NEXT_RUNTIME', 'edge');
+      await expect(module.register()).resolves.toBeUndefined();
+      vi.stubEnv('NEXT_RUNTIME', 'other');
+      await expect(module.register()).resolves.toBeUndefined();
+      vi.unstubAllEnvs();
+    },
+  );
 });

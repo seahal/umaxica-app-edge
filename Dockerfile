@@ -28,7 +28,6 @@ RUN apt-get update \
     libxrender1 \
     libxtst6 \
     openssh-client \
-    sudo \
     tzdata \
   && rm -rf /var/lib/apt/lists/*
 
@@ -54,12 +53,8 @@ RUN set -eux; \
   fi; \
   usermod --uid "${DOCKER_UID}" "${target_user}"; \
   usermod --gid "${DOCKER_GID}" "${target_user}"; \
-  usermod --append --groups sudo "${target_user}"; \
   install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces; \
   install -d -m 0755 -o "${target_user}" -g "${target_group}" /workspaces/umaxica-apps-edge
-
-RUN printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${DOCKER_USER}" > /etc/sudoers.d/devcontainer \
-  && chmod 0440 /etc/sudoers.d/devcontainer
 
 FROM base AS development
 
@@ -98,6 +93,8 @@ ENV HOME=/home/${DOCKER_USER} \
 # Create necessary directories with proper permissions
 RUN mkdir -p \
     "${HOME}/.config" \
+    "${HOME}/.cache" \
+    "${HOME}/.local/share" \
     "${HOME}/workspace" \
     "${HOME}/workspace/node_modules" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}" \
@@ -105,10 +102,11 @@ RUN mkdir -p \
 
 WORKDIR ${HOME}/workspace
 
-
-RUN rm -rf "${HOME}/.cache"
-RUN rm -rf "${HOME}/.local"
+ENV BUN_INSTALL=${HOME}/.bun \
+    PATH=${HOME}/.bun/bin:${PATH}
 
 USER ${DOCKER_USER}:${DOCKER_GROUP}
+
+RUN curl -fsSL https://bun.sh/install | bash
 
 CMD ["sleep", "infinity"]

@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "catalog:",
-    "@sentry/nextjs": "^10.51.0",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

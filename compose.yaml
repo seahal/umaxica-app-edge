@@ -43,7 +43,7 @@ services:
     tty: true
     stdin_open: true
     init: true
-    user: edge:group
+    userns_mode: keep-id
     environment:
       - CLOUDFLARE_ENV=development
       - VITE_GIT_HOOKS=0

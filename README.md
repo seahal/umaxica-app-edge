@@ -91,21 +91,22 @@ pnpm --filter <ws> run <script>
 | [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x     |
 | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.x       |
 
-### Docker / DevContainer
+### Podman / DevContainer
 
-The development environment can be set up via Docker + VS Code DevContainer.
+The development environment can be set up via rootless Podman + VS Code DevContainer.
 
 - **Base image**: `node:24-trixie` with pnpm (corepack) pre-installed
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
+- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; no `sudo`/`su`/`visudo` in the container.
 
 ```bash
 # VS Code: use "Reopen in Container" for automatic setup
 
-# Or start manually with Docker Compose
-docker compose up && docker compose exec core bash
+# Or start manually with Podman Compose
+podman compose up -d && podman compose exec core bash
 ```
 
 ## Testing
