@@ -55,8 +55,8 @@ pnpm install
 # Run a specific workspace
 pnpm --filter <workspace> run dev   # e.g. com/core, app/core
 
-# Docker (optional)
-docker compose up && docker compose exec core bash
+# Podman (optional)
+podman compose up -d && podman compose exec core bash
 ```
 
 ## Scripts
@@ -100,7 +100,7 @@ The development environment can be set up via rootless Podman + VS Code DevConta
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
-- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; no `sudo`/`su`/`visudo` in the container.
+- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
 
 ```bash
 # VS Code: use "Reopen in Container" for automatic setup

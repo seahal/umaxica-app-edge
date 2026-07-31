@@ -1,4 +1,5 @@
 import type { RateLimiter } from './rate-limit';
+import type { RailsFetcher } from './rails-client';
 import { APEX_INLINE_STYLE_CSP_SOURCE } from './inline-style';
 
 const DEFAULT_CSP_STYLE_SRC = `'self' ${APEX_INLINE_STYLE_CSP_SOURCE}`;
@@ -29,4 +30,5 @@ export type AssetEnv = {
     id?: string;
   };
   RATE_LIMITER?: RateLimiter;
+  UMAXICA_APPS_EDGE_CF_WORKERS_VPC?: RailsFetcher;
 };

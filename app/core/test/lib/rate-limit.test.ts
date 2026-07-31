@@ -17,7 +17,7 @@ describe(checkRateLimit, () => {
     };
     const result = await checkRateLimit(request, mockRateLimiter);
     expect(result).toBeNull();
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'root:192.168.1.1' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '192.168.1.1' });
   });
 
   it('returns 429 response when rate limit is exceeded', async () => {
@@ -39,7 +39,7 @@ describe(checkRateLimit, () => {
       limit: vi.fn().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'root:unknown' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'unknown' });
   });
 
   it('derives the key from the first path segment', async () => {
@@ -50,6 +50,6 @@ describe(checkRateLimit, () => {
       limit: vi.fn().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'api:10.0.0.1' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '10.0.0.1' });
   });
 });

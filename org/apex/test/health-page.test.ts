@@ -23,7 +23,10 @@ describe('renderHealthPage', () => {
 
     vi.stubGlobal('Response', ThrowOnceResponse);
 
-    const response = renderHealthPage({ BRAND_NAME: 'UMAXCA' }, { service: 'app' });
+    const response = renderHealthPage(
+      { BRAND_NAME: 'UMAXCA' },
+      { service: 'app', railsHealth: { kind: 'ok', status: 200 } },
+    );
 
     expect(response.status).toBe(503);
     expect(response.headers.get('content-type')).toBe('text/html; charset=UTF-8');
@@ -34,7 +37,7 @@ describe('renderHealthPage', () => {
   it('uses Cloudflare version metadata in the health JSON response', async () => {
     const response = renderHealthJson(
       { CF_VERSION_METADATA: { id: 'test-version-id' } },
-      { service: 'app' },
+      { service: 'app', railsHealth: { kind: 'ok', status: 200 } },
     );
 
     expect(await response.json()).toEqual({
@@ -42,7 +45,21 @@ describe('renderHealthPage', () => {
       service: 'app',
       version: 'test-version-id',
       edge: 'cloudflare',
+      rails: { status: 'OK', kind: 'ok' },
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+    });
+  });
+
+  it('returns 503 when Rails health is not OK', async () => {
+    const response = renderHealthJson(
+      {},
+      { service: 'org', railsHealth: { kind: 'unreachable', errorMessage: 'connection failed' } },
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      status: 'ERROR',
+      rails: { status: 'ERROR', kind: 'unreachable' },
     });
   });
 });

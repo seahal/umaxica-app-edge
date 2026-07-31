@@ -52,6 +52,13 @@
           "id": "bdbc8d77ad2d4421a1f653dedd97e273"
         }
       ],
+      "vpc_services": [
+        {
+          "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+          "remote": true
+        }
+      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -86,6 +93,13 @@
         {
           "binding": "BREAKER_KV",
           "id": "bdbc8d77ad2d4421a1f653dedd97e273"
+        }
+      ],
+      "vpc_services": [
+        {
+          "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+          "remote": true
         }
       ],
       "ratelimits": [

@@ -1,28 +1,35 @@
 import { getBrandName } from './brand';
 import { APEX_INLINE_STYLE } from './inline-style';
+import type { RailsHealthResult } from './rails-health';
 import type { AssetEnv } from './security-headers';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
 type HealthPayload = {
-  status: 'OK';
+  status: 'OK' | 'ERROR';
   service: string;
   version: string | null;
   edge: 'cloudflare';
   time: string;
+  rails: { status: 'OK' | 'ERROR'; kind: RailsHealthResult['kind'] };
 };
 
 type HealthPageOptions = {
   service: string;
+  railsHealth: RailsHealthResult;
 };
 
 function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPayload {
   return {
-    status: 'OK',
+    status: options.railsHealth.kind === 'ok' ? 'OK' : 'ERROR',
     service: options.service,
     version: env?.CF_VERSION_METADATA?.id ?? null,
     edge: 'cloudflare',
     time: new Date().toISOString(),
+    rails: {
+      status: options.railsHealth.kind === 'ok' ? 'OK' : 'ERROR',
+      kind: options.railsHealth.kind,
+    },
   };
 }
 
@@ -51,6 +58,8 @@ function buildHealthPageHtml(brandName: string, payload: HealthPayload): string 
           <dd>${payload.edge}</dd>
           <dt>time</dt>
           <dd>${payload.time}</dd>
+          <dt>rails</dt>
+          <dd>${payload.rails.status}</dd>
         </dl>
       </div>
     </main>
@@ -83,7 +92,7 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
 
   try {
     return new Response(buildHealthPageHtml(brandName, payload), {
-      status: 200,
+      status: payload.status === 'OK' ? 200 : 503,
       headers: {
         'content-type': 'text/html; charset=UTF-8',
         'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
@@ -101,8 +110,9 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
 }
 
 export function renderHealthJson(env: AssetEnv, options: HealthPageOptions): Response {
-  return new Response(JSON.stringify(buildHealthPayload(env, options)), {
-    status: 200,
+  const payload = buildHealthPayload(env, options);
+  return new Response(JSON.stringify(payload), {
+    status: payload.status === 'OK' ? 200 : 503,
     headers: {
       'content-type': 'application/json; charset=UTF-8',
       'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
