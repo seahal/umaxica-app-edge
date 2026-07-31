@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
-import { logger } from 'hono/logger';
 import { timeout } from 'hono/timeout';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
@@ -10,6 +9,7 @@ import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { applySecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
+import { apexStructuredLogger } from './structured-logger';
 
 export type ApexEnv = {
   Bindings: AssetEnv;
@@ -40,7 +40,7 @@ export function createApexApp(
   const pageRoutes = new Hono<ApexEnv>();
 
   app.use(etag());
-  app.use(logger());
+  app.use(apexStructuredLogger);
   app.use(async (c, next) => {
     const blocked = await checkRateLimit(c.req.raw, c.env?.RATE_LIMITER);
     if (blocked) return blocked;

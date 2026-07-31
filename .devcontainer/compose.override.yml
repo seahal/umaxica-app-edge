@@ -1,8 +1,6 @@
 name: umaxica-apps-edge-dc
 services:
   core:
-    userns_mode: keep-id
-    user: !reset null
     volumes: !override
       - type: bind
         source: .

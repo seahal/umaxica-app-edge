@@ -1,19 +1,13 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
   const handleReset = useCallback(() => reset(), [reset]);
   return (
     <html lang="ja">
