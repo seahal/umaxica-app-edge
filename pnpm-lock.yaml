@@ -10,8 +10,8 @@ catalogs:
       specifier: ^4.20260523.0
       version: 4.20260702.1
     '@opennextjs/cloudflare':
-      specifier: ^1.19.11
-      version: 1.20.1
+      specifier: ^1.20.2
+      version: 1.20.2
     '@types/node':
       specifier: ^25.7.0
       version: 25.9.5
@@ -120,7 +120,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       client-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -212,7 +212,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -243,7 +243,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -274,7 +274,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -321,7 +321,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       client-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -413,7 +413,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -444,7 +444,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -475,7 +475,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -615,7 +615,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       client-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -707,7 +707,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -738,7 +738,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -769,7 +769,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: 'catalog:'
-        version: 1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
+        version: 1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))
       next:
         specifier: 'catalog:'
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -2041,11 +2041,28 @@ packages:
     peerDependencies:
       next: '>=15.5.18 <16 || >=16.2.6'
 
+  '@opennextjs/aws@4.1.0':
+    resolution: {integrity: sha512-GuKkdUbnJhLvtwTiJlytNtWIcSYN3+Dzi+OusUlRgf+Ur7dGoXdzBopd+VFiSdTBduPOvr9lPFDg6BYNjEV3wQ==}
+    hasBin: true
+    peerDependencies:
+      next: '>=15.5.21 <16 || >=16.2.11'
+
   '@opennextjs/cloudflare@1.20.1':
     resolution: {integrity: sha512-T7yRoEmIdDQada0itRQmQ3cb9o9tWVg1193MviPWRX7XJulOQ6adz45ZgrJuzEPiwi+kMGnj9kozlNBlRNQZcw==}
     hasBin: true
     peerDependencies:
       next: '>=15.5.18 <16 || >=16.2.6'
+      rclone.js: ^0.6.6
+      wrangler: ^4.86.0
+    peerDependenciesMeta:
+      rclone.js:
+        optional: true
+
+  '@opennextjs/cloudflare@1.20.2':
+    resolution: {integrity: sha512-iFBjABnaDk3be27F5EpxyMLMGPbVnnArFx5I3Y8Rf6BSx5nBV8h0UuJiMKrx3+whDU5ahIy4d8sfbvWvMiF1Kg==}
+    hasBin: true
+    peerDependencies:
+      next: '>=15.5.21 <16 || >=16.2.11'
       rclone.js: ^0.6.6
       wrangler: ^4.86.0
     peerDependenciesMeta:
@@ -3293,9 +3310,6 @@ packages:
 
   '@types/node@25.9.5':
     resolution: {integrity: sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg==}
-
-  '@types/node@26.1.1':
-    resolution: {integrity: sha512-nxAkRSVkN1Y0JC1W8ky/fTfkGsMmcrRsbx+3XoZE+rMOX71kLYTV7fLXpqud1GpbpP5TuffXFqfX7fH2GgZREw==}
 
   '@types/node@26.1.2':
     resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
@@ -6730,11 +6744,52 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@opennextjs/aws@4.1.0(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))':
+    dependencies:
+      '@ast-grep/napi': 0.40.5
+      '@aws-sdk/client-cloudfront': 3.984.0
+      '@aws-sdk/client-dynamodb': 3.984.0
+      '@aws-sdk/client-lambda': 3.984.0
+      '@aws-sdk/client-s3': 3.984.0
+      '@aws-sdk/client-sqs': 3.984.0
+      '@node-minify/core': 8.0.6
+      '@node-minify/terser': 8.0.6
+      '@tsconfig/node18': 1.0.3
+      aws4fetch: 1.0.20
+      chalk: 5.6.2
+      cookie: 1.1.1
+      esbuild: 0.25.4
+      express: 5.2.1
+      next: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      path-to-regexp: 6.3.0
+      urlpattern-polyfill: 10.1.0
+      yaml: 2.9.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@opennextjs/cloudflare@1.20.1(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
       '@opennextjs/aws': 4.0.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
+      ci-info: 4.4.0
+      cloudflare: 4.5.0
+      comment-json: 4.6.2
+      enquirer: 2.4.1
+      glob: 12.0.0
+      next: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      ts-tqdm: 0.8.6
+      wrangler: 4.110.0(@cloudflare/workers-types@4.20260702.1)
+      yargs: 18.0.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  '@opennextjs/cloudflare@1.20.2(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.110.0(@cloudflare/workers-types@4.20260702.1))':
+    dependencies:
+      '@ast-grep/napi': 0.40.5
+      '@dotenvx/dotenvx': 1.31.0
+      '@opennextjs/aws': 4.1.0(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
       ci-info: 4.4.0
       cloudflare: 4.5.0
       comment-json: 4.6.2
@@ -7716,7 +7771,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 26.1.2
       form-data: 4.0.6
 
   '@types/node@18.19.130':
@@ -7726,10 +7781,6 @@ snapshots:
   '@types/node@25.9.5':
     dependencies:
       undici-types: 7.24.6
-
-  '@types/node@26.1.1':
-    dependencies:
-      undici-types: 8.3.0
 
   '@types/node@26.1.2':
     dependencies:
@@ -9560,7 +9611,7 @@ snapshots:
   terser@5.16.9:
     dependencies:
       '@jridgewell/source-map': 0.3.11
-      acorn: 8.17.0
+      acorn: 8.18.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
