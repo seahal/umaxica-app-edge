@@ -27,7 +27,7 @@
     "dependency-cruiser": "^18.1.0",
     "happy-dom": "^20.11.1",
     "hono": "catalog:",
-    "knip": "^6.29.0",
+    "knip": "^6.31.0",
     "lefthook": "^2.1.10",
     "oxfmt": "^0.61.0",
     "oxlint": "1.74.0",
