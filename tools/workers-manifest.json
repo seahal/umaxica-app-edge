@@ -1,8 +1,8 @@
 {
-  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding in env.preview ONLY (pnpm preview:vpc; development and test carry no transport, production carries none until a production VPC Service exists). contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: Vercel-hosted, no wrangler config.",
+  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding in env.vpc ONLY (pnpm preview:vpc; development and test carry no transport, and the top level — which IS production — carries none until a production VPC Service exists). contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: Vercel-hosted, no wrangler config.",
   "vpcBinding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-  "$vpcPreviewServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on core.app.localhost:3000. It is NOT a production resource; production must never point at it. Verify with `wrangler vpc service get <id>`.",
-  "vpcPreviewServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+  "$vpcDevelopmentServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on core.app.localhost:3000. It is NOT a production resource; production must never point at it. Verify with `wrangler vpc service get <id>`.",
+  "vpcDevelopmentServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
   "railsBacked": [
     "app/core",
     "app/docs",

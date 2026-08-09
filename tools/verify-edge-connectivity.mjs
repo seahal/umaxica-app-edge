@@ -9,7 +9,7 @@
 //   next dev          Node. No VPC binding exists in `env.development`, so
 //                     /rails-health here can never be VPC evidence.
 //   preview           local workerd, `--env development`. No binding either.
-//   preview:vpc       local workerd, `--env preview`. The real remote binding.
+//   preview:vpc       local workerd, `--env vpc`. The real remote binding.
 //   vpc (this tool)   the binding alone, with no application code in the way.
 //
 // `/rails-health` cannot distinguish them: getRailsClient() falls back to a
@@ -565,11 +565,11 @@ async function modeConfig(report, surfaces, manifest) {
     if (error) {
       problems.push(error);
     } else {
-      const declared = (config.env?.preview?.vpc_services ?? []).filter(
+      const declared = (config.env?.vpc?.vpc_services ?? []).filter(
         (v) => v.binding === manifest.vpcBinding,
       );
       if (declared.length !== 1) {
-        problems.push(`env.preview must declare ${manifest.vpcBinding} exactly once`);
+        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
       } else {
         const idProblem = describeServiceIdProblem(declared[0].service_id);
         if (idProblem) problems.push(idProblem);
@@ -584,13 +584,13 @@ async function modeConfig(report, surfaces, manifest) {
       problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
     } else {
       const types = readFileSync(typesPath, 'utf8');
-      const previewBlock = extractInterfaceBlock(types, 'PreviewEnv');
+      const previewBlock = extractInterfaceBlock(types, 'VpcEnv');
       if (previewBlock === null) {
-        problems.push('cloudflare-env.d.ts declares no PreviewEnv — run cf-typegen');
+        problems.push('cloudflare-env.d.ts declares no VpcEnv — run cf-typegen');
       } else if (!previewBlock.includes(manifest.vpcBinding)) {
-        problems.push(`cloudflare-env.d.ts PreviewEnv does not declare ${manifest.vpcBinding}`);
+        problems.push(`cloudflare-env.d.ts VpcEnv does not declare ${manifest.vpcBinding}`);
       }
-      for (const envName of ['DevelopmentEnv', 'TestEnv', 'ProductionEnv']) {
+      for (const envName of ['DevelopmentEnv', 'TestEnv']) {
         const block = extractInterfaceBlock(types, envName);
         if (block?.includes(manifest.vpcBinding)) {
           problems.push(`cloudflare-env.d.ts ${envName} must not declare ${manifest.vpcBinding}`);
@@ -609,7 +609,7 @@ async function modeConfig(report, surfaces, manifest) {
       'VPC config',
       surface.key,
       problems.length ? FAIL : PASS,
-      problems.length ? problems.join('; ') : `env.preview → ${manifest.vpcPreviewServiceId}`,
+      problems.length ? problems.join('; ') : `env.vpc → ${manifest.vpcDevelopmentServiceId}`,
     );
   }
 
@@ -663,11 +663,14 @@ async function modeConfig(report, surfaces, manifest) {
     const list = await run('pnpm', ['exec', 'wrangler', 'vpc', 'service', 'list'], {
       CLOUDFLARE_ENV: '',
     });
-    if (list.code === 0 && list.stdout.includes(manifest.vpcPreviewServiceId)) {
-      devService = manifest.vpcPreviewServiceId;
+    if (list.code === 0 && list.stdout.includes(manifest.vpcDevelopmentServiceId)) {
+      devService = manifest.vpcDevelopmentServiceId;
       report.note(PASS, `VPC Service ${devService} exists on the account`);
     } else {
-      report.note(FAIL, `VPC Service ${manifest.vpcPreviewServiceId} was not found on the account`);
+      report.note(
+        FAIL,
+        `VPC Service ${manifest.vpcDevelopmentServiceId} was not found on the account`,
+      );
     }
   } else {
     report.note(BLOCKED, 'VPC Service existence not checked — no Cloudflare session');
@@ -676,14 +679,15 @@ async function modeConfig(report, surfaces, manifest) {
   const productionServices = new Set();
   for (const ws of manifest.railsBacked) {
     const { config } = readWranglerConfig(join(ws, 'wrangler.jsonc'));
-    for (const entry of config?.env?.production?.vpc_services ?? []) {
+    // The top level IS production — there is no `env.production`.
+    for (const entry of config?.vpc_services ?? []) {
       productionServices.add(entry.service_id);
     }
   }
 
   report.note(
     PASS,
-    `Development VPC Service: ${manifest.vpcPreviewServiceId}${devService ? ' (verified)' : ''}`,
+    `Development VPC Service: ${manifest.vpcDevelopmentServiceId}${devService ? ' (verified)' : ''}`,
   );
   report.note(
     productionServices.size ? PASS : WARN,
@@ -692,7 +696,7 @@ async function modeConfig(report, surfaces, manifest) {
       : 'Production VPC Service: none — env.production declares no binding, so production fails closed (ADR 006)',
   );
 
-  const shared = [...productionServices].includes(manifest.vpcPreviewServiceId);
+  const shared = [...productionServices].includes(manifest.vpcDevelopmentServiceId);
   if (shared) {
     report.note(
       FAIL,
@@ -776,7 +780,7 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
   for (const surface of surfaces) {
     const detail =
       verdict.transport === PASS
-        ? `${verdict.detail} (shared VPC Service ${manifest.vpcPreviewServiceId})`
+        ? `${verdict.detail} (shared VPC Service ${manifest.vpcDevelopmentServiceId})`
         : `${verdict.layer}: ${verdict.detail}`;
     report.record('Direct VPC → Rails', surface.key, verdict.transport, detail);
   }

@@ -25,12 +25,12 @@ would take roughly half the VPC traffic away from the connector that can.
 
 ## What this leaves
 
-| Concern                      | How it works today                                      |
-| ---------------------------- | ------------------------------------------------------- |
-| Edge → Rails, development    | Workers VPC binding (`env.preview` only), `preview:vpc` |
-| Edge → Rails, production     | **nothing** — no production VPC Service exists yet      |
-| Edge → Rails, fallback       | HTTPS to `core-jp.umaxica.app` + Access service token   |
-| Browser → local dev surfaces | `localhost` only — no tunnel, not exposed               |
+| Concern                      | How it works today                                    |
+| ---------------------------- | ----------------------------------------------------- |
+| Edge → Rails, development    | Workers VPC binding (`env.vpc` only), `preview:vpc`   |
+| Edge → Rails, production     | **nothing** — no production VPC Service exists yet    |
+| Edge → Rails, fallback       | HTTPS to `core-jp.umaxica.app` + Access service token |
+| Browser → local dev surfaces | `localhost` only — no tunnel, not exposed             |
 
 Production carries no binding on purpose. The only VPC Service that exists is on
 the **development** tunnel and terminates on a developer's machine, so pointing
@@ -68,7 +68,7 @@ pnpm install
 pnpm run dev        # every dev server, on the ports in CLAUDE.md
 ```
 
-`vpc_services` is declared in `env.preview` alone, so `next dev` and
+`vpc_services` is declared in `env.vpc` alone, so `next dev` and
 `preview` resolve no remote binding and never authenticate to Cloudflare.
 
 ### `preview:vpc` — the production-shaped path
@@ -283,7 +283,7 @@ devcontainer mode.
 | `Authentication error [code: 10000]` on a `wrangler vpc` command | Token is missing `Connectivity: Read`                         | Edit the token's permissions                              |
 | `remote session could not be authenticated` on `preview:vpc`     | Token is missing `Workers Scripts: Edit`                      | Add the scope, or use `wrangler login` instead            |
 | `preview:vpc` reports `unreachable`                              | Development tunnel or its connector is down                   | Check the tunnel in Zero Trust; restart the connector     |
-| `preview:vpc` reports `not-configured`                           | Ran `--env development` rather than `--env preview`           | Use the `preview:vpc` script; only it carries the binding |
+| `preview:vpc` reports `not-configured`                           | Ran `--env development` rather than `--env vpc`               | Use the `preview:vpc` script; only it carries the binding |
 | Prompted to log in to Cloudflare after every rebuild             | `wrangler-config` volume missing from the `!override` list    | Re-add it to `.devcontainer/compose.override.yml`         |
 
 ## Environment separation

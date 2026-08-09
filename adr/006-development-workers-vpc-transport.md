@@ -81,7 +81,10 @@ production had never been exercised.
 
 ## Decision
 
-### 1. The binding lives in `env.preview`, and nowhere else
+### 1. The binding lives in one environment, and nowhere else
+
+> Renamed `preview` → `vpc` on 2026-08-09; see the amendment above. The
+> reasoning below is unchanged.
 
 A fourth wrangler environment carries it:
 
@@ -109,7 +112,10 @@ This was preferred to a flag (`--local` / `--remote`) on a shared environment.
 A flag leaves the other environment's `service_id` textually reachable from the
 development command, and reduces the separation to remembering to pass it.
 
-### 2. `env.production` carries no binding, and fails closed
+### 2. Production carries no binding, and fails closed
+
+> Production moved out of `env` to the top level on 2026-08-09; see the
+> amendment above. "env.production" below now means the top level.
 
 Production has no Rails transport until a production VPC Service on a production
 tunnel exists. Neither exists today. `getRailsClient()` therefore returns `null`
@@ -123,7 +129,7 @@ Restoring it is two steps, both outside this repository first:
 
 1. Create a production tunnel beside production Rails, and a production VPC
    Service on it. **Dashboard/API action.**
-2. Add the `vpc_services` block back to each `env.production` with that
+2. Add the `vpc_services` block back at each frame's top level with that
    `service_id`.
 
 `tools/check-workers.mjs` and `test/rails-connection-invariants.test.ts` both
@@ -135,8 +141,8 @@ fail if that restoration reuses the development `service_id`.
 | ------------------ | ---------------------------------- | --------------- | ------------------------ |
 | `pnpm dev`         | Node (`next dev`)                  | no              | **none**                 |
 | `pnpm preview`     | local workerd, `--env development` | no              | **none**                 |
-| `pnpm preview:vpc` | local workerd, `--env preview`     | **yes, remote** | `wrangler login` (OAuth) |
-| `pnpm deploy`      | Cloudflare, `--env production`     | none, for now   | API token                |
+| `pnpm preview:vpc` | local workerd, `--env vpc`         | **yes, remote** | `wrangler login` (OAuth) |
+| `pnpm deploy`      | Cloudflare, no `--env` (top level) | none, for now   | API token                |
 
 Note the credentials differ in kind, not just in scope: deploys use the API
 token, `preview:vpc` cannot (see Outcome). Run it with the token blanked so the
@@ -191,7 +197,7 @@ than a client bug. That is exactly how this one stayed invisible.
 ### 5. `getRailsClient()` is unchanged
 
 ADR 005 decision 5 resolves the transport by **which configuration exists**,
-with no branch on the environment name. `env.preview` supplies a binding, so
+with no branch on the environment name. `env.vpc` supplies a binding, so
 branch 1 fires there exactly as it was meant to in production. No application
 code changed in this record — which is the evidence that decision 5 was right.
 
@@ -258,7 +264,7 @@ and workerd-versus-Node differences in the request path.
 | ------------------- | ----------------------- | ----------------------- |
 | Tunnel              | `1d501e9a-…`            | does not exist yet      |
 | VPC Service         | `019f5fe0-…`            | does not exist yet      |
-| Binding declaration | `env.preview` only      | none                    |
+| Binding declaration | `env.vpc` only          | none (top level)        |
 | Worker              | never deployed          | `umaxica-apps-edge-*-*` |
 | Rails               | local Podman            | AWS                     |
 | Cloudflare account  | shared — deliberate     | shared                  |
@@ -270,7 +276,7 @@ make the misconnection fail the build rather than fail in production.
 ## Guardrails
 
 - `tools/check-workers.mjs` — the binding is declared exactly once, in
-  `env.preview`, with `remote: true` and the `service_id` recorded in
+  `env.vpc`, with `remote: true` and the `service_id` recorded in
   `tools/workers-manifest.json`; absent from `development`, `test`,
   `production`, and the top level.
 - `test/rails-connection-invariants.test.ts` — the same rules textually, plus
@@ -326,6 +332,62 @@ The 404 is a **Rails routing question, not a transport one** — see ADR 005
 decision 3, which explicitly left open whether Rails distinguishes frames by
 `Host` or by the `/{frame}/{brand}` prefix. That question is now the only thing
 between here and a green `/rails-health`.
+
+### Amendment, 2026-08-09 (b) — `env.preview` is now `env.vpc`, and production left `env` entirely
+
+Two naming/structure corrections. Decision 1's _substance_ stands — the binding
+still lives in exactly one environment, and ordinary local development still
+needs no Cloudflare account. Only the shape changed.
+
+**1. `env.preview` → `env.vpc`.** "Preview" is already an official Cloudflare
+term: [Preview URLs](https://developers.cloudflare.com/workers/configuration/previews/)
+are the versioned URLs of a **deployed** Worker. This environment is never
+deployed, so the name meant close to the opposite of what it named — and it
+misled a reader in practice before it was changed. `vpc` says what distinguishes
+it: it is the one environment carrying the VPC binding.
+
+**2. There is no `env.production`; the top level is production.** A wrangler
+environment deploys to a separate Worker named `<name>-<env>`, so
+`env.production` had to re-declare `name` purely to cancel that out — fighting
+the tool to stand still. Cloudflare's model is that the top level is the real
+Worker and environments are its variants, so `wrangler deploy` with no `--env`
+is now the production deploy. **The deployed Worker name does not change**
+(`env.production.name` already equalled the top-level name), so nothing is
+orphaned. This was also applied to the four `*/apex` workers, for one shape
+across the repo.
+
+**The hazard this creates, and the guard for it.** With no `--env`, the
+`CLOUDFLARE_ENV` variable selects the environment — and `compose.yaml` exports
+`CLOUDFLARE_ENV=development`. Measured with `wrangler deploy --dry-run`:
+
+```
+CLOUDFLARE_ENV=development, no --env   →  env.CLOUDFLARE_ENV ("development")
+CLOUDFLARE_ENV=,            no --env   →  env.CLOUDFLARE_ENV ("production")
+```
+
+So a deploy from inside the container would have shipped to
+`<name>-development` and left production untouched — a failure that looks like
+success. Every deploy/build/typegen script therefore blanks it
+(`CLOUDFLARE_ENV= opennextjs-cloudflare deploy`), and `tools/check-workers.mjs`
+fails the build if a wrangler invocation has neither `--env` nor that blanking.
+
+**One thing this record previously asserted is wrong.** `check-workers.mjs` used
+to justify banning a top-level `vpc_services` with "it applies to every
+environment, including development". It does not. Non-inheritable keys declared
+at the top level do not reach `env.*` at all — measured:
+
+```
+▲ WARNING  "vars" is not inherited by environments.
+No bindings found.        ← env.development resolved with nothing
+```
+
+The real reason to keep the binding out of the top level is simply that the top
+level is now production, and the only VPC Service that exists is on the
+development tunnel.
+
+Verified after the change: `pn run check:preview:vpc` → `rails-health: ok` on
+all fifteen frames; `pn run check:vpc` → 15/15; `pn run check:local` → all
+green; 1185 tests pass.
 
 ### Amendment, 2026-08-09 — now a 200, and now a repeatable check
 

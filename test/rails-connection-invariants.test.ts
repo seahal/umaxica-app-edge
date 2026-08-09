@@ -3,7 +3,7 @@
  *
  * The design is recorded in `adr/005-rails-edge-workers-vpc-connection.md` and
  * amended by `adr/006-development-workers-vpc-transport.md`: one Cloudflare
- * Workers VPC binding, declared in `env.preview` alone; paths sent to Rails
+ * Workers VPC binding, declared in `env.vpc` alone (the top level is production); paths sent to Rails
  * exactly as given, with no frame prefix; and no Rails dependency in the apex
  * workers.
  *
@@ -19,6 +19,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { readWranglerConfig as readWrangler } from '../tools/lib/wrangler-config.mjs';
 
 const repoRoot = join(import.meta.dirname, '..');
 const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
@@ -230,58 +231,75 @@ describe('apex workers stay independent of Rails', () => {
 
 describe('workers vpc bindings', () => {
   /*
-   * The binding is declared exactly once per frame, inside `env.preview`.
+   * The binding is declared exactly once per frame, inside `env.vpc`.
    *
    * wrangler does NOT inherit bindings into `env` blocks, so placement is the
    * whole enforcement mechanism:
    *
-   * - not at the top level, and not in `development`/`test`, because the
-   *   binding is `remote: true` and would force every local dev session to
-   *   authenticate to Cloudflare with a write-scoped credential. `pnpm dev` and
-   *   `pnpm preview` needing no Cloudflare account is a property worth keeping.
-   * - not in `production`, because the only VPC Service that exists today is on
-   *   the *development* tunnel and terminates on a developer's machine. A
+   * - not in `development`/`test`, because the binding is `remote: true` and
+   *   would force every local dev session to authenticate to Cloudflare.
+   *   `pnpm dev` and `pnpm preview` needing no Cloudflare account is a property
+   *   worth keeping.
+   * - not at the top level, because **the top level is production** (there is
+   *   no `env.production`), and the only VPC Service that exists today is on
+   *   the *development* tunnel, terminating on a developer's machine. A
    *   production Worker pointed at it would leave the production network
    *   entirely. See adr/006-development-workers-vpc-transport.md.
    *
    * `tools/check-workers.mjs` asserts the same thing from the parsed config;
    * this is the textual belt to its braces.
    */
-  it.each(RAILS_FRAMES)('$workspace declares the binding once, in preview', ({ workspace }) => {
+  it.each(RAILS_FRAMES)('$workspace declares the binding once, in env.vpc', ({ workspace }) => {
     const config = read(`${workspace}/wrangler.jsonc`);
 
     expect(config).toContain('"env"');
     expect(config).toContain('"development"');
-    expect(config).toContain('"preview"');
+    expect(config).toContain('"vpc"');
     expect(config).toContain('"test"');
-    expect(config).toContain('"production"');
 
     const declarations = config.match(new RegExp(VPC_BINDING, 'g')) ?? [];
     expect(declarations, `${workspace} must declare the binding exactly once`).toHaveLength(1);
 
-    // The one declaration sits between the "preview" and "test" keys — i.e.
-    // inside the preview block, not an adjacent environment.
+    // The one declaration sits between the "vpc" and "test" keys — i.e. inside
+    // the vpc block, not an adjacent environment.
     const at = config.indexOf(VPC_BINDING);
-    expect(at).toBeGreaterThan(config.indexOf('"preview"'));
+    expect(at).toBeGreaterThan(config.indexOf('"vpc"'));
     expect(at).toBeLessThan(config.indexOf('"test"'));
   });
 
-  it.each(RAILS_FRAMES)('$workspace declares no VPC binding in production', ({ workspace }) => {
+  it.each(RAILS_FRAMES)('$workspace has no env.production at all', ({ workspace }) => {
+    /*
+     * A wrangler environment deploys to `<name>-<env>`, so an `env.production`
+     * has to re-declare `name` purely to cancel that out. The top level is
+     * production instead, and `wrangler deploy` with no `--env` deploys it.
+     *
+     * This assertion also protects the one below: the previous version sliced
+     * the config from `indexOf('"production"')`, which returns -1 once the key
+     * is gone — `slice(-1)` is the last character, so the service-id check
+     * would have passed vacuously and silently.
+     */
+    const { config, error } = readWrangler(`${workspace}/wrangler.jsonc`);
+    expect(error).toBeUndefined();
+    expect(Object.keys(config?.env ?? {})).not.toContain('production');
+  });
+
+  it.each(RAILS_FRAMES)('$workspace declares no VPC binding at the top level', ({ workspace }) => {
     /*
      * Fail closed rather than fail outward. With no binding and no
-     * `PUBLIC_CORE_RAILS_ORIGIN`, `getRailsClient()` returns null and `/rails-health`
-     * reports `not-configured` and answers 503 — a visible, correct absence.
+     * `PUBLIC_CORE_RAILS_ORIGIN`, `getRailsClient()` returns null and
+     * `/rails-health` reports `not-configured` and answers 503 — a visible,
+     * correct absence.
      *
      * Restoring production means creating a production VPC Service on a
-     * production tunnel and adding the block back. The next assertion is what
+     * production tunnel and adding the block here. The next assertion is what
      * stops that restoration from re-using the development service.
      */
-    const config = read(`${workspace}/wrangler.jsonc`);
-    const production = config.slice(config.indexOf('"production"'));
+    const { config } = readWrangler(`${workspace}/wrangler.jsonc`);
 
-    expect(production, `${workspace} env.production must carry no vpc_services`).not.toContain(
-      '"vpc_services"',
-    );
+    expect(
+      config?.vpc_services ?? [],
+      `${workspace} top level (production) must carry no vpc_services`,
+    ).toHaveLength(0);
   });
 
   it('points every frame at the same development VPC service', () => {
@@ -300,24 +318,29 @@ describe('workers vpc bindings', () => {
     expect(new Set(serviceIds).size).toBe(1);
   });
 
-  it('never lets development and production share a VPC service', () => {
+  it('never lets production reuse the development VPC service', () => {
     /*
-     * The single assertion that makes "development cannot reach production
-     * Rails" mechanical rather than procedural. It holds vacuously while
-     * production declares no binding, and starts biting the moment somebody
-     * adds one — which is exactly when it is needed.
+     * The single assertion that makes "production cannot reach development
+     * Rails" mechanical rather than procedural. It holds vacuously while the
+     * top level declares no binding, and starts biting the moment somebody adds
+     * one — which is exactly when it is needed.
+     *
+     * Read through the parsed config, not by slicing text at a key name: the
+     * text version passed vacuously the moment `env.production` was removed.
      */
-    const previewId = JSON.parse(read('tools/workers-manifest.json')).vpcPreviewServiceId;
+    const developmentId = JSON.parse(read('tools/workers-manifest.json'))
+      .vpcDevelopmentServiceId as string;
 
     for (const { workspace } of RAILS_FRAMES) {
-      const config = read(`${workspace}/wrangler.jsonc`);
-      const production = config.slice(config.indexOf('"production"'));
-      const productionIds = [...production.matchAll(/"service_id":\s*"([^"]+)"/g)].map((m) => m[1]);
+      const { config } = readWrangler(`${workspace}/wrangler.jsonc`);
+      const productionIds = (config?.vpc_services ?? []).map(
+        (entry: { service_id: string }) => entry.service_id,
+      );
 
       expect(
         productionIds,
         `${workspace} production must not reuse the development VPC service`,
-      ).not.toContain(previewId);
+      ).not.toContain(developmentId);
     }
   });
 });

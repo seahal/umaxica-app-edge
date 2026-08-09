@@ -42,7 +42,9 @@ const NON_INHERITABLE = [
   'queues',
 ];
 
-function checkEnvironments(ws, config, requiredEnvs = ['development', 'test', 'production']) {
+// `production` is deliberately absent from this list — the top level is
+// production, and the assertion below is that `env.production` does NOT exist.
+function checkEnvironments(ws, config, requiredEnvs = ['development', 'test']) {
   for (const envName of requiredEnvs) {
     if (!config.env?.[envName]) {
       fail(ws, `env.${envName} is missing`);
@@ -66,13 +68,20 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test', 'p
     }
   }
 
-  // `wrangler deploy --env production` would otherwise deploy to
-  // `<name>-production`, orphaning the live Worker and its custom domain.
-  if (config.env?.production && config.env.production.name !== config.name) {
+  // The top level IS production; there is no `env.production`.
+  //
+  // A wrangler environment deploys to a separate Worker named `<name>-<env>`,
+  // so an `env.production` has to re-declare `name` purely to cancel that out.
+  // Putting production at the top level means `wrangler deploy` with no `--env`
+  // is the production deploy, which is the shape Cloudflare's own model expects.
+  if (config.env?.production) {
     fail(
       ws,
-      `env.production.name must equal the top-level name (${config.name}) so production keeps updating the deployed Worker`,
+      'env.production must not exist — the top level is production, so `wrangler deploy` with no --env deploys it',
     );
+  }
+  if (config.vars?.CLOUDFLARE_ENV !== 'production') {
+    fail(ws, 'top-level vars must set CLOUDFLARE_ENV to production — the top level is production');
   }
 
   for (const [envName, env] of Object.entries(config.env ?? {})) {
@@ -86,6 +95,10 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test', 'p
 }
 
 function checkOpenNext(ws, config) {
+  // Next.js only accepts development|test|production, and the top level is production.
+  if (config.vars?.NODE_ENV !== 'production') {
+    fail(ws, 'top-level vars must set NODE_ENV to production');
+  }
   if (!config.compatibility_flags?.includes('nodejs_compat')) {
     fail(ws, 'compatibility_flags must include nodejs_compat');
   }
@@ -106,67 +119,103 @@ function checkOpenNext(ws, config) {
 for (const ws of manifest.railsBacked) {
   const config = loadWrangler(ws);
   if (!config) continue;
-  // Only railsBacked workers need `preview` — it exists to carry the VPC binding.
-  checkEnvironments(ws, config, ['development', 'preview', 'test', 'production']);
+  // Only railsBacked workers need `vpc` — it exists to carry the VPC binding.
+  checkEnvironments(ws, config, ['development', 'vpc', 'test']);
   checkOpenNext(ws, config);
 
-  // The VPC binding lives in `env.preview` and nowhere else.
+  // The VPC binding lives in `env.vpc` and nowhere else.
   //
   // `remote: true` does not mean "unusable locally" — it runs this Worker's
   // code in local workerd and proxies only the binding out to Cloudflare, which
   // is the supported way to reach a VPC Service in development. What it does
-  // cost is an account credential at session start-up (Workers Scripts: Edit,
-  // because wrangler stands up a remote-proxy Worker). Confining the binding to
-  // `preview` keeps that cost on the one command that opts into it
-  // (`pnpm preview:vpc`) and leaves `pnpm dev` / `pnpm preview` needing no
-  // Cloudflare account at all.
-  //
-  // `production` carries no binding today: the only VPC Service that exists is
-  // bound to the development tunnel, so declaring it in production would route
-  // production traffic to a developer's machine. Until a production VPC Service
-  // exists, production has no Rails transport and fails closed.
+  // cost is a `wrangler login` session at start-up (an API token cannot open
+  // one). Confining the binding to `vpc` keeps that cost on the one command
+  // that opts into it (`pnpm preview:vpc`) and leaves `pnpm dev` /
+  // `pnpm preview` needing no Cloudflare account at all.
   //
   // Bindings are not inherited into `env.*`, so this placement is structural:
   // no other environment can acquire the binding by accident.
   // See adr/006-development-workers-vpc-transport.md.
-  const previewBindings = config.env?.preview?.vpc_services ?? [];
-  const declared = previewBindings.filter((v) => v.binding === manifest.vpcBinding);
+  const declared = (config.env?.vpc?.vpc_services ?? []).filter(
+    (v) => v.binding === manifest.vpcBinding,
+  );
 
   if (declared.length !== 1) {
     fail(
       ws,
-      `env.preview must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
+      `env.vpc must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
     );
   }
-  if (declared[0] && declared[0].service_id !== manifest.vpcPreviewServiceId) {
+  if (declared[0] && declared[0].service_id !== manifest.vpcDevelopmentServiceId) {
     fail(
       ws,
-      `env.preview vpc_services service_id must be ${manifest.vpcPreviewServiceId} (found ${declared[0].service_id})`,
+      `env.vpc vpc_services service_id must be ${manifest.vpcDevelopmentServiceId} (found ${declared[0].service_id})`,
     );
   }
   if (declared[0] && declared[0].remote !== true) {
     fail(
       ws,
-      'env.preview vpc_services must set remote: true — local workerd cannot simulate a VPC Service',
+      'env.vpc vpc_services must set remote: true — local workerd cannot simulate a VPC Service',
     );
   }
 
-  for (const envName of ['development', 'test', 'production']) {
+  for (const envName of ['development', 'test']) {
     if ((config.env?.[envName]?.vpc_services ?? []).length > 0) {
       fail(
         ws,
-        envName === 'production'
-          ? `env.production must not declare vpc_services until a production VPC Service exists — the current one (${manifest.vpcPreviewServiceId}) is on the development tunnel`
-          : `env.${envName} must not declare vpc_services — it would force every local dev session to authenticate to Cloudflare`,
+        `env.${envName} must not declare vpc_services — it would force every local dev session to authenticate to Cloudflare`,
       );
     }
   }
 
-  if ((config.vpc_services ?? []).length > 0) {
-    fail(
-      ws,
-      'top-level vpc_services must not be declared — it applies to every environment, including development',
-    );
+  // The top level is production. A binding here would be a *production*
+  // binding, and the only VPC Service that exists is on the development tunnel,
+  // terminating on a developer's machine.
+  //
+  // Note this is NOT about leaking into `env.*`: non-inheritable keys declared
+  // at the top level do not reach environments at all — wrangler warns "not
+  // inherited by environments" and the environment resolves with no bindings.
+  // Measured, because the previous comment here asserted the opposite.
+  const topLevel = (config.vpc_services ?? []).filter((v) => v.binding === manifest.vpcBinding);
+  if (topLevel.length > 0) {
+    if (topLevel.some((v) => v.service_id === manifest.vpcDevelopmentServiceId)) {
+      fail(
+        ws,
+        `top-level (production) vpc_services must not reuse the development service_id ${manifest.vpcDevelopmentServiceId} — it is on the development tunnel`,
+      );
+    }
+    // A real production VPC Service is the intended end state, so a distinct
+    // id here is allowed and only has to be well-formed.
+  }
+}
+
+// Deploying production means running with no `--env`, and CLOUDFLARE_ENV picks
+// the environment when the flag is absent. compose.yaml exports
+// CLOUDFLARE_ENV=development, so a deploy script that does not blank it would
+// silently ship to `<name>-development` and leave production untouched — a
+// failure that looks like success. Verified with `wrangler deploy --dry-run`.
+for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
+  const pkgPath = join(root, ws, 'package.json');
+  if (!existsSync(pkgPath)) continue;
+  const scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {};
+  for (const [name, body] of Object.entries(scripts)) {
+    if (/--env\s+production/.test(body)) {
+      fail(ws, `${name} must not pass --env production — the top level is production`);
+    }
+    // Per sub-command, because a script chains several with `&&`. A segment
+    // that passes `--env` is explicit and safe whatever CLOUDFLARE_ENV says;
+    // one that does not is at the mercy of the variable.
+    for (const segment of body.split('&&')) {
+      // `build:next` is plain `next build` — no wrangler, nothing to redirect.
+      if (!/opennextjs-cloudflare|wrangler/.test(segment)) continue;
+      if (/--env\s+\S+/.test(segment)) continue;
+      if (!segment.includes('CLOUDFLARE_ENV=')) {
+        fail(
+          ws,
+          `${name} runs wrangler with no --env and does not blank CLOUDFLARE_ENV — the container exports it, so this would silently target <name>-development`,
+        );
+      }
+    }
   }
 }
 
@@ -214,8 +263,8 @@ for (const ws of manifest.standalone) {
         `top-level vpc_services must declare ${manifest.vpcBinding} exactly once (found ${declared.length})`,
       );
     }
-    if (declared[0] && declared[0].service_id !== manifest.vpcPreviewServiceId) {
-      fail(ws, `vpc_services service_id must be ${manifest.vpcPreviewServiceId}`);
+    if (declared[0] && declared[0].service_id !== manifest.vpcDevelopmentServiceId) {
+      fail(ws, `vpc_services service_id must be ${manifest.vpcDevelopmentServiceId}`);
     }
     if (declared[0] && declared[0].remote !== true) {
       fail(ws, 'vpc_services must set remote: true — local workerd cannot simulate a VPC Service');

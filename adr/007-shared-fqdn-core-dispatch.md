@@ -132,23 +132,23 @@ Workers VPC behavior above (the fetch target's host _is_ the Host header).
 
 `dispatchToRails()` checks for `env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC`
 (the existing binding, unchanged name, unchanged `service_id`, unchanged
-`env.preview`-only placement — see ADR 005/006). If it is absent, it
+`env.vpc`-only placement — see ADR 005/006). If it is absent, it
 returns `503` directly — it never calls `nextWorker.fetch` and never
 retries against any other resource. This mirrors `getRailsClient()`'s own
 "fail closed, visibly" principle:
 
-| Tier                                 | Binding present?                                      | Behavior                                |
-| ------------------------------------ | ----------------------------------------------------- | --------------------------------------- |
-| `pnpm dev` (Node, `next dev`)        | no — no Workers runtime at all                        | 503, fails closed                       |
-| `pnpm preview` (`--env development`) | no                                                    | 503, fails closed                       |
-| `pnpm preview:vpc` (`--env preview`) | yes, `remote: true`                                   | dispatches to Rails over the dev tunnel |
-| `pnpm deploy` (`--env production`)   | **not yet** — no production VPC Service/tunnel exists | 503, fails closed                       |
+| Tier                                  | Binding present?                                      | Behavior                                |
+| ------------------------------------- | ----------------------------------------------------- | --------------------------------------- |
+| `pnpm dev` (Node, `next dev`)         | no — no Workers runtime at all                        | 503, fails closed                       |
+| `pnpm preview` (`--env development`)  | no                                                    | 503, fails closed                       |
+| `pnpm preview:vpc` (`--env vpc`)      | yes, `remote: true`                                   | dispatches to Rails over the dev tunnel |
+| `pnpm deploy` (top level, no `--env`) | **not yet** — no production VPC Service/tunnel exists | 503, fails closed                       |
 
 Restoring production Rails dispatch needs exactly what ADR 006 already
 documents for `getRailsClient()`: a production Cloudflare Tunnel next to
 production Rails, and a production Workers VPC Service on it, created via
 the Cloudflare dashboard/API — outside this repository — then
-`env.production.vpc_services` gains the same block `env.preview` already
+the top-level `vpc_services` gains the same block `env.vpc` already
 has, with that service's `service_id`. No application code changes.
 
 ## What this record explicitly did NOT change
@@ -162,8 +162,8 @@ has, with that service's `service_id`. No application code changes.
   ADR 005 §1/§3/§5 and ADR 006 still spell the pre-rename names; read them
   as historical. See "Naming drift" below.
 - The `UMAXICA_APPS_EDGE_CF_WORKERS_VPC` binding name, its `service_id`, and
-  its `env.preview`-only placement (ADR 006 §1).
-- `env.production`/`env.preview`/`env.development`/`env.test` separation
+  its `env.vpc`-only placement (ADR 006 §1).
+- top level (production)/`env.vpc`/`env.development`/`env.test` separation
   and the `pnpm dev` / `pnpm preview` / `pnpm preview:vpc` topology.
 - `rails-client.ts` / `rails-health.ts` — no edits; the new
   `core-dispatch.ts` is a sibling module, not a rewrite.

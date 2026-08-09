@@ -39,6 +39,49 @@
   "placement": {
     "mode": "smart"
   },
+  /**
+   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
+   *
+   * Wrangler environments deploy to a *separate* Worker named
+   * `<name>-<env>`, so an `env.production` has to re-declare `name` just to
+   * cancel that out — fighting the tool to stand still. Cloudflare's own model
+   * is that the top level is the real Worker and environments are the variants,
+   * so `wrangler deploy` with no `--env` deploys production and every
+   * `--env` is a non-production variant.
+   *
+   * The deploy scripts blank CLOUDFLARE_ENV for this reason: the container
+   * exports `CLOUDFLARE_ENV=development`, and with no `--env` flag that
+   * variable alone would silently redirect a production deploy to
+   * `<name>-development`. Measured, not assumed.
+   *
+   * Non-inheritable keys (vars, services, images, version_metadata, ratelimits,
+   * vpc_services, …) do NOT reach `env.*` from here — also measured: wrangler
+   * warns "not inherited by environments" and the environment resolves with no
+   * bindings at all. So production values sitting here cannot leak into a
+   * development session.
+   */
+  "vars": {
+    "CLOUDFLARE_ENV": "production",
+    "NODE_ENV": "production",
+    "BRAND_NAME": "UMAXICA"
+  },
+
+  /**
+   * No `vpc_services` here — deliberately, and this is not an omission.
+   *
+   * The only VPC Service that exists (019f5fe0-287f-7040-9f2f-036cb5b21df7) is
+   * bound to the development tunnel and terminates on a developer's machine.
+   * Pointing production at it would send production traffic to a laptop. A
+   * production VPC Service on a production tunnel does not exist yet; until it
+   * does, production has no Rails transport and `getRailsClient()` returns
+   * null, so `/rails-health` reports `not-configured` and answers 503.
+   * Fail closed, visibly.
+   *
+   * To restore it: create the production VPC Service, then add the block here
+   * with that service_id. tools/check-workers.mjs enforces that it never
+   * equals the development one.
+   */
+
   "env": {
     "development": {
       "vars": {
@@ -70,24 +113,27 @@
       ]
     },
     /**
-     * `preview` is the Cloudflare-integration development tier: local workerd
-     * (`opennextjs-cloudflare preview --env preview`) with the VPC binding
-     * resolved remotely against the real dev VPC Service. It is the only
+     * `vpc` is the Cloudflare-integration development tier: local workerd
+     * (`opennextjs-cloudflare preview --env vpc`) with the VPC binding resolved
+     * remotely against the real development VPC Service. It is the only
      * environment that carries `vpc_services`, and it is never deployed.
      *
+     * It was called `preview` until it became clear that Cloudflare already
+     * uses "preview" for Preview URLs — the versioned URLs of a *deployed*
+     * Worker — which is close to the opposite of what this is.
+     *
      * `remote: true` runs this Worker's code locally and proxies only the
-     * binding to Cloudflare, so a session needs an account credential
-     * (`wrangler login`, or CLOUDFLARE_API_TOKEN with Workers Scripts: Edit
-     * and Connectivity: Read). That cost is why the binding lives here and not
-     * in `env.development` — `pnpm dev` and `pnpm preview` stay
-     * credential-free. See adr/006-development-workers-vpc-transport.md.
+     * binding to Cloudflare, so a session needs `wrangler login` (an API token
+     * cannot open one). That cost is why the binding lives here and not in
+     * `env.development` — `pnpm dev` and `pnpm preview` stay credential-free.
+     * See adr/006-development-workers-vpc-transport.md.
      */
-    "preview": {
+    "vpc": {
       "images": {
         "binding": "IMAGES"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "preview",
+        "CLOUDFLARE_ENV": "vpc",
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
@@ -146,51 +192,6 @@
         {
           "name": "RATE_LIMITER",
           "namespace_id": "3001",
-          "simple": {
-            "limit": 2000,
-            "period": 60
-          }
-        }
-      ]
-    },
-    "production": {
-      "name": "umaxica-apps-edge-app-help",
-      "vars": {
-        "CLOUDFLARE_ENV": "production",
-        "NODE_ENV": "production",
-        "BRAND_NAME": "UMAXICA"
-      },
-      "version_metadata": {
-        "binding": "REVISION"
-      },
-      "images": {
-        "binding": "IMAGES"
-      },
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "umaxica-apps-edge-app-help"
-        }
-      ],
-      /**
-       * No `vpc_services` — deliberately, and this is not an omission.
-       *
-       * The only VPC Service that exists (019f5fe0-287f-7040-9f2f-036cb5b21df7)
-       * is bound to the development tunnel and terminates on a developer's
-       * machine. Pointing production at it would send production traffic to a
-       * laptop. A production VPC Service on a production tunnel does not exist
-       * yet; until it does, production has no Rails transport and
-       * `getRailsClient()` returns null, so `/rails-health` reports
-       * `not-configured` and answers 503. Fail closed, visibly.
-       *
-       * To restore it: create the production VPC Service, then add the block
-       * back here with that service_id. tools/check-workers.mjs enforces that
-       * it never equals the preview one.
-       */
-      "ratelimits": [
-        {
-          "name": "RATE_LIMITER",
-          "namespace_id": "1001",
           "simple": {
             "limit": 2000,
             "period": 60

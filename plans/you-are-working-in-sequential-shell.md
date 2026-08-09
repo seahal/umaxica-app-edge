@@ -179,6 +179,62 @@ re-verify. Do not guess at anything that is really a design decision (how much o
 OpenNext's worker a wrapper may rewrap, whether a frame should gain a `/health`
 route); report those instead.
 
+## Follow-up, same day — wrangler environments restructured
+
+After the fifteen-frame verification came a question that turned out to be
+well-founded: why is the VPC binding in an environment called `preview` when
+this is development? Research against current Cloudflare, Next.js and OpenNext
+documentation showed the Rails one-axis intuition does not map, because there
+are three independent axes here:
+
+| Axis                   | Decides                                      | Values                                            |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------- |
+| `NODE_ENV`             | Next's build/runtime mode, `.env.*` order    | **exactly** `development` / `test` / `production` |
+| Cloudflare environment | which infrastructure; deploys `<name>-<env>` | any name                                          |
+| where the code runs    | Node / local workerd / edge                  | —                                                 |
+
+Only the first is the `RAILS_ENV` analogue, and the repo already had it right.
+Two things were wrong on the second axis, and both were fixed:
+
+**`env.preview` → `env.vpc`.** "Preview" is an official Cloudflare term for the
+versioned URLs of a _deployed_ Worker, so it named close to the opposite of this
+never-deployed, local-only environment.
+
+**`env.production` deleted; the top level is production.** A wrangler
+environment deploys to `<name>-<env>`, so `env.production` existed only to
+re-declare `name` and cancel that out. Applied to the four `*/apex` workers too,
+for one shape across the repo. The deployed Worker name is unchanged, so nothing
+is orphaned.
+
+**The hazard that created, measured before relying on it.** With no `--env`,
+`CLOUDFLARE_ENV` picks the environment — and `compose.yaml` exports
+`CLOUDFLARE_ENV=development`:
+
+```
+CLOUDFLARE_ENV=development, no --env  →  env.CLOUDFLARE_ENV ("development")
+CLOUDFLARE_ENV=,            no --env  →  env.CLOUDFLARE_ENV ("production")
+```
+
+A deploy from inside the container would have shipped to `<name>-development`
+and left production untouched. Every deploy/build/typegen script now blanks it,
+and `check-workers.mjs` fails any wrangler invocation that has neither `--env`
+nor the blanking.
+
+**A comment that was simply false, corrected.** `check-workers.mjs` justified
+banning a top-level `vpc_services` with "it applies to every environment,
+including development". Measured: it does not. Top-level non-inheritable keys do
+not reach `env.*` at all — wrangler warns and the environment resolves with **no
+bindings found**.
+
+**A test that would have gone quiet, caught.** `rails-connection-invariants`
+sliced the config from `indexOf('"production"')`; with the key gone that is
+`slice(-1)`, so the "production must not reuse the development service_id"
+assertion would have passed vacuously. Rewritten to read the parsed config.
+
+Re-verified after the restructure: `check:preview:vpc` 15/15 `rails-health: ok`,
+`check:vpc` 15/15, `check:local` all green, 1185 tests, lint/typecheck/
+check-workers clean.
+
 ## Result — executed 2026-08-09, all fifteen frames
 
 Every cell below was actually run. No FAILs.

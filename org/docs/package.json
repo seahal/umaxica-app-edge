@@ -3,15 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "opennextjs-cloudflare build --env production",
+    "build": "CLOUDFLARE_ENV= opennextjs-cloudflare build",
     "build:next": "next build",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
-    "deploy": "opennextjs-cloudflare build --env production && opennextjs-cloudflare deploy --env production",
-    "deploy:upload": "opennextjs-cloudflare build --env production && opennextjs-cloudflare upload --env production",
-    "deploy:promote": "wrangler versions deploy --env production --yes",
+    "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
+    "deploy": "CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare deploy",
+    "deploy:upload": "CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare upload",
+    "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --yes",
     "dev": "next dev --hostname 0.0.0.0 --port 5306",
     "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
-    "preview:vpc": "opennextjs-cloudflare build --env preview && opennextjs-cloudflare preview --env preview",
+    "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {

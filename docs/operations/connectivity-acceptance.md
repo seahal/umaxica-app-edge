@@ -34,7 +34,7 @@ They are not interchangeable, and collapsing them hides the failure that matters
 | ------------- | ---------------------------------- | ----------- | --------------------- |
 | `next`        | Node, `next dev`                   | no          | none                  |
 | `preview`     | local workerd, `--env development` | no          | none                  |
-| `preview:vpc` | local workerd, `--env preview`     | **yes**     | `wrangler login`      |
+| `preview:vpc` | local workerd, `--env vpc`         | **yes**     | `wrangler login`      |
 | `vpc`         | the binding alone                  | **yes**     | `wrangler login`      |
 
 **A green `/rails-health` is never proof that the VPC binding works.**

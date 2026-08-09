@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --config wrangler.jsonc --env development --port 5201 --ip 0.0.0.0",
-    "build": "wrangler deploy --config wrangler.jsonc --env production --dry-run --outdir dist",
+    "build": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc --dry-run --outdir dist",
     "preview": "pnpm run build && wrangler dev --config wrangler.jsonc --env development --local --ip 0.0.0.0",
-    "deploy": "wrangler deploy --config wrangler.jsonc --env production",
-    "deploy:upload": "wrangler versions upload --config wrangler.jsonc --env production",
-    "deploy:promote": "wrangler versions deploy --config wrangler.jsonc --env production --yes",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "deploy": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",
+    "deploy:upload": "CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
+    "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --config wrangler.jsonc --yes",
+    "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareBindings",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {

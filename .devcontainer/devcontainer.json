@@ -23,7 +23,7 @@
   // table in CLAUDE.md), forwarded for direct local access.
   //
   // 8976 is wrangler's OAuth callback listener. Ordinary local development does
-  // not need it: `vpc_services` is declared in `env.preview` only, so
+  // not need it: `vpc_services` is declared in `env.vpc` only, so
   // `next dev` / `initOpenNextCloudflareForDev()` resolve no remote binding and
   // never authenticate to Cloudflare (ADR 006, which moved the binding out of
   // `env.production`). It IS needed for the commands that opt into the real

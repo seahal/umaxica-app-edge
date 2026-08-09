@@ -26,6 +26,24 @@
       "head_sampling_rate": 0.2
     }
   },
+  /**
+   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
+   *
+   * A wrangler environment deploys to a separate Worker named `<name>-<env>`,
+   * so an `env.production` has to re-declare `name` purely to cancel that
+   * out. Cloudflare's model is that the top level is the real Worker and
+   * environments are the variants, so `wrangler deploy` with no `--env` is
+   * the production deploy.
+   *
+   * The deploy scripts blank CLOUDFLARE_ENV: compose.yaml exports
+   * `CLOUDFLARE_ENV=development`, and with no `--env` that variable alone
+   * would redirect the deploy to `<name>-development`. Measured, not assumed.
+   */
+  "vars": {
+    "CLOUDFLARE_ENV": "production",
+    "BRAND_NAME": "UMAXICA"
+  },
+
   "env": {
     "development": {
       "version_metadata": {
@@ -94,47 +112,6 @@
         {
           "name": "RATE_LIMITER",
           "namespace_id": "3004",
-          "simple": {
-            "limit": 2000,
-            "period": 60
-          }
-        }
-      ]
-    },
-    "production": {
-      "name": "umaxica-apps-edge-apex-net",
-      "version_metadata": {
-        "binding": "CF_VERSION_METADATA"
-      },
-      "vars": {
-        "CLOUDFLARE_ENV": "production",
-        "BRAND_NAME": "UMAXICA"
-      },
-      "observability": {
-        "enabled": false,
-        "head_sampling_rate": 1,
-        "logs": {
-          "enabled": true,
-          "invocation_logs": true,
-          "head_sampling_rate": 0.2,
-          "persist": true
-        },
-        "traces": {
-          "enabled": true,
-          "head_sampling_rate": 0.2,
-          "persist": true
-        }
-      },
-      "kv_namespaces": [
-        {
-          "binding": "BREAKER_KV",
-          "id": "c6e6da19377c4d878faefac24e2a1b42"
-        }
-      ],
-      "ratelimits": [
-        {
-          "name": "RATE_LIMITER",
-          "namespace_id": "1004",
           "simple": {
             "limit": 2000,
             "period": 60
