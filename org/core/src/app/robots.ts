@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/private/',
     },
-    sitemap: 'https://umaxica.org/sitemap.xml',
+    sitemap: 'https://jp.umaxica.org/sitemap.xml',
   };
 }
