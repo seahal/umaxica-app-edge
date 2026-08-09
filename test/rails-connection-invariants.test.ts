@@ -1,0 +1,323 @@
+/**
+ * Static guardrails for the Rails ↔ Edge connection.
+ *
+ * The design is recorded in `adr/005-rails-edge-workers-vpc-connection.md` and
+ * amended by `adr/006-development-workers-vpc-transport.md`: one Cloudflare
+ * Workers VPC binding, declared in `env.preview` alone; paths sent to Rails
+ * exactly as given, with no frame prefix; and no Rails dependency in the apex
+ * workers.
+ *
+ * Fifteen frames each own a byte-identical copy of the client (deliberately —
+ * `CLAUDE.md` forbids extracting a shared module), so the failure mode is drift:
+ * one copy edited and fourteen left behind, or a sixteenth frame added without
+ * a client at all. Nothing at runtime notices either. These assertions read the
+ * files directly, so they need no container and no Cloudflare credentials.
+ *
+ * `test/compose-tunnel-invariants.test.ts` already asserts the fifteen clients
+ * exist and strip the `cf-access-client-*` headers; that is not repeated here.
+ */
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const repoRoot = join(import.meta.dirname, '..');
+const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
+
+const BRANDS = ['app', 'com', 'org'] as const;
+const FRAMES = ['core', 'docs', 'news', 'help', 'info'] as const;
+const APEX_WORKSPACES = ['app/apex', 'com/apex', 'net/apex', 'org/apex'] as const;
+
+const VPC_BINDING = 'UMAXICA_APPS_EDGE_CF_WORKERS_VPC';
+
+/** The fifteen Next.js frames that reach Rails, as `<brand>/<frame>` paths. */
+const RAILS_FRAMES = BRANDS.flatMap((brand) =>
+  FRAMES.map((frame) => ({ brand, frame, workspace: `${brand}/${frame}` })),
+);
+
+/** Read a `const NAME = <value>;` declaration out of a client copy. */
+function readConstant(source: string, name: string): string | undefined {
+  return new RegExp(`const ${name} = (.+);`).exec(source)?.[1];
+}
+
+describe('rails client layout', () => {
+  it.each(RAILS_FRAMES)('$workspace owns a complete Rails surface', ({ workspace }) => {
+    // A frame with a client but no surface exposes nothing; a surface with no
+    // client fails to compile. Both halves must be present in every frame.
+    for (const file of [
+      `${workspace}/src/lib/rails-client.ts`,
+      `${workspace}/src/lib/rails-health.ts`,
+    ]) {
+      expect(existsSync(join(repoRoot, file)), `missing ${file}`).toBe(true);
+    }
+  });
+
+  it.each(RAILS_FRAMES)(
+    '$workspace exposes /rails-health in its frame idiom',
+    ({ frame, workspace }) => {
+      /*
+       * The two surfaces are NOT interchangeable, and the difference is load
+       * bearing for anyone verifying connectivity by hand:
+       *
+       *   core          → `(page)/rails-health/page.tsx`, an HTML page. The route
+       *                   group `(page)` does not appear in the URL. `curl | jq`
+       *                   against a core port gets markup, not JSON.
+       *   docs/news/    → `rails-health/route.ts`, a JSON Route Handler
+       *   help/info       answering `{"rails": {...}}`.
+       *
+       * core is the authenticated, human-facing surface and renders status for an
+       * operator; the content frames have no such UI and expose the probe
+       * directly. Asserting each frame uses its own idiom keeps a copy-paste
+       * between frames from quietly turning a page into a route or vice versa.
+       */
+      const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
+      const route = `${workspace}/src/app/rails-health/route.ts`;
+      const isCore = frame === 'core';
+
+      expect(existsSync(join(repoRoot, page)), `${page} should exist: ${isCore}`).toBe(isCore);
+      expect(existsSync(join(repoRoot, route)), `${route} should exist: ${!isCore}`).toBe(!isCore);
+    },
+  );
+
+  it('agrees on VPC origin and timeout across all fifteen copies', () => {
+    // Both are intentionally identical everywhere: there is one VPC service on
+    // one host, and one timeout budget. Divergence here means a copy was edited
+    // in isolation. (The dev transport's origin is NOT here — it comes from
+    // `.env.development.local` at runtime, deliberately not from source.)
+    const constants = RAILS_FRAMES.map(({ workspace }) => {
+      const source = read(`${workspace}/src/lib/rails-client.ts`);
+      return {
+        workspace,
+        vpcOrigin: readConstant(source, 'PRIVATE_CORE_RAILS_ORIGIN'),
+        timeout: readConstant(source, 'RAILS_FETCH_TIMEOUT_MS'),
+      };
+    });
+
+    const [first] = constants;
+    expect(first?.vpcOrigin).toBeDefined();
+    expect(first?.timeout).toBeDefined();
+
+    for (const entry of constants) {
+      expect(entry, `${entry.workspace} diverges`).toEqual({
+        workspace: entry.workspace,
+        vpcOrigin: first?.vpcOrigin,
+        timeout: first?.timeout,
+      });
+    }
+  });
+
+  it('keeps the dev transport credentials out of source and out of wrangler config', () => {
+    /*
+     * The development transport authenticates to a Cloudflare Access-protected
+     * hostname with a service token. That token is a real credential: it must
+     * arrive from `.env.development.local` (gitignored) at runtime and must never be
+     * committed, either as a literal in a client copy or as a `vars` entry in a
+     * `wrangler.jsonc`.
+     *
+     * `wrangler.jsonc` is the dangerous one — `vars` is plaintext configuration
+     * that ships with the Worker, so a secret placed there would be deployed.
+     */
+    const secretNames = [
+      'PUBLIC_CORE_ACCESS_CLIENT_ID',
+      'PUBLIC_CORE_ACCESS_CLIENT_SECRET',
+      'PUBLIC_CORE_RAILS_ORIGIN',
+    ];
+
+    for (const { workspace } of RAILS_FRAMES) {
+      const config = read(`${workspace}/wrangler.jsonc`);
+      for (const name of secretNames) {
+        expect(config, `${workspace}/wrangler.jsonc must not carry ${name}`).not.toContain(name);
+      }
+
+      // The names may appear in the client as env lookups, but never with an
+      // assigned string literal.
+      const source = read(`${workspace}/src/lib/rails-client.ts`);
+      expect(source, `${workspace} hardcodes a credential`).not.toMatch(
+        /PUBLIC_CORE_ACCESS_CLIENT_(?:ID|SECRET)\s*=\s*['"]/,
+      );
+    }
+  });
+
+  it('sends no path prefix — Rails routes on the path exactly as given', () => {
+    /*
+     * ADR 005 decision 3 assumed frames would identify themselves to Rails with
+     * a `/{frame}/{brand}` prefix, and said openly that whether Rails wanted
+     * that was a question for the Rails repository. It did not: the first real
+     * request over the VPC binding produced
+     *
+     *   ActionController::RoutingError (No route matches [GET] "/docs/app/health/liveness.json")
+     *
+     * Rails serves `/health/liveness.json` unprefixed. ADR 006 records the
+     * retraction.
+     *
+     * This is a regression guard rather than a style rule. A prefix
+     * reintroduced here would not fail loudly — it would produce 404s, which
+     * `checkRailsHealth` reports as `http-error`, which reads like a Rails
+     * outage rather than a client bug.
+     */
+    for (const { workspace } of RAILS_FRAMES) {
+      const source = read(`${workspace}/src/lib/rails-client.ts`);
+
+      expect(source, `${workspace} must not reintroduce a frame prefix`).not.toContain(
+        'RAILS_FRAME_PREFIX',
+      );
+      expect(source, `${workspace} must not reintroduce prefix plumbing`).not.toContain(
+        'pathPrefix',
+      );
+      expect(source, `${workspace} must build the URL from the path alone`).toContain(
+        'new URL(path,',
+      );
+    }
+  });
+
+  it('points every frame at the same development origin', () => {
+    /*
+     * The VPC service targets exactly one Rails origin, so the fallback Access
+     * transport points every frame at the public hostname for that same origin.
+     * Both transports therefore reach the identical backend, and frames are not
+     * distinguished at the URL level at all.
+     *
+     * The Rails tunnel also publishes per-brand hostnames. Switching a frame to
+     * one of those in isolation is the failure this guards: development would
+     * silently reach a different origin than production, and nothing would
+     * notice until deploy.
+     *
+     * Moving to per-brand origins for real means per-brand VPC services first,
+     * then changing all fifteen examples together — at which point this
+     * assertion is the thing to update, deliberately.
+     */
+    const origins = RAILS_FRAMES.map(({ workspace }) => ({
+      workspace,
+      origin: /^PUBLIC_CORE_RAILS_ORIGIN=(.*)$/m.exec(read(`${workspace}/.env.example`))?.[1],
+    }));
+
+    const [first] = origins;
+    expect(first?.origin, 'the example must ship a concrete origin').toBeTruthy();
+
+    for (const { workspace, origin } of origins) {
+      expect(origin, `${workspace} diverges from the shared development origin`).toBe(
+        first?.origin,
+      );
+    }
+  });
+
+  it('ships an example that carries no credential', () => {
+    // The origin is a public DNS name and is committed on purpose. The token
+    // halves are credentials and must stay empty in the tracked example.
+    for (const { workspace } of RAILS_FRAMES) {
+      const example = read(`${workspace}/.env.example`);
+      expect(example, `${workspace} leaks a client id`).toMatch(/^PUBLIC_CORE_ACCESS_CLIENT_ID=$/m);
+      expect(example, `${workspace} leaks a client secret`).toMatch(
+        /^PUBLIC_CORE_ACCESS_CLIENT_SECRET=$/m,
+      );
+    }
+  });
+});
+
+describe('apex workers stay independent of Rails', () => {
+  // The apex workers own the root domain. They used to proxy Rails health, and
+  // a Rails outage therefore surfaced as a failing apex. That coupling was
+  // removed on purpose; this guards against it creeping back.
+  it.each(APEX_WORKSPACES)('%s holds no Rails client or VPC binding', (workspace) => {
+    for (const file of ['src/rails-client.ts', 'src/rails-health.ts']) {
+      expect(existsSync(join(repoRoot, workspace, file)), `${workspace}/${file} returned`).toBe(
+        false,
+      );
+    }
+
+    expect(read(`${workspace}/wrangler.jsonc`)).not.toContain(VPC_BINDING);
+  });
+});
+
+describe('workers vpc bindings', () => {
+  /*
+   * The binding is declared exactly once per frame, inside `env.preview`.
+   *
+   * wrangler does NOT inherit bindings into `env` blocks, so placement is the
+   * whole enforcement mechanism:
+   *
+   * - not at the top level, and not in `development`/`test`, because the
+   *   binding is `remote: true` and would force every local dev session to
+   *   authenticate to Cloudflare with a write-scoped credential. `pnpm dev` and
+   *   `pnpm preview` needing no Cloudflare account is a property worth keeping.
+   * - not in `production`, because the only VPC Service that exists today is on
+   *   the *development* tunnel and terminates on a developer's machine. A
+   *   production Worker pointed at it would leave the production network
+   *   entirely. See adr/006-development-workers-vpc-transport.md.
+   *
+   * `tools/check-workers.mjs` asserts the same thing from the parsed config;
+   * this is the textual belt to its braces.
+   */
+  it.each(RAILS_FRAMES)('$workspace declares the binding once, in preview', ({ workspace }) => {
+    const config = read(`${workspace}/wrangler.jsonc`);
+
+    expect(config).toContain('"env"');
+    expect(config).toContain('"development"');
+    expect(config).toContain('"preview"');
+    expect(config).toContain('"test"');
+    expect(config).toContain('"production"');
+
+    const declarations = config.match(new RegExp(VPC_BINDING, 'g')) ?? [];
+    expect(declarations, `${workspace} must declare the binding exactly once`).toHaveLength(1);
+
+    // The one declaration sits between the "preview" and "test" keys — i.e.
+    // inside the preview block, not an adjacent environment.
+    const at = config.indexOf(VPC_BINDING);
+    expect(at).toBeGreaterThan(config.indexOf('"preview"'));
+    expect(at).toBeLessThan(config.indexOf('"test"'));
+  });
+
+  it.each(RAILS_FRAMES)('$workspace declares no VPC binding in production', ({ workspace }) => {
+    /*
+     * Fail closed rather than fail outward. With no binding and no
+     * `PUBLIC_CORE_RAILS_ORIGIN`, `getRailsClient()` returns null and `/rails-health`
+     * reports `not-configured` and answers 503 — a visible, correct absence.
+     *
+     * Restoring production means creating a production VPC Service on a
+     * production tunnel and adding the block back. The next assertion is what
+     * stops that restoration from re-using the development service.
+     */
+    const config = read(`${workspace}/wrangler.jsonc`);
+    const production = config.slice(config.indexOf('"production"'));
+
+    expect(production, `${workspace} env.production must carry no vpc_services`).not.toContain(
+      '"vpc_services"',
+    );
+  });
+
+  it('points every frame at the same development VPC service', () => {
+    /*
+     * One development Rails, so one VPC service shared by all fifteen frames.
+     * Written as an assertion so a divergence — a frame left on an old service
+     * after a migration — fails loudly.
+     */
+    const serviceIds = RAILS_FRAMES.flatMap(({ workspace }) =>
+      [...read(`${workspace}/wrangler.jsonc`).matchAll(/"service_id":\s*"([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    );
+
+    expect(serviceIds).toHaveLength(RAILS_FRAMES.length);
+    expect(new Set(serviceIds).size).toBe(1);
+  });
+
+  it('never lets development and production share a VPC service', () => {
+    /*
+     * The single assertion that makes "development cannot reach production
+     * Rails" mechanical rather than procedural. It holds vacuously while
+     * production declares no binding, and starts biting the moment somebody
+     * adds one — which is exactly when it is needed.
+     */
+    const previewId = JSON.parse(read('tools/workers-manifest.json')).vpcPreviewServiceId;
+
+    for (const { workspace } of RAILS_FRAMES) {
+      const config = read(`${workspace}/wrangler.jsonc`);
+      const production = config.slice(config.indexOf('"production"'));
+      const productionIds = [...production.matchAll(/"service_id":\s*"([^"]+)"/g)].map((m) => m[1]);
+
+      expect(
+        productionIds,
+        `${workspace} production must not reuse the development VPC service`,
+      ).not.toContain(previewId);
+    }
+  });
+});

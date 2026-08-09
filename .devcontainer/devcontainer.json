@@ -1,5 +1,9 @@
 {
   "name": "umaxica-apps-edge-dc",
+  // This repository no longer runs a Cloudflare Tunnel connector. There is one
+  // connector for the whole system, and it lives in the Rails repository — see
+  // docs/operations/cloudflare-tunnel-development.md for why, and for the
+  // shared-network overlay to add here once that connector is ready.
   "dockerComposeFile": ["../compose.yaml", "./compose.override.yml"],
   "service": "core",
   "remoteUser": "edge",
@@ -10,75 +14,117 @@
   "overrideCommand": false,
   "remoteEnv": {
     "EDITOR": "code --wait --reuse-window",
-    "DEBUGGER_DISABLE": "1"
+    "DEBUGGER_DISABLE": "1",
+    "TERM": "${localEnv:TERM}",
+    "COLORTERM": "${localEnv:COLORTERM}"
   },
 
+  // These are the ports the dev servers actually listen on (see the workspace
+  // table in CLAUDE.md), forwarded for direct local access.
+  //
+  // 8976 is wrangler's OAuth callback listener. Ordinary local development does
+  // not need it: `vpc_services` is declared in `env.preview` only, so
+  // `next dev` / `initOpenNextCloudflareForDev()` resolve no remote binding and
+  // never authenticate to Cloudflare (ADR 006, which moved the binding out of
+  // `env.production`). It IS needed for the commands that opt into the real
+  // binding — `pnpm run check:vpc` and `preview:vpc` — because those require an
+  // OAuth session and an API token cannot open one.
+  //
+  // It MUST be forwarded by VS Code rather than published via Compose:
+  // wrangler binds `localhost:8976` inside the container, which a Compose
+  // `ports:` mapping cannot reach. VS Code's forwarder runs inside the
+  // container and connects over loopback, so it works.
   "forwardPorts": [
-    5173, 8780, 8781, 8782, 5102, 5103, 5104, 5105, 5302, 5303, 5304, 5305, 5402, 5403, 5404, 5405
+    5101, 5103, 5105, 5106, 5107, 5108, 5201, 5301, 5303, 5305, 5306, 5307, 5308, 5401, 5403, 5405,
+    5406, 5407, 5408, 5501, 5502, 8976
   ],
   "portsAttributes": {
-    "8781": {
-      "label": "App Domain (app)",
-      "onAutoForward": "notify"
-    },
-    "8780": {
-      "label": "Com Domain (com)",
-      "onAutoForward": "notify"
-    },
-    "8782": {
-      "label": "Org Domain (org)",
-      "onAutoForward": "notify"
-    },
-    "5173": {
-      "label": "Net Domain (net)",
-      "onAutoForward": "notify"
-    },
-    "5102": {
-      "label": "Com Core JIT",
+    "8976": {
+      "label": "wrangler OAuth callback",
       "onAutoForward": "silent"
+    },
+    "5101": {
+      "label": "com/apex",
+      "onAutoForward": "notify"
     },
     "5103": {
-      "label": "Com Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5104": {
-      "label": "Com Help JIT",
+      "label": "com/info",
       "onAutoForward": "silent"
     },
     "5105": {
-      "label": "Com News JIT",
+      "label": "com/core",
+      "onAutoForward": "notify"
+    },
+    "5106": {
+      "label": "com/docs",
       "onAutoForward": "silent"
     },
-    "5302": {
-      "label": "Org Core JIT",
+    "5107": {
+      "label": "com/news",
       "onAutoForward": "silent"
+    },
+    "5108": {
+      "label": "com/help",
+      "onAutoForward": "silent"
+    },
+    "5201": {
+      "label": "net/apex",
+      "onAutoForward": "notify"
+    },
+    "5301": {
+      "label": "org/apex",
+      "onAutoForward": "notify"
     },
     "5303": {
-      "label": "Org Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5304": {
-      "label": "Org Help JIT",
+      "label": "org/info",
       "onAutoForward": "silent"
     },
     "5305": {
-      "label": "Org News JIT",
+      "label": "org/core",
+      "onAutoForward": "notify"
+    },
+    "5306": {
+      "label": "org/docs",
       "onAutoForward": "silent"
     },
-    "5402": {
-      "label": "App Core JIT",
+    "5307": {
+      "label": "org/news",
       "onAutoForward": "silent"
+    },
+    "5308": {
+      "label": "org/help",
+      "onAutoForward": "silent"
+    },
+    "5401": {
+      "label": "app/apex",
+      "onAutoForward": "notify"
     },
     "5403": {
-      "label": "App Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5404": {
-      "label": "App Help JIT",
+      "label": "app/info",
       "onAutoForward": "silent"
     },
     "5405": {
-      "label": "App News JIT",
+      "label": "app/core",
+      "onAutoForward": "notify"
+    },
+    "5406": {
+      "label": "app/docs",
+      "onAutoForward": "silent"
+    },
+    "5407": {
+      "label": "app/news",
+      "onAutoForward": "silent"
+    },
+    "5408": {
+      "label": "app/help",
+      "onAutoForward": "silent"
+    },
+    "5501": {
+      "label": "dev/apex (Vercel)",
+      "onAutoForward": "silent"
+    },
+    "5502": {
+      "label": "dev/acme (Vercel)",
       "onAutoForward": "silent"
     }
   },

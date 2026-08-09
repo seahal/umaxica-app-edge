@@ -23,10 +23,7 @@ describe('renderHealthPage', () => {
 
     vi.stubGlobal('Response', ThrowOnceResponse);
 
-    const response = renderHealthPage(
-      { BRAND_NAME: 'UMAXCA' },
-      { service: 'app', railsHealth: { kind: 'ok', status: 200 } },
-    );
+    const response = renderHealthPage({ BRAND_NAME: 'UMAXCA' }, { service: 'app' });
 
     expect(response.status).toBe(503);
     expect(response.headers.get('content-type')).toBe('text/html; charset=UTF-8');
@@ -37,29 +34,28 @@ describe('renderHealthPage', () => {
   it('uses Cloudflare version metadata in the health JSON response', async () => {
     const response = renderHealthJson(
       { CF_VERSION_METADATA: { id: 'test-version-id' } },
-      { service: 'app', railsHealth: { kind: 'ok', status: 200 } },
+      { service: 'app' },
     );
 
     expect(await response.json()).toEqual({
       status: 'OK',
       service: 'app',
       version: 'test-version-id',
+      environment: null,
       edge: 'cloudflare',
-      rails: { status: 'OK', kind: 'ok' },
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
     });
   });
 
-  it('returns 503 when Rails health is not OK', async () => {
-    const response = renderHealthJson(
-      {},
-      { service: 'app', railsHealth: { kind: 'unreachable', errorMessage: 'connection failed' } },
-    );
+  it('reports the wrangler environment when CLOUDFLARE_ENV is bound', async () => {
+    const response = renderHealthJson({ CLOUDFLARE_ENV: 'test' }, { service: 'app' });
 
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
-      status: 'ERROR',
-      rails: { status: 'ERROR', kind: 'unreachable' },
-    });
+    expect(await response.json()).toMatchObject({ environment: 'test' });
+  });
+
+  it('renders the environment in the health page', async () => {
+    const response = renderHealthPage({ CLOUDFLARE_ENV: 'production' }, { service: 'app' });
+
+    expect(await response.text()).toContain('<dd>production</dd>');
   });
 });

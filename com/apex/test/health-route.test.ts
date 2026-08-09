@@ -39,8 +39,8 @@ describe('GET /health', () => {
       status: 'OK',
       service: 'com',
       version: null,
+      environment: null,
       edge: 'cloudflare',
-      rails: { status: 'OK', kind: 'ok' },
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
     });
   });

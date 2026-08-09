@@ -34,31 +34,45 @@ describe('org/core rails client', () => {
     await client?.fetch('/edge/v0/health');
 
     const [requestUrl] = fetchMock.mock.calls[0] as [string];
-    expect(new URL(requestUrl).host).toBe('core.org.localhost:3000');
+    expect(new URL(requestUrl).host).toBe('core.app.localhost:3000');
+    expect(new URL(requestUrl).pathname).toBe('/edge/v0/health');
   });
 
-  it('falls back to a dev-only direct fetcher in development when no binding exists', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
+  it('uses the Access transport when configured instead of the binding', async () => {
+    // development: no VPC binding, so the client goes out over HTTPS to an
+    // Access-protected hostname and presents a service token.
     const fetchSpy = vi.fn<typeof fetch>(() =>
       Promise.resolve(new Response('ok', { status: 200 })),
     );
     vi.stubGlobal('fetch', fetchSpy);
+    vi.stubEnv('PUBLIC_CORE_RAILS_ORIGIN', 'https://rails.example.test');
+    vi.stubEnv('PUBLIC_CORE_ACCESS_CLIENT_ID', 'service-token-id');
+    vi.stubEnv('PUBLIC_CORE_ACCESS_CLIENT_SECRET', 'service-token-secret');
 
     const client = getRailsClient();
     expect(client).not.toBeNull();
 
-    await client?.fetch('/edge/v0/health');
+    await client?.fetch('/health/liveness.json');
 
-    const [requestUrl] = fetchSpy.mock.calls[0] as [string];
-    const url = new URL(requestUrl);
-    expect(url.protocol).toBe('http:');
-    expect(url.port).toBe('3000');
-    expect(url.hostname).toBe('core.org.localhost');
+    const [requestUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(new URL(requestUrl).origin).toBe('https://rails.example.test');
+    expect(new URL(requestUrl).pathname).toBe('/health/liveness.json');
+
+    const headers = new Headers(init.headers);
+    expect(headers.get('cf-access-client-id')).toBe('service-token-id');
+    expect(headers.get('cf-access-client-secret')).toBe('service-token-secret');
   });
 
-  it('fails closed to null outside development when no binding exists', () => {
-    vi.stubEnv('NODE_ENV', 'production');
+  it('ignores a partial Access configuration rather than calling out unauthenticated', () => {
+    // Origin present but no token: reaching the Access hostname without
+    // credentials would return an Access login page, which reads as a Rails
+    // outage. Fail closed instead.
+    vi.stubEnv('PUBLIC_CORE_RAILS_ORIGIN', 'https://rails.example.test');
 
+    expect(getRailsClient()).toBeNull();
+  });
+
+  it('fails closed to null when no binding exists', () => {
     const client = getRailsClient();
 
     expect(client).toBeNull();

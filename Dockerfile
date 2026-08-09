@@ -1,6 +1,10 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=24-trixie
+# Pinned to an exact patch of the Node.js Active LTS line (24.x "Krypton"), not
+# a floating major tag: a rebuild months apart must produce the same runtime.
+# Keep in sync with README.md and with the sibling Rails repo
+# (seahal/umaxica-apps-jit-global), which targets the same exact release.
+ARG NODE_VERSION=24.19.0-trixie
 ARG DOCKER_UID=1000
 ARG DOCKER_USER=edge
 ARG DOCKER_GID=1000
@@ -31,8 +35,11 @@ RUN apt-get update \
     tzdata \
   && rm -rf /var/lib/apt/lists/*
 
+# Pinned, NOT `pnpm@latest`: an unpinned install silently drifts away from the
+# exact version `package.json#packageManager` claims. These two must stay
+# byte-identical.
 RUN corepack enable \
-  && corepack install --global pnpm@latest
+  && corepack install --global pnpm@11.20.0
 
 RUN set -eux; \
   base_user=node; \
@@ -99,6 +106,18 @@ RUN mkdir -p \
     "${HOME}/workspace/node_modules" \
   && chown -R "${DOCKER_UID}:${DOCKER_GID}" "${HOME}" \
   && chmod -R 755 "${HOME}"
+
+# `pn` — the short alias for pnpm, used interactively and in docs.
+#
+# An executable on PATH rather than a Bash alias: this also works in `sh`, in
+# non-interactive shells, from lefthook hooks, and from VS Code tasks, and it
+# forwards arbitrary arguments verbatim. Because it resolves `pnpm` through
+# PATH rather than hard-coding a path or a version, it can never diverge from
+# the corepack-managed binary installed above.
+#
+# Development stage only — it is deliberately absent from any production image.
+RUN printf '#!/bin/sh\nexec pnpm "$@"\n' > /usr/local/bin/pn \
+  && chmod 0755 /usr/local/bin/pn
 
 WORKDIR ${HOME}/workspace
 

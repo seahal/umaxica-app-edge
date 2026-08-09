@@ -10,8 +10,8 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 
 ## Prerequisites
 
-- Node.js 24.x (`node:24-trixie`)
-- [pnpm](https://pnpm.io/) 11.13.x
+- Node.js 24.19.0 — Active LTS "Krypton" (`node:24.19.0-trixie`, pinned exactly in `Dockerfile`)
+- [pnpm](https://pnpm.io/) 11.20.0 (pinned in `Dockerfile` and `package.json#packageManager`)
 - Docker & Docker Compose (optional)
 
 ## Workspaces
@@ -19,24 +19,25 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 | Package    | Role                | Domain             | Dev Port |
 | ---------- | ------------------- | ------------------ | -------- |
 | `com/apex` | Apex/static worker  | `umaxica.com`      | 5101     |
-| `com/core` | Corporate app       | `umaxica.com`      | 5102     |
+| `com/info` | Corporate info      | `info.umaxica.com` | 5103     |
+| `com/core` | Corporate app       | `umaxica.com`      | 5105     |
 | `com/docs` | Corporate docs      | `docs.umaxica.com` | 5106     |
 | `com/news` | Corporate news      | `news.umaxica.com` | 5107     |
 | `com/help` | Corporate help      | `help.umaxica.com` | 5108     |
-| `com/info` | Corporate info      | `info.umaxica.com` | 5109     |
 | `net/apex` | Network apex worker | `umaxica.net`      | 5201     |
 | `org/apex` | Apex/static worker  | `umaxica.org`      | 5301     |
-| `org/core` | Staff app           | `umaxica.org`      | 5302     |
+| `org/info` | Staff info          | `info.umaxica.org` | 5303     |
+| `org/core` | Staff app           | `umaxica.org`      | 5305     |
 | `org/docs` | Staff docs          | `docs.umaxica.org` | 5306     |
 | `org/news` | Staff news          | `news.umaxica.org` | 5307     |
 | `org/help` | Staff help          | `help.umaxica.org` | 5308     |
-| `org/info` | Staff info          | `info.umaxica.org` | 5309     |
 | `app/apex` | Apex/static worker  | `umaxica.app`      | 5401     |
-| `app/core` | Service app         | `umaxica.app`      | 5402     |
+| `app/info` | Service info        | `info.umaxica.app` | 5403     |
+| `app/core` | Service app         | `umaxica.app`      | 5405     |
 | `app/docs` | Service docs        | `docs.umaxica.app` | 5406     |
 | `app/news` | Service news        | `news.umaxica.app` | 5407     |
 | `app/help` | Service help        | `help.umaxica.app` | 5408     |
-| `app/info` | Service info        | `info.umaxica.app` | 5409     |
+| `dev/apex` | Apex/static worker  | `umaxica.dev`      | 5501     |
 | `dev/acme` | Development app     | `umaxica.dev`      | 5502     |
 
 `{com,org,app}/apex` are lightweight Hono workers (root redirect, `/health`,
@@ -81,10 +82,10 @@ pnpm --filter <ws> run <script>
 
 | Tool                                                            | Role                                 | Version   |
 | --------------------------------------------------------------- | ------------------------------------ | --------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.13.x   |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.20.0   |
 | [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x      |
-| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.58.x    |
-| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.73.x    |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.62.x    |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.77.x    |
 | [tsgo](https://github.com/microsoft/typescript-go)              | Type checker (`pnpm run typecheck`)  | 7.0.0-dev |
 | [Vitest](https://vitest.dev/)                                   | Test runner (`pnpm run test`)        | 4.1.x     |
 | [Playwright](https://playwright.dev/)                           | Browser/E2E tests                    | 1.59.x    |
@@ -95,7 +96,14 @@ pnpm --filter <ws> run <script>
 
 The development environment can be set up via rootless Podman + VS Code DevContainer.
 
-- **Base image**: `node:24-trixie` with pnpm (corepack) pre-installed
+- **Base image**: `node:24.19.0-trixie` with pnpm 11.20.0 (corepack) pre-installed. Both are
+  pinned to exact versions so a rebuild reproduces the same toolchain, and both match
+  the sibling Rails repo (`seahal/umaxica-apps-jit-global`).
+- **`pn`**: a `pnpm` shorthand installed at `/usr/local/bin/pn` by the `development`
+  stage of the `Dockerfile`. It is an executable (`exec pnpm "$@"`), not a shell alias,
+  so it works in non-interactive shells and forwards all arguments — `pn install`,
+  `pn run test`, `pn exec vitest`. It resolves `pnpm` via `PATH`, so it can never
+  drift from the installed binary. Development images only.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
@@ -108,6 +116,28 @@ The development environment can be set up via rootless Podman + VS Code DevConta
 # Or start manually with Podman Compose
 podman compose up -d && podman compose exec core bash
 ```
+
+### Cloudflare
+
+Local development needs **no Cloudflare credentials** — no API token, no
+`wrangler login`, no tunnel connector. `vpc_services` is declared in
+`env.production` only, so `next dev` resolves no remote binding.
+
+```bash
+pnpm run dev   # every dev server, on the ports in the table above
+```
+
+The dev servers are reachable on `localhost` only; this repository runs no
+tunnel connector. There is one connector for the whole system and it lives in
+the Rails repository — a second one on the same tunnel would make Cloudflare
+load-balance Rails traffic onto Edge containers.
+
+To reach Rails from local development, copy a frame's `.env.example` to
+`.env.development.local` and fill in the Cloudflare Access service token.
+
+Topology, the plan for exposing dev surfaces again, and troubleshooting:
+[`docs/operations/cloudflare-tunnel-development.md`](docs/operations/cloudflare-tunnel-development.md)
+and [`docs/operations/cloudflare-access.md`](docs/operations/cloudflare-access.md).
 
 ## Testing
 

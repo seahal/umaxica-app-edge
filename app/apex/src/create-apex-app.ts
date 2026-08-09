@@ -5,8 +5,6 @@ import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
-import { getRailsClient } from './rails-client';
-import { checkRailsHealth } from './rails-health';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { applySecurityHeaders, type AssetEnv } from './security-headers';
@@ -74,20 +72,9 @@ export function createApexApp(
     return badRequest();
   });
 
-  const healthOptions = async (env: ApexEnv['Bindings']) => ({
-    ...options,
-    railsHealth: await checkRailsHealth(getRailsClient(env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC)),
-  });
-
-  app.get('/health', timeout(2000), async (c) =>
-    renderHealthPage(c.env, await healthOptions(c.env)),
-  );
-  app.get('/health.html', timeout(2000), async (c) =>
-    renderHealthPage(c.env, await healthOptions(c.env)),
-  );
-  app.get('/health.json', timeout(2000), async (c) =>
-    renderHealthJson(c.env, await healthOptions(c.env)),
-  );
+  app.get('/health', timeout(2000), (c) => renderHealthPage(c.env, options));
+  app.get('/health.html', timeout(2000), (c) => renderHealthPage(c.env, options));
+  app.get('/health.json', timeout(2000), (c) => renderHealthJson(c.env, options));
   app.route('/', pageRoutes);
   app.notFound(notFound);
 

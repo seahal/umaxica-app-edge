@@ -1,5 +1,4 @@
 import type { RateLimiter } from './rate-limit';
-import type { RailsFetcher } from './rails-client';
 import { APEX_INLINE_STYLE_CSP_SOURCE } from './inline-style';
 
 const DEFAULT_CSP_STYLE_SRC = `'self' ${APEX_INLINE_STYLE_CSP_SOURCE}`;
@@ -26,9 +25,9 @@ export function applySecurityHeaders(c: SecurityContext): void {
 
 export type AssetEnv = {
   BRAND_NAME?: string;
+  CLOUDFLARE_ENV?: string;
   CF_VERSION_METADATA?: {
     id?: string;
   };
   RATE_LIMITER?: RateLimiter;
-  UMAXICA_APPS_EDGE_CF_WORKERS_VPC?: RailsFetcher;
 };

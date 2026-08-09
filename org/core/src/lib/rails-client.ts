@@ -1,10 +1,20 @@
 import 'server-only';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-const RAILS_HOSTNAME = 'core.org.localhost';
-const RAILS_PORT = 3000;
 const RAILS_FETCH_TIMEOUT_MS = 5000;
 
+// production. The Workers VPC service terminates on the Rails-side tunnel and
+// resolves this label itself — it is not a DNS name and never resolves locally.
+// One service serves every frame, and Rails does not distinguish them by path:
+// paths are sent through exactly as given. Frames are told apart, where it
+// matters, by what they request — not by a prefix or a Host.
+const PRIVATE_CORE_RAILS_ORIGIN = 'http://core.app.localhost:3000';
+
+// Stripped from every outbound request, always, on both transports. This is
+// about never RELAYING a caller's credentials to Rails — a browser session
+// cookie or an inbound Access token must not become a Rails-side identity.
+// The dev transport's own service token is applied afterwards, so a caller
+// cannot smuggle one in through `init.headers`.
 const FORBIDDEN_REQUEST_HEADERS = [
   'cookie',
   'authorization',
@@ -26,6 +36,23 @@ export type RailsClientResult =
 
 export interface RailsClient {
   fetch(path: string, init?: RailsClientInit): Promise<RailsClientResult>;
+}
+
+/**
+ * development-only configuration, read from `process.env` the ordinary Next.js
+ * way. Values come from `.env.development.local` (gitignored), which Next.js
+ * loads ahead of every other `.env*` file when NODE_ENV is `development`.
+ *
+ * Deliberately NOT a Cloudflare binding: a binding would have to be declared in
+ * `wrangler.jsonc`, whose `vars` are plaintext and ship with the Worker. These
+ * are absent from the generated `CloudflareEnv` for the same reason.
+ * `test/rails-connection-invariants.test.ts` fails the build if any of these
+ * names appears in a `wrangler.jsonc`.
+ */
+interface RailsDevTransportEnv {
+  PUBLIC_CORE_RAILS_ORIGIN?: string;
+  PUBLIC_CORE_ACCESS_CLIENT_ID?: string;
+  PUBLIC_CORE_ACCESS_CLIENT_SECRET?: string;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -67,21 +94,26 @@ function validateRelativePath(path: string): string | null {
   return null;
 }
 
-function buildSanitizedHeaders(init: RailsClientInit | undefined): Headers {
+function buildSanitizedHeaders(
+  init: RailsClientInit | undefined,
+  authHeaders: Readonly<Record<string, string>>,
+): Headers {
   const headers = new Headers(init?.headers);
   for (const forbidden of FORBIDDEN_REQUEST_HEADERS) {
     headers.delete(forbidden);
+  }
+  // Applied after the strip, so the transport's own credentials always win.
+  for (const [name, value] of Object.entries(authHeaders)) {
+    headers.set(name, value);
   }
   return headers;
 }
 
 export function createRailsClient(
-  binding: RailsFetcher,
-  hostname: string,
-  port: number,
+  fetcher: RailsFetcher,
+  origin: string,
+  authHeaders: Readonly<Record<string, string>> = {},
 ): RailsClient {
-  const origin = `http://${hostname}:${port}`;
-
   return {
     async fetch(path, init) {
       const validationError = validateRelativePath(path);
@@ -95,10 +127,10 @@ export function createRailsClient(
       }
 
       try {
-        const response = await binding.fetch(url.toString(), {
-          method: init?.method,
-          body: init?.body,
-          headers: buildSanitizedHeaders(init),
+        const response = await fetcher.fetch(url.toString(), {
+          ...(init?.method === undefined ? {} : { method: init.method }),
+          ...(init?.body === undefined ? {} : { body: init.body }),
+          headers: buildSanitizedHeaders(init, authHeaders),
           redirect: 'manual',
           cache: 'no-store',
           signal: AbortSignal.timeout(RAILS_FETCH_TIMEOUT_MS),
@@ -116,24 +148,41 @@ export function createRailsClient(
   };
 }
 
-function createDevOnlyFetcher(): RailsFetcher {
-  return {
-    fetch(input, init) {
-      return fetch(input, init);
-    },
-  };
-}
-
+/**
+ * Two mutually exclusive transports, chosen by which configuration is present —
+ * never by the environment name. See
+ * `adr/005-rails-edge-workers-vpc-connection.md`.
+ *
+ * 1. VPC binding     → production. Cloudflare grants it at runtime.
+ * 2. Access + origin → development, from `.env.development.local`. The Edge runs
+ *                      in a local container, not on Workers, so there is no VPC
+ *                      binding to grant. Requests go out over HTTPS to a
+ *                      Cloudflare Access-protected hostname fronting the same
+ *                      Rails-side tunnel.
+ * 3. Neither         → null, reported as `not-configured`. Fail closed.
+ */
 export function getRailsClient(): RailsClient | null {
+  // The binding is a Cloudflare object, so it can only come from the Cloudflare
+  // context. Plain configuration comes from `process.env`, the Next.js way.
   const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
-  const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
 
+  const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
   if (binding) {
-    return createRailsClient(binding, RAILS_HOSTNAME, RAILS_PORT);
+    return createRailsClient(binding, PRIVATE_CORE_RAILS_ORIGIN);
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    return createRailsClient(createDevOnlyFetcher(), RAILS_HOSTNAME, RAILS_PORT);
+  const devEnv = process.env as unknown as RailsDevTransportEnv;
+  const origin = devEnv.PUBLIC_CORE_RAILS_ORIGIN;
+  const clientId = devEnv.PUBLIC_CORE_ACCESS_CLIENT_ID;
+  const clientSecret = devEnv.PUBLIC_CORE_ACCESS_CLIENT_SECRET;
+
+  // All three or nothing. A partial configuration would otherwise reach the
+  // Access hostname without credentials and read as a Rails outage.
+  if (origin && clientId && clientSecret) {
+    return createRailsClient({ fetch }, origin, {
+      'cf-access-client-id': clientId,
+      'cf-access-client-secret': clientSecret,
+    });
   }
 
   return null;

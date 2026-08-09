@@ -32,25 +32,33 @@ Most workspaces are Next.js applications; `*/apex` are Hono workers:
 | Workspace  | Domain           | Dev Port | Framework      |
 | ---------- | ---------------- | -------- | -------------- |
 | `app/apex` | umaxica.app      | 5401     | Hono           |
-| `app/core` | umaxica.app      | 5402     | Next.js        |
+| `app/info` | info.umaxica.app | 5403     | Next.js        |
+| `app/core` | umaxica.app      | 5405     | Next.js        |
 | `app/docs` | docs.umaxica.app | 5406     | Next.js        |
 | `app/news` | news.umaxica.app | 5407     | Next.js        |
 | `app/help` | help.umaxica.app | 5408     | Next.js        |
-| `app/info` | info.umaxica.app | 5409     | Next.js        |
 | `com/apex` | umaxica.com      | 5101     | Hono           |
-| `com/core` | umaxica.com      | 5102     | Next.js        |
+| `com/info` | info.umaxica.com | 5103     | Next.js        |
+| `com/core` | umaxica.com      | 5105     | Next.js        |
 | `com/docs` | docs.umaxica.com | 5106     | Next.js        |
 | `com/news` | news.umaxica.com | 5107     | Next.js        |
 | `com/help` | help.umaxica.com | 5108     | Next.js        |
-| `com/info` | info.umaxica.com | 5109     | Next.js        |
 | `net/apex` | umaxica.net      | 5201     | Hono           |
 | `org/apex` | umaxica.org      | 5301     | Hono           |
-| `org/core` | umaxica.org      | 5302     | Next.js        |
+| `org/info` | info.umaxica.org | 5303     | Next.js        |
+| `org/core` | umaxica.org      | 5305     | Next.js        |
 | `org/docs` | docs.umaxica.org | 5306     | Next.js        |
 | `org/news` | news.umaxica.org | 5307     | Next.js        |
 | `org/help` | help.umaxica.org | 5308     | Next.js        |
-| `org/info` | info.umaxica.org | 5309     | Next.js        |
+| `dev/apex` | umaxica.dev      | 5501     | Vercel/Hono    |
 | `dev/acme` | umaxica.dev      | 5502     | Vercel/edge fn |
+
+Port scheme: thousands digit = domain family (`com`=1, `net`=2, `org`=3, `app`=4,
+`dev`=5); last two digits = workspace role (`apex`=01, `acme`=02, `info`=03,
+`core`=05, `docs`=06, `news`=07, `help`=08). `apex`/`info`/`acme` (01/02/03) are
+grouped as the "global-facing" slots; `core`/`docs`/`news`/`help` (05–08) are
+the regional-subdomain slots. `net` only has `apex`; `dev` only has `apex` and
+`acme` (Vercel, no `core`).
 
 `app/apex`, `com/apex`, `org/apex`, and `net/apex` own the apex/root domain
 (redirect to a regional `*/core` subdomain, `/health`, `/about`); the

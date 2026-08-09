@@ -1,35 +1,30 @@
 import { getBrandName } from './brand';
 import { APEX_INLINE_STYLE } from './inline-style';
-import type { RailsHealthResult } from './rails-health';
 import type { AssetEnv } from './security-headers';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
 type HealthPayload = {
-  status: 'OK' | 'ERROR';
+  status: 'OK';
   service: string;
   version: string | null;
+  environment: string | null;
   edge: 'cloudflare';
   time: string;
-  rails: { status: 'OK' | 'ERROR'; kind: RailsHealthResult['kind'] };
 };
 
 type HealthPageOptions = {
   service: string;
-  railsHealth: RailsHealthResult;
 };
 
 function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPayload {
   return {
-    status: options.railsHealth.kind === 'ok' ? 'OK' : 'ERROR',
+    status: 'OK',
     service: options.service,
     version: env?.CF_VERSION_METADATA?.id ?? null,
+    environment: env?.CLOUDFLARE_ENV ?? null,
     edge: 'cloudflare',
     time: new Date().toISOString(),
-    rails: {
-      status: options.railsHealth.kind === 'ok' ? 'OK' : 'ERROR',
-      kind: options.railsHealth.kind,
-    },
   };
 }
 
@@ -54,12 +49,12 @@ function buildHealthPageHtml(brandName: string, payload: HealthPayload): string 
           <dd>${payload.service}</dd>
           <dt>version</dt>
           <dd>${String(payload.version)}</dd>
+          <dt>environment</dt>
+          <dd>${String(payload.environment)}</dd>
           <dt>edge</dt>
           <dd>${payload.edge}</dd>
           <dt>time</dt>
           <dd>${payload.time}</dd>
-          <dt>rails</dt>
-          <dd>${payload.rails.status}</dd>
         </dl>
       </div>
     </main>
@@ -92,7 +87,7 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
 
   try {
     return new Response(buildHealthPageHtml(brandName, payload), {
-      status: payload.status === 'OK' ? 200 : 503,
+      status: 200,
       headers: {
         'content-type': 'text/html; charset=UTF-8',
         'X-Robots-Tag': HEALTH_ROBOTS_HEADER,
@@ -112,7 +107,7 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
 export function renderHealthJson(env: AssetEnv, options: HealthPageOptions): Response {
   const payload = buildHealthPayload(env, options);
   return new Response(JSON.stringify(payload), {
-    status: payload.status === 'OK' ? 200 : 503,
+    status: 200,
     headers: {
       'content-type': 'application/json; charset=UTF-8',
       'X-Robots-Tag': HEALTH_ROBOTS_HEADER,

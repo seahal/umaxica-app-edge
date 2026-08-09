@@ -1,0 +1,19 @@
+# Dockerfile には COPY/ADD が無く、ワークスペースは compose の bind mount で
+# 入る。ここで重量物を落とすのは純粋な転送量削減であり、コンテナ内から見える
+# ファイルには影響しない。将来 COPY を足すときはこの一覧を見直すこと。
+.git
+node_modules
+**/node_modules
+.pnpm-store
+coverage
+.next
+**/.next
+.open-next
+**/.open-next
+.wrangler
+**/.wrangler
+.idea
+.claude
+.aiassistant
+plans
+*.log

@@ -26,19 +26,42 @@ services:
       - type: volume
         source: home-local-share
         target: /home/edge/.local/share
+      # `wrangler login` writes its OAuth credentials to
+      # $XDG_CONFIG_HOME/.wrangler (see getGlobalConfigPath in wrangler). Bind
+      # only that subdirectory to a named volume — mounting all of ~/.config
+      # would shadow the read-only gh/git/opencode binds from devcontainer.json.
+      # Without this the login is lost every time the container is recreated.
+      - type: volume
+        source: wrangler-config
+        target: /home/edge/.config/.wrangler
+    # Host-published ports are for direct local access only. No Cloudflare
+    # Tunnel connector runs in this repository — the single connector lives
+    # beside Rails, and test/compose-tunnel-invariants.test.ts fails the build
+    # if one reappears here. Edge reaches Rails outward through the Workers VPC
+    # binding, never inward over these ports, so removing an entry here affects
+    # local access only.
     ports:
-      - '5102:5102' # com/core
+      - '5101:5101' # com/apex
+      - '5103:5103' # com/info
+      - '5105:5105' # com/core
       - '5106:5106' # com/docs
       - '5107:5107' # com/news
       - '5108:5108' # com/help
-      - '5302:5302' # org/core
+      - '5201:5201' # net/apex
+      - '5301:5301' # org/apex
+      - '5303:5303' # org/info
+      - '5305:5305' # org/core
       - '5306:5306' # org/docs
       - '5307:5307' # org/news
       - '5308:5308' # org/help
-      - '5402:5402' # app/core
+      - '5401:5401' # app/apex
+      - '5403:5403' # app/info
+      - '5405:5405' # app/core
       - '5406:5406' # app/docs
       - '5407:5407' # app/news
       - '5408:5408' # app/help
+      - '5501:5501' # dev/apex (Vercel, but runs inside this container via `vercel dev`)
+      - '5502:5502' # dev/acme (Vercel, but runs inside this container via `vercel dev`)
     command: sleep infinity
     tty: true
     stdin_open: true
@@ -48,6 +71,27 @@ services:
       - CLOUDFLARE_ENV=development
       - VITE_GIT_HOOKS=0
       - NODE_OPTIONS=--max-old-space-size=4096
+      # For deploys. NOT usable for `pnpm preview:vpc`, and not needed by
+      # `pnpm dev` / `pnpm preview` (which resolve no remote binding and never
+      # contact Cloudflare).
+      #
+      # Measured, 2026-08-08: a scoped API token CANNOT open a remote-binding
+      # session. POST /accounts/<id>/workers/subdomain/edge-preview answers
+      # `10405 Method not allowed for this authentication scheme` — the endpoint
+      # rejects token auth outright, regardless of scopes. `preview:vpc`
+      # therefore requires `wrangler login` (OAuth).
+      #
+      # Worse, this variable actively breaks `preview:vpc` even when unset in
+      # the shell: `next build` loads the repo-root `.env` into `process.env`,
+      # and the wrangler child inherits it. `env -u` does not help — an absent
+      # key is exactly what dotenv fills in. Blank it instead, so dotenv sees
+      # the key as already present:
+      #
+      #   CLOUDFLARE_API_TOKEN= pnpm --filter <ws> run preview:vpc
+      #
+      # See adr/006-development-workers-vpc-transport.md.
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
     restart: unless-stopped
   postgres:
     image: postgres:17-alpine
@@ -73,6 +117,8 @@ volumes:
   home-cache:
     driver: local
   home-local-share:
+    driver: local
+  wrangler-config:
     driver: local
   postgres-data:
     driver: local

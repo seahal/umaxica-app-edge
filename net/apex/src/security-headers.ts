@@ -25,6 +25,7 @@ export function applySecurityHeaders(c: SecurityContext): void {
 
 export type AssetEnv = {
   BRAND_NAME?: string;
+  CLOUDFLARE_ENV?: string;
   CF_VERSION_METADATA?: {
     id?: string;
   };
