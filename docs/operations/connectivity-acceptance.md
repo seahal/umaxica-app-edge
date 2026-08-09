@@ -137,6 +137,33 @@ A **404 from Rails is recorded as a transport PASS** with a Rails-layer failure
 beside it. The request demonstrably arrived; that is exactly where ADR 006's
 first verified run landed.
 
+### Workers VPC reports an unreachable origin as a 500, not as a throw
+
+Measured 2026-08-09 by stopping Rails and running `pn run check:vpc`:
+
+```json
+{
+  "probe": "reached",
+  "status": 500,
+  "contentType": "text/plain;charset=UTF-8",
+  "body": "ProxyError: connection_refused"
+}
+```
+
+The documented codes (`connection_refused`, `destination_unavailable`, …) do
+**not** all arrive as thrown exceptions. At least an unreachable origin arrives
+as an ordinary HTTP 500 whose body is `ProxyError: <code>`. Reading the status
+alone would report "Rails answered 500" when Rails answered nothing at all —
+the tunnel did. The checker therefore inspects the body before the status and
+attributes it to the **Tunnel/private origin** layer.
+
+**The application does not make this distinction.** `rails-client.ts` sees a
+500 response and returns `http-error`, so with Rails down `/rails-health` reads
+_"Rails responded with an error — Status: HTTP 500"_. That is honest about the
+status code and misleading about the cause: a stopped Rails and a Rails that
+threw a 500 in its own code are indistinguishable there. Known gap; the checker
+is the tool that tells them apart.
+
 ## The staged single-host state
 
 All fifteen frames declare the same VPC Service and the same

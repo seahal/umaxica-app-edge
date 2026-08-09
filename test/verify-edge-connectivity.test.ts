@@ -143,6 +143,35 @@ describe('classifyProbeOutcome', () => {
     expect(verdict.layer).toBe('Rails');
   });
 
+  it('does not mistake a tunnel ProxyError for a Rails answer', () => {
+    /*
+     * Measured by stopping Rails: Workers VPC does not throw on an unreachable
+     * origin, it returns HTTP 500 with `ProxyError: connection_refused` as the
+     * body. Reading the status alone reports "Rails answered 500" when Rails
+     * answered nothing — the exact layer confusion this tool exists to prevent.
+     */
+    const verdict = classifyProbeOutcome({
+      probe: {
+        probe: 'reached',
+        status: 500,
+        contentType: 'text/plain;charset=UTF-8',
+        body: 'ProxyError: connection_refused',
+      },
+    });
+    expect(verdict.transport).toBe(FAIL);
+    expect(verdict.layer).toBe('Tunnel/private origin');
+    expect(verdict.code).toBe('connection_refused');
+    expect(verdict.detail).not.toContain('Rails answered');
+  });
+
+  it('still blames Rails for a 500 that carries no ProxyError', () => {
+    const verdict = classifyProbeOutcome({
+      probe: { probe: 'reached', status: 500, body: '{"error":"boom"}' },
+    });
+    expect(verdict.transport).toBe(PASS);
+    expect(verdict.layer).toBe('Rails');
+  });
+
   it('detects a missing binding', () => {
     const verdict = classifyProbeOutcome({ probe: { probe: 'binding-missing' } });
     expect(verdict).toMatchObject({ transport: FAIL, layer: 'Binding' });

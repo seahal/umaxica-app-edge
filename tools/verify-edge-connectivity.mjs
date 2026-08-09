@@ -234,6 +234,28 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
 
   if (probe.probe === 'reached') {
     const status = probe.status;
+
+    // Workers VPC does NOT throw when the origin is unreachable. It answers
+    // with an ordinary HTTP 500 whose body is `ProxyError: <documented code>`:
+    //
+    //   status 500, text/plain, "ProxyError: connection_refused"   (Rails down)
+    //
+    // Measured 2026-08-09 by stopping Rails. Taking that at face value would
+    // report "Rails answered 500" when Rails answered nothing at all — the tunnel
+    // did — which is exactly the layer confusion this tool exists to prevent.
+    // Checked before the status, because the status alone cannot distinguish it.
+    const proxyError = /ProxyError:\s*([a-z_]+)/i.exec(probe.body ?? '')?.[1];
+    if (proxyError) {
+      const known = TRANSPORT_CODES.find(([code]) => code === proxyError);
+      return {
+        transport: FAIL,
+        layer: known?.[1] ?? 'Tunnel/private origin',
+        detail: `${proxyError}: ${known?.[2] ?? 'the VPC service could not reach the origin'} (returned as HTTP ${status}, not thrown)`,
+        code: proxyError,
+        status,
+      };
+    }
+
     if (status === 200) {
       return { transport: PASS, layer: null, detail: 'Rails answered 200', status };
     }
