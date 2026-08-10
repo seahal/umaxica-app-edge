@@ -117,6 +117,26 @@ The development environment can be set up via rootless Podman + VS Code DevConta
 podman compose up -d && podman compose exec core bash
 ```
 
+#### Getting an interactive shell
+
+Use `podman compose exec` (or `podman exec -it`) — both allocate a pseudo-terminal:
+
+```bash
+podman compose exec core bash -l
+podman exec -it umaxica-apps-edge-dc-core-1 bash -l
+```
+
+`devcontainer exec` is for **one-shot commands only**. It wires stdin to a plain pipe
+and never allocates a PTY, so the shell has no line discipline: Ctrl+C is delivered as
+a raw `0x03` byte instead of `SIGINT`, line editing and history are dead, and Ctrl+D
+closes the pipe rather than sending EOF — the shell exits instantly and it looks like
+the container died. Confirm with `tty`: an interactive shell answers `/dev/pts/N`, a
+broken one answers `not a tty`. VS Code's integrated terminal allocates its own PTY and
+is unaffected.
+
+Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
+(`sleep infinity`) only — they have no bearing on shells started later via `exec`.
+
 ### Cloudflare
 
 Local development needs **no Cloudflare credentials** — no API token, no
