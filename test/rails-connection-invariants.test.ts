@@ -84,31 +84,40 @@ describe('rails client layout', () => {
     expect(digests.size, 'the fifteen route handlers have diverged').toBe(1);
   });
 
-  it('agrees on VPC origin and timeout across all fifteen copies', () => {
-    // Both are intentionally identical everywhere: there is one VPC service on
-    // one host, and one timeout budget. Divergence here means a copy was edited
-    // in isolation. (The dev transport's origin is NOT here — it comes from
-    // `.env.development.local` at runtime, deliberately not from source.)
-    const constants = RAILS_FRAMES.map(({ workspace }) => {
-      const source = read(`${workspace}/src/lib/rails-client.ts`);
-      return {
-        workspace,
-        vpcOrigin: readConstant(source, 'PRIVATE_CORE_RAILS_ORIGIN'),
-        timeout: readConstant(source, 'RAILS_FETCH_TIMEOUT_MS'),
-      };
-    });
+  it.each(RAILS_FRAMES)('$workspace sends its own Rails host', ({ brand, frame, workspace }) => {
+    /*
+     * Each frame addresses its own Rails entry point, and the host is how.
+     *
+     * Workers VPC does not route on it — one VPC Service and one tunnel serve
+     * all fifteen — but the host becomes the `Host` header, and Rails dispatches
+     * on that to `<Frame>::<Brand>::…`. Measured 2026-08-10 through a single
+     * Service: `core.com.localhost` answered from `Core::Com::…`,
+     * `docs.app.localhost` from `Docs::App::…`.
+     *
+     * So a wrong host here does not fail: it quietly reaches the wrong
+     * namespace and answers 200. That is why this is pinned per frame rather
+     * than left to review. It replaces an assertion that all fifteen agreed,
+     * which was correct only while the split was still staged.
+     */
+    const origin = readConstant(
+      read(`${workspace}/src/lib/rails-client.ts`),
+      'PRIVATE_RAILS_ORIGIN',
+    );
+    expect(origin, `${workspace} must address ${frame}.${brand}`).toBe(
+      `'http://${frame}.${brand}.localhost:3000'`,
+    );
+  });
 
-    const [first] = constants;
-    expect(first?.vpcOrigin).toBeDefined();
-    expect(first?.timeout).toBeDefined();
-
-    for (const entry of constants) {
-      expect(entry, `${entry.workspace} diverges`).toEqual({
-        workspace: entry.workspace,
-        vpcOrigin: first?.vpcOrigin,
-        timeout: first?.timeout,
-      });
-    }
+  it('agrees on the timeout budget across all fifteen copies', () => {
+    // Unlike the origin, this one *is* meant to be identical everywhere;
+    // divergence means a copy was edited in isolation.
+    const timeouts = new Set(
+      RAILS_FRAMES.map(({ workspace }) =>
+        readConstant(read(`${workspace}/src/lib/rails-client.ts`), 'RAILS_FETCH_TIMEOUT_MS'),
+      ),
+    );
+    expect(timeouts.size, 'the fifteen timeout budgets have diverged').toBe(1);
+    expect([...timeouts][0]).toBeDefined();
   });
 
   it('keeps the dev transport credentials out of source and out of wrangler config', () => {

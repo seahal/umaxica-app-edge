@@ -34,7 +34,7 @@ describe('com/news rails client', () => {
     await client?.fetch('/edge/v0/health');
 
     const [requestUrl] = fetchMock.mock.calls[0] as [string];
-    expect(new URL(requestUrl).host).toBe('core.app.localhost:3000');
+    expect(new URL(requestUrl).host).toBe('news.com.localhost:3000');
     expect(new URL(requestUrl).pathname).toBe('/edge/v0/health');
   });
 

@@ -90,7 +90,7 @@ export function loadSurfaces(manifest = loadManifest()) {
 /** The Rails origin a frame will send, read from its rails-client copy. */
 export function readRailsOrigin(ws) {
   const source = readFileSync(join(repoRoot, ws, 'src/lib/rails-client.ts'), 'utf8');
-  return /PRIVATE_CORE_RAILS_ORIGIN\s*=\s*'([^']+)'/.exec(source)?.[1] ?? null;
+  return /PRIVATE_RAILS_ORIGIN\s*=\s*'([^']+)'/.exec(source)?.[1] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -607,7 +607,7 @@ async function modeConfig(report, surfaces, manifest) {
 
     const origin = readRailsOrigin(surface.ws);
     if (!origin) {
-      problems.push('could not read PRIVATE_CORE_RAILS_ORIGIN from rails-client.ts');
+      problems.push('could not read PRIVATE_RAILS_ORIGIN from rails-client.ts');
     } else {
       railsHosts.set(surface.key, new URL(origin).host);
     }
@@ -620,40 +620,35 @@ async function modeConfig(report, surfaces, manifest) {
     );
   }
 
-  // Brand routing. Rails selects the brand from the Host header, and the Host is
-  // whatever each frame's PRIVATE_CORE_RAILS_ORIGIN says. Today all frames
-  // deliberately send core.app.localhost: the agreed sequence is to reach one
-  // Rails endpoint over VPC first and split the routes per brand afterwards.
+  // Rails entry-point routing.
+  //
+  // Rails dispatches to `<Frame>::<Brand>::…` on the Host header, and the Host
+  // is whatever each frame's PRIVATE_RAILS_ORIGIN says. Workers VPC does not
+  // route on it — one Service and one tunnel serve all fifteen — so a wrong
+  // host does not fail. It reaches the wrong namespace and answers 200. That
+  // is why this is checked here rather than left to the eye, and why it is no
+  // longer opt-in: the staged single-host period ended 2026-08-10.
   const hosts = [...new Set(railsHosts.values())];
-  if (process.env.STRICT_BRAND_ROUTING === '1') {
-    for (const surface of surfaces) {
-      const host = railsHosts.get(surface.key);
-      const expected = `core.${surface.brand}.localhost:3000`;
-      report.record(
-        'Brand routing',
-        surface.key,
-        host === expected ? PASS : FAIL,
-        host === expected ? host : `sends Host ${host}, expected ${expected}`,
-      );
-    }
+  for (const surface of surfaces) {
+    const host = railsHosts.get(surface.key);
+    const expected = `${surface.frame}.${surface.brand}.localhost:3000`;
+    report.record(
+      'Rails routing',
+      surface.key,
+      host === expected ? PASS : FAIL,
+      host === expected ? host : `sends Host ${host}, expected ${expected}`,
+    );
+  }
+  if (hosts.length !== surfaces.length) {
+    report.note(
+      FAIL,
+      `Rails Host must be distinct per frame; ${surfaces.length} frames share ${hosts.length} hosts`,
+    );
   } else {
-    for (const surface of surfaces) {
-      report.record(
-        'Brand routing',
-        surface.key,
-        SKIP,
-        `sends Host ${railsHosts.get(surface.key)}`,
-      );
-    }
-    if (hosts.length === 1) {
-      report.note(
-        PASS,
-        `Rails Host: all surfaces send ${hosts[0]} (staged: one endpoint first, per-brand routes next). ` +
-          'Set STRICT_BRAND_ROUTING=1 once the split begins.',
-      );
-    } else {
-      report.note(WARN, `Rails Host differs across surfaces: ${hosts.join(', ')}`);
-    }
+    report.note(
+      PASS,
+      `Rails Host: ${surfaces.length} frames, ${hosts.length} distinct entry points`,
+    );
   }
 
   const auth = await readCloudflareAuth();
@@ -722,7 +717,7 @@ async function modeConfig(report, surfaces, manifest) {
 
   report.note(
     PASS,
-    `INFO: one VPC Service and one Rails Host serve all ${manifest.railsBacked.length} frames (staged)`,
+    `INFO: one VPC Service serves all ${manifest.railsBacked.length} frames, each addressing its own Rails entry point by Host`,
   );
 }
 
@@ -1242,7 +1237,7 @@ function modeLinks(surfaces) {
 const GATE_ORDER = [
   'Toolchain',
   'VPC config',
-  'Brand routing',
+  'Rails routing',
   'Direct VPC → Rails',
   'Next.js dev server',
   'Local /health',
@@ -1265,7 +1260,7 @@ const GATE_ORDER = [
 const GATE_ABBREVIATIONS = new Map([
   ['Toolchain', 'tool'],
   ['VPC config', 'cfg'],
-  ['Brand routing', 'brand'],
+  ['Rails routing', 'rails'],
   ['Direct VPC → Rails', 'VPC→'],
   ['Next.js dev server', 'dev'],
   ['Local /health', 'd:hlt'],

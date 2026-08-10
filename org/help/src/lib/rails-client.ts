@@ -3,12 +3,23 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 const RAILS_FETCH_TIMEOUT_MS = 5000;
 
-// production. The Workers VPC service terminates on the Rails-side tunnel and
-// resolves this label itself — it is not a DNS name and never resolves locally.
-// One service serves every frame, and Rails does not distinguish them by path:
-// paths are sent through exactly as given. Frames are told apart, where it
-// matters, by what they request — not by a prefix or a Host.
-const PRIVATE_CORE_RAILS_ORIGIN = 'http://core.app.localhost:3000';
+// The Rails entry point for this frame.
+//
+// Workers VPC does NOT route on this host. The VPC Service decides where the
+// connection goes — one Service, one tunnel, for all fifteen frames — and this
+// URL only populates the `Host` header: "The host provided in the fetch()
+// operation is not used to route requests, and instead only populates the Host
+// field" (Cloudflare, Workers VPC / VPC Services).
+//
+// Rails dispatches on that header to `<Frame>::<Brand>::…`. Measured 2026-08-10
+// against one VPC Service: `docs.app.localhost` answered from
+// `Docs::App::Health::LivenessesController`, `core.com.localhost` from
+// `Core::Com::…`. So fifteen frames reach fifteen entry points with no extra
+// Cloudflare resources.
+//
+// This is therefore NOT a label — editing it changes which Rails namespace
+// answers. `test/rails-connection-invariants.test.ts` pins the mapping.
+const PRIVATE_RAILS_ORIGIN = 'http://help.org.localhost:3000';
 
 // Stripped from every outbound request, always, on both transports. This is
 // about never RELAYING a caller's credentials to Rails — a browser session
@@ -215,7 +226,7 @@ export function getRailsClient(): RailsClient | null {
 
   const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
   if (binding) {
-    return createRailsClient(binding, PRIVATE_CORE_RAILS_ORIGIN);
+    return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
   }
 
   const devEnv = process.env as unknown as RailsDevTransportEnv;

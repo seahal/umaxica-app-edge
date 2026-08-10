@@ -81,9 +81,14 @@ describe('surfaces', () => {
     }
   });
 
-  it('reads the Rails Host each frame will send', () => {
+  it('reads the Rails Host each frame will send, and it is that frame’s own', () => {
+    // The host is not decoration: Rails dispatches to `<Frame>::<Brand>::…` on
+    // it, so reading the wrong one would make the checker bless a frame that
+    // talks to the wrong namespace — which answers 200 and looks fine.
     for (const surface of loadSurfaces()) {
-      expect(readRailsOrigin(surface.ws)).toMatch(/^http:\/\/core\.[a-z]+\.localhost:3000$/);
+      expect(readRailsOrigin(surface.ws)).toBe(
+        `http://${surface.frame}.${surface.brand}.localhost:3000`,
+      );
     }
   });
 });

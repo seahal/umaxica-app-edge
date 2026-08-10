@@ -177,6 +177,12 @@ same internal service:
 | `core-jp.umaxica.com` | `core.com.localhost:3000`                          |
 | `core-jp.umaxica.org` | `core.org.localhost:3000`                          |
 
+> Do not confuse this table with the fifteen hosts the frames send over the VPC
+> binding. This column is the **routing target** — where the tunnel delivers the
+> connection, and it is one value for the whole VPC route. The `<frame>.<brand>`
+> host each frame puts in its `fetch()` URL never routes; it only sets `Host`,
+> which is what Rails dispatches on. See ADR 006's 2026-08-10 amendment.
+
 **Use `core-jp.umaxica.app` for every frame**, including the com and org ones, so
 development and production reach the same origin. The reasoning, and what a later
 per-brand split would require, is in

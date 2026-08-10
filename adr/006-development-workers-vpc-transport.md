@@ -333,6 +333,44 @@ decision 3, which explicitly left open whether Rails distinguishes frames by
 `Host` or by the `/{frame}/{brand}` prefix. That question is now the only thing
 between here and a green `/rails-health`.
 
+### Amendment, 2026-08-10 — fifteen Rails entry points, still one VPC Service
+
+The staged single-host period is over. Each frame now addresses its own Rails
+namespace, and **no Cloudflare resource was added to do it**: the VPC Service,
+its `service_id` and the tunnel are unchanged.
+
+The mechanism is the `Host` header alone. Measured through one Service before
+changing anything:
+
+```
+core.app.localhost  →  Core::App::Health::LivenessesController
+core.com.localhost  →  Core::Com::…          docs.app.localhost  →  Docs::App::…
+core.org.localhost  →  Core::Org::…          news.app.localhost  →  News::App::…
+```
+
+Rails' namespace is `<Frame>::<Brand>::`, and the host is `<frame>.<brand>.localhost`,
+so the fifteen frames map one-to-one onto fifteen entry points. Verified end to
+end afterwards: a full `check:preview:vpc` produced exactly fifteen Rails
+requests landing on fifteen distinct namespaces, in order.
+
+Two consequences worth stating plainly:
+
+- **A wrong host does not fail.** It reaches a different namespace and answers 200. So the mapping is pinned in two places — `Rails routing` in
+  `check:config` (no longer opt-in; `STRICT_BRAND_ROUTING` is gone) and
+  per-frame assertions in `test/rails-connection-invariants.test.ts`. The old
+  invariant asserted all fifteen origins were _identical_, which was only ever a
+  record of the staging.
+- `PRIVATE_CORE_RAILS_ORIGIN` is now `PRIVATE_RAILS_ORIGIN`. The `CORE` was
+  false in the twelve content frames the moment they stopped pointing at
+  `core.*`.
+
+Splitting further — one VPC Service per brand, or per frame — remains available
+and now needs no application change at all, since the hosts are already
+distinct. It would be a Cloudflare-side change plus a `service_id` per
+`env.vpc`. That is deliberately not done: one Service and one tunnel are
+sufficient, and each extra one is a resource to provision, secure and keep in
+step.
+
 ### Amendment, 2026-08-09 (b) — `env.preview` is now `env.vpc`, and production left `env` entirely
 
 Two naming/structure corrections. Decision 1's _substance_ stands — the binding
@@ -410,15 +448,12 @@ Processing by Core::App::Health::LivenessesController#show as JSON
 Completed 200 OK in 2ms
 ```
 
-Note `Core::App::` — **Rails selects the brand from the `Host` header.** The
-Workers VPC documentation states that the host in `env.<BINDING>.fetch(url)` does
-not route the request (routing comes wholly from the VPC Service record) and only
-populates `Host`, while the port is ignored outright. All fifteen frames
-currently send `core.app.localhost`, which is the agreed staging: reach one Rails
-endpoint over VPC first, split the routes per brand afterwards. The split will
-therefore need no second VPC Service and no tunnel change — only the origin
-constant in each frame's `rails-client.ts`. `pnpm run check:config` with
-`STRICT_BRAND_ROUTING=1` enforces the split once it starts.
+Note `Core::App::` — **Rails selects the entry point from the `Host` header.**
+The Workers VPC documentation states that the host in `env.<BINDING>.fetch(url)`
+does not route the request (routing comes wholly from the VPC Service record) and
+only populates `Host`, while the port is ignored outright.
+
+**The staging ended the next day; see the amendment below.**
 
 **2. A fourth thing the documentation had wrong.** Item 2 below says to blank
 `CLOUDFLARE_API_TOKEN` rather than unset it, because `next build` reloads the

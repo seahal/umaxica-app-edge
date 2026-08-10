@@ -172,25 +172,33 @@ status code and misleading about the cause: a stopped Rails and a Rails that
 threw a 500 in its own code are indistinguishable there. Known gap; the checker
 is the tool that tells them apart.
 
-## The staged single-host state
+## Fifteen Rails entry points, one VPC Service
 
-All fifteen frames declare the same VPC Service and the same
-`PRIVATE_CORE_RAILS_ORIGIN = http://core.app.localhost:3000`. This is deliberate:
-reach one Rails endpoint over VPC first, split the routes per brand afterwards.
-So `check:vpc` is **one transport exercised three times**, not three independent
-paths, and the report says so rather than printing three PASSes that imply
-otherwise.
+Each frame addresses its own Rails namespace, and the **`Host` header is the
+whole mechanism**. Workers VPC does not route on it — the VPC Service and its
+tunnel decide where the connection goes, identically for all fifteen — but the
+host becomes `Host`, and Rails dispatches on that:
 
-When the per-brand split begins, set `STRICT_BRAND_ROUTING=1` and the checker
-requires each frame to send its own Host (`app`→`core.app`, `com`→`core.com`,
-`org`→`core.org`). The split needs no second VPC Service and no tunnel change —
-only the origin constant in each frame's `rails-client.ts`.
+| frame sends               | Rails answers from |
+| ------------------------- | ------------------ |
+| `core.app.localhost:3000` | `Core::App::…`     |
+| `docs.app.localhost:3000` | `Docs::App::…`     |
+| `info.org.localhost:3000` | `Info::Org::…`     |
 
-The checker cannot observe which Rails brand a request landed on: the liveness
-payload carries `status`, `check`, `dependencies` and `details` only, with no
-controller or brand. That is visible solely in the Rails log. If Edge-side
-verification of the landing brand is wanted later, Rails has to include it in the
-health document.
+Measured across all fifteen on 2026-08-10, through a **single** VPC Service.
+`check:vpc` is therefore still one transport exercised once; what varies per
+frame is only which entry point answers it.
+
+**A wrong host does not fail.** It reaches a different namespace and answers 200. Nothing at runtime notices, and the liveness payload carries no controller
+or brand, so the checker cannot see the landing namespace either — only the
+Rails log shows it. That is why the mapping is pinned twice: `Rails routing` in
+`check:config`, and per-frame assertions in
+`test/rails-connection-invariants.test.ts`. If Edge-side verification of the
+landing namespace is ever wanted, Rails has to put it in the health document.
+
+Splitting further — a VPC Service per brand, say — needs no application change
+at all: the hosts are already distinct. It would be a Cloudflare-side change
+plus a `service_id` per `env.vpc`.
 
 `STRICT_ENV_ISOLATION=1` additionally requires a production VPC Service to exist
 and to differ from the development one. It fails today on purpose — production
