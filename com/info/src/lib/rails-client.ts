@@ -94,6 +94,36 @@ function validateRelativePath(path: string): string | null {
   return null;
 }
 
+// Long enough for `ProxyError: <code>`, short enough that a real Rails error
+// page is never pulled into memory just to be rejected.
+const PROXY_ERROR_MAX_BYTES = 200;
+
+/**
+ * The `ProxyError: <code>` that Workers VPC returns when it cannot reach the
+ * private origin, or null for any other response.
+ *
+ * Deliberately narrow: only a 500 with a `text/plain` body is even inspected,
+ * and the body is read from a clone so the caller still receives an unconsumed
+ * response on every path this does not claim.
+ */
+async function readProxyError(response: Response): Promise<string | null> {
+  if (response.status !== 500) {
+    return null;
+  }
+  if (!response.headers.get('content-type')?.startsWith('text/plain')) {
+    return null;
+  }
+
+  try {
+    const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
+    return /^ProxyError:\s*\w+/i.test(body) ? body : null;
+  } catch {
+    // A body that cannot be read is not evidence of anything; leave the
+    // response to be reported as the http-error it appears to be.
+    return null;
+  }
+}
+
 function buildSanitizedHeaders(
   init: RailsClientInit | undefined,
   authHeaders: Readonly<Record<string, string>>,
@@ -137,6 +167,23 @@ export function createRailsClient(
         });
 
         if (!response.ok) {
+          // Workers VPC does not throw when the private origin is unreachable.
+          // It answers with an ordinary HTTP 500 whose body carries the
+          // documented code:
+          //
+          //   500  text/plain  "ProxyError: connection_refused"
+          //
+          // Measured 2026-08-09 by stopping Rails. Reporting that as
+          // `http-error` makes a stopped Rails indistinguishable from a Rails
+          // that returned 500 from its own code — the status is honest and the
+          // cause is not. `unreachable` is what actually happened: nothing
+          // reached Rails. The code is kept in `errorMessage` so the specific
+          // failure (connection_refused vs dns_error vs
+          // tls_certificate_error) is not lost in the rounding.
+          const proxyError = await readProxyError(response);
+          if (proxyError) {
+            return { kind: 'unreachable', errorMessage: proxyError };
+          }
           return { kind: 'http-error', status: response.status, response };
         }
 

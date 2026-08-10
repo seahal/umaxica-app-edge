@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --config wrangler.jsonc --env development --port 5301 --ip 0.0.0.0",
+    "dev": "wrangler dev --config wrangler.jsonc --env development --port 5301 --inspector-port 9301 --ip 0.0.0.0",
     "build": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc --dry-run --outdir dist",
     "preview": "pnpm run build && wrangler dev --config wrangler.jsonc --env development --local --ip 0.0.0.0",
     "deploy": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",

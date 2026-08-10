@@ -52,32 +52,37 @@ describe('rails client layout', () => {
     }
   });
 
-  it.each(RAILS_FRAMES)(
-    '$workspace exposes /rails-health in its frame idiom',
-    ({ frame, workspace }) => {
-      /*
-       * The two surfaces are NOT interchangeable, and the difference is load
-       * bearing for anyone verifying connectivity by hand:
-       *
-       *   core          → `(page)/rails-health/page.tsx`, an HTML page. The route
-       *                   group `(page)` does not appear in the URL. `curl | jq`
-       *                   against a core port gets markup, not JSON.
-       *   docs/news/    → `rails-health/route.ts`, a JSON Route Handler
-       *   help/info       answering `{"rails": {...}}`.
-       *
-       * core is the authenticated, human-facing surface and renders status for an
-       * operator; the content frames have no such UI and expose the probe
-       * directly. Asserting each frame uses its own idiom keeps a copy-paste
-       * between frames from quietly turning a page into a route or vice versa.
-       */
-      const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
-      const route = `${workspace}/src/app/rails-health/route.ts`;
-      const isCore = frame === 'core';
+  it.each(RAILS_FRAMES)('$workspace exposes /rails-health as JSON', ({ workspace }) => {
+    /*
+     * One shape across all fifteen frames — a Route Handler answering
+     * `{"rails": {...}}`, 200 when the kind is `ok` and 503 otherwise.
+     *
+     * The cores used to render an HTML status page here instead, and this
+     * assertion used to pin that difference. It cost two parsers in
+     * `tools/verify-edge-connectivity.mjs`, a "`jq` against a core port returns
+     * markup" caveat in the operations doc, and a wrong turn during a manual
+     * walkthrough. The stated reason — that the content frames had no UI to host
+     * such a page — was not true either; they have `layout.tsx` and `style.css`.
+     *
+     * The page is not gone forever, only un-duplicated ahead of a refactor that
+     * was already coming. `docs/design/rails-health-page.md` records what it did
+     * so it can be rebuilt once, deliberately, rather than in fifteen copies.
+     */
+    const route = `${workspace}/src/app/rails-health/route.ts`;
+    const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
 
-      expect(existsSync(join(repoRoot, page)), `${page} should exist: ${isCore}`).toBe(isCore);
-      expect(existsSync(join(repoRoot, route)), `${route} should exist: ${!isCore}`).toBe(!isCore);
-    },
-  );
+    expect(existsSync(join(repoRoot, route)), `${route} is missing`).toBe(true);
+    expect(existsSync(join(repoRoot, page)), `${page} must not come back per-frame`).toBe(false);
+  });
+
+  it('keeps all fifteen /rails-health routes byte-identical', () => {
+    // Fifteen owned copies, so the failure mode is drift: one edited and
+    // fourteen left behind. Nothing at runtime notices.
+    const digests = new Set(
+      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/rails-health/route.ts`)),
+    );
+    expect(digests.size, 'the fifteen route handlers have diverged').toBe(1);
+  });
 
   it('agrees on VPC origin and timeout across all fifteen copies', () => {
     // Both are intentionally identical everywhere: there is one VPC service on

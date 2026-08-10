@@ -67,14 +67,22 @@ The checker reads each frame's shape off disk rather than assuming it:
 
 |                      | `/health`     | `/rails-health`                       | wrangler `main`         |
 | -------------------- | ------------- | ------------------------------------- | ----------------------- |
-| `{app,com,org}/core` | Route Handler | **HTML status page**                  | `src/worker.ts` wrapper |
+| `{app,com,org}/core` | Route Handler | **JSON route**, 200 iff `ok` else 503 | `src/worker.ts` wrapper |
 | the other twelve     | **absent**    | **JSON route**, 200 iff `ok` else 503 | `.open-next/worker.js`  |
 
 Consequences worth knowing when you read a report:
 
-- **Readiness is polled on `/rails-health`, not `/health`.** It is the only route
-  all fifteen have, and it always answers, so it is a clean liveness signal.
-  Polling `/health` would hang forever on twelve frames.
+- **Readiness is polled on `/`, and that matters.** It used to poll
+  `/rails-health`, which calls Rails over the VPC binding — so asking whether a
+  server had started sent a request across the tunnel, and every frame hit Rails
+  twice per run. A fifteen-frame pass produced 31 Rails requests instead of 16.
+  A readiness probe must not have a side effect on an external system.
+  (`/health` is not usable for this either: twelve frames do not have it, so
+  polling it would hang forever.)
+- **One Rails request per frame.** A full `check:preview:vpc` should appear in
+  the Rails log as exactly sixteen hits on `/health/liveness.json`: fifteen
+  frames plus the one from `check:vpc` if you ran it. Counting them is a cheap
+  way to catch the tool calling Rails more than it says it does.
 - **`/health` is `SKIP: frame has no /health route`** on those twelve. That is the
   frame's design, not a failure — but it is printed with its reason, because a
   blank cell must never read as coverage.

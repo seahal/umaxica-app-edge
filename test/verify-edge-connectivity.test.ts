@@ -12,7 +12,6 @@ import {
   loadSurfaces,
   main,
   parseRailsHealthJson,
-  parseRailsHealthPage,
   railsHealthStatusMismatch,
   readRailsOrigin,
   waitFor,
@@ -72,12 +71,13 @@ describe('surfaces', () => {
     expect(new Set(Object.values(ports)).size).toBe(15); // no collisions
   });
 
-  it('derives each frame shape from disk, so cores and content frames differ', () => {
+  it('derives each frame shape from disk', () => {
     for (const surface of loadSurfaces()) {
-      // Only the cores own a /health Route Handler; all fifteen must publish
-      // /rails-health in one form or the other, or the connection is unreportable.
+      // Only the cores own a /health Route Handler. All fifteen expose
+      // /rails-health, and it is JSON everywhere — a frame without it has no way
+      // to report the Rails connection at all.
       expect(surface.hasHealthRoute).toBe(surface.frame === 'core');
-      expect(surface.railsHealthForm).toBe(surface.frame === 'core' ? 'html' : 'json');
+      expect(surface.hasRailsHealth, `${surface.ws} must expose /rails-health`).toBe(true);
     }
   });
 
@@ -246,21 +246,6 @@ describe('service_id validation', () => {
 
   it('accepts the real development service id', () => {
     expect(describeServiceIdProblem('019f5fe0-287f-7040-9f2f-036cb5b21df7')).toBeNull();
-  });
-});
-
-describe('parseRailsHealthPage', () => {
-  it.each([
-    ['Rails health is reachable', 'ok'],
-    ['Rails responded with an error', 'http-error'],
-    ['Rails is unreachable', 'unreachable'],
-    ['Rails VPC binding is not configured', 'not-configured'],
-  ])('maps %j to %j', (heading, kind) => {
-    expect(parseRailsHealthPage(`<h1>${heading}</h1>`)).toBe(kind);
-  });
-
-  it('returns null for a page it does not recognise', () => {
-    expect(parseRailsHealthPage('<h1>502 Bad Gateway</h1>')).toBeNull();
   });
 });
 

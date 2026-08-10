@@ -67,13 +67,10 @@ export function loadSurfaces(manifest = loadManifest()) {
       throw new Error(`${ws}: could not read a --port from its dev script`);
     }
 
-    // The three cores answer /health from a Route Handler and render
-    // /rails-health as an HTML status page; the twelve content frames have no
-    // /health at all and expose /rails-health as JSON. Both facts are read, not
-    // assumed.
+    // Only the three cores answer /health from a Route Handler; all fifteen
+    // expose /rails-health as JSON. Both facts are read from disk, not assumed.
     const hasHealthRoute = existsSync(join(repoRoot, ws, 'src/app/health/route.ts'));
-    const jsonRailsHealth = existsSync(join(repoRoot, ws, 'src/app/rails-health/route.ts'));
-    const htmlRailsHealth = existsSync(join(repoRoot, ws, 'src/app/(page)/rails-health/page.tsx'));
+    const hasRailsHealth = existsSync(join(repoRoot, ws, 'src/app/rails-health/route.ts'));
 
     return {
       key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
@@ -83,9 +80,9 @@ export function loadSurfaces(manifest = loadManifest()) {
       pkgName: pkg.name,
       port,
       hasHealthRoute,
-      // null is a FAIL later, not a skip: a Rails-backed frame with no
+      // false is a FAIL later, not a skip: a Rails-backed frame with no
       // /rails-health has no way to report the connection at all.
-      railsHealthForm: jsonRailsHealth ? 'json' : htmlRailsHealth ? 'html' : null,
+      hasRailsHealth,
     };
   });
 }
@@ -288,21 +285,9 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
 // /rails-health parsing
 // ---------------------------------------------------------------------------
 
-// The Core frames render /rails-health as an HTML page, not JSON. These strings
-// come from */core/src/app/(page)/rails-health/rails-health.tsx.
-const RAILS_HEALTH_HEADINGS = [
-  ['Rails health is reachable', 'ok'],
-  ['Rails responded with an error', 'http-error'],
-  ['Rails is unreachable', 'unreachable'],
-  ['Rails VPC binding is not configured', 'not-configured'],
-];
-
-export function parseRailsHealthPage(html) {
-  for (const [heading, kind] of RAILS_HEALTH_HEADINGS) {
-    if (html.includes(heading)) return kind;
-  }
-  return null;
-}
+// One shape across all fifteen frames. The cores used to render an HTML status
+// page instead, which forced a second parser to live here; unifying on JSON is
+// what removed it. See docs/design/rails-health-page.md.
 
 const RAILS_HEALTH_KINDS = new Set(['ok', 'http-error', 'unreachable', 'not-configured']);
 
@@ -830,13 +815,21 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
 // ---------------------------------------------------------------------------
 
 /**
- * Readiness for every surface is `/rails-health`, not `/health`: it is the one
- * route all fifteen frames have, and it always answers (200 when `ok`, 503
- * otherwise), so "any HTTP status" is a clean liveness signal. Twelve of the
- * fifteen have no `/health` at all, so polling that would hang forever.
+ * Readiness is polled on `/`, which every frame has and which touches nothing
+ * outside the process.
+ *
+ * It used to poll `/rails-health`, and that was wrong: `/rails-health` calls
+ * Rails over the VPC binding, so merely *asking whether the server had started*
+ * sent a request across the tunnel. Every frame therefore hit Rails twice per
+ * run — once to answer "are you up", once to be measured — and a fifteen-frame
+ * pass produced 31 Rails requests where it should have produced 16. Caught by
+ * comparing the Rails log against the expected count.
+ *
+ * `/health` is not usable here either: twelve of the fifteen frames do not have
+ * it, so polling it would hang forever on those.
  */
 function readinessUrl(baseUrl) {
-  return `${baseUrl}/rails-health`;
+  return `${baseUrl}/`;
 }
 
 async function checkHttpSurface(report, surface, baseUrl, gatePrefix) {
@@ -870,20 +863,18 @@ async function checkHttpSurface(report, surface, baseUrl, gatePrefix) {
   const rootOk = root.status >= 200 && root.status < 400;
   report.record(`${gatePrefix} /`, surface.key, rootOk ? PASS : FAIL, `HTTP ${root.status}`);
 
-  const railsHealth = await httpGet(readinessUrl(baseUrl), 30_000).catch((e) => ({
+  // The one Rails-touching request in this function, and the only one the whole
+  // run should make per frame. Keep it that way: anything else that calls
+  // /rails-health doubles the traffic the tunnel and Rails see.
+  const railsHealth = await httpGet(`${baseUrl}/rails-health`, 30_000).catch((e) => ({
     status: 0,
     body: String(e),
   }));
 
-  // Cores render an HTML status page; the content frames return JSON. Both forms
-  // are read the way that frame actually publishes it.
-  const kind =
-    surface.railsHealthForm === 'json'
-      ? parseRailsHealthJson(railsHealth.body)
-      : parseRailsHealthPage(railsHealth.body);
+  const kind = parseRailsHealthJson(railsHealth.body);
 
   let statusProblem = null;
-  if (surface.railsHealthForm === 'json' && kind) {
+  if (kind) {
     statusProblem = railsHealthStatusMismatch(kind, railsHealth.status);
     if (statusProblem) {
       report.note(FAIL, `${surface.ws} ${gatePrefix} /rails-health: ${statusProblem}`);
@@ -966,7 +957,7 @@ async function runNextBatch(report, surfaces) {
           'Local /rails-health',
           surface.key,
           FAIL,
-          `unrecognised ${surface.railsHealthForm ?? 'missing'} response, HTTP ${status}`,
+          `unrecognised JSON response, HTTP ${status}`,
         );
       }
     }

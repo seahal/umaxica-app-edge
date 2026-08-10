@@ -127,22 +127,23 @@ whether the VPC configuration is correct.
 The apex workers do not contact Rails, so `/health.json` reports only the worker
 itself. Check Rails through a Next.js frame's `/rails-health`.
 
-All fifteen frames expose it, in two different forms:
+All fifteen frames expose it in **one** form: a JSON Route Handler answering
+`{"rails": {...}}`, 200 when the kind is `ok` and 503 otherwise. So the same
+command works against any port:
 
-- **`docs` / `news` / `help` / `info` — a JSON Route Handler.** Use these for
-  scripted checks:
+```bash
+curl -s http://127.0.0.1:5405/rails-health | jq .rails   # app/core
+curl -s http://127.0.0.1:5406/rails-health | jq .rails   # app/docs
+curl -s http://127.0.0.1:5106/rails-health | jq .rails   # com/docs
+curl -s http://127.0.0.1:5306/rails-health | jq .rails   # org/docs
+```
 
-  ```bash
-  curl -s http://127.0.0.1:5406/rails-health | jq .rails   # app/docs
-  curl -s http://127.0.0.1:5106/rails-health | jq .rails   # com/docs
-  curl -s http://127.0.0.1:5306/rails-health | jq .rails   # org/docs
-  ```
+The three cores used to render an HTML status page here instead, so `jq` against
+a core port returned markup. Unified on JSON 2026-08-10;
+`docs/design/rails-health-page.md` records what that page did, for whenever a
+diagnostics UI is built deliberately rather than copied fifteen times.
 
-- **`core` — an HTML status page** (`src/app/(page)/rails-health/page.tsx`).
-  Open `http://127.0.0.1:5405/rails-health` (app), `:5105` (com), or `:5305`
-  (org) in a browser. Piping a core port through `jq` returns markup, not JSON.
-
-`test/rails-connection-invariants.test.ts` pins which frame uses which form.
+`test/rails-connection-invariants.test.ts` pins the uniformity.
 The `kind` field is one of four values:
 
 | `kind`           | Meaning                                  |
