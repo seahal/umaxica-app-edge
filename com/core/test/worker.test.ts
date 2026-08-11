@@ -90,6 +90,21 @@ describe('com/core worker.ts dispatch', () => {
     expect(response.status).toBe(200);
   });
 
+  it('returns 429 before Rails dispatch when the rate limiter rejects the request', async () => {
+    const railsFetch = vi.fn().mockResolvedValue(new Response('{}'));
+    const env = {
+      ...makeEnv({ fetch: railsFetch }),
+      RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) },
+    } as unknown as CloudflareEnv;
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.com/api/v0/session'),
+      env,
+      ctx,
+    );
+    expect(response.status).toBe(429);
+    expect(railsFetch).not.toHaveBeenCalled();
+  });
+
   it('sends /oidc/callback straight to Rails with the query string unchanged and passes through Set-Cookie/redirect unchanged', async () => {
     const railsHeaders = new Headers({
       location: 'https://jp.umaxica.com/',

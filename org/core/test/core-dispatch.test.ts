@@ -62,6 +62,19 @@ describe('org/core dispatchToRails', () => {
     expect(request.headers.get('x-forwarded-host')).toBeNull();
   });
 
+  it('strips caller-controlled forwarding headers before dispatch', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('ok'));
+    await dispatchToRails(
+      new Request('https://jp.umaxica.org/api/v0/x', {
+        headers: { forwarded: 'for=attacker', 'x-real-ip': '192.0.2.1' },
+      }),
+      { UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } as unknown as Fetcher },
+    );
+    const request = fetch.mock.calls[0]?.[0] as Request;
+    expect(request.headers.has('forwarded')).toBe(false);
+    expect(request.headers.has('x-real-ip')).toBe(false);
+  });
+
   it('omits duplex for a bodyless GET request', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('ok'));
     await dispatchToRails(new Request('https://jp.umaxica.org/api/v0/x'), {

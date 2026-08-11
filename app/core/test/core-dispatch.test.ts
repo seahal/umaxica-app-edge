@@ -62,6 +62,38 @@ describe('app/core dispatchToRails', () => {
     expect(request.headers.get('x-forwarded-host')).toBeNull();
   });
 
+  it('removes attacker-controlled proxy identity headers while preserving application headers', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('ok'));
+    const incoming = new Request('https://jp.umaxica.app/api/v0/x', {
+      headers: {
+        authorization: 'Bearer token',
+        cookie: 'session=abc',
+        forwarded: 'for=203.0.113.10;host=evil.example;proto=http',
+        origin: 'https://jp.umaxica.app',
+        'x-csrf-token': 'csrf-token',
+        'x-forwarded-for': '203.0.113.10',
+        'x-forwarded-host': 'evil.example',
+        'x-forwarded-proto': 'http',
+        'x-real-ip': '203.0.113.10',
+      },
+    });
+
+    await dispatchToRails(incoming, {
+      UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } as unknown as Fetcher,
+    });
+
+    const request = fetch.mock.calls[0]?.[0] as Request;
+    expect(request.headers.get('forwarded')).toBeNull();
+    expect(request.headers.get('x-forwarded-for')).toBeNull();
+    expect(request.headers.get('x-forwarded-host')).toBeNull();
+    expect(request.headers.get('x-forwarded-proto')).toBeNull();
+    expect(request.headers.get('x-real-ip')).toBeNull();
+    expect(request.headers.get('authorization')).toBe('Bearer token');
+    expect(request.headers.get('cookie')).toBe('session=abc');
+    expect(request.headers.get('origin')).toBe('https://jp.umaxica.app');
+    expect(request.headers.get('x-csrf-token')).toBe('csrf-token');
+  });
+
   it('omits duplex for a bodyless GET request', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('ok'));
     await dispatchToRails(new Request('https://jp.umaxica.app/api/v0/x'), {

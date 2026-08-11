@@ -330,3 +330,10 @@ see the operations docs.
 Operational procedure lives in `docs/operations/cloudflare-tunnel-development.md`
 (local tunnel) and `docs/operations/cloudflare-access.md` (who may reach a
 tunnelled hostname, and the Rails-side application the dev transport needs).
+
+# Historical note
+
+The Access fallback described in this ADR was removed by the 2026-08 Edge development
+environment refresh. Local Node now uses only the optional private Podman Rails network;
+Access/Tunnel validation and Workers VPC validation are independent and fail closed. See
+`docs/development/cloudflare-development-network.md` for the current architecture.

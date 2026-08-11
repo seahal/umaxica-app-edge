@@ -43,6 +43,25 @@
     "CLOUDFLARE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
+  /**
+   * The apex hostname is owned by the development Cloudflare Tunnel, so this
+   * Worker claims no route at all — see adr/008-edge-development-tunnel-exposure.md.
+   *
+   * This used to declare `{ pattern: "<apex>", custom_domain: true }` so that
+   * `wrangler deploy` would reconcile the binding on every production deploy and
+   * stop a hand-edited dashboard entry from pointing the hostname elsewhere. That
+   * property is now the exact hazard: a custom domain and a Tunnel Public
+   * Hostname cannot both own one name, so a production deploy would reclaim the
+   * hostname from the Tunnel and silently break the development route.
+   *
+   * Empty is therefore load-bearing, not a leftover. Restoring the apex domain to
+   * this Worker means removing the Tunnel's Public Hostname entry first, then
+   * putting the `routes` entry back — in that order.
+   *
+   * Named environments DO inherit this key, so `env.development` and
+   * `env.test` keep pinning `"routes": []` for their own reasons.
+   */
+  "routes": [],
 
   "env": {
     "development": {
@@ -53,6 +72,10 @@
         "CLOUDFLARE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
+      // Required, not decorative: `routes` IS inherited by named environments,
+      // so without this an `--env development` deploy reassigns the production
+      // custom domain to `<name>-development`. Measured via `--dry-run`.
+      "routes": [],
       "observability": {
         "enabled": false,
         "head_sampling_rate": 1,
@@ -99,6 +122,8 @@
         "CLOUDFLARE_ENV": "test",
         "BRAND_NAME": "UMAXICA"
       },
+      // See the note in `env.development` — blocks route inheritance.
+      "routes": [],
       "kv_namespaces": [
         {
           "binding": "BREAKER_KV",

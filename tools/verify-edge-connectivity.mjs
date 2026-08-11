@@ -12,11 +12,9 @@
 //   preview:vpc       local workerd, `--env vpc`. The real remote binding.
 //   vpc (this tool)   the binding alone, with no application code in the way.
 //
-// `/rails-health` cannot distinguish them: getRailsClient() falls back to a
-// global fetch() against an Access-protected hostname that fronts the *same*
-// tunnel, and RailsHealthResult carries no transport identity. So a green
-// /rails-health is never accepted here as proof that the VPC binding works.
-// That proof comes only from mode `vpc`.
+// `/rails-health` in next dev can prove only the explicitly enabled private
+// Podman path. It is never accepted as VPC or Tunnel evidence. Those paths have
+// their own checks and no transport falls back to another.
 
 import { spawn } from 'node:child_process';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -34,10 +32,23 @@ export const FAIL = 'FAIL';
 export const BLOCKED = 'BLOCKED';
 export const SKIP = 'SKIP';
 
-export const MODES = ['config', 'vpc', 'next', 'preview', 'preview:vpc', 'host', 'links', 'all'];
+export const MODES = [
+  'config',
+  'vpc',
+  'next',
+  'preview',
+  'preview:vpc',
+  'host',
+  'links',
+  'tunnel',
+  'tunnel:apex',
+  'all',
+];
 
 // `host` is excluded from `all` on purpose: it is meaningless inside the
-// container, which is where `all` is run.
+// container, which is where `all` is run. `tunnel` is excluded for a different
+// reason: it needs hostnames someone configured in Cloudflare, so it would
+// report sixteen failures on a machine that never set the tunnel up.
 const ALL_MODES = ['config', 'vpc', 'next', 'preview', 'preview:vpc'];
 
 const LOG_DIR = join(repoRoot, 'tmp/connectivity-check');
@@ -85,6 +96,89 @@ export function loadSurfaces(manifest = loadManifest()) {
       hasRailsHealth,
     };
   });
+}
+
+/**
+ * The sixteen surfaces published through the Rails-shared Cloudflare Tunnel:
+ * the four Hono apex workers plus the twelve non-core Next.js content frames.
+ *
+ * The `core` frames are excluded deliberately, not incidentally. `jp.umaxica.{app,com,org}`
+ * is a shared FQDN where Rails owns some paths and Next.js the rest, so it needs
+ * path-level ingress rather than a whole-host route, and it is a separate piece
+ * of work. `dev/apex` and `dev/acme` are excluded too: they are Vercel-targeted,
+ * and neither binds anything but container loopback.
+ *
+ * Ports come from each workspace's own `dev` script, the same way `loadSurfaces`
+ * does it, so they cannot drift from what actually listens.
+ */
+export function loadTunnelSurfaces(manifest = loadManifest()) {
+  const workspaces = [
+    ...manifest.standalone.map((ws) => ({ ws, runtime: 'hono' })),
+    ...manifest.railsBacked
+      .filter((ws) => !ws.endsWith('/core'))
+      .map((ws) => ({ ws, runtime: 'next' })),
+  ];
+
+  return workspaces.map(({ ws, runtime }) => {
+    const [brand, frame] = ws.split('/');
+    const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
+    const port = Number(/--port\s+(\d+)/.exec(pkg.scripts?.dev ?? '')?.[1]);
+    if (!Number.isInteger(port)) {
+      throw new Error(`${ws}: could not read a --port from its dev script`);
+    }
+
+    return {
+      key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
+      brand,
+      frame,
+      ws,
+      pkgName: pkg.name,
+      port,
+      runtime,
+      host: tunnelHostFor(brand, frame),
+      // What proves THIS application answered, as opposed to merely something
+      // answering with a 200. Apex reports it directly; the content frames only
+      // differ from each other by this one string.
+      marker:
+        runtime === 'hono'
+          ? { kind: 'apex-service', value: brand }
+          : { kind: 'html', value: `UMAXICA ${frame[0].toUpperCase()}${frame.slice(1)}` },
+    };
+  });
+}
+
+/**
+ * The published hostname for a frame, derived from the project's naming policy.
+ *
+ * The policy, which is CURRENT and deliberate — not legacy:
+ *
+ *   apex              umaxica.<brand>
+ *   info              info.umaxica.<brand>        (global surface, no region)
+ *   docs/news/help    <frame>-jp.umaxica.<brand>  (regional, ONE label)
+ *
+ * `docs-jp` is a single subdomain label on purpose: nesting it as
+ * `docs.jp.umaxica.<brand>` would add a certificate level, and development and
+ * staging deliberately avoid that cost. Do not "normalise" the hyphen form.
+ * Core is the sole exception and uses `jp.umaxica.<brand>`; it is not published
+ * here. See docs/operations/cloudflare-tunnel-development.md.
+ *
+ * `EDGE_TUNNEL_HOSTS` overrides any of it, as `app/docs=example.test,...`, so a
+ * developer on their own hostnames does not have to patch this file.
+ */
+export function tunnelHostFor(brand, frame, env = process.env) {
+  const overrides = new Map(
+    (env.EDGE_TUNNEL_HOSTS ?? '')
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map((entry) => entry.split('=').map((part) => part.trim())),
+  );
+  const override = overrides.get(`${brand}/${frame}`);
+  if (override) return override;
+
+  if (frame === 'apex') return `umaxica.${brand}`;
+  if (frame === 'info') return `info.umaxica.${brand}`;
+  return `${frame}-jp.umaxica.${brand}`;
 }
 
 /** The Rails origin a frame will send, read from its rails-client copy. */
@@ -367,12 +461,16 @@ export async function waitFor(check, { timeoutMs, intervalMs = 500, onGiveUp } =
   }
 }
 
-async function httpGet(url, timeoutMs = 15_000) {
+async function httpGet(url, timeoutMs = 15_000, headers) {
   const response = await fetch(url, {
     redirect: 'manual',
     signal: AbortSignal.timeout(timeoutMs),
+    ...(headers ? { headers } : {}),
   });
-  return { status: response.status, body: await response.text() };
+  // `headers` is additive: existing callers destructure status/body only. The
+  // tunnel mode needs `cf-ray` to tell "Cloudflare answered" apart from
+  // "something answered", which a status code alone cannot do.
+  return { status: response.status, headers: response.headers, body: await response.text() };
 }
 
 function logStream(name) {
@@ -490,27 +588,26 @@ function run(command, args, env = {}) {
 }
 
 async function checkToolchain(report, surfaces) {
-  const versions = {};
-  for (const [name, command, args] of [
-    ['node', 'node', ['--version']],
-    ['pnpm', 'pnpm', ['--version']],
-    ['pn', 'pn', ['--version']],
-    ['wrangler', 'pnpm', ['exec', 'wrangler', '--version']],
-  ]) {
-    const result = await run(command, args);
-    versions[name] = result.code === 0 ? result.stdout.trim().split('\n').pop().trim() : null;
+  const rootPackage = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  const pnpmVersion = /^pnpm@([^+]+)/.exec(rootPackage.packageManager ?? '')?.[1] ?? null;
+  let wranglerVersion = null;
+  try {
+    wranglerVersion = JSON.parse(
+      readFileSync(join(repoRoot, 'node_modules/wrangler/package.json'), 'utf8'),
+    ).version;
+  } catch {
+    // Reported below as a missing installed tool.
   }
+  const versions = {
+    node: process.version,
+    pnpm: pnpmVersion,
+    wrangler: wranglerVersion,
+  };
 
   const problems = [];
   for (const [name, value] of Object.entries(versions)) {
     if (!value) problems.push(`${name} could not be executed`);
   }
-  // `pn` is a repo-provided sh wrapper around pnpm. If it resolves to something
-  // else, every documented `pn run …` command is lying.
-  if (versions.pn && versions.pnpm && versions.pn !== versions.pnpm) {
-    problems.push(`pn reports ${versions.pn} but pnpm reports ${versions.pnpm}`);
-  }
-
   const line = Object.entries(versions)
     .map(([k, v]) => `${k} ${v ?? 'MISSING'}`)
     .join(', ');
@@ -924,28 +1021,34 @@ async function runNextBatch(report, surfaces) {
       report.record('Next.js dev server', surface.key, PASS, `listening on ${surface.port}`);
       const { kind, status } = await checkHttpSurface(report, surface, baseUrl, 'Local');
 
-      // Under `--env development` the generated CloudflareEnv provably carries no
-      // VPC binding, so this result can never be VPC evidence — whatever it says.
-      if (kind === 'not-configured') {
+      const localRailsEnabled = process.env.EDGE_LOCAL_RAILS_ENABLED === '1';
+      if (!localRailsEnabled && kind === 'not-configured') {
         report.record(
           'Local /rails-health',
           surface.key,
           PASS,
-          'not-configured (expected: no transport in next dev)',
+          'not-configured (expected without the optional Rails overlay)',
         );
-      } else if (kind === 'ok') {
+      } else if (localRailsEnabled && kind === 'ok') {
         report.record(
           'Local /rails-health',
           surface.key,
-          WARN,
-          'ok via the Access fallback — transport=access-or-none (NOT VPC evidence)',
+          PASS,
+          'ok via the private Podman Rails network (NOT Tunnel or VPC evidence)',
+        );
+      } else if (localRailsEnabled && kind) {
+        report.record(
+          'Local /rails-health',
+          surface.key,
+          FAIL,
+          `${kind} on the explicitly enabled private Podman Rails path`,
         );
       } else if (kind) {
         report.record(
           'Local /rails-health',
           surface.key,
-          WARN,
-          `${kind} (transport=access-or-none)`,
+          FAIL,
+          `${kind}: a transport appeared without the Rails overlay`,
         );
       } else {
         report.record(
@@ -1231,6 +1334,376 @@ function modeLinks(surfaces) {
 }
 
 // ---------------------------------------------------------------------------
+// Mode: tunnel — the published hostnames, layer by layer
+// ---------------------------------------------------------------------------
+
+/**
+ * Statuses Cloudflare returns when it reached the tunnel but the origin did not
+ * answer. These mean "that dev server is not running", which is an ordinary
+ * state here — not every frame is up at once — so they are reported as BLOCKED,
+ * never FAIL. Conflating them with a real failure would make the report useless
+ * exactly when it matters.
+ */
+const ORIGIN_DOWN_STATUSES = new Set([502, 503, 521, 522, 523, 530]);
+
+/** Local origins as the connector addresses them, for the operator-facing table. */
+export function tunnelLocalOrigin(surface) {
+  return `http://edge-core:${surface.port}`;
+}
+
+async function resolvesInDns(host) {
+  // DNS-over-HTTPS rather than dns.lookup: it answers from Cloudflare's own
+  // resolver, so a stale container resolver cache cannot make an unconfigured
+  // hostname look configured.
+  const response = await fetch(
+    `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=A`,
+    { headers: { accept: 'application/dns-json' }, signal: AbortSignal.timeout(10_000) },
+  );
+  if (!response.ok) return { ok: false, detail: `DoH HTTP ${response.status}` };
+  const answer = await response.json();
+  const records = (answer.Answer ?? []).filter((entry) => entry.type === 1 || entry.type === 5);
+  return records.length > 0
+    ? { ok: true, detail: `${records.length} record(s)` }
+    : { ok: false, detail: 'no A/CNAME' };
+}
+
+function classifyTransportError(error) {
+  const text = String(error?.message ?? error);
+  if (/certificate|TLS|SSL|ERR_TLS/i.test(text)) return `TLS failed: ${text}`;
+  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(text)) return `DNS failed: ${text}`;
+  return `transport failed: ${text}`;
+}
+
+/**
+ * Cloudflare Access, from the outside.
+ *
+ * An Access-protected hostname answers an unauthenticated browser request with a
+ * 302 to the team domain. That is the *desired* result for the unauthenticated
+ * half of the check, and it also means the connector was never contacted — which
+ * is precisely the property worth proving. Detected by the redirect target rather
+ * than by a status code, because a 302 on its own is also how `net/apex` and the
+ * apex `/` behave.
+ */
+const ACCESS_TEAM_DOMAIN = /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//i;
+
+function accessRedirect(response) {
+  const location = response.headers.get('location') ?? '';
+  return ACCESS_TEAM_DOMAIN.test(location) ? location : null;
+}
+
+/**
+ * Service-token headers for the authenticated half, read from the environment and
+ * never persisted. A service token is a credential: it is not committed, not
+ * written to the evidence log, and not echoed in any report detail. Absent
+ * variables simply mean the authenticated half is reported as BLOCKED rather
+ * than guessed at.
+ */
+function accessServiceTokenHeaders() {
+  const id = process.env.CF_ACCESS_CLIENT_ID;
+  const secret = process.env.CF_ACCESS_CLIENT_SECRET;
+  if (!id || !secret) return null;
+  return { 'CF-Access-Client-Id': id, 'CF-Access-Client-Secret': secret };
+}
+
+/** Anything that would reveal the origin's own address to a browser. */
+function findLocalLeak(text) {
+  return /localhost|127\.0\.0\.1|edge-core|0\.0\.0\.0/.exec(text ?? '')?.[0] ?? null;
+}
+
+async function modeTunnel(report, surfaces) {
+  for (const surface of surfaces) {
+    await checkTunnelSurface(report, surface);
+  }
+
+  if (!accessServiceTokenHeaders()) {
+    report.note(
+      SKIP,
+      'No Access service token in the environment, so only the unauthenticated half of any ' +
+        'Access-protected surface was measured. Where Access blocked the probe, the remaining ' +
+        'gates report BLOCKED — unproven, deliberately not PASS.',
+    );
+  }
+
+  // Both notes below are about the content frames. In `tunnel:apex` there are
+  // none, and printing them would describe surfaces this run never touched.
+  if (!surfaces.some((surface) => surface.runtime === 'next')) return;
+
+  report.note(
+    SKIP,
+    'Tunnel reachability is not VPC evidence. These frames run on `next dev`/`wrangler dev`, ' +
+      'which carry no VPC binding, so /rails-health answers not-configured by design. See mode `vpc`.',
+  );
+  report.note(
+    SKIP,
+    'Brand mix-up is unverifiable for the twelve content frames: all three brands of a frame ' +
+      'return byte-identical HTML, so the response cannot say which one answered. The frame ' +
+      'identity below IS verified; the brand is asserted by the ingress table only.',
+  );
+}
+
+async function checkTunnelSurface(report, surface) {
+  const { key, host } = surface;
+  const base = `https://${host}`;
+  const restGates = ['Tunnel origin', 'Tunnel identity', 'Tunnel route', 'Tunnel no-leak'];
+  const skipRest = (detail, status = SKIP) => {
+    for (const gate of restGates) {
+      report.record(gate, key, status, detail);
+    }
+  };
+
+  // 1. DNS
+  const dns = await resolvesInDns(host).catch((error) => ({ ok: false, detail: String(error) }));
+  report.record('Tunnel DNS', key, dns.ok ? PASS : FAIL, `${host}: ${dns.detail}`);
+  if (!dns.ok) {
+    report.record('Tunnel Cloudflare', key, SKIP, 'no DNS record');
+    report.record('Tunnel access', key, SKIP, 'no DNS record');
+    skipRest('no DNS record');
+    return;
+  }
+
+  // 2. TLS + Cloudflare. One request answers both: it cannot succeed without a
+  //    valid certificate, and `cf-ray` is only present when Cloudflare served it.
+  let landing;
+  try {
+    landing = await httpGet(base, 20_000);
+  } catch (error) {
+    report.record('Tunnel Cloudflare', key, FAIL, classifyTransportError(error));
+    report.record('Tunnel access', key, SKIP, 'did not reach Cloudflare');
+    skipRest('did not reach Cloudflare');
+    return;
+  }
+  const servedByCloudflare = landing.headers.has('cf-ray');
+  report.record(
+    'Tunnel Cloudflare',
+    key,
+    servedByCloudflare ? PASS : WARN,
+    servedByCloudflare
+      ? `TLS ok, HTTP ${landing.status}`
+      : `TLS ok but no cf-ray (HTTP ${landing.status})`,
+  );
+
+  // 3. Access. Both halves in one place, because the unauthenticated result
+  //    determines whether the rest of the checks can run at all.
+  const authHeaders = accessServiceTokenHeaders();
+  const unauthenticatedBlock = accessRedirect(landing);
+  if (unauthenticatedBlock) {
+    // The origin was NOT contacted, which is the point. Report the team domain
+    // without its query string: the `meta` parameter is a JWT.
+    report.record(
+      'Tunnel access',
+      key,
+      PASS,
+      `unauthenticated blocked: 302 → ${new URL(unauthenticatedBlock).origin}/… [query REDACTED]`,
+    );
+
+    if (!authHeaders) {
+      skipRest(
+        'behind Access, and no service token in the environment — the authenticated half is ' +
+          'unproven, not passing. Set CF_ACCESS_CLIENT_ID/CF_ACCESS_CLIENT_SECRET to check it.',
+        BLOCKED,
+      );
+      return;
+    }
+
+    try {
+      landing = await httpGet(base, 20_000, authHeaders);
+    } catch (error) {
+      report.record('Tunnel origin', key, FAIL, classifyTransportError(error));
+      skipRest('authenticated request failed transport');
+      return;
+    }
+    if (accessRedirect(landing)) {
+      // A token that Access does not accept, or a policy that excludes it.
+      report.record(
+        'Tunnel origin',
+        key,
+        FAIL,
+        'service token was rejected by Access — still redirected to the team domain',
+      );
+      skipRest('not authenticated');
+      return;
+    }
+  } else {
+    // The Access rollout completed on 2026-08-11: all sixteen surfaces answer a
+    // 302 to the team domain, so this branch should no longer be reached. It is
+    // kept as the detector for Access having been removed or misapplied, and it
+    // stays WARN rather than FAIL so the same checker remains usable during a
+    // rollout elsewhere, where publishing precedes Access surface by surface.
+    // Loud either way, because an unprotected development origin is on the internet.
+    report.record(
+      'Tunnel access',
+      key,
+      WARN,
+      `no Access in front — reachable unauthenticated (HTTP ${landing.status})`,
+    );
+  }
+
+  // 4. Origin. A tunnel that reached nothing is a stopped dev server, not a fault.
+  if (ORIGIN_DOWN_STATUSES.has(landing.status)) {
+    report.record(
+      'Tunnel origin',
+      key,
+      BLOCKED,
+      `HTTP ${landing.status} — ${surface.ws} not listening on ${surface.port}`,
+    );
+    skipRest(`origin down (HTTP ${landing.status})`);
+    return;
+  }
+  report.record('Tunnel origin', key, PASS, `origin answered HTTP ${landing.status}`);
+
+  // 5. Identity, then routes. Split by runtime because the two shapes prove
+  //    themselves differently.
+  if (surface.runtime === 'hono') {
+    await checkTunnelApex(report, surface, base, landing, authHeaders);
+  } else {
+    await checkTunnelNext(report, surface, base, landing, authHeaders);
+  }
+}
+
+async function checkTunnelApex(report, surface, base, landing, authHeaders) {
+  const { key, brand } = surface;
+
+  const health = await httpGet(`${base}/health.json`, 15_000, authHeaders).catch((e) => ({
+    status: 0,
+    body: String(e),
+  }));
+  let service = null;
+  let environment = null;
+  try {
+    const parsed = JSON.parse(health.body);
+    service = parsed.service;
+    // The development server reports `environment`; the deployed production
+    // Worker's payload has no such field. So this one string distinguishes
+    // "the Tunnel answered" from "the Worker still owns the hostname" — a
+    // distinction `service` alone cannot make, since both report the brand.
+    environment = parsed.environment ?? null;
+  } catch {
+    service = null;
+  }
+  const identityOk = health.status === 200 && service === brand && environment === 'development';
+  report.record(
+    'Tunnel identity',
+    key,
+    identityOk ? PASS : FAIL,
+    identityOk
+      ? `/health.json service=${service} environment=development (dev server, not the Worker)`
+      : `/health.json HTTP ${health.status} service=${service ?? '<unparsed>'} (want ${brand}) ` +
+          `environment=${environment ?? '<absent — deployed Worker still owns this hostname>'}`,
+  );
+
+  // `/` is a 301 by design, to a hardcoded absolute URL. `net` alone redirects
+  // relatively, to its own /about.
+  const wantLocation = brand === 'net' ? '/about' : `https://jp.umaxica.${brand}/`;
+  const location = landing.headers.get('location');
+  const about = await httpGet(`${base}/about`, 15_000, authHeaders).catch((e) => ({
+    status: 0,
+    body: String(e),
+  }));
+  const routeOk = landing.status === 301 && location === wantLocation && about.status === 200;
+  report.record(
+    'Tunnel route',
+    key,
+    routeOk ? PASS : FAIL,
+    `/ ${landing.status}→${location ?? '<none>'} (want 301→${wantLocation}), /about ${about.status}`,
+  );
+
+  const leak = findLocalLeak(location) ?? findLocalLeak(about.body);
+  report.record(
+    'Tunnel no-leak',
+    key,
+    leak ? FAIL : PASS,
+    leak ? `leaked ${leak}` : 'no local address',
+  );
+}
+
+/**
+ * `{"service":"app","frame":"info",...}` from a content frame's `/health.json`,
+ * or null if the route is absent or answered with something else.
+ */
+function parseSurfaceIdentityJson(body) {
+  try {
+    const parsed = JSON.parse(body);
+    return typeof parsed?.service === 'string' && typeof parsed?.frame === 'string'
+      ? { service: parsed.service, frame: parsed.frame }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkTunnelNext(report, surface, base, landing, authHeaders) {
+  const { key, brand, frame, marker } = surface;
+
+  const frameOk = landing.status === 200 && landing.body.includes(marker.value);
+
+  // The HTML marker proves the FRAME and nothing more: `UMAXICA Info` is the
+  // same string in all three brands' copies, as is every other byte these pages
+  // return. An ingress entry that sent `info.umaxica.com` to the `app` port
+  // would satisfy the check above exactly like a correct one.
+  //
+  // `/health.json` closes that with a build-time `service` literal — the same
+  // mechanism the apexes already had. A frame that does not carry the route yet
+  // reports WARN rather than PASS, because "the brand was not checked" and "the
+  // brand is correct" must not look the same in the matrix.
+  const health = await httpGet(`${base}/health.json`, 15_000, authHeaders).catch((e) => ({
+    status: 0,
+    body: String(e),
+  }));
+  const identity = health.status === 200 ? parseSurfaceIdentityJson(health.body) : null;
+  const brandOk = identity !== null && identity.service === brand && identity.frame === frame;
+
+  const identityStatus = !frameOk ? FAIL : identity === null ? WARN : brandOk ? PASS : FAIL;
+  report.record(
+    'Tunnel identity',
+    key,
+    identityStatus,
+    !frameOk
+      ? `HTTP ${landing.status}, "${marker.value}" absent — wrong frame or not rendered`
+      : identity === null
+        ? `HTML carries "${marker.value}"; brand UNPROVEN — /health.json ${health.status}`
+        : brandOk
+          ? `HTML carries "${marker.value}"; /health.json service=${identity.service} frame=${identity.frame}`
+          : `/health.json says service=${identity.service} frame=${identity.frame}, want ${brand}/${frame} — WRONG SURFACE`,
+  );
+
+  // A dev-server asset URL taken from the page it was served with, so the check
+  // cannot pass against a stale or guessed hash.
+  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/.exec(landing.body)?.[1] ?? null;
+  const asset = assetPath
+    ? await httpGet(`${base}${assetPath}`, 15_000, authHeaders).catch((e) => ({
+        status: 0,
+        body: String(e),
+      }))
+    : null;
+
+  // 503 not-configured is the correct answer without `--rails`: `next dev` has no
+  // VPC binding, so a 200 here would mean the private Podman path is live.
+  const railsHealth = await httpGet(`${base}/rails-health`, 30_000, authHeaders).catch((e) => ({
+    status: 0,
+    body: String(e),
+  }));
+  const kind = parseRailsHealthJson(railsHealth.body);
+  const railsOk = kind !== null && !railsHealthStatusMismatch(kind, railsHealth.status);
+
+  const assetOk = asset?.status === 200;
+  report.record(
+    'Tunnel route',
+    key,
+    assetOk && railsOk ? PASS : FAIL,
+    `${assetPath ? `${assetPath.slice(0, 42)} ${asset.status}` : 'no _next asset in HTML'}, ` +
+      `/rails-health ${railsHealth.status} ${kind ?? '<unrecognised>'}`,
+  );
+
+  const leak = findLocalLeak(landing.headers.get('location')) ?? findLocalLeak(landing.body);
+  report.record(
+    'Tunnel no-leak',
+    key,
+    leak ? FAIL : PASS,
+    leak ? `leaked ${leak}` : 'no local address',
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 
@@ -1253,6 +1726,13 @@ const GATE_ORDER = [
   'Preview(vpc) /rails-health',
   'Preview → Rails VPC',
   'Host port reachability',
+  'Tunnel DNS',
+  'Tunnel Cloudflare',
+  'Tunnel access',
+  'Tunnel origin',
+  'Tunnel identity',
+  'Tunnel route',
+  'Tunnel no-leak',
 ];
 
 // Short column headers for the transposed matrix. Fifteen surfaces do not fit as
@@ -1274,6 +1754,13 @@ const GATE_ABBREVIATIONS = new Map([
   ['Preview(vpc) /', 'v:/'],
   ['Preview → Rails VPC', 'v:rh'],
   ['Host port reachability', 'host'],
+  ['Tunnel DNS', 'dns'],
+  ['Tunnel Cloudflare', 'cf'],
+  ['Tunnel access', 'acs'],
+  ['Tunnel origin', 'orig'],
+  ['Tunnel identity', 'ident'],
+  ['Tunnel route', 'route'],
+  ['Tunnel no-leak', 'leak'],
 ]);
 
 const STATUS_GLYPH = new Map([
@@ -1356,7 +1843,19 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   const manifest = loadManifest();
-  const surfaces = loadSurfaces(manifest);
+  // `tunnel` measures a different surface set: the four apex workers plus the
+  // twelve non-core frames, with `*/core` excluded. Every other mode is about the
+  // fifteen Rails-backed frames.
+  //
+  // `tunnel:apex` narrows that to the four Hono apexes. They are worth their own
+  // mode because they are the only surfaces whose brand is verifiable from the
+  // response, which makes them the right place to prove the ingress and the
+  // Access policy before the twelve look-alike content frames follow.
+  const surfaces = requested.startsWith('tunnel')
+    ? loadTunnelSurfaces(manifest).filter(
+        (surface) => requested !== 'tunnel:apex' || surface.frame === 'apex',
+      )
+    : loadSurfaces(manifest);
   const report = new Report();
   const modes = requested === 'all' ? ALL_MODES : [requested];
 
@@ -1379,6 +1878,8 @@ export async function main(argv = process.argv.slice(2)) {
         await modePreview(report, surfaces, { withVpc: true });
       } else if (mode === 'host') {
         await modeHost(report, surfaces);
+      } else if (mode === 'tunnel' || mode === 'tunnel:apex') {
+        await modeTunnel(report, surfaces);
       } else if (mode === 'links') {
         modeLinks(surfaces);
         return 0; // an index, not a verdict — nothing to put in the matrix

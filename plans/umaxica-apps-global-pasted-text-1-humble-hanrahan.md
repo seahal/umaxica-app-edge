@@ -1,5 +1,32 @@
 # Edge 開発環境の Cloudflare Tunnel + Access 化
 
+> ## Superseded by ADR 008 — 実行しないこと
+>
+> この計画は実装されなかった。実際に採用された設計は
+> `adr/008-edge-development-tunnel-exposure.md`（2026-08-11 完了）で、以下の点がここと異なる。
+> 却下された設計の記録として残しているだけなので、**手順として実行してはならない。**
+>
+> - **§8-1 の「Tunnel を新規作成し、コネクタートークンを Edge リポジトリの `.env` の
+>   `CLOUDFLARED_TOKEN` に設定」は現在テストで禁止されている。** システム全体でコネクタは
+>   1 本のみで、Rails リポジトリが所有する。同じ Tunnel に 2 本目を登録すると Cloudflare が
+>   両者に負荷分散するため、Rails 宛のリクエストが Edge のコンテナに届くようになる。
+>   `test/compose-tunnel-invariants.test.ts` が、compose ファイル内の `cloudflared` 参照と
+>   `TUNNEL_TOKEN` / `CLOUDFLARED_TOKEN` の出現でスイートを失敗させる。
+> - **公開ホスト名は 7 件ではなく 16 件**で、`*/core` を含まない。Core は
+>   `jp.umaxica.{app,com,org}` で Rails とパスを共有するため、パスレベルの ingress が必要な
+>   別作業になっている（ADR 007）。
+> - **オリジンは `core:<port>` ではなく `edge-core:<port>`。** Rails 側にも `core` という
+>   サービスがあり、1 つのネットワーク上で 2 つのコンテナが `core` に応答すると、コネクタの
+>   Rails オリジンが曖昧になる。
+> - **`bin/tunnel-status` は存在しない。** 到達性の検証は
+>   `pnpm run check:tunnel:edge` / `check:tunnel:apex`（`tools/verify-edge-connectivity.mjs`）。
+> - **§11 のロールバック手順（`runServices` から `cloudflare-tunnel` を外す、
+>   `CLOUDFLARED_TOKEN` を空にする）と §12 のトークンローテーションは、いずれも存在しない
+>   構成が前提のため無効。**
+> - `Bypass ポリシーは作らない`（§8-4）という方針だけは、結果的に現在の構成と一致している。
+>   ただし理由は異なり、2026-08-11 に `/health*` の Bypass を明示的に検討したうえで不採用と
+>   した経緯が ADR 008 に記録されている。
+
 ## Context
 
 現在 `umaxica-apps-edge` の開発サーバー（Next.js `*/core`、Hono `*/apex`）はコンテナ内の

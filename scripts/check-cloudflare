@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pnpm exec wrangler whoami
+echo 'PASS: Wrangler resolved a dedicated container OAuth identity.'

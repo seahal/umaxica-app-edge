@@ -4,11 +4,12 @@ services:
   core:
     build:
       context: .
+      dockerfile: Containerfile
       args:
-        - DOCKER_UID=${UID:-1000}
-        - DOCKER_GID=${GID:-1000}
-        - DOCKER_USER=edge
-        - DOCKER_GROUP=group
+        CONTAINER_UID: ${UID:-1000}
+        CONTAINER_GID: ${GID:-1000}
+        CONTAINER_USER: edge
+        CONTAINER_GROUP: group
     working_dir: /home/edge/workspace
     volumes:
       - type: bind
@@ -24,101 +25,120 @@ services:
         source: home-cache
         target: /home/edge/.cache
       - type: volume
-        source: home-local-share
-        target: /home/edge/.local/share
-      # `wrangler login` writes its OAuth credentials to
-      # $XDG_CONFIG_HOME/.wrangler (see getGlobalConfigPath in wrangler). Bind
-      # only that subdirectory to a named volume — mounting all of ~/.config
-      # would shadow the read-only gh/git/opencode binds from devcontainer.json.
-      # Without this the login is lost every time the container is recreated.
+        source: pnpm-store
+        target: /home/edge/.local/share/pnpm/store
       - type: volume
-        source: wrangler-config
-        target: /home/edge/.config/.wrangler
-    # Host-published ports are for direct local access only. No Cloudflare
-    # Tunnel connector runs in this repository — the single connector lives
-    # beside Rails, and test/compose-tunnel-invariants.test.ts fails the build
-    # if one reappears here. Edge reaches Rails outward through the Workers VPC
-    # binding, never inward over these ports, so removing an entry here affects
-    # local access only.
+        source: workspace-secrets-mask
+        target: /home/edge/workspace/.secrets
+        read_only: true
+        volume:
+          nocopy: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/.env
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/app/core/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/app/docs/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/app/help/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/app/info/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/app/news/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/com/core/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/com/docs/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/com/help/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/com/info/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/com/news/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/org/core/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/org/docs/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/org/help/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/org/info/.env.development.local
+        read_only: true
+      - type: bind
+        source: ./.devcontainer/empty.env
+        target: /home/edge/workspace/org/news/.env.development.local
+        read_only: true
     ports:
-      - '5101:5101' # com/apex
-      - '5103:5103' # com/info
-      - '5105:5105' # com/core
-      - '5106:5106' # com/docs
-      - '5107:5107' # com/news
-      - '5108:5108' # com/help
-      - '5201:5201' # net/apex
-      - '5301:5301' # org/apex
-      - '5303:5303' # org/info
-      - '5305:5305' # org/core
-      - '5306:5306' # org/docs
-      - '5307:5307' # org/news
-      - '5308:5308' # org/help
-      - '5401:5401' # app/apex
-      - '5403:5403' # app/info
-      - '5405:5405' # app/core
-      - '5406:5406' # app/docs
-      - '5407:5407' # app/news
-      - '5408:5408' # app/help
-      - '5501:5501' # dev/apex (Vercel, but runs inside this container via `vercel dev`)
-      - '5502:5502' # dev/acme (Vercel, but runs inside this container via `vercel dev`)
+      - '127.0.0.1:5101:5101' # com/apex
+      - '127.0.0.1:5103:5103' # com/info
+      - '127.0.0.1:5105:5105' # com/core
+      - '127.0.0.1:5106:5106' # com/docs
+      - '127.0.0.1:5107:5107' # com/news
+      - '127.0.0.1:5108:5108' # com/help
+      - '127.0.0.1:5201:5201' # net/apex
+      - '127.0.0.1:5301:5301' # org/apex
+      - '127.0.0.1:5303:5303' # org/info
+      - '127.0.0.1:5305:5305' # org/core
+      - '127.0.0.1:5306:5306' # org/docs
+      - '127.0.0.1:5307:5307' # org/news
+      - '127.0.0.1:5308:5308' # org/help
+      - '127.0.0.1:5401:5401' # app/apex
+      - '127.0.0.1:5403:5403' # app/info
+      - '127.0.0.1:5405:5405' # app/core
+      - '127.0.0.1:5406:5406' # app/docs
+      - '127.0.0.1:5407:5407' # app/news
+      - '127.0.0.1:5408:5408' # app/help
+      - '127.0.0.1:5501:5501' # dev/apex
+      - '127.0.0.1:5502:5502' # dev/acme
     command: sleep infinity
     tty: true
     stdin_open: true
     init: true
     userns_mode: keep-id
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     environment:
-      - CLOUDFLARE_ENV=development
-      - VITE_GIT_HOOKS=0
-      - NODE_OPTIONS=--max-old-space-size=4096
-      # For deploys. NOT usable for `pnpm preview:vpc`, and not needed by
-      # `pnpm dev` / `pnpm preview` (which resolve no remote binding and never
-      # contact Cloudflare).
-      #
-      # Measured, 2026-08-08: a scoped API token CANNOT open a remote-binding
-      # session. POST /accounts/<id>/workers/subdomain/edge-preview answers
-      # `10405 Method not allowed for this authentication scheme` — the endpoint
-      # rejects token auth outright, regardless of scopes. `preview:vpc`
-      # therefore requires `wrangler login` (OAuth).
-      #
-      # Worse, this variable actively breaks `preview:vpc` even when unset in
-      # the shell: `next build` loads the repo-root `.env` into `process.env`,
-      # and the wrangler child inherits it. `env -u` does not help — an absent
-      # key is exactly what dotenv fills in. Blank it instead, so dotenv sees
-      # the key as already present:
-      #
-      #   CLOUDFLARE_API_TOKEN= pnpm --filter <ws> run preview:vpc
-      #
-      # See adr/006-development-workers-vpc-transport.md.
-      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
-      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
+      CLOUDFLARE_ENV: development
+      VITE_GIT_HOOKS: '0'
     restart: unless-stopped
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: umaxica_post_development
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - '5432:5432'
-    volumes:
-      - type: volume
-        source: postgres-data
-        target: /var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d umaxica_post_development']
-      interval: 5s
-      timeout: 5s
-      retries: 12
-    restart: unless-stopped
+
 volumes:
   node-volume:
     driver: local
   home-cache:
     driver: local
-  home-local-share:
+  pnpm-store:
     driver: local
-  wrangler-config:
-    driver: local
-  postgres-data:
+  workspace-secrets-mask:
     driver: local

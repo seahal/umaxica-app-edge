@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+use_rails=false
+use_credentials=false
+use_tunnel=false
+for argument in "$@"; do
+  case "${argument}" in
+    --rails) use_rails=true ;;
+    --credentials) use_credentials=true ;;
+    --tunnel) use_tunnel=true ;;
+    *) echo "Usage: $0 [--rails] [--credentials] [--tunnel]" >&2; exit 2 ;;
+  esac
+done
+
+if [[ ${EUID} -eq 0 || -n ${SUDO_UID:-} ]]; then
+  echo 'ERROR: the Edge environment must be started with rootless Podman, never root or sudo.' >&2
+  exit 1
+fi
+if ! rootless=$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null) || [[ ${rootless} != true ]]; then
+  echo 'ERROR: rootless Podman is unavailable. Check `podman info` as your normal user.' >&2
+  exit 1
+fi
+
+mapfile -t unmasked_env_files < <(
+  find . \
+    -path './.git' -prune -o \
+    -path './node_modules' -prune -o \
+    -path './.claude' -prune -o \
+    -type f \( \
+      -name '.dev.vars' -o \
+      -name '.env.local' -o \
+      -name '.env.test.local' -o \
+      -name '.env.production.local' \
+    \) -print
+)
+if ((${#unmasked_env_files[@]} > 0)); then
+  echo 'ERROR: unmasked ignored environment files would enter through the workspace bind:' >&2
+  printf '  %s\n' "${unmasked_env_files[@]}" >&2
+  echo 'Move dedicated credential inputs under .secrets/ and register them with Podman Secret.' >&2
+  exit 1
+fi
+
+compose=(podman compose -f compose.yaml)
+
+if [[ ${use_rails} == true ]]; then
+  if [[ -z ${EDGE_RAILS_NETWORK:-} ]]; then
+    echo 'ERROR: --rails requires EDGE_RAILS_NETWORK to name the existing Rails rootless Podman network.' >&2
+    echo 'Inspect available networks with: podman network ls' >&2
+    exit 1
+  fi
+  if ! podman network exists "${EDGE_RAILS_NETWORK}"; then
+    echo "ERROR: Rails network does not exist: ${EDGE_RAILS_NETWORK}" >&2
+    echo 'Inspect available networks with `podman network ls`, then set EDGE_RAILS_NETWORK.' >&2
+    exit 1
+  fi
+  compose+=(-f compose.rails.yaml)
+fi
+
+# Independent of --rails on purpose: Tunnel exposure and Rails connectivity are
+# different networks answering different questions, and either is useful alone.
+#
+# No network name to supply and no pre-existence check: compose.custom.yaml owns
+# the network under a literal name and creates it, so there is nothing to
+# misspell and nothing to set up first. The devcontainer gets the same file
+# through devcontainer.json, so both entry paths end up on the same network.
+if [[ ${use_tunnel} == true ]]; then
+  compose+=(-f compose.custom.yaml)
+fi
+
+if [[ ${use_credentials} == true ]]; then
+  required=(
+    dev_github_token
+    dev_cloudflare_access_client_id
+    dev_cloudflare_access_client_secret
+    dev_claude_api_key
+    dev_codex_api_key
+  )
+  for secret_name in "${required[@]}"; do
+    if ! podman secret inspect "${secret_name}" >/dev/null 2>&1; then
+      echo "ERROR: missing rootless Podman Secret: ${secret_name}" >&2
+      echo "Register it with scripts/setup-secrets ${secret_name}." >&2
+      exit 1
+    fi
+  done
+  compose+=(-f compose.credentials.yaml)
+fi
+
+"${compose[@]}" up -d core

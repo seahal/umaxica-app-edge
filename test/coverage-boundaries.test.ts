@@ -43,6 +43,9 @@ describe('coverage boundaries', () => {
     );
     expect(url('APP', 'CORE', { JIT_APP_CORE_URL: '   ' })).toBeNull();
     expect(url('APP', 'CORE', {})).toBeNull();
+    expect(url('APP', 'CORE', { JIT_APP_CORE_URL: 'https://jit.example' })).toBe(
+      'https://jit.example',
+    );
   });
 
   it.each([

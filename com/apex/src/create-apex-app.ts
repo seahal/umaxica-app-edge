@@ -39,6 +39,13 @@ export function createApexApp(
   const app = new Hono<ApexEnv>();
   const pageRoutes = new Hono<ApexEnv>();
 
+  app.use('*', async (c, next) => {
+    try {
+      await next();
+    } finally {
+      applySecurityHeaders(c);
+    }
+  });
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
@@ -47,10 +54,6 @@ export function createApexApp(
     await next();
   });
   app.use('*', apexCsrf);
-  app.use('*', async (c, next) => {
-    await next();
-    applySecurityHeaders(c);
-  });
   app.use(languageDetector({ supportedLanguages: ['en', 'ja'], fallbackLanguage: 'en' }));
 
   pageRoutes.use(renderer);
@@ -63,10 +66,9 @@ export function createApexApp(
 
     // oxlint-disable-next-line no-console
     console.error('Unhandled apex error', {
+      error: err instanceof Error ? err.name : 'UnknownError',
       method: c.req.method,
-      url: c.req.url,
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
+      path: new URL(c.req.url).pathname,
     });
 
     return badRequest();

@@ -2,9 +2,17 @@
   "name": "umaxica-apps-edge-dc",
   // This repository no longer runs a Cloudflare Tunnel connector. There is one
   // connector for the whole system, and it lives in the Rails repository — see
-  // docs/operations/cloudflare-tunnel-development.md for why, and for the
-  // shared-network overlay to add here once that connector is ready.
-  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml"],
+  // docs/operations/cloudflare-tunnel-development.md for why.
+  //
+  // The network that lets that connector reach this container is defined in
+  // ../compose.custom.yaml — named to match the Rails side, though its contents do
+  // the opposite: it owns a network for the connector to visit rather than
+  // defining a connector. It is listed below because the network is
+  // compose-managed rather than `external: true`, so `up` creates it and succeeds
+  // on a machine that has never run the connector. An always-present network is
+  // not exposure: that additionally needs the connector to join it and a
+  // Cloudflare Public Hostname pointing at it, both operator acts.
+  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml", "../compose.custom.yaml"],
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",
@@ -29,27 +37,13 @@
   // These are the ports the dev servers actually listen on (see the workspace
   // table in CLAUDE.md), forwarded for direct local access.
   //
-  // 8976 is wrangler's OAuth callback listener. Ordinary local development does
-  // not need it: `vpc_services` is declared in `env.vpc` only, so
-  // `next dev` / `initOpenNextCloudflareForDev()` resolve no remote binding and
-  // never authenticate to Cloudflare (ADR 006, which moved the binding out of
-  // `env.production`). It IS needed for the commands that opt into the real
-  // binding — `pnpm run check:vpc` and `preview:vpc` — because those require an
-  // OAuth session and an API token cannot open one.
-  //
-  // It MUST be forwarded by VS Code rather than published via Compose:
-  // wrangler binds `localhost:8976` inside the container, which a Compose
-  // `ports:` mapping cannot reach. VS Code's forwarder runs inside the
-  // container and connects over loopback, so it works.
+  // Wrangler OAuth is deliberately absent from this credential-free base.
+  // scripts/dev-start --credentials adds a host-loopback-only callback port.
   "forwardPorts": [
     5101, 5103, 5105, 5106, 5107, 5108, 5201, 5301, 5303, 5305, 5306, 5307, 5308, 5401, 5403, 5405,
-    5406, 5407, 5408, 5501, 5502, 8976
+    5406, 5407, 5408, 5501, 5502
   ],
   "portsAttributes": {
-    "8976": {
-      "label": "wrangler OAuth callback",
-      "onAutoForward": "silent"
-    },
     "5101": {
       "label": "com/apex",
       "onAutoForward": "notify"
@@ -159,8 +153,6 @@
         "-GitHub.copilot-chat"
       ],
       "settings": {
-        "claude.allowDangerouslySkipPermissions": true,
-        "extensions.verifySignature": false,
         "editor.defaultFormatter": "nicolo-ribaudo.oxfmt-vscode",
         "editor.formatOnSave": true,
         "editor.tabSize": 2,
@@ -188,27 +180,7 @@
   },
 
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {}
   },
-  "containerEnv": {
-    "NODE_OPTIONS": "--max-old-space-size=4096"
-  },
-  "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/edge/.claude,type=bind",
-    "source=${localEnv:HOME}/.claude.json,target=/home/edge/.claude.json,type=bind",
-    "source=${localEnv:HOME}/.copilot,target=/home/edge/.copilot,type=bind",
-    "source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=bind",
-    "source=${localEnv:HOME}/.gemini,target=/home/edge/.gemini,type=bind",
-    "source=${localEnv:HOME}/.config/gh,target=/home/edge/.config/gh,type=bind,readonly",
-    "source=${localEnv:HOME}/.config/git,target=/home/edge/.config/git,type=bind,readonly",
-    "source=${localEnv:HOME}/.gitconfig,target=/home/edge/.gitconfig,type=bind,readonly",
-    "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,readonly",
-    "source=${localEnv:HOME}/.config/opencode,target=/home/edge/.config/opencode,type=bind,readonly"
-  ],
   "updateRemoteUserUID": false
 }

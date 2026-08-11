@@ -7,10 +7,10 @@ const ABOUT_DESCRIPTION =
 const ABOUT_CANONICAL_URL = 'https://umaxica.org/about';
 const ABOUT_ROBOTS = 'index,follow';
 
-function buildApexTitle(_env: AssetEnv, domain: string, pageName?: string): string {
+function buildApexTitle(_env: AssetEnv, domain: string, pageName: string): string {
   const brandName = DEFAULT_BRAND_NAME;
   const baseTitle = `${brandName} (${domain}) - Apex`;
-  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
+  return `${pageName} | ${baseTitle}`;
 }
 
 export function getAboutMeta(env: AssetEnv) {

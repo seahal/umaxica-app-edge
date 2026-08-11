@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
   // docs/operations/connectivity-acceptance.md.
   images: imageConfig as NextConfig['images'],
   headers: imageFontSecurityHeaders as NextConfig['headers'],
+  // Reached through the Rails-shared Cloudflare Tunnel under this frame's own
+  // hostname, so that hostname has to be listed here. Next blocks cross-origin
+  // requests to `/_next/*` and `/__nextjs*` by default: the initial HTML and
+  // same-origin asset GETs still pass, but the HMR WebSocket sends an `Origin`
+  // and gets a 403 without this. See
+  // docs/operations/cloudflare-tunnel-development.md.
+  allowedDevOrigins: ['localhost', '*.localhost', 'docs-jp.umaxica.app'],
 };
 
 export default nextConfig;

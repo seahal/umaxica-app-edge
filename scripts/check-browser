@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for workspace in \
+  umaxica-apps-edge-app-core \
+  umaxica-apps-edge-com-core \
+  umaxica-apps-edge-org-core \
+  umaxica-apps-edge-dev-acme; do
+  pnpm --filter "${workspace}" exec playwright test --project=chromium
+done

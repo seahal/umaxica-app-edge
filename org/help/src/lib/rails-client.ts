@@ -49,21 +49,9 @@ export interface RailsClient {
   fetch(path: string, init?: RailsClientInit): Promise<RailsClientResult>;
 }
 
-/**
- * development-only configuration, read from `process.env` the ordinary Next.js
- * way. Values come from `.env.development.local` (gitignored), which Next.js
- * loads ahead of every other `.env*` file when NODE_ENV is `development`.
- *
- * Deliberately NOT a Cloudflare binding: a binding would have to be declared in
- * `wrangler.jsonc`, whose `vars` are plaintext and ship with the Worker. These
- * are absent from the generated `CloudflareEnv` for the same reason.
- * `test/rails-connection-invariants.test.ts` fails the build if any of these
- * names appears in a `wrangler.jsonc`.
- */
-interface RailsDevTransportEnv {
-  PUBLIC_CORE_RAILS_ORIGIN?: string;
-  PUBLIC_CORE_ACCESS_CLIENT_ID?: string;
-  PUBLIC_CORE_ACCESS_CLIENT_SECRET?: string;
+interface RailsLocalNodeEnv {
+  EDGE_LOCAL_NODE_RUNTIME?: string;
+  EDGE_LOCAL_RAILS_ENABLED?: string;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -207,21 +195,18 @@ export function createRailsClient(
 }
 
 /**
- * Two mutually exclusive transports, chosen by which configuration is present —
- * never by the environment name. See
- * `adr/005-rails-edge-workers-vpc-connection.md`.
+ * Two mutually exclusive transports, selected by an actual runtime capability.
  *
- * 1. VPC binding     → production. Cloudflare grants it at runtime.
- * 2. Access + origin → development, from `.env.development.local`. The Edge runs
- *                      in a local container, not on Workers, so there is no VPC
- *                      binding to grant. Requests go out over HTTPS to a
- *                      Cloudflare Access-protected hostname fronting the same
- *                      Rails-side tunnel.
- * 3. Neither         → null, reported as `not-configured`. Fail closed.
+ * 1. VPC binding       → Workers/workerd. Cloudflare grants the real binding.
+ * 2. Explicit Node dev → direct private Podman network, with no Access token.
+ * 3. Neither           → null, reported as `not-configured`. Fail closed.
+ *
+ * Requiring both local flags matters: the Rails overlay is container-wide, but
+ * only the `next dev` scripts set EDGE_LOCAL_NODE_RUNTIME. A workerd preview
+ * launched from that same container therefore cannot inherit a fabricated
+ * fallback when its VPC binding is absent.
  */
 export function getRailsClient(): RailsClient | null {
-  // The binding is a Cloudflare object, so it can only come from the Cloudflare
-  // context. Plain configuration comes from `process.env`, the Next.js way.
   const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
 
   const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
@@ -229,18 +214,9 @@ export function getRailsClient(): RailsClient | null {
     return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
   }
 
-  const devEnv = process.env as unknown as RailsDevTransportEnv;
-  const origin = devEnv.PUBLIC_CORE_RAILS_ORIGIN;
-  const clientId = devEnv.PUBLIC_CORE_ACCESS_CLIENT_ID;
-  const clientSecret = devEnv.PUBLIC_CORE_ACCESS_CLIENT_SECRET;
-
-  // All three or nothing. A partial configuration would otherwise reach the
-  // Access hostname without credentials and read as a Rails outage.
-  if (origin && clientId && clientSecret) {
-    return createRailsClient({ fetch }, origin, {
-      'cf-access-client-id': clientId,
-      'cf-access-client-secret': clientSecret,
-    });
+  const localEnv = process.env as unknown as RailsLocalNodeEnv;
+  if (localEnv.EDGE_LOCAL_NODE_RUNTIME === '1' && localEnv.EDGE_LOCAL_RAILS_ENABLED === '1') {
+    return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
   }
 
   return null;

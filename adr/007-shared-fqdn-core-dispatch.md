@@ -253,3 +253,9 @@ exclusion for it; that clause is now inert rather than wrong.
 
 The repository-root `.env` itself is untouched and, being gitignored,
 remains the only place root-level Compose values live.
+
+# Historical note
+
+References below to `PUBLIC_CORE_*` describe the historical Access fallback. The active
+development environment no longer loads those values into Next.js. Access is validated only
+by `scripts/check-tunnel`; see `docs/development/cloudflare-development-network.md`.

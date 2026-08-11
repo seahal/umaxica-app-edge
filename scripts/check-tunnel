@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z ${EDGE_TUNNEL_RAILS_URL:-} ]]; then
+  echo 'BLOCKED: set EDGE_TUNNEL_RAILS_URL to the Access-protected development Rails check URL.' >&2
+  exit 2
+fi
+
+id_secret=/run/secrets/dev_cloudflare_access_client_id
+secret_secret=/run/secrets/dev_cloudflare_access_client_secret
+if [[ ! -f ${id_secret} || ! -f ${secret_secret} ]]; then
+  echo 'BLOCKED: Access service-token secrets are not mounted; start with --credentials.' >&2
+  exit 2
+fi
+
+# Feed sensitive headers over stdin so they never appear in the curl process argv.
+{
+  printf 'header = "CF-Access-Client-Id: %s"\n' "$(<"${id_secret}")"
+  printf 'header = "CF-Access-Client-Secret: %s"\n' "$(<"${secret_secret}")"
+} | curl --config - --fail --silent --show-error --max-time 20 --output /dev/null \
+  "${EDGE_TUNNEL_RAILS_URL}"
+echo 'PASS: HTTPS reached the Access-protected development Tunnel path.'

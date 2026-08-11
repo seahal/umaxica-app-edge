@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+secret=/run/secrets/dev_claude_api_key
+if [[ ! -f ${secret} ]]; then
+  echo 'BLOCKED: dev_claude_api_key is not mounted; start with --credentials.' >&2
+  exit 2
+fi
+
+settings=$(mktemp)
+trap 'rm -f "${settings}"' EXIT
+chmod 600 "${settings}"
+printf '{"apiKeyHelper":"cat /run/secrets/dev_claude_api_key"}\n' >"${settings}"
+claude --settings "${settings}" "$@"

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+compose=(podman compose -f compose.yaml)
+for argument in "$@"; do
+  case "${argument}" in
+    --rails) compose+=(-f compose.rails.yaml) ;;
+    --credentials) compose+=(-f compose.credentials.yaml) ;;
+    --tunnel) compose+=(-f compose.custom.yaml) ;;
+    *) echo "Usage: $0 [--rails] [--credentials] [--tunnel]" >&2; exit 2 ;;
+  esac
+done
+"${compose[@]}" down

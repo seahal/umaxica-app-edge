@@ -120,35 +120,33 @@ describe('rails client layout', () => {
     expect([...timeouts][0]).toBeDefined();
   });
 
-  it('keeps the dev transport credentials out of source and out of wrangler config', () => {
-    /*
-     * The development transport authenticates to a Cloudflare Access-protected
-     * hostname with a service token. That token is a real credential: it must
-     * arrive from `.env.development.local` (gitignored) at runtime and must never be
-     * committed, either as a literal in a client copy or as a `vars` entry in a
-     * `wrangler.jsonc`.
-     *
-     * `wrangler.jsonc` is the dangerous one — `vars` is plaintext configuration
-     * that ships with the Worker, so a secret placed there would be deployed.
-     */
-    const secretNames = [
-      'PUBLIC_CORE_ACCESS_CLIENT_ID',
-      'PUBLIC_CORE_ACCESS_CLIENT_SECRET',
-      'PUBLIC_CORE_RAILS_ORIGIN',
-    ];
-
+  it('keeps Access credentials and public fallback origins out of every application runtime', () => {
     for (const { workspace } of RAILS_FRAMES) {
       const config = read(`${workspace}/wrangler.jsonc`);
-      for (const name of secretNames) {
-        expect(config, `${workspace}/wrangler.jsonc must not carry ${name}`).not.toContain(name);
-      }
-
-      // The names may appear in the client as env lookups, but never with an
-      // assigned string literal.
       const source = read(`${workspace}/src/lib/rails-client.ts`);
-      expect(source, `${workspace} hardcodes a credential`).not.toMatch(
-        /PUBLIC_CORE_ACCESS_CLIENT_(?:ID|SECRET)\s*=\s*['"]/,
-      );
+      const example = read(`${workspace}/.env.example`);
+      for (const name of [
+        'PUBLIC_CORE_ACCESS_CLIENT_ID',
+        'PUBLIC_CORE_ACCESS_CLIENT_SECRET',
+        'PUBLIC_CORE_RAILS_ORIGIN',
+      ]) {
+        expect(config, `${workspace}/wrangler.jsonc must not carry ${name}`).not.toContain(name);
+        expect(source, `${workspace} must not consume ${name}`).not.toContain(name);
+        expect(example, `${workspace}/.env.example must not advertise ${name}`).not.toContain(name);
+      }
+    }
+  });
+
+  it('requires both the private-network overlay and the local Node marker', () => {
+    for (const { workspace } of RAILS_FRAMES) {
+      const source = read(`${workspace}/src/lib/rails-client.ts`);
+      const pkg = JSON.parse(read(`${workspace}/package.json`)) as {
+        scripts?: { dev?: string };
+      };
+
+      expect(source).toContain("localEnv.EDGE_LOCAL_NODE_RUNTIME === '1'");
+      expect(source).toContain("localEnv.EDGE_LOCAL_RAILS_ENABLED === '1'");
+      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /);
     }
   });
 
@@ -180,49 +178,6 @@ describe('rails client layout', () => {
       );
       expect(source, `${workspace} must build the URL from the path alone`).toContain(
         'new URL(path,',
-      );
-    }
-  });
-
-  it('points every frame at the same development origin', () => {
-    /*
-     * The VPC service targets exactly one Rails origin, so the fallback Access
-     * transport points every frame at the public hostname for that same origin.
-     * Both transports therefore reach the identical backend, and frames are not
-     * distinguished at the URL level at all.
-     *
-     * The Rails tunnel also publishes per-brand hostnames. Switching a frame to
-     * one of those in isolation is the failure this guards: development would
-     * silently reach a different origin than production, and nothing would
-     * notice until deploy.
-     *
-     * Moving to per-brand origins for real means per-brand VPC services first,
-     * then changing all fifteen examples together — at which point this
-     * assertion is the thing to update, deliberately.
-     */
-    const origins = RAILS_FRAMES.map(({ workspace }) => ({
-      workspace,
-      origin: /^PUBLIC_CORE_RAILS_ORIGIN=(.*)$/m.exec(read(`${workspace}/.env.example`))?.[1],
-    }));
-
-    const [first] = origins;
-    expect(first?.origin, 'the example must ship a concrete origin').toBeTruthy();
-
-    for (const { workspace, origin } of origins) {
-      expect(origin, `${workspace} diverges from the shared development origin`).toBe(
-        first?.origin,
-      );
-    }
-  });
-
-  it('ships an example that carries no credential', () => {
-    // The origin is a public DNS name and is committed on purpose. The token
-    // halves are credentials and must stay empty in the tracked example.
-    for (const { workspace } of RAILS_FRAMES) {
-      const example = read(`${workspace}/.env.example`);
-      expect(example, `${workspace} leaks a client id`).toMatch(/^PUBLIC_CORE_ACCESS_CLIENT_ID=$/m);
-      expect(example, `${workspace} leaks a client secret`).toMatch(
-        /^PUBLIC_CORE_ACCESS_CLIENT_SECRET=$/m,
       );
     }
   });
@@ -299,8 +254,8 @@ describe('workers vpc bindings', () => {
 
   it.each(RAILS_FRAMES)('$workspace declares no VPC binding at the top level', ({ workspace }) => {
     /*
-     * Fail closed rather than fail outward. With no binding and no
-     * `PUBLIC_CORE_RAILS_ORIGIN`, `getRailsClient()` returns null and
+     * Fail closed rather than fail outward. With no binding and no explicitly
+     * enabled local-Node transport, `getRailsClient()` returns null and
      * `/rails-health` reports `not-configured` and answers 503 — a visible,
      * correct absence.
      *

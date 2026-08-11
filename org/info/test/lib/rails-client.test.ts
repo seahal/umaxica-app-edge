@@ -38,16 +38,13 @@ describe('org/info rails client', () => {
     expect(new URL(requestUrl).pathname).toBe('/edge/v0/health');
   });
 
-  it('uses the Access transport when configured instead of the binding', async () => {
-    // development: no VPC binding, so the client goes out over HTTPS to an
-    // Access-protected hostname and presents a service token.
+  it('uses the private Podman transport only for explicit local Node development', async () => {
     const fetchSpy = vi.fn<typeof fetch>(() =>
       Promise.resolve(new Response('ok', { status: 200 })),
     );
     vi.stubGlobal('fetch', fetchSpy);
-    vi.stubEnv('PUBLIC_CORE_RAILS_ORIGIN', 'https://rails.example.test');
-    vi.stubEnv('PUBLIC_CORE_ACCESS_CLIENT_ID', 'service-token-id');
-    vi.stubEnv('PUBLIC_CORE_ACCESS_CLIENT_SECRET', 'service-token-secret');
+    vi.stubEnv('EDGE_LOCAL_NODE_RUNTIME', '1');
+    vi.stubEnv('EDGE_LOCAL_RAILS_ENABLED', '1');
 
     const client = getRailsClient();
     expect(client).not.toBeNull();
@@ -55,19 +52,16 @@ describe('org/info rails client', () => {
     await client?.fetch('/health/liveness.json');
 
     const [requestUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    expect(new URL(requestUrl).origin).toBe('https://rails.example.test');
+    expect(new URL(requestUrl).origin).toBe('http://info.org.localhost:3000');
     expect(new URL(requestUrl).pathname).toBe('/health/liveness.json');
 
     const headers = new Headers(init.headers);
-    expect(headers.get('cf-access-client-id')).toBe('service-token-id');
-    expect(headers.get('cf-access-client-secret')).toBe('service-token-secret');
+    expect(headers.has('cf-access-client-id')).toBe(false);
+    expect(headers.has('cf-access-client-secret')).toBe(false);
   });
 
-  it('ignores a partial Access configuration rather than calling out unauthenticated', () => {
-    // Origin present but no token: reaching the Access hostname without
-    // credentials would return an Access login page, which reads as a Rails
-    // outage. Fail closed instead.
-    vi.stubEnv('PUBLIC_CORE_RAILS_ORIGIN', 'https://rails.example.test');
+  it('does not fabricate a local transport from the Rails overlay alone', () => {
+    vi.stubEnv('EDGE_LOCAL_RAILS_ENABLED', '1');
 
     expect(getRailsClient()).toBeNull();
   });

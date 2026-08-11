@@ -1,0 +1,19 @@
+# Podman's native build-context policy. Keep aligned with .dockerignore;
+# duplication is intentional defense in depth.
+.git
+.secrets/
+node_modules
+**/node_modules
+.pnpm-store
+coverage
+.next
+**/.next
+.open-next
+**/.open-next
+.wrangler
+**/.wrangler
+.idea
+.claude
+.aiassistant
+plans
+*.log

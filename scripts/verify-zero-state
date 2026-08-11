@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ${EUID} -eq 0 || -n ${SUDO_UID:-} ]]; then
+  echo 'ERROR: zero-state verification requires rootless Podman.' >&2
+  exit 1
+fi
+
+source_root=$(git rev-parse --show-toplevel)
+temporary=$(mktemp -d /tmp/edge-zero-state.XXXXXX)
+project="edge-zero-state-$$"
+
+cleanup() {
+  if [[ ${project} == edge-zero-state-* && -f ${temporary}/compose.yaml ]]; then
+    podman compose --project-name "${project}" -f "${temporary}/compose.yaml" down --volumes \
+      >/dev/null 2>&1 || true
+  fi
+  if [[ ${temporary} == /tmp/edge-zero-state.* ]]; then
+    rm -rf "${temporary}"
+  fi
+}
+trap cleanup EXIT
+
+tar \
+  --exclude=.git \
+  --exclude=.secrets \
+  --exclude=node_modules \
+  --exclude='*/node_modules' \
+  --exclude=tmp \
+  --exclude='*/.next' \
+  -C "${source_root}" -cf - . | tar -C "${temporary}" -xf -
+
+cd "${temporary}"
+podman compose --project-name "${project}" -f compose.yaml build core
+podman compose --project-name "${project}" -f compose.yaml up -d core
+podman compose --project-name "${project}" -f compose.yaml exec -T core sh -lc '
+  id
+  test "$HOME" = /home/edge
+  test -w "$HOME"
+  node --version
+  pnpm --version
+'
+echo 'PASS: disposable zero-state build, startup, UID/HOME, Node, and pnpm checks completed.'

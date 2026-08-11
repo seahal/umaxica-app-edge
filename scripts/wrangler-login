@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ! -f /run/secrets/dev_github_token ]]; then
+  echo 'ERROR: start the credential overlay first: scripts/dev-start --credentials' >&2
+  exit 1
+fi
+
+exec pnpm exec wrangler login \
+  --callback-host=0.0.0.0 \
+  --callback-port=8976 \
+  --no-use-keyring

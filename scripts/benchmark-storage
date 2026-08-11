@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+output_dir=${EDGE_BENCHMARK_DIR:-tmp/storage-benchmark}
+mkdir -p "${output_dir}"
+timestamp=$(date -u +%Y%m%dT%H%M%SZ)
+report="${output_dir}/${timestamp}.tsv"
+printf 'task\telapsed_s\tmax_rss_kb\tdisk_kb_before\tdisk_kb_after\tstatus\n' >"${report}"
+
+measure() {
+  local name=$1
+  shift
+  local before after metrics status
+  before=$(du -sk . | awk '{print $1}')
+  metrics=$(mktemp)
+  if /usr/bin/time -f '%e\t%M' -o "${metrics}" "$@"; then status=PASS; else status=FAIL; fi
+  after=$(du -sk . | awk '{print $1}')
+  printf '%s\t%s\t%s\t%s\t%s\n' "${name}" "$(<"${metrics}")" "${before}" "${after}" "${status}" >>"${report}"
+  rm -f "${metrics}"
+  [[ ${status} == PASS ]]
+}
+
+measure install pnpm install --frozen-lockfile
+measure build pnpm --filter umaxica-apps-edge-app-core run build:next
+measure vitest pnpm run test
+
+echo "Storage baseline written to ${report}"

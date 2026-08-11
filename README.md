@@ -48,6 +48,13 @@ regional subdomains. Cloudflare's custom domain for each apex root
 dashboard/DNS change outside this repo and must be coordinated before
 deploying `*/apex`.
 
+Those custom domains are currently **removed**: since 2026-08-11 the four apex
+hostnames are Public Hostnames on the development Cloudflare Tunnel, and a
+custom domain and a Public Hostname cannot both own one name. Each
+`*/apex/wrangler.jsonc` therefore declares `"routes": []`. Returning an apex to
+its Worker means removing the Public Hostname entry first, then restoring the
+route — in that order. See `adr/008-edge-development-tunnel-exposure.md`.
+
 ## Quick Start
 
 ```bash
@@ -94,27 +101,35 @@ pnpm --filter <ws> run <script>
 
 ### Podman / DevContainer
 
-The development environment can be set up via rootless Podman + VS Code DevContainer.
+The development environment is started with Dev Containers CLI over rootless Podman.
 
-- **Base image**: `node:24.19.0-trixie` with pnpm 11.20.0 (corepack) pre-installed. Both are
+- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.20.0
+  (Corepack) pre-installed. Both are
   pinned to exact versions so a rebuild reproduces the same toolchain, and both match
   the sibling Rails repo (`seahal/umaxica-apps-jit-global`).
-- **`pn`**: a `pnpm` shorthand installed at `/usr/local/bin/pn` by the `development`
-  stage of the `Dockerfile`. It is an executable (`exec pnpm "$@"`), not a shell alias,
-  so it works in non-interactive shells and forwards all arguments — `pn install`,
-  `pn run test`, `pn exec vitest`. It resolves `pnpm` via `PATH`, so it can never
-  drift from the installed binary. Development images only.
+- **Package manager**: use the directly available `pnpm` command. Bun and the former
+  `pn` convenience alias are intentionally absent.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
 - Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
 
-```bash
-# VS Code: use "Reopen in Container" for automatic setup
+Start the credential-free Dev Container from any working directory:
 
-# Or start manually with Podman Compose
-podman compose up -d && podman compose exec core bash
+```bash
+/path/to/umaxica-apps-edge/podman/tools/dcup
+```
+
+The launcher fixes Dev Containers CLI to `/usr/bin/podman`,
+`/usr/bin/podman-compose`, and this repository root. It rejects root/sudo and adds neither a
+Docker fallback nor host credential mounts.
+
+The direct Compose launcher remains available for optional overlays:
+
+```bash
+scripts/dev-start [--rails] [--credentials]
+podman compose exec core bash -l
 ```
 
 #### Getting an interactive shell
@@ -139,25 +154,32 @@ Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
 
 ### Cloudflare
 
-Local development needs **no Cloudflare credentials** — no API token, no
-`wrangler login`, no tunnel connector. `vpc_services` is declared in
-`env.production` only, so `next dev` resolves no remote binding.
+Base local development needs **no Cloudflare credentials** — no API token, no
+`wrangler login`, and no tunnel connector. `vpc_services` exists only in the
+explicit `env.vpc` development environment; production remains fail-closed.
 
 ```bash
 pnpm run dev   # every dev server, on the ports in the table above
 ```
 
-The dev servers are reachable on `localhost` only; this repository runs no
-tunnel connector. There is one connector for the whole system and it lives in
-the Rails repository — a second one on the same tunnel would make Cloudflare
-load-balance Rails traffic onto Edge containers.
+This repository runs no tunnel connector. There is one connector for the whole
+system and it lives in the Rails repository — a second one on the same tunnel
+would make Cloudflare load-balance Rails traffic onto Edge containers.
 
-To reach Rails from local development, copy a frame's `.env.example` to
-`.env.development.local` and fill in the Cloudflare Access service token.
+What this repository does own is the Podman network that connector reaches:
+`compose.custom.yaml` defines `umaxica-edge-tunnel` and gives the container the
+alias `edge-core`, so Cloudflare Public Hostname entries can point at
+`http://edge-core:<port>`. The network existing is not exposure — that
+additionally needs the connector to join it and a Public Hostname pointing at
+it, both operator acts. See `docs/operations/cloudflare-tunnel-development.md`
+and `adr/008-edge-development-tunnel-exposure.md`.
 
-Topology, the plan for exposing dev surfaces again, and troubleshooting:
-[`docs/operations/cloudflare-tunnel-development.md`](docs/operations/cloudflare-tunnel-development.md)
-and [`docs/operations/cloudflare-access.md`](docs/operations/cloudflare-access.md).
+To reach Rails from local Node development, set `EDGE_RAILS_NETWORK` to the existing
+Rails rootless Podman network and use `scripts/dev-start --rails`. Access credentials
+are reserved for the independent `scripts/check-tunnel` path.
+
+The authoritative topology and security documentation begins at
+[`docs/development/development-environment-overview.md`](docs/development/development-environment-overview.md).
 
 ## Testing
 

@@ -9,6 +9,21 @@
  * `core-jp.umaxica.app`, which local development calls. The assertions below
  * keep a connector from reappearing here by accident.
  *
+ * This file also used to assert that `compose.custom.yaml` did not exist, because
+ * that is the Rails overlay's filename and its absence was a cheap proxy for "the
+ * connector was not copied here". That proxy is retired: this repository now has a
+ * `compose.custom.yaml` of its own, deliberately named to match the other side of
+ * the shared connector, whose job is the opposite one — it owns the network the
+ * connector visits instead of defining a connector. The guarantee is therefore
+ * asserted on contents rather than on a filename, which is strictly stronger: no
+ * `cloudflared` reference, no token, and exactly one service.
+ *
+ * Ownership of the network runs the other way from how this started. Edge defines
+ * it and the connector joins, rather than Edge joining an `external` network the
+ * connector already made. That is what lets the devcontainer — the primary
+ * development environment — read the overlay at all: an external network must
+ * exist before `up`, so its absence used to be a hard startup failure.
+ *
  * Everything reads files directly — no container engine required, so it runs in
  * CI and in the pre-commit hook alongside the rest of the suite.
  */
@@ -22,7 +37,21 @@ const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath)
 
 const composeBase = read('compose.yaml');
 const composeOverride = read('.devcontainer/compose.override.yml');
+const composeCustom = read('compose.custom.yaml');
 const devcontainer = read('.devcontainer/devcontainer.json');
+
+/**
+ * Every compose file that can define a service, checked as one set.
+ *
+ * Enumerated rather than globbed so that adding a compose file is a deliberate
+ * act: a new overlay that nobody adds here would sit outside these assertions
+ * while looking covered.
+ */
+const composeFiles = [
+  ['compose.yaml', composeBase],
+  ['.devcontainer/compose.override.yml', composeOverride],
+  ['compose.custom.yaml', composeCustom],
+] as const;
 
 /**
  * Source files worth scanning for leaked secrets.
@@ -45,6 +74,10 @@ function collectSourceFiles(): string[] {
 }
 
 function trackedFiles(): string[] {
+  const injected = process.env.EDGE_TRACKED_FILES;
+  if (injected !== undefined) {
+    return injected.split('\n').filter(Boolean);
+  }
   return execFileSync('git', ['ls-files'], { cwd: repoRoot, encoding: 'utf8' })
     .split('\n')
     .filter(Boolean);
@@ -55,20 +88,73 @@ describe('no tunnel connector in this repository', () => {
     // A connector here would be a SECOND connector on the shared tunnel.
     // Cloudflare load-balances across connectors, so Rails-bound requests would
     // start landing on an Edge container that cannot serve them.
-    for (const [name, contents] of [
-      ['compose.yaml', composeBase],
-      ['.devcontainer/compose.override.yml', composeOverride],
-    ] as const) {
+    for (const [name, contents] of composeFiles) {
       expect(contents, `${name} must not define a connector`).not.toContain('cloudflared');
     }
-
-    expect(existsSync(join(repoRoot, 'compose.custom.yaml'))).toBe(false);
   });
 
-  it('keeps the connector overlay out of the devcontainer', () => {
-    // Quoted, so a prose mention or a doc filename (`cloudflare-tunnel-…​.md`)
-    // does not trip this — only an actual service reference does.
-    expect(devcontainer).not.toContain('"compose.custom.yaml"');
+  it('enumerates every compose file that can define a service', () => {
+    // The assertions above are only as complete as this list. `compose.custom.yaml`
+    // shares its name with the Rails overlay that DOES define the connector, so a
+    // future edit that copies content across would land in a file this suite has
+    // to be reading. Fail loudly if one of them disappears or is renamed.
+    for (const [name] of composeFiles) {
+      expect(existsSync(join(repoRoot, name)), `${name} is asserted on but missing`).toBe(true);
+    }
+    expect(composeFiles.map(([name]) => name)).toContain('compose.custom.yaml');
+  });
+
+  it('owns the tunnel network without defining a second service', () => {
+    // compose.custom.yaml exists to make `core` reachable FROM the Rails-side
+    // connector, so it may define a network and an alias — and nothing else. A
+    // second service here would be a second container on the tunnel network,
+    // which is the failure this whole file is about.
+    // Scoped to the `services:` block: `networks:` uses the same indentation, so
+    // an unscoped match would count `tunnel` as a service.
+    const servicesBlock = /^services:\n((?: .*\n|\n)*)/m.exec(composeCustom)?.[1] ?? '';
+    const serviceNames = [...servicesBlock.matchAll(/^ {2}([a-z0-9][\w-]*):/gm)].map(
+      (match) => match[1],
+    );
+    expect(serviceNames).toEqual(['core']);
+
+    // `core` is also a Rails service name, and Podman registers the compose
+    // service name as a network-scoped DNS name. Ingress must therefore address
+    // the explicit alias, never the bare service name.
+    expect(composeCustom, 'compose.custom.yaml must publish the edge-core alias').toContain(
+      'edge-core',
+    );
+
+    // The network is compose-managed under a literal name, deliberately NOT
+    // `external: true`. An external network has to exist before `up`, which is
+    // what previously made this file unusable from the devcontainer: a machine
+    // that had never run the connector could not start at all. Owning the network
+    // inverts that — Edge creates it and the connector joins.
+    //
+    // A literal name also removes the failure mode an environment variable
+    // brought with it: a misspelled network name would silently create an empty
+    // network and leave the container isolated on it, which reads as a Cloudflare
+    // fault rather than a typo.
+    //
+    // Scoped to the `networks:` block rather than the whole file: the header
+    // comment quotes the `external: true` stanza the Rails side needs, and that
+    // example is worth keeping where the name it has to match is defined.
+    const networksBlock = /^networks:\n((?: .*\n|\n)*)/m.exec(composeCustom)?.[1] ?? '';
+    expect(networksBlock).not.toContain('external: true');
+    expect(networksBlock).toContain('name: umaxica-edge-tunnel');
+    expect(composeCustom).not.toContain('EDGE_TUNNEL_NETWORK');
+  });
+
+  it('gives the devcontainer the tunnel network', () => {
+    // The devcontainer is the primary development environment, so it must be able
+    // to be reached through the Tunnel. That only works if it reads this overlay,
+    // which is safe precisely because the network is not external.
+    //
+    // Matched with the trailing quote rather than both quotes, so the path form
+    // `dockerComposeFile` actually uses — `"../compose.custom.yaml"` — matches.
+    expect(devcontainer).toContain('compose.custom.yaml"');
+
+    // Reading the overlay must not have brought a connector along with it. The
+    // devcontainer runs the dev servers and nothing else.
     expect(devcontainer).not.toContain('"cloudflare-tunnel"');
     expect(devcontainer).not.toContain('tunnel-warn');
   });
@@ -77,10 +163,7 @@ describe('no tunnel connector in this repository', () => {
     // The connector token belongs to whoever runs the connector. This
     // repository does not, so it must not carry one — reusing the Rails token
     // here is exactly how a second connector gets registered.
-    for (const [name, contents] of [
-      ['compose.yaml', composeBase],
-      ['.devcontainer/compose.override.yml', composeOverride],
-    ] as const) {
+    for (const [name, contents] of composeFiles) {
       expect(contents, `${name} must not pass a tunnel token`).not.toContain('TUNNEL_TOKEN');
       expect(contents, `${name} must not pass a tunnel token`).not.toContain('CLOUDFLARED_TOKEN');
     }
@@ -105,10 +188,10 @@ describe('secret hygiene', () => {
      * anything. A new secret added to an example is then caught without anyone
      * remembering to extend this test.
      *
-     * `PUBLIC_CORE_RAILS_ORIGIN` is the one deliberate exception — a public DNS
-     * name, not a credential, committed so the examples are usable as-is.
+     * Local Rails connectivity needs no environment credential or public
+     * fallback origin, so every tracked example must remain value-free.
      */
-    const allowedWithValue = new Set(['PUBLIC_CORE_RAILS_ORIGIN']);
+    const allowedWithValue = new Set<string>();
     const offenders: string[] = [];
 
     for (const path of trackedFiles().filter((file) => file.endsWith('.env.example'))) {
@@ -207,7 +290,7 @@ describe('environment separation', () => {
     }
 
     expect(offenders).toEqual([]);
-    expect(composeBase).toContain('CLOUDFLARE_ENV=development');
-    expect(composeBase).not.toContain('CLOUDFLARE_ENV=staging');
+    expect(composeBase).toMatch(/CLOUDFLARE_ENV:\s*development/);
+    expect(composeBase).not.toMatch(/CLOUDFLARE_ENV:\s*staging/);
   });
 });

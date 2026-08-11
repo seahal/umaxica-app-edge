@@ -115,6 +115,11 @@ function railsNotConfiguredResponse(): Response {
 function buildRailsRequest(request: Request, incomingUrl: URL): Request {
   const target = new URL(incomingUrl.pathname + incomingUrl.search, PUBLIC_CORE_ORIGIN);
   const headers = new Headers(request.headers);
+  for (const name of [...headers.keys()]) {
+    if (name === 'forwarded' || name === 'x-real-ip' || name.startsWith('x-forwarded-')) {
+      headers.delete(name);
+    }
+  }
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD' && request.body !== null;
 

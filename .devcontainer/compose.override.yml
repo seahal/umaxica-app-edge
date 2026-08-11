@@ -1,62 +1,7 @@
 name: umaxica-apps-edge-dc
+
 services:
   core:
-    volumes: !override
-      - type: bind
-        source: .
-        target: /home/edge/workspace
-        consistency: cached
-      - type: volume
-        source: node-volume
-        target: /home/edge/workspace/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: home-cache
-        target: /home/edge/.cache
-      - type: volume
-        source: home-local-share
-        target: /home/edge/.local/share
-      # Keep in sync with compose.yaml: this list uses `!override`, so anything
-      # omitted here is dropped in devcontainer mode. Persists `wrangler login`
-      # across container recreation.
-      - type: volume
-        source: wrangler-config
-        target: /home/edge/.config/.wrangler
-    # Restored to match compose.yaml's list (not left empty): under the plain
-    # devcontainer CLI (no VS Code), devcontainer.json's `forwardPorts` never
-    # actually forwards anything — that mechanism only runs inside the VS Code
-    # Dev Containers extension's own relay. Every one of these dev servers
-    # binds `0.0.0.0` inside the container, so a native Compose `ports:`
-    # publish reaches them regardless of which tool started the container.
-    # 8976 (wrangler's OAuth callback) is deliberately NOT listed here: it
-    # binds `localhost`-only inside the container, which no port mapping can
-    # reach — it stays VS-Code-forwardPorts-only, per devcontainer.json.
-    ports: !override
-      - '5101:5101' # com/apex
-      - '5103:5103' # com/info
-      - '5105:5105' # com/core
-      - '5106:5106' # com/docs
-      - '5107:5107' # com/news
-      - '5108:5108' # com/help
-      - '5201:5201' # net/apex
-      - '5301:5301' # org/apex
-      - '5303:5303' # org/info
-      - '5305:5305' # org/core
-      - '5306:5306' # org/docs
-      - '5307:5307' # org/news
-      - '5308:5308' # org/help
-      - '5401:5401' # app/apex
-      - '5403:5403' # app/info
-      - '5405:5405' # app/core
-      - '5406:5406' # app/docs
-      - '5407:5407' # app/news
-      - '5408:5408' # app/help
-      - '5501:5501' # dev/apex (Vercel)
-      - '5502:5502' # dev/acme (Vercel)
     environment:
-      - DEVCONTAINER=1
+      DEVCONTAINER: '1'
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1

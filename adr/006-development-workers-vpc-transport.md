@@ -492,3 +492,9 @@ allowed for this authentication scheme`; no scope changes it. `preview:vpc`
 Also worth recording: wrangler's OAuth callback listener binds `::1` only, so an
 IPv4 port forward never reaches it. Procedure for logging in from inside a
 container is in `docs/operations/cloudflare-tunnel-development.md`.
+
+# Historical note
+
+The development VPC environment remains current, but the Access fallback retained by this
+ADR was removed by the 2026-08 Edge development environment refresh. See
+`docs/development/cloudflare-development-network.md` for the active four-path model.

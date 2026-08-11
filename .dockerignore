@@ -1,7 +1,7 @@
-# Dockerfile には COPY/ADD が無く、ワークスペースは compose の bind mount で
-# 入る。ここで重量物を落とすのは純粋な転送量削減であり、コンテナ内から見える
-# ファイルには影響しない。将来 COPY を足すときはこの一覧を見直すこと。
+# Keep this file aligned with .containerignore. The duplicate policy is
+# intentional defense in depth for Docker-compatible build frontends.
 .git
+.secrets/
 node_modules
 **/node_modules
 .pnpm-store

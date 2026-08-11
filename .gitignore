@@ -184,6 +184,7 @@ package-lock.json
 .claude.json
 .claude.json.backup
 .codex/
+.secrets/
 .vercel
 .idea
 .claude/

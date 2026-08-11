@@ -1,5 +1,6 @@
 import { blockedCoreResponse, classifyCorePath, dispatchToRails } from './lib/core-dispatch';
 import { sanitizeHealthRequest } from './lib/health-request';
+import { checkRateLimit } from './lib/rate-limit';
 import nextWorker from './lib/next-handler';
 
 /**
@@ -18,7 +19,7 @@ import nextWorker from './lib/next-handler';
  *   and never gets to set one the browser will keep.
  */
 export default {
-  fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
+  async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
     const pathname = new URL(request.url).pathname;
     const ownership = classifyCorePath(pathname);
 
@@ -27,6 +28,8 @@ export default {
     }
 
     if (ownership === 'rails') {
+      const rateLimitedResponse = await checkRateLimit(request, env.RATE_LIMITER);
+      if (rateLimitedResponse) return rateLimitedResponse;
       return dispatchToRails(request, env);
     }
 

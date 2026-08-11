@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly podman_path=/usr/bin/podman
+readonly compose_path=/usr/bin/podman-compose
+
+if ((EUID == 0)) || [[ -n ${SUDO_UID:-} || -n ${SUDO_USER:-} ]]; then
+  echo 'ERROR: run dcup as the normal rootless Podman user, never as root or through sudo.' >&2
+  exit 1
+fi
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+repo_root=$(cd -- "${script_dir}/../.." && pwd -P)
+
+if [[ ! -f ${repo_root}/.devcontainer/devcontainer.json || ! -f ${repo_root}/compose.yaml ]]; then
+  echo "ERROR: dcup could not resolve the umaxica-apps-edge repository root: ${repo_root}" >&2
+  exit 1
+fi
+
+for argument in "$@"; do
+  case ${argument} in
+    --docker-path | --docker-path=* | --docker-compose-path | --docker-compose-path=* | --workspace-folder | --workspace-folder=*)
+      echo "ERROR: ${argument} is fixed by dcup and cannot be overridden." >&2
+      exit 2
+      ;;
+    --config | --config=* | --override-config | --override-config=* | --mount | --mount=* | --secrets-file | --secrets-file=* | --remote-env | --remote-env=*)
+      echo "ERROR: ${argument} may bypass the repository security boundary and is not accepted by dcup." >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ ! -x ${podman_path} ]]; then
+  echo "ERROR: Podman is not executable at ${podman_path}." >&2
+  exit 1
+fi
+if [[ ! -x ${compose_path} ]]; then
+  echo "ERROR: podman-compose is not executable at ${compose_path}." >&2
+  exit 1
+fi
+if ! devcontainer_path=$(command -v devcontainer); then
+  echo 'ERROR: Dev Containers CLI (`devcontainer`) is not available in PATH.' >&2
+  exit 1
+fi
+
+if ! rootless=$(${podman_path} info --format '{{.Host.Security.Rootless}}' 2>/dev/null) || [[ ${rootless} != true ]]; then
+  echo 'ERROR: rootless Podman is unavailable. Run `podman info` as the normal user.' >&2
+  exit 1
+fi
+
+mapfile -t unmasked_env_files < <(
+  find "${repo_root}" \
+    -path "${repo_root}/.git" -prune -o \
+    -path "${repo_root}/node_modules" -prune -o \
+    -path "${repo_root}/.claude" -prune -o \
+    -type f \( \
+      -name '.dev.vars' -o \
+      -name '.env.local' -o \
+      -name '.env.test.local' -o \
+      -name '.env.production.local' \
+    \) -print
+)
+if ((${#unmasked_env_files[@]} > 0)); then
+  echo 'ERROR: ignored environment files would enter through the workspace bind:' >&2
+  printf '  %s\n' "${unmasked_env_files[@]}" >&2
+  echo 'Move dedicated credential inputs under .secrets/ and register them as Podman Secrets.' >&2
+  exit 1
+fi
+
+export PODMAN_COMPOSE_PROVIDER=${compose_path}
+
+(
+  cd -- "${repo_root}"
+  # The same three files, in the same order, that devcontainer.json's
+  # `dockerComposeFile` uses. Preflighting a subset is worse than not
+  # preflighting at all: a fault in the omitted overlay passes here and then
+  # surfaces as a devcontainer CLI stack trace instead of an error from dcup.
+  "${compose_path}" \
+    -f compose.yaml \
+    -f .devcontainer/compose.override.yml \
+    -f compose.custom.yaml \
+    config >/dev/null
+)
+
+exec "${devcontainer_path}" up \
+  --docker-path "${podman_path}" \
+  --docker-compose-path "${compose_path}" \
+  --workspace-folder "${repo_root}" \
+  "$@"

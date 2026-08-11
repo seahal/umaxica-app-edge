@@ -10,7 +10,10 @@
 // code actually runs on — this override does not touch `vitest.config.ts`.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { nextFetch } = vi.hoisted(() => ({ nextFetch: vi.fn() }));
+const { checkRateLimit, nextFetch } = vi.hoisted(() => ({
+  checkRateLimit: vi.fn(),
+  nextFetch: vi.fn(),
+}));
 
 vi.mock('../src/lib/next-handler', () => ({
   default: { fetch: nextFetch },
@@ -19,6 +22,8 @@ vi.mock('../src/lib/next-handler', () => ({
 vi.mock('../src/lib/health-request', () => ({
   sanitizeHealthRequest: (request: Request) => request,
 }));
+
+vi.mock('../src/lib/rate-limit', () => ({ checkRateLimit }));
 
 import worker from '../src/worker';
 
@@ -35,6 +40,7 @@ const ctx = {
 
 describe('app/core worker.ts dispatch', () => {
   afterEach(() => {
+    checkRateLimit.mockReset();
     nextFetch.mockReset();
   });
 
@@ -88,6 +94,21 @@ describe('app/core worker.ts dispatch', () => {
     expect(railsUrl.pathname).toBe('/api/v0/session');
     expect(railsUrl.searchParams.get('foo')).toBe('bar');
     expect(response.status).toBe(200);
+  });
+
+  it('does not dispatch a rate-limited RAILS-owned request to Rails or Next.js', async () => {
+    const railsFetch = vi.fn();
+    checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
+
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.app/api/v0/session'),
+      makeEnv({ fetch: railsFetch }),
+      ctx,
+    );
+
+    expect(response.status).toBe(429);
+    expect(railsFetch).not.toHaveBeenCalled();
+    expect(nextFetch).not.toHaveBeenCalled();
   });
 
   it('sends /oidc/callback straight to Rails with the query string unchanged and passes through Set-Cookie/redirect unchanged', async () => {

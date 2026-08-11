@@ -1,0 +1,78 @@
+# Tunnel-facing network: Edge owns it, the Rails-side connector joins it.
+#
+# This file deliberately defines NO connector and holds NO token. The system has
+# exactly one Cloudflare Tunnel connector, and it lives in the Rails repository
+# (`umaxica-apps-global`, compose project `umaxica-apps-global-dc`, service
+# `cloudflare-tunnel`). Registering a second connector on the same tunnel makes
+# Cloudflare load-balance across both, so Rails-bound requests would land on an
+# Edge container roughly half the time. `test/compose-tunnel-invariants.test.ts`
+# fails the suite if a connector or a token ever appears here.
+#
+# What this overlay does instead is make the Edge container reachable FROM that
+# connector. `compose.yaml` publishes every dev port to host `127.0.0.1` only,
+# which a containerised connector cannot reach — not even through
+# `host.docker.internal`, because a host-gateway connection does not arrive on
+# the loopback interface the publish is bound to. Sharing a Podman network and
+# addressing the container directly is what works.
+#
+# The network is compose-managed here, NOT `external: true`, and that is the whole
+# point. An external network must already exist, so a machine that has never run
+# the connector could not bring the devcontainer up at all — which is why this
+# file used to be excluded from `devcontainer.json`. Owning the network instead
+# means `up` always succeeds, and it is the connector that joins Edge rather than
+# Edge that joins the connector. The name is a literal so there is no environment
+# variable to misspell.
+#
+# Creating a network is not the same as owning the connector. The rule this
+# repository keeps is that it registers no connector and holds no token; both
+# still hold. See adr/008-edge-development-tunnel-exposure.md.
+#
+# An always-present network is not exposure. Reaching a dev server from the
+# internet additionally requires the connector to join this network AND a
+# Cloudflare Public Hostname to point at it, and both are the operator's
+# deliberate acts.
+#
+# The Rails side joins with an external reference to the same name:
+#
+#   services:
+#     cloudflare-tunnel:
+#       networks: [frontend, edge-tunnel]
+#   networks:
+#     edge-tunnel:
+#       external: true
+#       name: umaxica-edge-tunnel
+#
+# Public Hostname entries in the Cloudflare dashboard then point at
+# `http://edge-core:<port>`. See docs/operations/cloudflare-tunnel-development.md
+# for the port map and the verification procedure.
+#
+# `edge-core`, not `core`: Podman registers the compose service name as a
+# network-scoped DNS name, and the Rails project also has a service called
+# `core`. Two containers answering to `core` on one network would make the
+# connector's own Rails origin ambiguous, so every ingress entry must use the
+# explicit alias.
+#
+# The filename matches the Rails repository's overlay on purpose — both sides of
+# the shared connector are configured in a file of the same name. The contents are
+# opposites: the Rails one DEFINES the connector and carries its token, this one
+# only owns the network the connector visits. `test/compose-tunnel-invariants.test.ts`
+# is what keeps the difference from eroding, since the name no longer signals it.
+services:
+  core:
+    networks:
+      default: {}
+      edge-tunnel:
+        aliases:
+          - edge-core
+
+networks:
+  # Declared explicitly even though it carries no settings. Naming any network on
+  # a service drops the implicit default, so `core` has to ask for `default` back
+  # by name — and podman-compose only synthesises a `default` entry when the
+  # top-level `networks:` block is empty. With `edge-tunnel` defined, an
+  # undeclared `default` is a hard `missing networks: default` error at `config`
+  # time, which is a devcontainer that will not start. Docker Compose is lenient
+  # here; this line is what makes both engines agree.
+  default: {}
+  edge-tunnel:
+    name: umaxica-edge-tunnel
