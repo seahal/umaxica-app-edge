@@ -35,7 +35,9 @@ describe('dev/acme application shell', () => {
 
   it('renders the root document and publishes install metadata', () => {
     expect(renderToStaticMarkup(<RootLayout>content</RootLayout>)).toContain('content');
-    expect(metadata).toMatchObject({ title: 'Umaxica Dev' });
+    expect(metadata).toMatchObject({
+      title: { default: 'UMAXICA (DEV)', template: '%s — UMAXICA (DEV)' },
+    });
     expect(manifest()).toMatchObject({ start_url: '/', display: 'standalone' });
   });
 });

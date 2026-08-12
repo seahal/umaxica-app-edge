@@ -1,46 +1,55 @@
-import { brandFromEnv, buildBrandTitle, getBrandName } from '../src/brand';
+import { BRAND_TLD, brandFromEnv, buildBrandTitle, getBrandName } from '../src/brand';
 
 describe('buildBrandTitle', () => {
-  it('formats as "Brand | Page" when pageTitle is provided', () => {
-    const result = buildBrandTitle('Pricing', { brandName: 'Umaxica' });
-    expect(result).toBe('Umaxica | Pricing');
+  it('formats as "Page — UMAXICA (TLD)" when pageTitle is provided', () => {
+    const result = buildBrandTitle('Pricing', { brandName: 'UMAXICA', tld: 'APP' });
+    expect(result).toBe('Pricing — UMAXICA (APP)');
   });
 
   it('uses defaultPageTitle when pageTitle is not provided', () => {
     const result = buildBrandTitle(undefined, {
-      brandName: 'Umaxica',
+      brandName: 'UMAXICA',
+      tld: 'APP',
       defaultPageTitle: 'Home',
     });
-    expect(result).toBe('Umaxica | Home');
+    expect(result).toBe('Home — UMAXICA (APP)');
   });
 
-  it('returns only brandName when pageTitle and defaultPageTitle are both missing', () => {
-    const result = buildBrandTitle(undefined, { brandName: 'Umaxica' });
-    expect(result).toBe('Umaxica');
+  it('returns the root title when pageTitle and defaultPageTitle are both missing', () => {
+    const result = buildBrandTitle(undefined, { brandName: 'UMAXICA', tld: 'APP' });
+    expect(result).toBe('UMAXICA (APP)');
   });
 
   it('applies custom separator', () => {
     const result = buildBrandTitle('Pricing', {
-      brandName: 'Umaxica',
+      brandName: 'UMAXICA',
+      tld: 'APP',
       separator: ' - ',
     });
-    expect(result).toBe('Umaxica - Pricing');
+    expect(result).toBe('Pricing - UMAXICA (APP)');
   });
 
-  it('falls back when brandName and separator are blank', () => {
+  it('falls back to the brand defaults when brandName, separator and tld are blank', () => {
     const result = buildBrandTitle('Pricing', {
       brandName: '   ',
       separator: '   ',
+      tld: '   ',
     });
-    expect(result).toBe('UMAXICA | Pricing');
+    expect(result).toBe('Pricing — UMAXICA (APP)');
   });
 
   it('treats whitespace-only pageTitle as empty', () => {
     const result = buildBrandTitle('   ', {
-      brandName: 'Umaxica',
+      brandName: 'UMAXICA',
+      tld: 'APP',
       defaultPageTitle: 'Home',
     });
-    expect(result).toBe('Umaxica | Home');
+    expect(result).toBe('Home — UMAXICA (APP)');
+  });
+
+  it('never leaks a surface or runtime name into the title', () => {
+    const result = buildBrandTitle('About', { brandName: 'UMAXICA', tld: 'APP' });
+    expect(result).not.toMatch(/apex|core|edge|hono|next|workers|cloudflare/i);
   });
 });
 
@@ -48,15 +57,16 @@ describe('brandFromEnv', () => {
   it('reads brand values from c.env', () => {
     const brand = brandFromEnv({
       env: {
-        BRAND_NAME: 'Umaxica',
+        BRAND_NAME: 'UMAXICA',
         BRAND_SEPARATOR: ' - ',
         BRAND_DEFAULT_TITLE: 'Home',
       },
     });
 
     expect(brand).toEqual({
-      brandName: 'Umaxica',
+      brandName: 'UMAXICA',
       separator: ' - ',
+      tld: 'APP',
       defaultPageTitle: 'Home',
     });
   });
@@ -66,32 +76,48 @@ describe('brandFromEnv', () => {
 
     expect(brand).toEqual({
       brandName: 'UMAXICA',
-      separator: ' | ',
+      separator: ' — ',
+      tld: 'APP',
     });
   });
 
   it('falls back to defaults when the request context is absent', () => {
-    expect(brandFromEnv(null)).toEqual({ brandName: 'UMAXICA', separator: ' | ' });
+    expect(brandFromEnv(null)).toEqual({
+      brandName: 'UMAXICA',
+      separator: ' — ',
+      tld: 'APP',
+    });
   });
 
   it('falls back to default separator when binding is blank', () => {
     const brand = brandFromEnv({
       env: {
-        BRAND_NAME: 'Umaxica',
+        BRAND_NAME: 'UMAXICA',
         BRAND_SEPARATOR: '   ',
       },
     });
 
     expect(brand).toEqual({
-      brandName: 'Umaxica',
-      separator: ' | ',
+      brandName: 'UMAXICA',
+      separator: ' — ',
+      tld: 'APP',
     });
+  });
+
+  it('reads an overridden TLD from c.env', () => {
+    expect(brandFromEnv({ env: { BRAND_TLD: 'ZZZ' } }).tld).toBe('ZZZ');
+  });
+});
+
+describe('BRAND_TLD', () => {
+  it('matches the deployment family this worker serves', () => {
+    expect(BRAND_TLD).toBe('APP');
   });
 });
 
 describe('getBrandName', () => {
   it('returns BRAND_NAME from env when present', () => {
-    expect(getBrandName({ BRAND_NAME: 'Umaxica' })).toBe('Umaxica');
+    expect(getBrandName({ BRAND_NAME: 'UMAXICA' })).toBe('UMAXICA');
   });
 
   it('falls back to DEFAULT_BRAND_NAME when env is missing', () => {

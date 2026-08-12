@@ -8,9 +8,9 @@ describe('GET /about', () => {
     expect(response.headers.get('content-type')).toContain('text/html');
 
     const body = await response.text();
-    expect(body).toContain('<title>About | UMAXICA (org) - Apex</title>');
+    expect(body).toContain('<title>About — UMAXICA (ORG)</title>');
     expect(body).toContain(
-      '<meta name="description" content="umaxica.org is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains"',
+      '<meta name="description" content="umaxica.org is a UMAXICA platform domain. Services and content are available on dedicated subdomains"',
     );
     expect(body).toContain('<link rel="canonical" href="https://umaxica.org/about"');
     expect(body).toContain('<meta name="robots" content="index,follow"');
@@ -22,7 +22,7 @@ describe('GET /about', () => {
   it('uses BRAND_NAME from env in the page title', async () => {
     const response = await requestFromOrgApp('/about', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await response.text();
-    expect(body).toContain('<title>About | UMAXICA (org) - Apex</title>');
+    expect(body).toContain('<title>About — UMAXICA (ORG)</title>');
   });
 
   it('renders Japanese content when Accept-Language prefers ja', async () => {

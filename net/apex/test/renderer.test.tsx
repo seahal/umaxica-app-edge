@@ -28,7 +28,7 @@ describe('Renderer layout', () => {
     const res = await app.request('/', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await res.text();
     expect(body).toContain('UMAXCA');
-    expect(body).toContain('<title>UMAXCA</title>');
+    expect(body).toContain('<title>UMAXCA (NET)</title>');
   });
 
   it('renders children in main element', async () => {

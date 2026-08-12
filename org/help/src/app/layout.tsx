@@ -7,8 +7,11 @@ import { ServiceWorkerRegistration } from '../components/service-worker-registra
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'UMAXICA Help',
-  description: 'Next.js frontend for UMAXICA Help on Cloudflare Workers.',
+  title: {
+    default: 'Help — UMAXICA (ORG)',
+    template: '%s — UMAXICA (ORG)',
+  },
+  description: 'Help and support for the UMAXICA platform.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

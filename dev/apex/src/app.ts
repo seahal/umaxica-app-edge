@@ -3,7 +3,9 @@ import type { Context } from 'hono';
 
 const BRAND_NAME = process.env.BRAND_NAME ?? 'UMAXICA';
 const TITLE_BRAND_NAME = 'UMAXICA';
-const DOMAIN = 'dev';
+const BRAND_TLD = 'DEV';
+/** EM DASH — the UMAXICA title contract is `{PAGE} — UMAXICA ({TLD})`. */
+const BRAND_SEPARATOR = ' — ';
 const SITE_URL = 'umaxica.dev';
 const DEFAULT_LANGUAGE = 'en';
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
@@ -16,9 +18,13 @@ type HealthPayload = {
   time: string;
 };
 
+/**
+ * Root title -> `UMAXICA (DEV)`; page title -> `{PAGE} — UMAXICA (DEV)`.
+ * Surface and runtime names must never reach this function.
+ */
 function buildApexTitle(pageName?: string): string {
-  const baseTitle = `${TITLE_BRAND_NAME} (${DOMAIN}) - Apex`;
-  return pageName ? `${pageName} | ${baseTitle}` : baseTitle;
+  const root = `${TITLE_BRAND_NAME} (${BRAND_TLD})`;
+  return pageName ? `${pageName}${BRAND_SEPARATOR}${root}` : root;
 }
 
 function detectLanguage(c: Context): 'ja' | 'en' {
@@ -159,6 +165,38 @@ app.get('/', (c) => {
   const redirectUrl = process.env.DEV_CORE_URL ?? 'https://www.umaxica.dev/';
   return c.redirect(redirectUrl, 301);
 });
+
+/**
+ * 404 and 500 are served by this repository, not by the hosting platform's
+ * built-in error page: the title contract covers every HTML document shown to a
+ * user, and a platform default cannot satisfy it.
+ */
+function renderStatusDocument(status: number, heading: string): Response {
+  const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
+  const html = buildPageShell({
+    lang: 'ja',
+    title: buildApexTitle(heading),
+    description: heading,
+    canonical: `https://${SITE_URL}/`,
+    robots: 'noindex, nofollow',
+    body: `
+  <main>
+    <h1>${heading}</h1>
+    <p>HTTP ${status}</p>
+    <p>${reload}<a href="/">トップへ戻る</a></p>
+  </main>
+`,
+  });
+
+  return new Response(html, {
+    status,
+    headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
+  });
+}
+
+app.notFound(() => renderStatusDocument(404, 'ページが見つかりません'));
+
+app.onError(() => renderStatusDocument(500, '現在、このページを表示できません'));
 
 const fetch = app.fetch.bind(app);
 

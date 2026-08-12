@@ -3,8 +3,11 @@ import './globals.css';
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
 
 export const metadata: Metadata = {
-  title: 'Umaxica Dev',
-  description: 'Fresh Next.js app for umaxica.dev',
+  title: {
+    default: 'UMAXICA (DEV)',
+    template: '%s — UMAXICA (DEV)',
+  },
+  description: 'Developer domain for UMAXICA.',
 };
 
 export default function RootLayout({

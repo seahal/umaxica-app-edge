@@ -15,6 +15,9 @@ describe('app/news application shell', () => {
         </Layout>,
       ),
     ).toContain('UMAXICA News');
-    expect(metadata.title).toBe('UMAXICA News');
+    expect(metadata.title).toEqual({
+      default: 'News — UMAXICA (APP)',
+      template: '%s — UMAXICA (APP)',
+    });
   });
 });

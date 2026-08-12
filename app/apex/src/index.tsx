@@ -27,7 +27,7 @@ const app = createApexApp(
     });
 
     pageRoutes.get('/about', timeout(2000), (c) => {
-      setMeta(c, getAboutMeta(c.env));
+      setMeta(c, getAboutMeta(c.env, c.get('language')));
       return c.render(renderAboutContent(c.get('language')));
     });
   },

@@ -12,7 +12,10 @@ export async function middleware(request: NextRequest) {
   const { success } = await rateLimiter.limit({ key: ip });
   if (!success) {
     return new NextResponse(
-      '<main><h1>リクエストを処理できませんでした</h1><p>HTTP 429</p><a href="/">トップへ戻る</a></main>',
+      '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">' +
+        '<title>リクエストを処理できませんでした — UMAXICA (ORG)</title></head>' +
+        '<body><main><h1>リクエストを処理できませんでした</h1><p>HTTP 429</p>' +
+        '<a href="/">トップへ戻る</a></main></body></html>',
       {
         status: 429,
         headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },

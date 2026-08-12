@@ -233,6 +233,6 @@ describe('dev apex title branch', () => {
   it('covers the page-name title branch via about content', async () => {
     const response = await devApex.request('/about');
     const html = await response.text();
-    expect(html).toContain('About | UMAXICA (dev) - Apex');
+    expect(html).toContain('About — UMAXICA (DEV)');
   });
 });

@@ -28,7 +28,7 @@ describe('seo helpers', () => {
         canonical: 'https://umaxica.app/pricing',
         robots: 'index,follow',
         og: {
-          title: 'Umaxica | Pricing',
+          title: 'Pricing — UMAXICA (APP)',
           description: 'Plans and pricing',
           type: 'website',
           url: 'https://umaxica.app/pricing',
@@ -39,18 +39,18 @@ describe('seo helpers', () => {
         },
       });
 
-      const html = renderToString(<SeoHead c={c} brand={{ brandName: 'Umaxica' }} />);
+      const html = renderToString(<SeoHead c={c} brand={{ brandName: 'UMAXICA', tld: 'APP' }} />);
       return c.html(html);
     });
 
     const res = await app.request('/page');
     const body = await res.text();
 
-    expect(body).toContain('<title>Umaxica | Pricing</title>');
+    expect(body).toContain('<title>Pricing — UMAXICA (APP)</title>');
     expect(body).toContain('<meta name="description" content="Plans and pricing"/>');
     expect(body).toContain('<link rel="canonical" href="https://umaxica.app/pricing"/>');
     expect(body).toContain('<meta name="robots" content="index,follow"/>');
-    expect(body).toContain('<meta property="og:title" content="Umaxica | Pricing"/>');
+    expect(body).toContain('<meta property="og:title" content="Pricing — UMAXICA (APP)"/>');
     expect(body).toContain('<meta property="og:description" content="Plans and pricing"/>');
     expect(body).toContain('<meta property="og:type" content="website"/>');
     expect(body).toContain('<meta property="og:url" content="https://umaxica.app/pricing"/>');
@@ -61,17 +61,17 @@ describe('seo helpers', () => {
     expect(body).toContain('<meta name="twitter:site" content="@umaxica"/>');
   });
 
-  it('title is brand-only when no pageTitle/defaultPageTitle are present', async () => {
+  it('title is the bare root title when no pageTitle/defaultPageTitle are present', async () => {
     const app = new Hono();
 
     app.get('/brand-only', (c) => {
-      const html = renderToString(<SeoHead c={c} brand={{ brandName: 'Umaxica' }} />);
+      const html = renderToString(<SeoHead c={c} brand={{ brandName: 'UMAXICA', tld: 'APP' }} />);
       return c.html(html);
     });
 
     const res = await app.request('/brand-only');
     const body = await res.text();
-    expect(body).toContain('<title>Umaxica</title>');
+    expect(body).toContain('<title>UMAXICA (APP)</title>');
   });
 
   it('uses default metadata and omits blank optional tags', async () => {
@@ -81,7 +81,7 @@ describe('seo helpers', () => {
       const html = renderToString(
         <SeoHead
           c={c}
-          brand={{ brandName: 'Umaxica' }}
+          brand={{ brandName: 'UMAXICA', tld: 'APP' }}
           defaultMeta={{
             title: '   ',
             pageTitle: 'Home',
@@ -108,7 +108,7 @@ describe('seo helpers', () => {
     const res = await app.request('/default-meta');
     const body = await res.text();
 
-    expect(body).toContain('<title>Umaxica | Home</title>');
+    expect(body).toContain('<title>Home — UMAXICA (APP)</title>');
     expect(body).toContain('<meta name="twitter:card" content="summary_large_image"/>');
     expect(body).not.toContain('name="description"');
     expect(body).not.toContain('rel="canonical"');
