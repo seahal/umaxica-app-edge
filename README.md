@@ -233,6 +233,24 @@ Notes:
   reconnect or recreate that build for the matching docs Worker before deploying.
 - `npm --dir` is not a valid flag. If the platform requires npm, use
   `npm --prefix app/docs run deploy:upload` instead.
+- **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
+  The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
+  as `--env=production`. The top level of every `wrangler.jsonc` here *is*
+  production and there is deliberately no `env.production`, so a deploy command of
+  `pnpm --dir org/core exec wrangler versions upload` fails with
+  `No environment found in configuration with name "production"`. A raw
+  `wrangler versions upload` is wrong for the OpenNext workspaces for a second
+  reason: it uploads `main` (`src/worker.ts`) instead of the built
+  `.open-next/worker.js`. Configure the Workers Builds commands as:
+
+  ```text
+  Build command:   pnpm --dir org/core run build
+  Deploy command:  pnpm --dir org/core run upload:ci
+  ```
+
+  `upload:ci` is `CLOUDFLARE_ENV= opennextjs-cloudflare upload` — it blanks the
+  injected variable and uploads the output the build step already produced. Add
+  the same script to any other workspace before connecting it to Workers Builds.
 
 ### Environment Variables
 

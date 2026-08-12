@@ -9,6 +9,7 @@
     "deploy": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare deploy",
     "deploy:upload": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare upload",
     "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --yes",
+    "upload:ci": "CLOUDFLARE_ENV= opennextjs-cloudflare upload",
     "dev": "EDGE_LOCAL_NODE_RUNTIME=1 next dev --hostname 0.0.0.0 --port 5406",
     "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
     "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
