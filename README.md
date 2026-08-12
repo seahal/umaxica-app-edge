@@ -235,7 +235,7 @@ Notes:
   `npm --prefix app/docs run deploy:upload` instead.
 - **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
   The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
-  as `--env=production`. The top level of every `wrangler.jsonc` here *is*
+  as `--env=production`. The top level of every `wrangler.jsonc` here _is_
   production and there is deliberately no `env.production`, so a deploy command of
   `pnpm --dir org/core exec wrangler versions upload` fails with
   `No environment found in configuration with name "production"`. A raw
@@ -249,8 +249,11 @@ Notes:
   ```
 
   `upload:ci` is `CLOUDFLARE_ENV= opennextjs-cloudflare upload` — it blanks the
-  injected variable and uploads the output the build step already produced. Add
-  the same script to any other workspace before connecting it to Workers Builds.
+  injected variable and uploads the output the build step already produced. Every
+  deployable workspace defines `upload:ci`; for the Hono apex workspaces it is
+  `CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc`. Keep it in
+  place when adding a workspace, and substitute the workspace path in both
+  commands above.
 
 ### Environment Variables
 
