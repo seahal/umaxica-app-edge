@@ -41,8 +41,21 @@ describe('renderHealthPage', () => {
       status: 'OK',
       service: 'app',
       version: 'test-version-id',
+      environment: null,
       edge: 'cloudflare',
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
     });
+  });
+
+  it('reports the wrangler environment when EDGE_ENV is bound', async () => {
+    const response = renderHealthJson({ EDGE_ENV: 'test' }, { service: 'org' });
+
+    expect(await response.json()).toMatchObject({ environment: 'test' });
+  });
+
+  it('renders the environment in the health page', async () => {
+    const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'org' });
+
+    expect(await response.text()).toContain('<dd>production</dd>');
   });
 });

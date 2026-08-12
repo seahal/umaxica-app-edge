@@ -1,26 +1,7 @@
 name: umaxica-apps-edge-dc
+
 services:
   core:
-    volumes: !override
-      - type: bind
-        source: .
-        target: /home/edge/workspace
-        consistency: cached
-      - type: volume
-        source: node-volume
-        target: /home/edge/workspace/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: home-cache
-        target: /home/edge/.cache
-      - type: volume
-        source: home-local-share
-        target: /home/edge/.local/share
-    ports: !override []
     environment:
-      - DEVCONTAINER=1
+      DEVCONTAINER: '1'
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1

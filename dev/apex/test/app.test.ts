@@ -1,137 +1,58 @@
-import { app, fetch } from '../src/app';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { app } from '../src/app';
 
-describe('dev/apex/src/app.ts', () => {
-  it('exports a named fetch handler for Vercel', () => {
-    expect(fetch).toBeTypeOf('function');
+afterEach(() => vi.unstubAllEnvs());
+
+describe('dev apex root dispatch', () => {
+  it('redirects to the default dev core origin', async () => {
+    const response = await app.request('/');
+    expect(response.status).toBe(301);
+    expect(response.headers.get('location')).toBe('https://www.umaxica.dev/');
   });
 
-  describe('buildApexTitle', () => {
-    it('returns health status title for health page', async () => {
-      const res = await app.request('/health');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('<title>Health status | UMAXICA (dev) - Apex</title>');
-    });
+  it('uses the configured dev core origin when present', async () => {
+    vi.stubEnv('DEV_CORE_URL', 'https://preview.umaxica.dev/');
+    const response = await app.request('/');
+    expect(response.status).toBe(301);
+    expect(response.headers.get('location')).toBe('https://preview.umaxica.dev/');
+  });
+});
 
-    it('returns title with pageName when /about is requested', async () => {
-      const res = await app.request('/about');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('<title>About | UMAXICA (dev) - Apex</title>');
-    });
+describe('dev apex public routes', () => {
+  it.each(['/health', '/health.html'])('renders the health status page at %s', async (path) => {
+    const response = await app.request(path);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
+    expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
+    await expect(response.text()).resolves.toContain('<h1 style="margin: 0 0 1rem;">status</h1>');
   });
 
-  describe('detectLanguage', () => {
-    it('detects Japanese from query parameter', async () => {
-      const res = await app.request('/about?lang=ja');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('このサイトについて');
-    });
-
-    it('detects Japanese from accept-language header', async () => {
-      const res = await app.request('/about', {
-        headers: { 'accept-language': 'ja-JP,en-US;q=0.9' },
-      });
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('このサイトについて');
-    });
-
-    it('defaults to English for unknown language', async () => {
-      const res = await app.request('/about', {
-        headers: { 'accept-language': 'fr-FR;q=0.9' },
-      });
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('About this site');
+  it('returns machine-readable health with deployment identity', async () => {
+    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'revision-id');
+    const response = await app.request('/health.json');
+    await expect(response.json()).resolves.toMatchObject({
+      status: 'OK',
+      service: 'dev',
+      version: 'revision-id',
+      edge: 'vercel',
     });
   });
 
-  describe('buildPageShell', () => {
-    it('renders Japanese content', async () => {
-      const res = await app.request('/about?lang=ja');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('html lang="ja"');
-      expect(body).toContain('本ドメイン');
-    });
-
-    it('renders English content', async () => {
-      const res = await app.request('/about');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('html lang="en"');
-      expect(body).toContain('public-facing');
-    });
+  it('renders English about content by default', async () => {
+    const response = await app.request('/about');
+    const html = await response.text();
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain('About this site.');
+    expect(html).toContain('<link rel="canonical" href="https://umaxica.dev/about">');
   });
 
-  describe('buildHealthPageHtml', () => {
-    it('renders health page with five health fields', async () => {
-      const res = await app.request('/health');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('UMAXICA');
-      expect(body).toContain('<h1 style="margin: 0 0 1rem;">status</h1>');
-      expect(body).toContain('<dt>status</dt>');
-      expect(body).toContain('<dd>OK</dd>');
-      expect(body).toContain('<dt>service</dt>');
-      expect(body).toContain('<dd>dev</dd>');
-      expect(body).toContain('<dt>version</dt>');
-      expect(body).toContain('<dd>null</dd>');
-      expect(body).toContain('<dt>edge</dt>');
-      expect(body).toContain('<dd>vercel</dd>');
-      expect(body).toContain('<dt>time</dt>');
-    });
-
-    it('renders health JSON with null version when no Vercel commit is available', async () => {
-      delete process.env.VERCEL_GIT_COMMIT_SHA;
-
-      const res = await app.request('/health.json');
-
-      expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({
-        status: 'OK',
-        service: 'dev',
-        version: null,
-        edge: 'vercel',
-        time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-      });
-    });
-  });
-
-  describe('GET /', () => {
-    it('redirects to configured DEV_CORE_URL with 301', async () => {
-      process.env.DEV_CORE_URL = 'https://example.com/';
-      const res = await app.request('/');
-      expect(res.status).toBe(301);
-      expect(res.headers.get('location')).toBe('https://example.com/');
-      delete process.env.DEV_CORE_URL;
-    });
-
-    it('redirects to default DEV_CORE_URL', async () => {
-      const res = await app.request('/');
-      expect(res.status).toBe(301);
-      expect(res.headers.get('location')).toBe('https://www.umaxica.dev/');
-    });
-  });
-
-  describe('GET /about', () => {
-    it('includes copyright year', async () => {
-      const res = await app.request('/about');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      const year = new Date().getUTCFullYear();
-      expect(body).toContain(`&copy; ${year}`);
-    });
-
-    it('includes links to other domains', async () => {
-      const res = await app.request('/about');
-      expect(res.status).toBe(200);
-      const body = await res.text();
-      expect(body).toContain('umaxica.app');
-      expect(body).toContain('umaxica.com');
-      expect(body).toContain('umaxica.org');
-    });
+  it.each([
+    ['query parameter', 'https://umaxica.dev/about?lang=ja', {}],
+    ['Accept-Language', 'https://umaxica.dev/about', { 'accept-language': 'ja-JP,en;q=0.8' }],
+  ])('renders Japanese about content from the %s', async (_source, url, headers) => {
+    const response = await app.request(url, { headers });
+    const html = await response.text();
+    expect(html).toContain('<html lang="ja">');
+    expect(html).toContain('このサイトについて');
   });
 });

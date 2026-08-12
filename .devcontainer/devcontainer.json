@@ -1,6 +1,18 @@
 {
   "name": "umaxica-apps-edge-dc",
-  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml"],
+  // This repository no longer runs a Cloudflare Tunnel connector. There is one
+  // connector for the whole system, and it lives in the Rails repository — see
+  // docs/operations/cloudflare-tunnel-development.md for why.
+  //
+  // The network that lets that connector reach this container is defined in
+  // ../compose.custom.yaml — named to match the Rails side, though its contents do
+  // the opposite: it owns a network for the connector to visit rather than
+  // defining a connector. It is listed below because the network is
+  // compose-managed rather than `external: true`, so `up` creates it and succeeds
+  // on a machine that has never run the connector. An always-present network is
+  // not exposure: that additionally needs the connector to join it and a
+  // Cloudflare Public Hostname pointing at it, both operator acts.
+  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml", "../compose.custom.yaml"],
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",
@@ -10,75 +22,110 @@
   "overrideCommand": false,
   "remoteEnv": {
     "EDITOR": "code --wait --reuse-window",
-    "DEBUGGER_DISABLE": "1"
+    "DEBUGGER_DISABLE": "1",
+    // Do NOT forward the host's TERM. Ghostty, kitty, and WezTerm ship their
+    // own terminfo, so a host value like `xterm-ghostty` has no entry inside
+    // the image — `infocmp` fails, `tput clear` fails, and with it Ctrl+L,
+    // the arrow keys, history, less, htop, and every TUI. Pin a value the
+    // Debian trixie base image is guaranteed to carry in
+    // /usr/share/terminfo/x/ instead. COLORTERM is safe to forward: it only
+    // signals 24-bit color support and never looks anything up in terminfo.
+    "TERM": "xterm-256color",
+    "COLORTERM": "${localEnv:COLORTERM}"
   },
 
+  // These are the ports the dev servers actually listen on (see the workspace
+  // table in CLAUDE.md), forwarded for direct local access.
+  //
+  // Wrangler OAuth is deliberately absent from this credential-free base.
+  // scripts/dev-start --credentials adds a host-loopback-only callback port.
   "forwardPorts": [
-    5173, 8780, 8781, 8782, 5102, 5103, 5104, 5105, 5302, 5303, 5304, 5305, 5402, 5403, 5404, 5405
+    5101, 5103, 5105, 5106, 5107, 5108, 5201, 5301, 5303, 5305, 5306, 5307, 5308, 5401, 5403, 5405,
+    5406, 5407, 5408, 5501, 5502
   ],
   "portsAttributes": {
-    "8781": {
-      "label": "App Domain (app)",
+    "5101": {
+      "label": "com/apex",
       "onAutoForward": "notify"
-    },
-    "8780": {
-      "label": "Com Domain (com)",
-      "onAutoForward": "notify"
-    },
-    "8782": {
-      "label": "Org Domain (org)",
-      "onAutoForward": "notify"
-    },
-    "5173": {
-      "label": "Net Domain (net)",
-      "onAutoForward": "notify"
-    },
-    "5102": {
-      "label": "Com Core JIT",
-      "onAutoForward": "silent"
     },
     "5103": {
-      "label": "Com Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5104": {
-      "label": "Com Help JIT",
+      "label": "com/info",
       "onAutoForward": "silent"
     },
     "5105": {
-      "label": "Com News JIT",
+      "label": "com/core",
+      "onAutoForward": "notify"
+    },
+    "5106": {
+      "label": "com/docs",
       "onAutoForward": "silent"
     },
-    "5302": {
-      "label": "Org Core JIT",
+    "5107": {
+      "label": "com/news",
       "onAutoForward": "silent"
+    },
+    "5108": {
+      "label": "com/help",
+      "onAutoForward": "silent"
+    },
+    "5201": {
+      "label": "net/apex",
+      "onAutoForward": "notify"
+    },
+    "5301": {
+      "label": "org/apex",
+      "onAutoForward": "notify"
     },
     "5303": {
-      "label": "Org Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5304": {
-      "label": "Org Help JIT",
+      "label": "org/info",
       "onAutoForward": "silent"
     },
     "5305": {
-      "label": "Org News JIT",
+      "label": "org/core",
+      "onAutoForward": "notify"
+    },
+    "5306": {
+      "label": "org/docs",
       "onAutoForward": "silent"
     },
-    "5402": {
-      "label": "App Core JIT",
+    "5307": {
+      "label": "org/news",
       "onAutoForward": "silent"
+    },
+    "5308": {
+      "label": "org/help",
+      "onAutoForward": "silent"
+    },
+    "5401": {
+      "label": "app/apex",
+      "onAutoForward": "notify"
     },
     "5403": {
-      "label": "App Docs JIT",
-      "onAutoForward": "silent"
-    },
-    "5404": {
-      "label": "App Help JIT",
+      "label": "app/info",
       "onAutoForward": "silent"
     },
     "5405": {
-      "label": "App News JIT",
+      "label": "app/core",
+      "onAutoForward": "notify"
+    },
+    "5406": {
+      "label": "app/docs",
+      "onAutoForward": "silent"
+    },
+    "5407": {
+      "label": "app/news",
+      "onAutoForward": "silent"
+    },
+    "5408": {
+      "label": "app/help",
+      "onAutoForward": "silent"
+    },
+    "5501": {
+      "label": "dev/apex (Vercel)",
+      "onAutoForward": "silent"
+    },
+    "5502": {
+      "label": "dev/acme (Vercel)",
       "onAutoForward": "silent"
     }
   },
@@ -106,8 +153,6 @@
         "-GitHub.copilot-chat"
       ],
       "settings": {
-        "claude.allowDangerouslySkipPermissions": true,
-        "extensions.verifySignature": false,
         "editor.defaultFormatter": "nicolo-ribaudo.oxfmt-vscode",
         "editor.formatOnSave": true,
         "editor.tabSize": 2,
@@ -135,27 +180,7 @@
   },
 
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {},
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {}
   },
-  "containerEnv": {
-    "NODE_OPTIONS": "--max-old-space-size=4096"
-  },
-  "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/edge/.claude,type=bind",
-    "source=${localEnv:HOME}/.claude.json,target=/home/edge/.claude.json,type=bind",
-    "source=${localEnv:HOME}/.copilot,target=/home/edge/.copilot,type=bind",
-    "source=${localEnv:HOME}/.codex,target=/home/edge/.codex,type=bind",
-    "source=${localEnv:HOME}/.gemini,target=/home/edge/.gemini,type=bind",
-    "source=${localEnv:HOME}/.config/gh,target=/home/edge/.config/gh,type=bind,readonly",
-    "source=${localEnv:HOME}/.config/git,target=/home/edge/.config/git,type=bind,readonly",
-    "source=${localEnv:HOME}/.gitconfig,target=/home/edge/.gitconfig,type=bind,readonly",
-    "source=${localEnv:HOME}/.ssh,target=/home/edge/.ssh,type=bind,readonly",
-    "source=${localEnv:HOME}/.config/opencode,target=/home/edge/.config/opencode,type=bind,readonly"
-  ],
   "updateRemoteUserUID": false
 }

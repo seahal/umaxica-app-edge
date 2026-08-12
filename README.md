@@ -10,8 +10,8 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 
 ## Prerequisites
 
-- Node.js 24.x (`node:24-trixie`)
-- [pnpm](https://pnpm.io/) 11.13.x
+- Node.js 24.19.0 — Active LTS "Krypton" (`node:24.19.0-trixie`, pinned exactly in `Dockerfile`)
+- [pnpm](https://pnpm.io/) 11.20.0 (pinned in `Dockerfile` and `package.json#packageManager`)
 - Docker & Docker Compose (optional)
 
 ## Workspaces
@@ -19,24 +19,25 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 | Package    | Role                | Domain             | Dev Port |
 | ---------- | ------------------- | ------------------ | -------- |
 | `com/apex` | Apex/static worker  | `umaxica.com`      | 5101     |
-| `com/core` | Corporate app       | `umaxica.com`      | 5102     |
+| `com/info` | Corporate info      | `info.umaxica.com` | 5103     |
+| `com/core` | Corporate app       | `umaxica.com`      | 5105     |
 | `com/docs` | Corporate docs      | `docs.umaxica.com` | 5106     |
 | `com/news` | Corporate news      | `news.umaxica.com` | 5107     |
 | `com/help` | Corporate help      | `help.umaxica.com` | 5108     |
-| `com/info` | Corporate info      | `info.umaxica.com` | 5109     |
 | `net/apex` | Network apex worker | `umaxica.net`      | 5201     |
 | `org/apex` | Apex/static worker  | `umaxica.org`      | 5301     |
-| `org/core` | Staff app           | `umaxica.org`      | 5302     |
+| `org/info` | Staff info          | `info.umaxica.org` | 5303     |
+| `org/core` | Staff app           | `umaxica.org`      | 5305     |
 | `org/docs` | Staff docs          | `docs.umaxica.org` | 5306     |
 | `org/news` | Staff news          | `news.umaxica.org` | 5307     |
 | `org/help` | Staff help          | `help.umaxica.org` | 5308     |
-| `org/info` | Staff info          | `info.umaxica.org` | 5309     |
 | `app/apex` | Apex/static worker  | `umaxica.app`      | 5401     |
-| `app/core` | Service app         | `umaxica.app`      | 5402     |
+| `app/info` | Service info        | `info.umaxica.app` | 5403     |
+| `app/core` | Service app         | `umaxica.app`      | 5405     |
 | `app/docs` | Service docs        | `docs.umaxica.app` | 5406     |
 | `app/news` | Service news        | `news.umaxica.app` | 5407     |
 | `app/help` | Service help        | `help.umaxica.app` | 5408     |
-| `app/info` | Service info        | `info.umaxica.app` | 5409     |
+| `dev/apex` | Apex/static worker  | `umaxica.dev`      | 5501     |
 | `dev/acme` | Development app     | `umaxica.dev`      | 5502     |
 
 `{com,org,app}/apex` are lightweight Hono workers (root redirect, `/health`,
@@ -47,6 +48,13 @@ regional subdomains. Cloudflare's custom domain for each apex root
 dashboard/DNS change outside this repo and must be coordinated before
 deploying `*/apex`.
 
+Those custom domains are currently **removed**: since 2026-08-11 the four apex
+hostnames are Public Hostnames on the development Cloudflare Tunnel, and a
+custom domain and a Public Hostname cannot both own one name. Each
+`*/apex/wrangler.jsonc` therefore declares `"routes": []`. Returning an apex to
+its Worker means removing the Public Hostname entry first, then restoring the
+route — in that order. See `adr/008-edge-development-tunnel-exposure.md`.
+
 ## Quick Start
 
 ```bash
@@ -55,8 +63,8 @@ pnpm install
 # Run a specific workspace
 pnpm --filter <workspace> run dev   # e.g. com/core, app/core
 
-# Docker (optional)
-docker compose up && docker compose exec core bash
+# Podman (optional)
+podman compose up -d && podman compose exec core bash
 ```
 
 ## Scripts
@@ -81,10 +89,10 @@ pnpm --filter <ws> run <script>
 
 | Tool                                                            | Role                                 | Version   |
 | --------------------------------------------------------------- | ------------------------------------ | --------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.13.x   |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.20.0   |
 | [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x      |
-| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.58.x    |
-| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.73.x    |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.62.x    |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.77.x    |
 | [tsgo](https://github.com/microsoft/typescript-go)              | Type checker (`pnpm run typecheck`)  | 7.0.0-dev |
 | [Vitest](https://vitest.dev/)                                   | Test runner (`pnpm run test`)        | 4.1.x     |
 | [Playwright](https://playwright.dev/)                           | Browser/E2E tests                    | 1.59.x    |
@@ -93,21 +101,85 @@ pnpm --filter <ws> run <script>
 
 ### Podman / DevContainer
 
-The development environment can be set up via rootless Podman + VS Code DevContainer.
+The development environment is started with Dev Containers CLI over rootless Podman.
 
-- **Base image**: `node:24-trixie` with pnpm (corepack) pre-installed
+- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.20.0
+  (Corepack) pre-installed. Both are
+  pinned to exact versions so a rebuild reproduces the same toolchain, and both match
+  the sibling Rails repo (`seahal/umaxica-apps-jit-global`).
+- **Package manager**: use the directly available `pnpm` command. Bun and the former
+  `pn` convenience alias are intentionally absent.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
-- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; no `sudo`/`su`/`visudo` in the container.
+- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
+
+Start the credential-free Dev Container from any working directory:
 
 ```bash
-# VS Code: use "Reopen in Container" for automatic setup
-
-# Or start manually with Podman Compose
-podman compose up -d && podman compose exec core bash
+/path/to/umaxica-apps-edge/podman/tools/dcup
 ```
+
+The launcher fixes Dev Containers CLI to `/usr/bin/podman`,
+`/usr/bin/podman-compose`, and this repository root. It rejects root/sudo and adds neither a
+Docker fallback nor host credential mounts.
+
+The direct Compose launcher remains available for optional overlays:
+
+```bash
+scripts/dev-start [--rails] [--credentials]
+podman compose exec core bash -l
+```
+
+#### Getting an interactive shell
+
+Use `podman compose exec` (or `podman exec -it`) — both allocate a pseudo-terminal:
+
+```bash
+podman compose exec core bash -l
+podman exec -it umaxica-apps-edge-dc-core-1 bash -l
+```
+
+`devcontainer exec` is for **one-shot commands only**. It wires stdin to a plain pipe
+and never allocates a PTY, so the shell has no line discipline: Ctrl+C is delivered as
+a raw `0x03` byte instead of `SIGINT`, line editing and history are dead, and Ctrl+D
+closes the pipe rather than sending EOF — the shell exits instantly and it looks like
+the container died. Confirm with `tty`: an interactive shell answers `/dev/pts/N`, a
+broken one answers `not a tty`. VS Code's integrated terminal allocates its own PTY and
+is unaffected.
+
+Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
+(`sleep infinity`) only — they have no bearing on shells started later via `exec`.
+
+### Cloudflare
+
+Base local development needs **no Cloudflare credentials** — no API token, no
+`wrangler login`, and no tunnel connector. `vpc_services` exists only in the
+explicit `env.vpc` development environment; production remains fail-closed.
+
+```bash
+pnpm run dev   # every dev server, on the ports in the table above
+```
+
+This repository runs no tunnel connector. There is one connector for the whole
+system and it lives in the Rails repository — a second one on the same tunnel
+would make Cloudflare load-balance Rails traffic onto Edge containers.
+
+What this repository does own is the Podman network that connector reaches:
+`compose.custom.yaml` defines `umaxica-edge-tunnel` and gives the container the
+alias `edge-core`, so Cloudflare Public Hostname entries can point at
+`http://edge-core:<port>`. The network existing is not exposure — that
+additionally needs the connector to join it and a Public Hostname pointing at
+it, both operator acts. See `docs/operations/cloudflare-tunnel-development.md`
+and `adr/008-edge-development-tunnel-exposure.md`.
+
+To reach Rails from local Node development, set `EDGE_RAILS_NETWORK` to the existing
+Rails rootless Podman network and use `scripts/dev-start --rails`. Access credentials
+are reserved for the independent `scripts/check-tunnel` path.
+
+The authoritative topology and security documentation begins at
+[`docs/development/development-environment-overview.md`](docs/development/development-environment-overview.md).
 
 ## Testing
 
@@ -161,6 +233,24 @@ Notes:
   reconnect or recreate that build for the matching docs Worker before deploying.
 - `npm --dir` is not a valid flag. If the platform requires npm, use
   `npm --prefix app/docs run deploy:upload` instead.
+- **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
+  The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
+  as `--env=production`. The top level of every `wrangler.jsonc` here *is*
+  production and there is deliberately no `env.production`, so a deploy command of
+  `pnpm --dir org/core exec wrangler versions upload` fails with
+  `No environment found in configuration with name "production"`. A raw
+  `wrangler versions upload` is wrong for the OpenNext workspaces for a second
+  reason: it uploads `main` (`src/worker.ts`) instead of the built
+  `.open-next/worker.js`. Configure the Workers Builds commands as:
+
+  ```text
+  Build command:   pnpm --dir org/core run build
+  Deploy command:  pnpm --dir org/core run upload:ci
+  ```
+
+  `upload:ci` is `CLOUDFLARE_ENV= opennextjs-cloudflare upload` — it blanks the
+  injected variable and uploads the output the build step already produced. Add
+  the same script to any other workspace before connecting it to Workers Builds.
 
 ### Environment Variables
 

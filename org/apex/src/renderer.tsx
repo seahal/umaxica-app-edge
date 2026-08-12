@@ -12,8 +12,11 @@ export const renderer = jsxRenderer(({ children }, c) => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <SeoHead c={c} brand={brandFromEnv(c)} />
         <style>{APEX_INLINE_STYLE}</style>
+        <script src="/service-worker-register.js" defer></script>
       </head>
       <body class="min-h-screen flex flex-col bg-gray-50">
         <header class="bg-white shadow-sm">

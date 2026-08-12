@@ -11,6 +11,7 @@ import ConfigurationPage from '../src/app/(page)/configuration/page';
 import AccountPage from '../src/app/(page)/configuration/account/page';
 import PreferencePage from '../src/app/(page)/configuration/preference/page';
 import HomePage from '../src/app/(page)/home/page';
+import PageLayout from '../src/app/(page)/layout';
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn<() => never>(),
@@ -95,5 +96,12 @@ describe('org/core pages render without throwing', () => {
   it('home page redirects to root', () => {
     HomePage();
     expect(redirect).toHaveBeenCalledWith('/');
+  });
+
+  it('renders the localized navigation around page content', async () => {
+    const element = await PageLayout({ children: <p>workspace content</p> });
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain('Rails health');
+    expect(html).toContain('workspace content');
   });
 });

@@ -1,30 +1,5 @@
 {
   "features": {
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {
-      "version": "1.0.5",
-      "resolved": "ghcr.io/anthropics/devcontainer-features/claude-code@sha256:cfc2e7d3e9fd3b9b01f8d5cb158508a884c8c0ede2e23ed10f32dea5d4ffe69a",
-      "integrity": "sha256:cfc2e7d3e9fd3b9b01f8d5cb158508a884c8c0ede2e23ed10f32dea5d4ffe69a"
-    },
-    "ghcr.io/devcontainers/features/copilot-cli:1": {
-      "version": "1.1.2",
-      "resolved": "ghcr.io/devcontainers/features/copilot-cli@sha256:757c6c2899dc902c44a9f6164c1f7392832ced13c6bb632d8d60a880f2e92456",
-      "integrity": "sha256:757c6c2899dc902c44a9f6164c1f7392832ced13c6bb632d8d60a880f2e92456"
-    },
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "1.1.0",
-      "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671",
-      "integrity": "sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671"
-    },
-    "ghcr.io/jsburckhardt/devcontainer-features/codex:1": {
-      "version": "1.0.0",
-      "resolved": "ghcr.io/jsburckhardt/devcontainer-features/codex@sha256:e6ec5fabc4c804ddda9e0aee677d13e989decc7fbbdcf27f70551f986bb9b28a",
-      "integrity": "sha256:e6ec5fabc4c804ddda9e0aee677d13e989decc7fbbdcf27f70551f986bb9b28a"
-    },
-    "ghcr.io/jsburckhardt/devcontainer-features/opencode:1": {
-      "version": "1.1.1",
-      "resolved": "ghcr.io/jsburckhardt/devcontainer-features/opencode@sha256:047f9144ad6540ee416cc2ea170f41bfae887c6c2cd883e14d2ab44a1ce20fc8",
-      "integrity": "sha256:047f9144ad6540ee416cc2ea170f41bfae887c6c2cd883e14d2ab44a1ce20fc8"
-    },
     "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {
       "version": "1.0.0",
       "resolved": "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt@sha256:bd1f7a64fc308f256a01c61946db094e0c92c4fd9d32f42b7ea8b661788d879d",

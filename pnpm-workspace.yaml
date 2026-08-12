@@ -29,18 +29,18 @@ allowBuilds:
   workerd: true
 
 catalog:
-  '@cloudflare/workers-types': ^4.20260523.0
+  '@cloudflare/workers-types': ^5.20260810.1
   '@opennextjs/cloudflare': ^1.19.11
-  '@types/node': ^25.7.0
+  '@types/node': ^26.2.0
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
-  hono: ^4.12.32
-  next: ^16.2.0
-  nuqs: ^2.8.9
+  hono: ^4.13.1
+  next: ^16.3.0
+  nuqs: ^2.9.5
   react: ^19.2.0
   react-dom: ^19.2.0
   vitest: ^4.1.10
-  wrangler: ^4.93.0
+  wrangler: ^4.120.1
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
@@ -48,36 +48,52 @@ ignoredBuiltDependencies:
   - sharp
   - workerd
 
-minimumReleaseAge: 4320
+# Hold newly published versions back so a compromised release has time to be
+# pulled from the registry before it can be installed here.
+#
+# 1440 is also pnpm 11's default, so this line changes no version by itself.
+# It is spelled out because leaving it implicit costs the two settings below:
+# `minimumReleaseAgeStrict` only defaults to true when `minimumReleaseAge` is
+# set EXPLICITLY. Implicit meant strict=false, and strict=false makes pnpm fall
+# back to a version that violates the delay whenever no aged version satisfies
+# the range — the delay reads as enforced while quietly not being. Explicit also
+# survives a pnpm major that changes its own default.
+minimumReleaseAge: 1440
 
+# Fail resolution instead of silently installing a too-young version. If this
+# ever blocks an update, the fix is to wait out the window or add a justified
+# entry to minimumReleaseAgeExclude below — not to turn this off.
+minimumReleaseAgeStrict: true
+
+# Refuse to install rather than skip the age check when registry metadata has no
+# `time` field. The default (true) is a silent bypass for the WHOLE policy, and
+# this repository installs from a private registry (registry=https://npm.flatt.tech/
+# in .npmrc) rather than registry.npmjs.org — exactly the mirror case pnpm warns
+# omits `time`. That registry does serve `time` today (verified against its
+# wrangler metadata), so this costs nothing now and turns a future mirror change
+# from a silent loss of protection into a loud failure.
+minimumReleaseAgeIgnoreMissingTime: false
+
+# Live exceptions, not dead config: with the delay in force these are the pins
+# that were bumped inside their own release window. Both are toolchain-only and
+# pinned exactly, so the exposure is a deliberate, reviewed version rather than
+# "whatever is newest". Re-check when bumping — an entry kept past its bump is
+# a standing hole.
 minimumReleaseAgeExclude:
-  - '@oxlint/binding-android-arm-eabi@1.74.0'
-  - '@oxlint/binding-android-arm64@1.74.0'
-  - '@oxlint/binding-darwin-arm64@1.74.0'
-  - '@oxlint/binding-darwin-x64@1.74.0'
-  - '@oxlint/binding-freebsd-x64@1.74.0'
-  - '@oxlint/binding-linux-arm-gnueabihf@1.74.0'
-  - '@oxlint/binding-linux-arm-musleabihf@1.74.0'
-  - '@oxlint/binding-linux-arm64-gnu@1.74.0'
-  - '@oxlint/binding-linux-arm64-musl@1.74.0'
-  - '@oxlint/binding-linux-ppc64-gnu@1.74.0'
-  - '@oxlint/binding-linux-riscv64-gnu@1.74.0'
-  - '@oxlint/binding-linux-riscv64-musl@1.74.0'
-  - '@oxlint/binding-linux-s390x-gnu@1.74.0'
-  - '@oxlint/binding-linux-x64-gnu@1.74.0'
-  - '@oxlint/binding-linux-x64-musl@1.74.0'
-  - '@oxlint/binding-openharmony-arm64@1.74.0'
-  - '@oxlint/binding-win32-arm64-msvc@1.74.0'
-  - '@oxlint/binding-win32-ia32-msvc@1.74.0'
-  - '@oxlint/binding-win32-x64-msvc@1.74.0'
-  - knip@6.27.0
-  - miniflare@4.20260710.0
-  - oxlint@1.74.0
-  - wrangler@4.111.0
+  - miniflare@5.20260804.0-alpha
+  - wrangler@4.120.1
 
 overrides:
-  'oxlint@>=1.73.0 <2.0.0-0': 1.74.0
+  nanoid: ^3.3.17
   vitest: 'catalog:'
+  # @opentelemetry/sdk-logs@0.214.0 (reached through @vercel/otel in dev/acme)
+  # pulls @opentelemetry/core@2.6.1, which is vulnerable to GHSA-8988-4f7v-96qf:
+  # unbounded memory allocation in W3C Baggage propagation, fixed in 2.8.0.
+  # Bumping sdk-logs alone does not clear it — @vercel/otel's peer constraint
+  # holds the old core in place. 2.10.0 is already resolved elsewhere in this
+  # tree via @sentry/nextjs, so this override dedupes onto a version that is
+  # already installed rather than introducing a new one.
+  '@opentelemetry/core': '>=2.8.0'
 
 peerDependencyRules:
   allowAny:

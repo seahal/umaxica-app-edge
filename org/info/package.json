@@ -3,27 +3,33 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "opennextjs-cloudflare build",
+    "build": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build",
     "build:next": "next build",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "deploy:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "deploy:promote": "wrangler versions deploy --yes",
-    "dev": "next dev --hostname 0.0.0.0 --port 5309",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "typecheck": "tsgo --noEmit"
+    "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
+    "deploy": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare deploy",
+    "deploy:upload": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare upload",
+    "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --yes",
+    "upload:ci": "CLOUDFLARE_ENV= opennextjs-cloudflare upload",
+    "dev": "EDGE_LOCAL_NODE_RUNTIME=1 next dev --hostname 0.0.0.0 --port 5303",
+    "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
+    "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
+    "typecheck": "pnpm run cf-typegen && tsgo --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
+    "@playwright/test": "^1.62.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "typescript": "^7.0.2",
     "wrangler": "catalog:"
   }
 }

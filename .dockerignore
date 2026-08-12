@@ -1,0 +1,19 @@
+# Keep this file aligned with .containerignore. The duplicate policy is
+# intentional defense in depth for Docker-compatible build frontends.
+.git
+.secrets/
+node_modules
+**/node_modules
+.pnpm-store
+coverage
+.next
+**/.next
+.open-next
+**/.open-next
+.wrangler
+**/.wrangler
+.idea
+.claude
+.aiassistant
+plans
+*.log

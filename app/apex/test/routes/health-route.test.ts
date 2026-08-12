@@ -80,7 +80,7 @@ describe('GET /health', () => {
     expect(body).toContain('viewport');
   });
 
-  it('returns health JSON with the five health fields', async () => {
+  it('returns health JSON with the six health fields', async () => {
     const response = await requestFromApp('/health.json');
 
     expect(response.status).toBe(200);
@@ -91,6 +91,7 @@ describe('GET /health', () => {
       status: 'OK',
       service: 'app',
       version: null,
+      environment: null,
       edge: 'cloudflare',
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
     });

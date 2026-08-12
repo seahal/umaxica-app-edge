@@ -43,6 +43,9 @@ describe('coverage boundaries', () => {
     );
     expect(url('APP', 'CORE', { JIT_APP_CORE_URL: '   ' })).toBeNull();
     expect(url('APP', 'CORE', {})).toBeNull();
+    expect(url('APP', 'CORE', { JIT_APP_CORE_URL: 'https://jit.example' })).toBe(
+      'https://jit.example',
+    );
   });
 
   it.each([
@@ -58,7 +61,7 @@ describe('coverage boundaries', () => {
 
     expect(render(createElement(Component)).container.innerHTML).toBe('');
     await vi.waitFor(() =>
-      expect(register).toHaveBeenCalledWith('/sw.js', {
+      expect(register).toHaveBeenCalledWith('/service-worker.js', {
         scope: '/',
         updateViaCache: 'none',
       }),

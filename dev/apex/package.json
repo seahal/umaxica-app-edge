@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "vercel dev --listen 5501",
     "deploy": "vercel deploy --prod",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "hono": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "catalog:"
   }
 }

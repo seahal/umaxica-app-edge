@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+secret=/run/secrets/dev_github_token
+if [[ ! -f ${secret} ]]; then
+  echo 'BLOCKED: dev_github_token is not mounted; start with --credentials.' >&2
+  exit 2
+fi
+
+export GH_TOKEN
+GH_TOKEN=$(<"${secret}")
+gh auth status
+git -c credential.helper='!gh auth git-credential' \
+  ls-remote https://github.com/seahal/umaxica-apps-edge.git HEAD >/dev/null
+echo 'PASS: GitHub authentication and HTTPS read access succeeded.'

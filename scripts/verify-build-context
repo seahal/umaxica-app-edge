@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+
+mkdir -p .secrets
+chmod 700 .secrets
+canary=.secrets/build-context-canary
+printf 'harmless build-context canary\n' >"${canary}"
+chmod 600 "${canary}"
+trap 'rm -f "${canary}"' EXIT
+
+temporary=$(mktemp -d)
+trap 'rm -f "${canary}"; rm -rf "${temporary}"' EXIT
+printf 'FROM node:24.19.0-trixie\nCOPY . /context\nRUN test ! -e /context/.secrets/build-context-canary\n' >"${temporary}/CanaryContainerfile"
+
+tag="edge-build-context-canary-$$"
+podman build --file "${temporary}/CanaryContainerfile" --tag "${tag}" . >/dev/null
+echo 'PASS: .secrets build canary was excluded from the image.'

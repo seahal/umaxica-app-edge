@@ -11,7 +11,6 @@ import ConfigurationPage from '../src/app/(page)/configuration/page';
 import AccountPage from '../src/app/(page)/configuration/account/page';
 import PreferencePage from '../src/app/(page)/configuration/preference/page';
 import HomePage from '../src/app/(page)/home/page';
-import RailsHealthPage from '../src/app/(page)/rails-health/page';
 
 // Mock i18n dependencies
 vi.mock('next/navigation', () => ({
@@ -51,7 +50,7 @@ vi.mock('@/i18n/dictionaries', () => ({
   }),
 }));
 
-// Mock fetch for RailsHealthPage
+// Pages under test may fetch; keep the global stubbed and reset per test.
 const fetchMock = vi.fn<typeof fetch>();
 beforeEach(() => {
   vi.stubGlobal('fetch', fetchMock);
@@ -119,11 +118,5 @@ describe('app/core pages render without throwing', () => {
   it('home page redirects to root', () => {
     HomePage();
     expect(redirect).toHaveBeenCalledWith('/');
-  });
-
-  it('rails-health page renders', async () => {
-    const element = await RailsHealthPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
   });
 });

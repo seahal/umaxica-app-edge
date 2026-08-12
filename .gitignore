@@ -6,6 +6,11 @@ worker
 .wrangler
 worker-configuration.d.ts
 
+# Scratch output. tools/verify-edge-connectivity.mjs writes its per-child logs to
+# tmp/connectivity-check/ so a failing run keeps the full output without the
+# terminal carrying it, and without any of it reaching Git.
+tmp/
+
 # Logs
 logs
 *.log
@@ -82,6 +87,7 @@ web_modules/
 
 # dotenv environment variable files
 .env
+!.env.example
 .env.development.local
 .env.test.local
 .env.production.local
@@ -90,14 +96,23 @@ dev/core/.env.local
 dev/status/.env.local
 .dev.vars
 .dev.vars.*
+# Every Rails-backed frame ships an example. Keep this list complete: a missing
+# entry silently ignores that frame's example, so a developer never learns the
+# frame needs configuring.
+!app/core/.dev.vars.example
 !app/docs/.dev.vars.example
 !app/help/.dev.vars.example
+!app/info/.dev.vars.example
 !app/news/.dev.vars.example
+!com/core/.dev.vars.example
 !com/docs/.dev.vars.example
 !com/help/.dev.vars.example
+!com/info/.dev.vars.example
 !com/news/.dev.vars.example
+!org/core/.dev.vars.example
 !org/docs/.dev.vars.example
 !org/help/.dev.vars.example
+!org/info/.dev.vars.example
 !org/news/.dev.vars.example
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -169,7 +184,18 @@ package-lock.json
 .claude.json
 .claude.json.backup
 .codex/
+.secrets/
 .vercel
 .idea
 .claude/
 .pnpm-store/
+
+# Local audit scratch output
+/resuts.md
+
+# Playwright workspace artifacts
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache/
+**/playwright/.auth/

@@ -1,6 +1,19 @@
 # Plan 001: Rails Backend Health Check Integration
 
-## Status: Pending
+## Status: Superseded by ADR 005
+
+> **Historical record. Do not follow this document.**
+>
+> Everything below describes a design that no longer exists: `RAILS_API_URL` is
+> not defined anywhere in the repository, `shared/apex/` was removed and a
+> `shared/` directory is now forbidden by `CLAUDE.md`, and the `vp` CLI
+> referenced in the Outcome does not exist in this repository. The apex workers
+> no longer contact Rails at all.
+>
+> The current design — a Cloudflare Workers VPC binding, path-prefix frame
+> identification, and per-frame `/rails-health` endpoints — is recorded in
+> [ADR 005](005-rails-edge-workers-vpc-connection.md). This file is kept
+> unedited below the line as a record of what was decided at the time.
 
 ## GitHub Issue
 

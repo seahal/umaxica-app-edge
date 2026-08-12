@@ -70,6 +70,10 @@ describe('brandFromEnv', () => {
     });
   });
 
+  it('falls back to defaults when the request context is absent', () => {
+    expect(brandFromEnv(null)).toEqual({ brandName: 'UMAXICA', separator: ' | ' });
+  });
+
   it('falls back to default separator when binding is blank', () => {
     const brand = brandFromEnv({
       env: {

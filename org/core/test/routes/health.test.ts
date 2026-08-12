@@ -61,6 +61,20 @@ describe('org/core health route', () => {
     });
   });
 
+  it('uses an HTTP-date timestamp when ISO timestamp generation keeps failing', async () => {
+    vi.spyOn(Date.prototype, 'toISOString').mockImplementation(() => {
+      throw new Error('Date error');
+    });
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      status: 'error',
+      timestamp: 'Mon, 01 Jan 2024 00:00:00 GMT',
+    });
+  });
+
   it('returns OK status even when Cloudflare context is missing', async () => {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
     vi.mocked(getCloudflareContext).mockReturnValueOnce(

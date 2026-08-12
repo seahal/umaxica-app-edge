@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+checks=(
+  'com/apex|http://127.0.0.1:5101/health.json'
+  'com/core|http://127.0.0.1:5105/health'
+  'net/apex|http://127.0.0.1:5201/health.json'
+  'org/apex|http://127.0.0.1:5301/health.json'
+  'org/core|http://127.0.0.1:5305/health'
+  'app/apex|http://127.0.0.1:5401/health.json'
+  'app/core|http://127.0.0.1:5405/health'
+)
+
+failed=0
+for check in "${checks[@]}"; do
+  name=${check%%|*}
+  url=${check#*|}
+  if curl --fail --silent --show-error --max-time 10 --output /dev/null "${url}"; then
+    echo "PASS ${name} ${url}"
+  else
+    echo "FAIL ${name} ${url}" >&2
+    failed=1
+  fi
+done
+exit "${failed}"

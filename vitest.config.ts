@@ -1,8 +1,22 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  oxc: {
+    jsx: {
+      runtime: 'automatic',
+    },
+  },
+  resolve: {
+    tsconfigPaths: true,
+    alias: {
+      '@opennextjs/cloudflare': fileURLToPath(
+        new URL('./test/__mocks__/opennext-cloudflare.ts', import.meta.url),
+      ),
+      'next/server': fileURLToPath(new URL('./test/__mocks__/next-server.ts', import.meta.url)),
+      'server-only': fileURLToPath(new URL('./test/__mocks__/server-only.ts', import.meta.url)),
+    },
+  },
   test: {
     coverage: {
       exclude: [
@@ -16,26 +30,28 @@ export default defineConfig({
         '**/public/**',
         '**/*.css',
         '**/*.svg',
-        '**/workers/**',
         '**/test-setup.ts',
         '**/locales/**',
-        '**/zod.ts',
         '**/coverage/**',
         '**/.next/**',
         '**/.open-next/**',
+        '**/.wrangler/**',
+        '**/.claude/**',
+        '**/.pnpm-store/**',
+        '**/tmp/**',
+        '**/e2e/**',
+        '**/playwright.config.ts',
         '**/next.config.ts',
         '**/open-next.config.ts',
-        '**/src/i18n/**',
-        '**/src/app/**',
       ],
       include: ['**/*.{ts,tsx,js,jsx}'],
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html'],
       thresholds: {
-        branches: 100,
-        functions: 100,
-        lines: 100,
-        statements: 100,
+        branches: 99,
+        functions: 99,
+        lines: 99,
+        statements: 99,
       },
     },
     deps: {

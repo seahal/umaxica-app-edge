@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z ${EDGE_RAILS_NETWORK:-} ]]; then
+  echo 'BLOCKED: set EDGE_RAILS_NETWORK and start with scripts/dev-start --rails.' >&2
+  exit 2
+fi
+if ! podman network exists "${EDGE_RAILS_NETWORK}"; then
+  echo "FAIL: configured Rails network does not exist: ${EDGE_RAILS_NETWORK}" >&2
+  exit 1
+fi
+
+for brand in app com org; do
+  for frame in core docs help info news; do
+    origin="http://${frame}.${brand}.localhost:3000"
+    if podman compose -f compose.yaml -f compose.rails.yaml exec -T core \
+      curl --fail --silent --show-error --max-time 10 --output /dev/null \
+      "${origin}/health/liveness.json"; then
+      echo "PASS ${origin}"
+    else
+      echo "FAIL ${origin}" >&2
+      exit 1
+    fi
+  done
+done

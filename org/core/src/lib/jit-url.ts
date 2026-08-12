@@ -1,5 +1,5 @@
 const JIT_DOMAINS = ['APP', 'COM', 'ORG'] as const;
-const JIT_WORKSPACES = ['CORE', 'DOCS', 'NEWS', 'HELP'] as const;
+const JIT_WORKSPACES = ['CORE', 'DOCS', 'NEWS', 'INFO', 'HELP'] as const;
 
 export type JitDomain = (typeof JIT_DOMAINS)[number];
 export type JitWorkspace = (typeof JIT_WORKSPACES)[number];

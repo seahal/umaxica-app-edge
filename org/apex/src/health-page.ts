@@ -8,6 +8,7 @@ type HealthPayload = {
   status: 'OK';
   service: string;
   version: string | null;
+  environment: string | null;
   edge: 'cloudflare';
   time: string;
 };
@@ -21,6 +22,7 @@ function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPa
     status: 'OK',
     service: options.service,
     version: env?.CF_VERSION_METADATA?.id ?? null,
+    environment: env?.EDGE_ENV ?? null,
     edge: 'cloudflare',
     time: new Date().toISOString(),
   };
@@ -47,6 +49,8 @@ function buildHealthPageHtml(brandName: string, payload: HealthPayload): string 
           <dd>${payload.service}</dd>
           <dt>version</dt>
           <dd>${String(payload.version)}</dd>
+          <dt>environment</dt>
+          <dd>${String(payload.environment)}</dd>
           <dt>edge</dt>
           <dd>${payload.edge}</dd>
           <dt>time</dt>
@@ -101,7 +105,8 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
 }
 
 export function renderHealthJson(env: AssetEnv, options: HealthPageOptions): Response {
-  return new Response(JSON.stringify(buildHealthPayload(env, options)), {
+  const payload = buildHealthPayload(env, options);
+  return new Response(JSON.stringify(payload), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=UTF-8',

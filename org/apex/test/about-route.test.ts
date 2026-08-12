@@ -25,6 +25,15 @@ describe('GET /about', () => {
     expect(body).toContain('<title>About | UMAXICA (org) - Apex</title>');
   });
 
+  it('renders Japanese content when Accept-Language prefers ja', async () => {
+    const response = await requestFromOrgApp('/about', {
+      headers: { 'Accept-Language': 'ja' },
+    });
+    const body = await response.text();
+    expect(body).toContain('このサイトについて');
+    expect(body).toContain('<html lang="ja">');
+  });
+
   it('applies security headers to the about response', async () => {
     const response = await requestFromOrgApp('/about');
 

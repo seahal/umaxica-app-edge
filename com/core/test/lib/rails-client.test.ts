@@ -35,30 +35,38 @@ describe('com/core rails client', () => {
 
     const [requestUrl] = fetchMock.mock.calls[0] as [string];
     expect(new URL(requestUrl).host).toBe('core.com.localhost:3000');
+    expect(new URL(requestUrl).pathname).toBe('/edge/v0/health');
   });
 
-  it('falls back to a dev-only direct fetcher in development when no binding exists', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
+  it('uses the private Podman transport only for explicit local Node development', async () => {
     const fetchSpy = vi.fn<typeof fetch>(() =>
       Promise.resolve(new Response('ok', { status: 200 })),
     );
     vi.stubGlobal('fetch', fetchSpy);
+    vi.stubEnv('EDGE_LOCAL_NODE_RUNTIME', '1');
+    vi.stubEnv('EDGE_LOCAL_RAILS_ENABLED', '1');
 
     const client = getRailsClient();
     expect(client).not.toBeNull();
 
-    await client?.fetch('/edge/v0/health');
+    await client?.fetch('/health/liveness.json');
 
-    const [requestUrl] = fetchSpy.mock.calls[0] as [string];
-    const url = new URL(requestUrl);
-    expect(url.protocol).toBe('http:');
-    expect(url.port).toBe('3000');
-    expect(url.hostname).toBe('core.com.localhost');
+    const [requestUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(new URL(requestUrl).origin).toBe('http://core.com.localhost:3000');
+    expect(new URL(requestUrl).pathname).toBe('/health/liveness.json');
+
+    const headers = new Headers(init.headers);
+    expect(headers.has('cf-access-client-id')).toBe(false);
+    expect(headers.has('cf-access-client-secret')).toBe(false);
   });
 
-  it('fails closed to null outside development when no binding exists', () => {
-    vi.stubEnv('NODE_ENV', 'production');
+  it('does not fabricate a local transport from the Rails overlay alone', () => {
+    vi.stubEnv('EDGE_LOCAL_RAILS_ENABLED', '1');
 
+    expect(getRailsClient()).toBeNull();
+  });
+
+  it('fails closed to null when no binding exists', () => {
     const client = getRailsClient();
 
     expect(client).toBeNull();
