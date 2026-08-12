@@ -30,7 +30,7 @@ describe(checkRateLimit, () => {
     const result = await checkRateLimit(request, mockRateLimiter);
     expect(result).not.toBeNull();
     expect(result?.status).toBe(429);
-    expect(await result?.text()).toBe('Too Many Requests');
+    expect(await result?.text()).toContain('HTTP 429');
   });
 
   it('uses "unknown" as fallback IP when cf-connecting-ip is missing', async () => {

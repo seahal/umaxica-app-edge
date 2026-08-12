@@ -2,7 +2,8 @@
 // Validates every workspace's wrangler.jsonc against tools/workers-manifest.json.
 // Run from the repo root: node tools/check-workers.mjs (pnpm run check:workers).
 
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   collectVpcBindings as vpcBindings,
@@ -111,8 +112,61 @@ function checkOpenNext(ws, config) {
   if (config.images?.binding !== 'IMAGES') {
     fail(ws, 'images binding IMAGES is missing');
   }
-  if (!existsSync(join(root, ws, 'public/_headers'))) {
-    fail(ws, 'public/_headers is missing');
+}
+
+// Static assets are the one thing that ships without any gate noticing it is
+// gone. A missing .ts breaks typecheck; a missing route breaks a test. A missing
+// public/ file breaks nothing until a browser 404s in production — and `wrangler
+// deploy` uploads whatever is on disk, so a file that exists locally but was
+// never committed passes every local check and then vanishes from CI's clean
+// clone. Presence alone is therefore not enough: these have to be IN GIT.
+//
+// This is why the apex workers are checked too. They serve `public/` directly
+// (`assets.directory: ./public`), so for them the directory IS the deployed
+// surface; the OpenNext units build into `.open-next/assets` and copy from
+// `public/`, which makes `public/` the source of truth in both cases.
+const trackedFiles = (() => {
+  let cache = null;
+  return () => {
+    if (cache === null) {
+      cache = new Set(
+        execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
+          .split('\n')
+          .filter(Boolean),
+      );
+    }
+    return cache;
+  };
+})();
+
+// Every browser-facing Worker publishes these. `service-worker.js` is asserted
+// on by test/standard-url-contract.test.ts and by each unit's standard-contract
+// e2e spec, both of which read the working tree and so cannot see this gap.
+const REQUIRED_PUBLIC_ASSETS = ['_headers', 'service-worker.js'];
+
+function checkPublicAssets(ws) {
+  const publicDir = join(root, ws, 'public');
+  if (!existsSync(publicDir)) {
+    fail(ws, "public/ is missing — it is this worker's deployed static asset surface");
+    return;
+  }
+
+  for (const asset of REQUIRED_PUBLIC_ASSETS) {
+    if (!existsSync(join(publicDir, asset))) {
+      fail(ws, `public/${asset} is missing`);
+    }
+  }
+
+  const tracked = trackedFiles();
+  for (const entry of readdirSync(publicDir, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//, '')}`;
+    if (!tracked.has(path)) {
+      fail(
+        ws,
+        `${path} is not tracked by git — wrangler would upload it from this machine and CI would deploy without it`,
+      );
+    }
   }
 }
 
@@ -122,6 +176,7 @@ for (const ws of manifest.railsBacked) {
   // Only railsBacked workers need `vpc` — it exists to carry the VPC binding.
   checkEnvironments(ws, config, ['development', 'vpc', 'test']);
   checkOpenNext(ws, config);
+  checkPublicAssets(ws);
 
   // The VPC binding lives in `env.vpc` and nowhere else.
   //
@@ -224,6 +279,7 @@ for (const ws of manifest.contentSurface) {
   if (!config) continue;
   checkEnvironments(ws, config);
   checkOpenNext(ws, config);
+  checkPublicAssets(ws);
   if (vpcBindings(config).length > 0) {
     fail(
       ws,
@@ -236,6 +292,7 @@ for (const ws of manifest.standalone) {
   const config = loadWrangler(ws);
   if (!config) continue;
   checkEnvironments(ws, config);
+  checkPublicAssets(ws);
   if (vpcBindings(config).length > 0) {
     fail(ws, 'standalone workers must not declare vpc_services');
   }

@@ -11,7 +11,8 @@
     "deploy:upload": "CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
     "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --config wrangler.jsonc --yes",
     "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareBindings",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hono/structured-logger": "^0.1.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
+    "@playwright/test": "^1.62.1",
     "wrangler": "catalog:"
   }
 }

@@ -13,11 +13,14 @@ export default function GlobalError({
     <html lang="ja">
       <body>
         <main className="status-page">
-          <h1>500</h1>
-          <p>Something went wrong.</p>
+          <h1>現在、このページを表示できません</h1>
+          <p>HTTP 500</p>
           <button onClick={handleReset} type="button">
-            Try again
+            再読み込み
           </button>
+          <p>
+            <a href="/">トップへ戻る</a>
+          </p>
         </main>
       </body>
     </html>

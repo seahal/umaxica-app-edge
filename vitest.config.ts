@@ -1,4 +1,3 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
@@ -8,8 +7,8 @@ export default defineConfig({
       runtime: 'automatic',
     },
   },
-  plugins: [tsconfigPaths()],
   resolve: {
+    tsconfigPaths: true,
     alias: {
       '@opennextjs/cloudflare': fileURLToPath(
         new URL('./test/__mocks__/opennext-cloudflare.ts', import.meta.url),

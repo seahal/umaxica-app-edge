@@ -140,7 +140,11 @@ module.exports = {
         'section of your package.json. If this module is development only - add it to the ' +
         'from.pathNot re of the not-to-dev-dep rule in the dependency-cruiser configuration',
       from: {
-        path: '^(app)',
+        // Every deployable root, not just `app`. All five families ship the same
+        // way — a devDependency reaching production code is exactly as broken in
+        // com/org/net/dev as it is in app, and scoping this to one family meant
+        // the other seventeen deployment units were unprotected.
+        path: '^(app|com|dev|net|org)/',
         pathNot: '[.](?:spec|test)[.](?:js|mjs|cjs|jsx|ts|mts|cts|tsx)$',
       },
       to: {
@@ -151,6 +155,19 @@ module.exports = {
         pathNot: ['node_modules/@types/'],
       },
     },
+    // NO deployment-unit boundary rule lives here, deliberately.
+    //
+    // dependency-cruiser cannot parse this repository's TypeScript: it needs
+    // `typescript` >=2 <7 and the repo ships `@typescript/native-preview` (tsgo)
+    // instead, so depcruise emits `missing-typescript-transpiler` and cruises 39
+    // modules / 10 dependencies out of 1000+ TS sources. A boundary rule added
+    // here would report green because it never sees the imports — a false
+    // guarantee, which is worse than no rule.
+    //
+    // The boundary is therefore owned solely by oxlint's `no-restricted-imports`
+    // (.oxlintrc.json), which uses oxc's native TS parser and actually sees every
+    // file. Do not duplicate it here unless `typescript` is installed and this
+    // warning is gone.
     {
       name: 'optional-deps-used',
       severity: 'info',

@@ -6,7 +6,7 @@ describe('app/src/index.tsx coverage', () => {
     const res = await app.request('/nonexistent-404', {}, {});
 
     expect(res.status).toBe(404);
-    await expect(res.text()).resolves.toBe('Not Found');
+    await expect(res.text()).resolves.toContain('HTTP 404');
   });
 
   it('handles health check error and hits onError catch block', async () => {
@@ -17,10 +17,10 @@ describe('app/src/index.tsx coverage', () => {
 
     const res = await app.request('/health', {}, {});
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
     expect(res.headers.get('content-security-policy')).toContain("default-src 'self'");
-    await expect(res.text()).resolves.toBe('Bad Request');
+    await expect(res.text()).resolves.toContain('HTTP 500');
     expect(consoleSpy).toHaveBeenCalledWith('Unhandled apex error', {
       error: 'Error',
       method: 'GET',

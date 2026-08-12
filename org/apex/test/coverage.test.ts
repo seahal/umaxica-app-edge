@@ -6,7 +6,7 @@ describe('org/src/index.tsx coverage', () => {
     const res = await app.request('/nonexistent-404', {}, {});
 
     expect(res.status).toBe(404);
-    await expect(res.text()).resolves.toBe('Not Found');
+    await expect(res.text()).resolves.toContain('HTTP 404');
   });
 
   it('handles health check error and hits onError catch block', async () => {
@@ -17,8 +17,8 @@ describe('org/src/index.tsx coverage', () => {
 
     const res = await app.request('/health', {}, {});
 
-    expect(res.status).toBe(400);
-    await expect(res.text()).resolves.toBe('Bad Request');
+    expect(res.status).toBe(500);
+    await expect(res.text()).resolves.toContain('HTTP 500');
 
     isoSpy.mockRestore();
     consoleSpy.mockRestore();

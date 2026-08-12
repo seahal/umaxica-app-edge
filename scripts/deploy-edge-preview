@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly expected_account_name='UMAXICA'
+readonly expected_account_id='c90999d8a4039c63d02b7a7b1545d211'
+readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ "${1:-}" == '--' ]]; then
+  shift
+fi
+
+if (($# < 1 || $# > 2)); then
+  echo 'usage: pnpm run deploy:edge:preview -- <worker-directory> [--bootstrap-missing]' >&2
+  exit 64
+fi
+
+readonly worker_directory="$1"
+readonly bootstrap_option="${2:-}"
+if [[ -n "$bootstrap_option" && "$bootstrap_option" != '--bootstrap-missing' ]]; then
+  echo 'The only supported option is --bootstrap-missing.' >&2
+  exit 64
+fi
+
+case "$worker_directory" in
+  app/apex | app/core | app/docs | app/help | app/info | app/news | \
+    com/apex | com/core | com/docs | com/help | com/info | com/news | \
+    org/apex | org/core | org/docs | org/help | org/info | org/news | \
+    net/apex) ;;
+  *)
+    echo "Unknown Edge Worker directory: $worker_directory" >&2
+    exit 64
+    ;;
+esac
+
+cd "$repository_root"
+
+whoami_output="$(pnpm exec wrangler whoami 2>&1)"
+if [[ "$whoami_output" != *"$expected_account_name"* ]] ||
+  [[ "$whoami_output" != *"$expected_account_id"* ]]; then
+  printf '%s\n' "$whoami_output" >&2
+  echo "Refusing deployment: Wrangler is not authenticated to $expected_account_name ($expected_account_id)." >&2
+  exit 1
+fi
+echo "Cloudflare account verified: $expected_account_name ($expected_account_id)"
+
+echo "Building $worker_directory"
+pnpm --dir "$worker_directory" run build
+
+run_wrangler() {
+  local worker_directory="$1"
+  shift
+  (
+    cd "$repository_root/$worker_directory"
+    CLOUDFLARE_ACCOUNT_ID="$expected_account_id" \
+      CLOUDFLARE_ENV= \
+      OPEN_NEXT_DEPLOY=true \
+      pnpm exec wrangler "$@" --config wrangler.jsonc
+  )
+}
+
+echo "Uploading an immutable version for $worker_directory"
+if upload_output="$(run_wrangler "$worker_directory" versions upload 2>&1)"; then
+  printf '%s\n' "$upload_output"
+  exit 0
+fi
+
+printf '%s\n' "$upload_output" >&2
+if [[ "$bootstrap_option" != '--bootstrap-missing' ]] ||
+  [[ "$upload_output" != *'does not yet exist'* ]]; then
+  echo "Upload stopped at $worker_directory; no deploy fallback was attempted." >&2
+  exit 1
+fi
+
+echo "Worker is absent; bootstrapping only $worker_directory with its explicit Wrangler config."
+run_wrangler "$worker_directory" deploy
+run_wrangler "$worker_directory" versions upload
+
+echo "Version preview upload completed for $worker_directory. Production promotion was not run."

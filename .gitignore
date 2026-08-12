@@ -189,3 +189,13 @@ package-lock.json
 .idea
 .claude/
 .pnpm-store/
+
+# Local audit scratch output
+/resuts.md
+
+# Playwright workspace artifacts
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache/
+**/playwright/.auth/

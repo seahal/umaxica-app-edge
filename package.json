@@ -23,15 +23,16 @@
     "deploy:app-docs:upload": "pnpm --filter umaxica-apps-edge-app-docs run deploy:upload",
     "deploy:com-docs:upload": "pnpm --filter umaxica-apps-edge-com-docs run deploy:upload",
     "deploy:org-docs:upload": "pnpm --filter umaxica-apps-edge-org-docs run deploy:upload",
+    "deploy:edge:preview": "scripts/deploy-edge-preview",
     "typecheck": "pnpm --filter umaxica-apps-edge-apex-app --filter umaxica-apps-edge-apex-com --filter umaxica-apps-edge-apex-net --filter umaxica-apps-edge-apex-org --filter umaxica-apps-edge-app-core --filter umaxica-apps-edge-app-docs --filter umaxica-apps-edge-app-help --filter umaxica-apps-edge-app-info --filter umaxica-apps-edge-app-news --filter umaxica-apps-edge-com-core --filter umaxica-apps-edge-com-docs --filter umaxica-apps-edge-com-help --filter umaxica-apps-edge-com-info --filter umaxica-apps-edge-com-news --filter umaxica-apps-edge-apex-dev --filter umaxica-apps-edge-dev-acme --filter umaxica-apps-edge-org-core --filter umaxica-apps-edge-org-docs --filter umaxica-apps-edge-org-help --filter umaxica-apps-edge-org-info --filter umaxica-apps-edge-org-news run typecheck",
     "test": "EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
     "test:cov": "EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run --coverage",
+    "e2e": "pnpm -r --workspace-concurrency=1 run test:e2e",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.3",
     "@types/node": "catalog:",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
@@ -40,12 +41,11 @@
     "hono": "catalog:",
     "knip": "^6.32.1",
     "lefthook": "^2.1.10",
-    "oxfmt": "^0.62.0",
-    "oxlint": "1.77.0",
+    "oxfmt": "^0.63.0",
+    "oxlint": "1.78.0",
     "oxlint-tsgolint": "^7.0.2001",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10",
     "wrangler": "catalog:"
   },
-  "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee"
+  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
 }

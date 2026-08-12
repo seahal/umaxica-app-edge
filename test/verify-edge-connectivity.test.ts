@@ -73,10 +73,9 @@ describe('surfaces', () => {
 
   it('derives each frame shape from disk', () => {
     for (const surface of loadSurfaces()) {
-      // Only the cores own a /health Route Handler. All fifteen expose
-      // /rails-health, and it is JSON everywhere — a frame without it has no way
-      // to report the Rails connection at all.
-      expect(surface.hasHealthRoute).toBe(surface.frame === 'core');
+      // Every frame owns the standard lightweight /health Route Handler. All
+      // fifteen also expose /rails-health independently.
+      expect(surface.hasHealthRoute).toBe(true);
       expect(surface.hasRailsHealth, `${surface.ws} must expose /rails-health`).toBe(true);
     }
   });

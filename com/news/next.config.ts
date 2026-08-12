@@ -4,6 +4,7 @@ import { imageConfig } from './image-config';
 import { imageFontSecurityHeaders } from './security-headers';
 
 const nextConfig: NextConfig = {
+  experimental: { globalNotFound: true },
   // `cacheComponents` is deliberately absent. Next's Cache Components depend on
   // `setTimeout()` semantics workerd does not provide — Next itself warns
   // "cannot guarantee that Cache Components will run as expected due to the

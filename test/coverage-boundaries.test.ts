@@ -61,7 +61,7 @@ describe('coverage boundaries', () => {
 
     expect(render(createElement(Component)).container.innerHTML).toBe('');
     await vi.waitFor(() =>
-      expect(register).toHaveBeenCalledWith('/sw.js', {
+      expect(register).toHaveBeenCalledWith('/service-worker.js', {
         scope: '/',
         updateViaCache: 'none',
       }),

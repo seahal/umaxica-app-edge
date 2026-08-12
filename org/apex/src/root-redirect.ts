@@ -14,7 +14,7 @@ export const resolveRedirectUrl = (regionParam: string | null | undefined) => {
   return allowedUrls[normalizedRegion as AllowedRegion] ?? null;
 };
 
-export const getDefaultRedirectUrl = () => allowedUrls[DEFAULT_REGION] ?? null;
+export const getDefaultRedirectUrl = () => allowedUrls[DEFAULT_REGION];
 
 export const buildRegionErrorPayload = () => ({
   error: 'region_not_supported',

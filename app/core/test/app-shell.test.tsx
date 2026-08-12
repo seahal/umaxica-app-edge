@@ -59,10 +59,10 @@ describe('app/core application shell', () => {
   it('renders user-visible status and layout content', async () => {
     const reset = vi.fn();
     render(<GlobalError error={new Error('boom')} reset={reset} />, { container: document });
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.click(screen.getByRole('button', { name: '再読み込み' }));
     expect(reset).toHaveBeenCalledOnce();
 
-    expect(renderToStaticMarkup(<GlobalNotFound />)).toContain('Page not found.');
+    expect(renderToStaticMarkup(<GlobalNotFound />)).toContain('HTTP 404');
     expect(renderToStaticMarkup(<Loading />)).toContain('Loading...');
     expect(renderToStaticMarkup(<UnauthorizedPage />)).toContain('401 - Unauthorized');
     expect(renderToStaticMarkup(<RootLayout>content</RootLayout>)).toContain('content');

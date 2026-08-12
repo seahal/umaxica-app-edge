@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5502',
+    baseURL: 'http://localhost:5502',
     trace: 'on-first-retry',
   },
   projects: [
@@ -19,7 +19,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm run dev',
-    url: 'http://127.0.0.1:5502',
+    url: 'http://localhost:5502',
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
   },

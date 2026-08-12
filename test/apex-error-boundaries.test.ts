@@ -27,7 +27,7 @@ describe.each(factories)('%s apex error boundary', (service, createApexApp) => {
 
     const response = await app.request('/forbidden');
     expect(response.status).toBe(403);
-    await expect(response.text()).resolves.toBe('Forbidden');
+    await expect(response.text()).resolves.toContain('HTTP 403');
   });
 
   it('contains unexpected errors without leaking details', async () => {
@@ -42,8 +42,10 @@ describe.each(factories)('%s apex error boundary', (service, createApexApp) => {
     );
 
     const response = await app.request('/explode');
-    expect(response.status).toBe(400);
-    await expect(response.text()).resolves.toBe('Bad Request');
+    expect(response.status).toBe(500);
+    const body = await response.text();
+    expect(body).toContain('HTTP 500');
+    expect(body).not.toContain('secret failure details');
     expect(consoleError).toHaveBeenCalledWith(
       'Unhandled apex error',
       expect.objectContaining({ error: 'Error', method: 'GET', path: '/explode' }),

@@ -29,7 +29,7 @@ allowBuilds:
   workerd: true
 
 catalog:
-  '@cloudflare/workers-types': ^5.20260804.1
+  '@cloudflare/workers-types': ^5.20260810.1
   '@opennextjs/cloudflare': ^1.19.11
   '@types/node': ^26.2.0
   '@types/react': ^19.2.14
@@ -40,7 +40,7 @@ catalog:
   react: ^19.2.0
   react-dom: ^19.2.0
   vitest: ^4.1.10
-  wrangler: ^4.120.0
+  wrangler: ^4.120.1
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
@@ -48,8 +48,52 @@ ignoredBuiltDependencies:
   - sharp
   - workerd
 
+# Hold newly published versions back so a compromised release has time to be
+# pulled from the registry before it can be installed here.
+#
+# 1440 is also pnpm 11's default, so this line changes no version by itself.
+# It is spelled out because leaving it implicit costs the two settings below:
+# `minimumReleaseAgeStrict` only defaults to true when `minimumReleaseAge` is
+# set EXPLICITLY. Implicit meant strict=false, and strict=false makes pnpm fall
+# back to a version that violates the delay whenever no aged version satisfies
+# the range — the delay reads as enforced while quietly not being. Explicit also
+# survives a pnpm major that changes its own default.
+minimumReleaseAge: 1440
+
+# Fail resolution instead of silently installing a too-young version. If this
+# ever blocks an update, the fix is to wait out the window or add a justified
+# entry to minimumReleaseAgeExclude below — not to turn this off.
+minimumReleaseAgeStrict: true
+
+# Refuse to install rather than skip the age check when registry metadata has no
+# `time` field. The default (true) is a silent bypass for the WHOLE policy, and
+# this repository installs from a private registry (registry=https://npm.flatt.tech/
+# in .npmrc) rather than registry.npmjs.org — exactly the mirror case pnpm warns
+# omits `time`. That registry does serve `time` today (verified against its
+# wrangler metadata), so this costs nothing now and turns a future mirror change
+# from a silent loss of protection into a loud failure.
+minimumReleaseAgeIgnoreMissingTime: false
+
+# Live exceptions, not dead config: with the delay in force these are the pins
+# that were bumped inside their own release window. Both are toolchain-only and
+# pinned exactly, so the exposure is a deliberate, reviewed version rather than
+# "whatever is newest". Re-check when bumping — an entry kept past its bump is
+# a standing hole.
+minimumReleaseAgeExclude:
+  - miniflare@5.20260804.0-alpha
+  - wrangler@4.120.1
+
 overrides:
+  nanoid: ^3.3.17
   vitest: 'catalog:'
+  # @opentelemetry/sdk-logs@0.214.0 (reached through @vercel/otel in dev/acme)
+  # pulls @opentelemetry/core@2.6.1, which is vulnerable to GHSA-8988-4f7v-96qf:
+  # unbounded memory allocation in W3C Baggage propagation, fixed in 2.8.0.
+  # Bumping sdk-logs alone does not clear it — @vercel/otel's peer constraint
+  # holds the old core in place. 2.10.0 is already resolved elsewhere in this
+  # tree via @sentry/nextjs, so this override dedupes onto a version that is
+  # already installed rather than introducing a new one.
+  '@opentelemetry/core': '>=2.8.0'
 
 peerDependencyRules:
   allowAny:

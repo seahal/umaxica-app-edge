@@ -12,7 +12,8 @@
     "dev": "EDGE_LOCAL_NODE_RUNTIME=1 next dev --hostname 0.0.0.0 --port 5306",
     "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
     "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
-    "typecheck": "pnpm run cf-typegen && tsgo --noEmit"
+    "typecheck": "pnpm run cf-typegen && tsgo --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "catalog:",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
+    "@playwright/test": "^1.62.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
