@@ -39,9 +39,17 @@
    * The deploy scripts blank CLOUDFLARE_ENV: compose.yaml exports
    * `CLOUDFLARE_ENV=development`, and with no `--env` that variable alone
    * would redirect the deploy to `<name>-development`. Measured, not assumed.
+   *
+   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
+   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
+   * through `getPlatformProxy()` and writes every string one into its own
+   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
+   * comes back as `--env=production` and the upload dies looking for an
+   * `env.production` that deliberately does not exist. Measured, not assumed;
+   * tools/check-workers.mjs enforces the separation.
    */
   "vars": {
-    "CLOUDFLARE_ENV": "production",
+    "EDGE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
   /**
@@ -70,7 +78,7 @@
         "binding": "CF_VERSION_METADATA"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "development",
+        "EDGE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
       // Required, not decorative: `routes` IS inherited by named environments,
@@ -120,7 +128,7 @@
         "binding": "CF_VERSION_METADATA"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "test",
+        "EDGE_ENV": "test",
         "BRAND_NAME": "UMAXICA"
       },
       // See the note in `env.development` — blocks route inheritance.

@@ -35,7 +35,7 @@ export const apexSecurityHeaders = secureHeaders({
 
 export type AssetEnv = {
   BRAND_NAME?: string;
-  CLOUDFLARE_ENV?: string;
+  EDGE_ENV?: string;
   CF_VERSION_METADATA?: {
     id?: string;
     tag?: string;

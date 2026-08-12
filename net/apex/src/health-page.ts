@@ -22,7 +22,7 @@ function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPa
     status: 'OK',
     service: options.service,
     version: env?.CF_VERSION_METADATA?.id ?? null,
-    environment: env?.CLOUDFLARE_ENV ?? null,
+    environment: env?.EDGE_ENV ?? null,
     edge: 'cloudflare',
     time: new Date().toISOString(),
   };

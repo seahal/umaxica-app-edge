@@ -47,14 +47,14 @@ describe('renderHealthPage', () => {
     });
   });
 
-  it('reports the wrangler environment when CLOUDFLARE_ENV is bound', async () => {
-    const response = renderHealthJson({ CLOUDFLARE_ENV: 'test' }, { service: 'net' });
+  it('reports the wrangler environment when EDGE_ENV is bound', async () => {
+    const response = renderHealthJson({ EDGE_ENV: 'test' }, { service: 'net' });
 
     expect(await response.json()).toMatchObject({ environment: 'test' });
   });
 
   it('renders the environment in the health page', async () => {
-    const response = renderHealthPage({ CLOUDFLARE_ENV: 'production' }, { service: 'net' });
+    const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'net' });
 
     expect(await response.text()).toContain('<dd>production</dd>');
   });

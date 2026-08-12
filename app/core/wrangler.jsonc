@@ -55,6 +55,14 @@
    * variable alone would silently redirect a production deploy to
    * `<name>-development`. Measured, not assumed.
    *
+   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
+   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
+   * through `getPlatformProxy()` and writes every string one into its own
+   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
+   * comes back as `--env=production` and the upload dies looking for an
+   * `env.production` that deliberately does not exist. Measured, not assumed;
+   * tools/check-workers.mjs enforces the separation.
+   *
    * Non-inheritable keys (vars, services, images, version_metadata, ratelimits,
    * vpc_services, …) do NOT reach `env.*` from here — also measured: wrangler
    * warns "not inherited by environments" and the environment resolves with no
@@ -62,7 +70,7 @@
    * development session.
    */
   "vars": {
-    "CLOUDFLARE_ENV": "production",
+    "EDGE_ENV": "production",
     "NODE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
@@ -89,7 +97,7 @@
         "binding": "IMAGES"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "development",
+        "EDGE_ENV": "development",
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
@@ -134,7 +142,7 @@
         "binding": "IMAGES"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "vpc",
+        "EDGE_ENV": "vpc",
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
@@ -176,7 +184,7 @@
         "binding": "IMAGES"
       },
       "vars": {
-        "CLOUDFLARE_ENV": "test",
+        "EDGE_ENV": "test",
         "NODE_ENV": "test",
         "BRAND_NAME": "UMAXICA"
       },

@@ -81,8 +81,28 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test']) {
       'env.production must not exist — the top level is production, so `wrangler deploy` with no --env deploys it',
     );
   }
-  if (config.vars?.CLOUDFLARE_ENV !== 'production') {
-    fail(ws, 'top-level vars must set CLOUDFLARE_ENV to production — the top level is production');
+  if (config.vars?.EDGE_ENV !== 'production') {
+    fail(ws, 'top-level vars must set EDGE_ENV to production — the top level is production');
+  }
+
+  // `CLOUDFLARE_ENV` is wrangler's own control variable, not ours to bind.
+  //
+  // `opennextjs-cloudflare upload` resolves the Worker's vars through
+  // `getPlatformProxy()` and writes every string one straight into
+  // `process.env` (getEnvFromPlatformProxy: `const envVars = process.env`),
+  // then spawns wrangler with that env. A var named CLOUDFLARE_ENV therefore
+  // comes back as `--env=<value>`; with "production" — the value the top level
+  // would naturally carry — wrangler looks for an `env.production` that by
+  // design does not exist and the upload dies. Measured, not assumed.
+  //
+  // That is why the tier is exposed as EDGE_ENV. Keep the two apart.
+  for (const [envName, env] of [['<top level>', config], ...Object.entries(config.env ?? {})]) {
+    if (env.vars?.CLOUDFLARE_ENV !== undefined) {
+      fail(
+        ws,
+        `${envName} vars must not bind CLOUDFLARE_ENV — it is wrangler's control variable and leaks into the deploy as \`--env\`; use EDGE_ENV`,
+      );
+    }
   }
 
   for (const [envName, env] of Object.entries(config.env ?? {})) {
