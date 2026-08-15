@@ -4,17 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --config wrangler.jsonc --env development --port 5401 --inspector-port 9401 --ip 0.0.0.0",
-    "build": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc --dry-run --outdir dist",
+    "dev": "pnpm run build:css && wrangler dev --config wrangler.jsonc --env development --port 5401 --inspector-port 9401 --ip 0.0.0.0",
+    "build": "pnpm run build:css && CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc --dry-run --outdir dist",
+    "build:css": "tailwindcss --input ./src/style.css --output ./public/style.css --minify",
     "preview": "pnpm run build && wrangler dev --config wrangler.jsonc --env development --local --ip 0.0.0.0",
-    "deploy": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",
-    "deploy:upload": "CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
+    "deploy": "pnpm run build:css && CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",
+    "deploy:upload": "pnpm run build:css && CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
     "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --config wrangler.jsonc --yes",
-    "upload:ci": "CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
-    "deploy:ci": "CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",
+    "upload:ci": "pnpm run build:css && CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc",
+    "deploy:ci": "pnpm run build:css && CLOUDFLARE_ENV= wrangler deploy --config wrangler.jsonc",
     "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareBindings",
     "typecheck": "tsgo --noEmit",
-    "test:e2e": "playwright test"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "knip": "knip",
+    "lint": "oxlint --type-aware --fix .",
+    "lint:check": "oxlint --type-aware .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm run format:check && pnpm run lint:check && pnpm run typecheck && pnpm run test"
   },
   "dependencies": {
     "@hono/structured-logger": "^0.1.0",
@@ -23,6 +32,17 @@
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@playwright/test": "^1.62.1",
+    "@tailwindcss/cli": "catalog:",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@vitest/coverage-v8": "4.1.10",
+    "happy-dom": "^20.11.2",
+    "knip": "^6.32.1",
+    "oxfmt": "^0.63.0",
+    "oxlint": "1.78.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "tailwindcss": "catalog:",
+    "vitest": "catalog:",
     "wrangler": "catalog:"
   }
 }

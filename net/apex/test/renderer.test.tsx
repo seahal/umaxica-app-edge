@@ -59,11 +59,19 @@ describe('Renderer layout', () => {
     expect(body).toContain('width=device-width');
   });
 
-  it('inlines styles without Vite client markup', async () => {
+  it('links the compiled stylesheet without dev-server markup', async () => {
     const res = await app.request('/');
     const body = await res.text();
-    expect(body).toContain('<style>');
-    expect(body).not.toContain('/style.css');
+
+    /*
+     * The CSS is Tailwind's compiled output, served from ./public by the
+     * assets binding. What must never appear is the uncompiled source path or
+     * a dev-server client: either would mean a development artefact reached a
+     * production document. An inline `<style>` is equally wrong now — the CSP
+     * lists `style-src 'self'` and nothing else.
+     */
+    expect(body).toContain('<link rel="stylesheet" href="/style.css"');
+    expect(body).not.toContain('<style');
     expect(body).not.toContain('/src/style.css');
     expect(body).not.toContain('@vite/client');
   });

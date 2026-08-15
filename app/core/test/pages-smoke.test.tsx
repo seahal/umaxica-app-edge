@@ -9,7 +9,6 @@ import NotificationsPage from '../src/app/(page)/notifications/page';
 import MessagesPage from '../src/app/(page)/messages/page';
 import ConfigurationPage from '../src/app/(page)/configuration/page';
 import AccountPage from '../src/app/(page)/configuration/account/page';
-import PreferencePage from '../src/app/(page)/configuration/preference/page';
 import HomePage from '../src/app/(page)/home/page';
 
 // Mock i18n dependencies
@@ -46,7 +45,7 @@ vi.mock('@/i18n/dictionaries', () => ({
     messages: { title: 'Messages', wip: 'WIP' },
     configuration: { title: 'Configuration' },
     configuration_account: { title: 'Account' },
-    configuration_preference: { title: 'Preference' },
+    nav: { menu: 'Menu', primary: 'Main navigation', utility: 'Utility navigation' },
   }),
 }));
 
@@ -105,12 +104,6 @@ describe('app/core pages render without throwing', () => {
 
   it('account page renders', async () => {
     const element = await AccountPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('preference page renders', async () => {
-    const element = await PreferencePage();
     const html = renderToStaticMarkup(element);
     expect(html).not.toBe('');
   });

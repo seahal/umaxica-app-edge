@@ -11,16 +11,16 @@ describe('GET /health', () => {
     const body = await response.text();
     expect(body).toContain('<title>Health status — UMAXICA (COM)</title>');
     expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
-    expect(body).toContain('<h1>status</h1>');
-    expect(body).toContain('<dt>status</dt>');
+    expect(body).toMatch(/<h1[^>]*>status<\/h1>/);
+    expect(body).toMatch(/<dt[^>]*>status<\/dt>/);
     expect(body).toContain('<dd>OK</dd>');
-    expect(body).toContain('<dt>service</dt>');
+    expect(body).toMatch(/<dt[^>]*>service<\/dt>/);
     expect(body).toContain('<dd>com</dd>');
-    expect(body).toContain('<dt>version</dt>');
+    expect(body).toMatch(/<dt[^>]*>version<\/dt>/);
     expect(body).toContain('<dd>null</dd>');
-    expect(body).toContain('<dt>edge</dt>');
+    expect(body).toMatch(/<dt[^>]*>edge<\/dt>/);
     expect(body).toContain('<dd>cloudflare</dd>');
-    expect(body).toContain('<dt>time</dt>');
+    expect(body).toMatch(/<dt[^>]*>time<\/dt>/);
     expect(body).not.toContain('<header');
   });
 

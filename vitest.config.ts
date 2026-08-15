@@ -18,55 +18,16 @@ export default defineConfig({
     },
   },
   test: {
-    coverage: {
-      exclude: [
-        '**/+types/**',
-        '**/*.d.ts',
-        '**/*.test.{ts,tsx}',
-        '**/node_modules/**',
-        '**/build/**',
-        '**/dist/**',
-        '**/__mocks__/**',
-        '**/public/**',
-        '**/*.css',
-        '**/*.svg',
-        '**/test-setup.ts',
-        '**/locales/**',
-        '**/coverage/**',
-        '**/.next/**',
-        '**/.open-next/**',
-        '**/.wrangler/**',
-        '**/.claude/**',
-        '**/.pnpm-store/**',
-        '**/tmp/**',
-        '**/e2e/**',
-        '**/playwright.config.ts',
-        '**/next.config.ts',
-        '**/open-next.config.ts',
-      ],
-      include: ['**/*.{ts,tsx,js,jsx}'],
-      provider: 'v8',
-      reporter: ['text', 'text-summary', 'html'],
-      thresholds: {
-        branches: 99,
-        functions: 99,
-        lines: 99,
-        statements: 99,
-      },
-    },
     deps: {
       interopDefault: true,
     },
     environment: 'happy-dom',
     globals: true,
-    include: [
-      'app/**/*.test.{ts,tsx}',
-      'com/**/*.test.{ts,tsx}',
-      'dev/**/*.test.{ts,tsx}',
-      'org/**/*.test.{ts,tsx}',
-      'net/**/*.test.{ts,tsx}',
-      'test/**/*.test.{ts,tsx}',
-    ],
+    // Repository-level invariants only. Each deployment unit owns its own
+    // vitest.config.ts and runs its own tests (`pnpm -r run test`), so this
+    // config deliberately does NOT reach into app/, com/, org/, net/ or dev/ —
+    // a unit whose tests only run from the repository root is not extractable.
+    include: ['test/**/*.test.{ts,tsx}'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });

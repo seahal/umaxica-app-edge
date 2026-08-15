@@ -24,7 +24,7 @@ describe('dev apex public routes', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
-    await expect(response.text()).resolves.toContain('<h1 style="margin: 0 0 1rem;">status</h1>');
+    await expect(response.text()).resolves.toMatch(/<h1[^>]*>status<\/h1>/);
   });
 
   it('returns machine-readable health with deployment identity', async () => {

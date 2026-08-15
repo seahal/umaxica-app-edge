@@ -1,0 +1,188 @@
+/**
+ * Structured logging for the Edge → Workers VPC → Rails hop.
+ *
+ * Emitted as one JSON line per `console.*` call, which is what
+ * `wrangler.jsonc`'s `observability.logs.enabled` already collects into Workers
+ * Logs — no new vendor, no new binding. The `{ level, msg, data }` envelope is
+ * the same one each apex worker's `src/structured-logger.ts` produces, so both
+ * worker classes read alike in the log viewer. That module itself is not
+ * reusable here: it is `@hono/structured-logger` middleware, and a Core frame is
+ * a bare Workers `fetch` handler with no Hono anywhere in the request path.
+ *
+ * PRIVACY IS ENFORCED BY THE TYPE, NOT BY THE CALLER.
+ *
+ * `RailsDispatchLogEntry` is closed and has no free-text field. Every value is
+ * either a number or a member of a fixed union, so there is no channel through
+ * which a raw Cookie, an `Authorization` header, a CSRF token, a request or
+ * response body, a query string, a user id, an email, an access token, an
+ * internal hostname or a VPC service id could reach a log line — not even by
+ * mistake at a future call site. In particular the raw pathname is never
+ * recorded: `classifyRailsRouteClass()` reduces it to one of eight low
+ * cardinality classes first, so a path carrying an identifier cannot leak
+ * through the route label.
+ */
+
+/** Distinguishes success, a Rails-authored error, and the three failure modes. */
+export type RailsDispatchOutcome =
+  | 'rails_ok'
+  | 'rails_http_error'
+  | 'vpc_unreachable'
+  | 'timeout'
+  | 'binding_not_configured';
+
+export type RailsRouteClass =
+  | 'api_v0'
+  | 'web_v0'
+  | 'edge_v0'
+  | 'oidc'
+  | 'sign_out'
+  | 'jwks'
+  | 'csp_report'
+  | 'other';
+
+/**
+ * The documented Workers VPC failure codes, plus `unknown` for anything else.
+ *
+ * Closed on purpose: the code is parsed out of a `ProxyError:` response body,
+ * and an allowlist is what stops an unexpected body from becoming free text in
+ * a log line.
+ */
+export type RailsProxyErrorCode =
+  | 'connection_refused'
+  | 'connection_timeout'
+  | 'connection_read_timeout'
+  | 'dns_error'
+  | 'tls_certificate_error'
+  | 'rate_limited'
+  | 'proxy_internal_error'
+  | 'unknown';
+
+export type RailsRequestMethod =
+  | 'GET'
+  | 'HEAD'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
+  | 'OPTIONS'
+  | 'OTHER';
+
+export interface RailsDispatchLogEntry {
+  route_class: RailsRouteClass;
+  method: RailsRequestMethod;
+  outcome: RailsDispatchOutcome;
+  duration_ms: number;
+  /** Only when an HTTP response actually arrived. */
+  upstream_status?: number;
+  /** Only when a `ProxyError:` code was parsed. */
+  proxy_error_code?: RailsProxyErrorCode;
+}
+
+/*
+ * The route classes, keyed the same way `classifyCorePath()` keys ownership in
+ * `core-dispatch.ts` — exact matches first, then prefixes.
+ *
+ * Held separately rather than imported from `core-dispatch.ts`, which imports
+ * this module: sharing the constants would make the two files circular. The
+ * agreement between the two tables is asserted instead, in
+ * `test/core-dispatch-contract.test.ts`, which requires every Rails-owned path
+ * to classify as something other than `other`.
+ */
+const ROUTE_CLASS_EXACT = new Map<string, RailsRouteClass>([
+  ['/sign/out', 'sign_out'],
+  ['/sign/out/complete', 'sign_out'],
+  ['/.well-known/jwks.json', 'jwks'],
+  ['/csp-violation-report', 'csp_report'],
+]);
+
+const ROUTE_CLASS_PREFIXES: ReadonlyArray<readonly [string, RailsRouteClass]> = [
+  ['/api/v0', 'api_v0'],
+  ['/web/v0', 'web_v0'],
+  ['/edge/v0', 'edge_v0'],
+  ['/oidc', 'oidc'],
+];
+
+const KNOWN_METHODS: ReadonlySet<string> = new Set([
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'OPTIONS',
+]);
+
+const KNOWN_PROXY_ERROR_CODES: ReadonlySet<string> = new Set([
+  'connection_refused',
+  'connection_timeout',
+  'connection_read_timeout',
+  'dns_error',
+  'tls_certificate_error',
+  'rate_limited',
+  'proxy_internal_error',
+]);
+
+/**
+ * Reduces a pathname to a low cardinality class. Both `/sign/out` and
+ * `/sign/out/complete` fold into `sign_out` — they are one flow, and splitting
+ * them would buy nothing a status code does not already say.
+ */
+export function classifyRailsRouteClass(pathname: string): RailsRouteClass {
+  const exact = ROUTE_CLASS_EXACT.get(pathname);
+  if (exact) {
+    return exact;
+  }
+  for (const [prefix, routeClass] of ROUTE_CLASS_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return routeClass;
+    }
+  }
+  return 'other';
+}
+
+/** Anything outside the standard set becomes `OTHER` rather than being echoed. */
+export function normalizeRailsMethod(method: string): RailsRequestMethod {
+  const upper = method.toUpperCase();
+  return KNOWN_METHODS.has(upper) ? (upper as RailsRequestMethod) : 'OTHER';
+}
+
+/** Anything outside Cloudflare's documented codes becomes `unknown`. */
+export function normalizeProxyErrorCode(code: string): RailsProxyErrorCode {
+  const lower = code.toLowerCase();
+  return KNOWN_PROXY_ERROR_CODES.has(lower) ? (lower as RailsProxyErrorCode) : 'unknown';
+}
+
+export function logRailsDispatch(entry: RailsDispatchLogEntry): void {
+  const line = JSON.stringify({
+    level: levelFor(entry.outcome),
+    msg: 'rails_dispatch',
+    data: {
+      event: 'rails_dispatch',
+      ownership: 'rails',
+      method: entry.method,
+      route_class: entry.route_class,
+      outcome: entry.outcome,
+      duration_ms: entry.duration_ms,
+      ...(entry.upstream_status === undefined ? {} : { upstream_status: entry.upstream_status }),
+      ...(entry.proxy_error_code === undefined ? {} : { proxy_error_code: entry.proxy_error_code }),
+    },
+  });
+
+  if (entry.outcome === 'rails_ok') {
+    // oxlint-disable-next-line no-console
+    console.log(line);
+  } else if (entry.outcome === 'rails_http_error') {
+    // oxlint-disable-next-line no-console
+    console.warn(line);
+  } else {
+    // oxlint-disable-next-line no-console
+    console.error(line);
+  }
+}
+
+function levelFor(outcome: RailsDispatchOutcome): 'info' | 'warn' | 'error' {
+  if (outcome === 'rails_ok') {
+    return 'info';
+  }
+  return outcome === 'rails_http_error' ? 'warn' : 'error';
+}

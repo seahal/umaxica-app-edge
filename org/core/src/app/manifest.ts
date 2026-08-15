@@ -7,8 +7,16 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'UMAXICA Staff Application',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#111827',
+    /*
+     * A Web App Manifest is JSON read by the operating system, so these two
+     * cannot reference a theme token — they are the one place a colour has to be
+     * a literal. They are the converged palette all the same:
+     * `background_color` is `bg-gray-50`, the body background this app paints,
+     * and `theme_color` is `bg-white`, the header surface that sits under the
+     * browser chrome. Re-derive them if the theme changes.
+     */
+    background_color: '#f9fafb',
+    theme_color: '#ffffff',
     icons: [
       {
         src: '/favicon.ico',

@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "format": "oxfmt .",
-    "format:check": "oxfmt --check .",
-    "lint": "oxlint --type-aware --fix .",
-    "lint:check": "oxlint --type-aware .",
+    "format": "pnpm -r run format && oxfmt .",
+    "format:check": "pnpm -r run format:check && oxfmt --check .",
+    "lint": "pnpm -r run lint && oxlint --type-aware --fix .",
+    "lint:check": "pnpm -r run lint:check && oxlint --type-aware .",
     "check:workers": "node tools/check-workers.mjs",
     "check:connectivity": "node tools/verify-edge-connectivity.mjs all",
     "check:config": "node tools/verify-edge-connectivity.mjs config",
@@ -19,16 +19,19 @@
     "check:tunnel:edge": "node tools/verify-edge-connectivity.mjs tunnel",
     "check:tunnel:apex": "node tools/verify-edge-connectivity.mjs tunnel:apex",
     "check:links": "node tools/verify-edge-connectivity.mjs links",
-    "dev": "pnpm --parallel --filter umaxica-apps-edge-apex-app --filter umaxica-apps-edge-apex-com --filter umaxica-apps-edge-apex-net --filter umaxica-apps-edge-apex-org --filter umaxica-apps-edge-app-core --filter umaxica-apps-edge-com-core --filter umaxica-apps-edge-org-core --filter umaxica-apps-edge-app-docs --filter umaxica-apps-edge-app-news --filter umaxica-apps-edge-app-help --filter umaxica-apps-edge-app-info --filter umaxica-apps-edge-com-docs --filter umaxica-apps-edge-com-news --filter umaxica-apps-edge-com-help --filter umaxica-apps-edge-com-info --filter umaxica-apps-edge-org-docs --filter umaxica-apps-edge-org-news --filter umaxica-apps-edge-org-help --filter umaxica-apps-edge-org-info run dev",
+    "dev": "pnpm -r --parallel --filter='!./dev/*' run dev",
     "deploy:app-docs:upload": "pnpm --filter umaxica-apps-edge-app-docs run deploy:upload",
     "deploy:com-docs:upload": "pnpm --filter umaxica-apps-edge-com-docs run deploy:upload",
     "deploy:org-docs:upload": "pnpm --filter umaxica-apps-edge-org-docs run deploy:upload",
     "deploy:edge:preview": "scripts/deploy-edge-preview",
-    "typecheck": "pnpm --filter umaxica-apps-edge-apex-app --filter umaxica-apps-edge-apex-com --filter umaxica-apps-edge-apex-net --filter umaxica-apps-edge-apex-org --filter umaxica-apps-edge-app-core --filter umaxica-apps-edge-app-docs --filter umaxica-apps-edge-app-help --filter umaxica-apps-edge-app-info --filter umaxica-apps-edge-app-news --filter umaxica-apps-edge-com-core --filter umaxica-apps-edge-com-docs --filter umaxica-apps-edge-com-help --filter umaxica-apps-edge-com-info --filter umaxica-apps-edge-com-news --filter umaxica-apps-edge-apex-dev --filter umaxica-apps-edge-dev-acme --filter umaxica-apps-edge-org-core --filter umaxica-apps-edge-org-docs --filter umaxica-apps-edge-org-help --filter umaxica-apps-edge-org-info --filter umaxica-apps-edge-org-news run typecheck",
-    "test": "EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
-    "test:cov": "EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run --coverage",
+    "knip": "pnpm -r --workspace-concurrency=1 run knip",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test && EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
+    "test:cov": "pnpm -r run test:cov && EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
     "e2e": "pnpm -r --workspace-concurrency=1 run test:e2e",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "build": "pnpm -r run build",
+    "check": "pnpm run format:check && pnpm run lint:check && pnpm run typecheck && pnpm run test"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
@@ -36,10 +39,10 @@
     "@types/node": "catalog:",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
-    "dependency-cruiser": "^18.1.1",
+    "dependency-cruiser": "^18.2.0",
     "happy-dom": "^20.11.2",
     "hono": "catalog:",
-    "knip": "^6.32.1",
+    "knip": "^6.32.2",
     "lefthook": "^2.1.10",
     "oxfmt": "^0.63.0",
     "oxlint": "1.78.0",
@@ -47,5 +50,16 @@
     "vitest": "^4.1.10",
     "wrangler": "catalog:"
   },
-  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.21.0",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.19.0",
+      "onFail": "warn"
+    }
+  }
 }

@@ -1,63 +1,75 @@
-:root {
-  color-scheme: light;
-  --background: #f5f1e8;
-  --foreground: #171717;
-  --muted: #6f675d;
-  --accent: #b24c2f;
+/*
+ * The single stylesheet for this deployment unit.
+ *
+ * Deliberately duplicated per unit rather than shared: a unit that reaches
+ * across the deployment boundary cannot be extracted into its own repository
+ * (`test/deployment-unit-boundaries.test.ts`). Copy this file when the rules
+ * change; do not import it from a sibling or a shared package.
+ *
+ * This unit sits outside the UMAXICA shell contract — it has no header, no
+ * footer and no navigation — and it carries its own identity: a warm paper
+ * palette and a serif face, deliberately unlike the grey/sans shell every
+ * other unit renders. Those values are named tokens below rather than rounded
+ * into Tailwind's stock scale, because they are the brand rather than incident.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+  /*
+   * One breakpoint, matching the rest of the repository. This unit used 640px
+   * before; there is no reason for it to disagree, and clearing the namespace
+   * first means a second breakpoint cannot appear without editing this block.
+   */
+  --breakpoint-*: initial;
+  --breakpoint-wide: 50rem;
+
+  /* The identity: warm paper, near-black ink, a muted body grey, terracotta. */
+  --color-canvas: #f5f1e8;
+  --color-canvas-top: #f8f5ee;
+  --color-ink: #171717;
+  --color-muted: #6f675d;
+  --color-accent: #b24c2f;
+
+  --font-serif: Georgia, 'Times New Roman', serif;
+
+  /* Long measure, generous leading; the display heading sets tight instead. */
+  --leading-body: 1.7;
+  --leading-heading: 0.95;
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  /*
+   * Visible focus. One element rule rather than a utility per control, because
+   * prose links are not components and a per-component utility would miss them.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-}
+  /*
+   * The document is Japanese-tagged even though its copy is English, so the
+   * line-breaking rules stay. These are the properties Tailwind has no utility
+   * for, and they have to reach every element rather than the ones this unit
+   * happens to write, so they are element rules.
+   */
+  :root {
+    word-break: normal;
+    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    line-break: strict;
+    text-spacing-trim: normal;
+    text-autospace: normal;
+  }
 
-body {
-  background:
-    radial-gradient(circle at top, rgba(178, 76, 47, 0.18), transparent 32%),
-    linear-gradient(180deg, #f8f5ee 0%, var(--background) 100%);
-  color: var(--foreground);
-  font-family: Georgia, 'Times New Roman', serif;
-}
+  :is(h1, h2, h3, h4, h5, h6) {
+    word-break: auto-phrase;
+    text-wrap: balance;
+  }
 
-.shell {
-  display: grid;
-  gap: 1rem;
-  min-height: 100vh;
-  align-content: center;
-  padding: 3rem;
-  max-width: 48rem;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--accent);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
-  line-height: 0.95;
-}
-
-.copy {
-  margin: 0;
-  max-width: 36rem;
-  color: var(--muted);
-  font-size: 1.125rem;
-  line-height: 1.7;
-}
-
-@media (max-width: 640px) {
-  .shell {
-    padding: 2rem 1.5rem;
+  :is(code, kbd, samp, pre) {
+    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 }

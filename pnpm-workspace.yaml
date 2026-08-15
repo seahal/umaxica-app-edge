@@ -22,6 +22,12 @@ packages:
   - org/news
 
 allowBuilds:
+  # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
+  # which nothing here uses: every Tailwind invocation in this repository is a
+  # one-shot `build:css`. The package ships prebuilt binaries for the platforms
+  # it supports, so declining its build script costs nothing and keeps the
+  # `ignore-scripts=true` posture in .npmrc intact.
+  '@parcel/watcher': false
   '@sentry/cli': true
   esbuild: true
   lefthook: true
@@ -31,16 +37,32 @@ allowBuilds:
 catalog:
   '@cloudflare/workers-types': ^5.20260810.1
   '@opennextjs/cloudflare': ^1.19.11
+  # Tailwind v4 has no JS config file: the theme is declared in each unit's own
+  # stylesheet with `@theme`. `@tailwindcss/postcss` is the engine the Next
+  # frames run through PostCSS; `@tailwindcss/cli` is the same engine as a
+  # binary, which is how the apex Hono Workers get a stylesheet at all — they
+  # have no bundler that could process CSS. Both are pinned here rather than per
+  # unit so the twenty-one units cannot drift onto different Tailwind versions.
+  '@tailwindcss/cli': ^4.3.3
+  '@tailwindcss/postcss': ^4.3.3
   '@types/node': ^26.2.0
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
-  hono: ^4.13.1
+  hono: ^4.13.2
   next: ^16.3.0
   nuqs: ^2.9.5
   react: ^19.2.0
+  react-aria-components: ^1.20.0
   react-dom: ^19.2.0
+  tailwindcss: ^4.3.3
+  # The official Tailwind plugin for react-aria-components, which turns the
+  # library's `data-hovered` / `data-pressed` / `data-focus-visible` attributes
+  # into first-class variants (`hovered:`, `pressed:`, `focus-visible:`). Only
+  # the units that actually render a React Aria component install it; v2 is the
+  # Tailwind v4 line (v1.x is for Tailwind v3).
+  tailwindcss-react-aria-components: ^2.2.0
   vitest: ^4.1.10
-  wrangler: ^4.120.1
+  wrangler: ^4.123.0
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
@@ -86,19 +108,26 @@ minimumReleaseAgeExclude:
 overrides:
   nanoid: ^3.3.17
   vitest: 'catalog:'
-  # @opentelemetry/sdk-logs@0.214.0 (reached through @vercel/otel in dev/acme)
-  # pulls @opentelemetry/core@2.6.1, which is vulnerable to GHSA-8988-4f7v-96qf:
-  # unbounded memory allocation in W3C Baggage propagation, fixed in 2.8.0.
-  # Bumping sdk-logs alone does not clear it — @vercel/otel's peer constraint
-  # holds the old core in place. 2.10.0 is already resolved elsewhere in this
-  # tree via @sentry/nextjs, so this override dedupes onto a version that is
-  # already installed rather than introducing a new one.
+  # A floor against GHSA-8988-4f7v-96qf: unbounded memory allocation in W3C
+  # Baggage propagation, present in @opentelemetry/core < 2.8.0.
+  #
+  # This entry was added when dev/acme depended on @vercel/otel, whose peer
+  # constraint pinned @opentelemetry/core to a vulnerable 2.6.1 and could not be
+  # cleared by bumping @opentelemetry/sdk-logs alone. Those OTel packages were
+  # never imported by dev/acme source (Sentry's instrumentation.ts replaced
+  # them) and have since been removed, so nothing resolves core below 2.8.0
+  # today: the only remaining path is @sentry/nextjs, which already brings
+  # 2.10.0 on its own.
+  #
+  # The floor is kept rather than deleted because it constrains a transitive
+  # dependency no direct dependency pins — a future @sentry/* or Next.js bump
+  # can reintroduce a 2.6.x core silently, and this line turns that into a
+  # resolution failure instead of a reintroduced advisory. Re-check when the
+  # advisory is retired or when core >= 2.8.0 becomes the floor everywhere.
   '@opentelemetry/core': '>=2.8.0'
 
 peerDependencyRules:
   allowAny:
-    - vite
     - vitest
   allowedVersions:
-    vite: '*'
     vitest: '*'

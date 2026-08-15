@@ -1,0 +1,40 @@
+// Knip boundary for ONE deployment unit: dev/acme (Vercel).
+//
+// This file is deliberately self-contained: it extends nothing at the
+// repository root, so this directory stays valid if it is ever extracted into
+// its own repository. Run it with `pnpm --dir dev/acme exec knip` or
+// `pnpm --filter <pkg> run knip`. Knip finds no pnpm-workspace.yaml at this
+// level, so it analyses this unit alone and never reaches a sibling unit.
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // Vercel deployment: api/** (vercel.json rewrite target) and the Next.js
+  // App Router / instrumentation conventions are resolved by Knip's plugins.
+  // Only what no plugin can see is listed here.
+  "entry": ["test/**/*.test.{ts,tsx}", "e2e/**/*.spec.ts"],
+
+  "project": ["**/*.{ts,tsx}"],
+
+  // `catalog:` version specifiers resolve from the repository-root
+  // pnpm-workspace.yaml, which does not exist inside this unit. That is a real
+  // repository-split coupling (the specifiers must be inlined when splitting),
+  // but it is a version-resolution concern rather than an unused-code one, so
+  // it is excluded here and tracked as a boundary finding instead.
+  "exclude": ["catalogReferences"],
+
+  // `tailwindcss` is used only from CSS (`@import 'tailwindcss'` in
+  // src/app/globals.css). Knip resolves `@tailwindcss/postcss` from
+  // postcss.config.mjs but does not parse CSS at-rules, so the engine itself
+  // has to be named here.
+  "ignoreDependencies": ["tailwindcss"],
+
+  // knip itself is repository-owned tooling (like oxlint/oxfmt/lefthook) and is
+  // intentionally NOT duplicated into every unit's package.json. On extraction,
+  // add knip to that repository's devDependencies.
+  // The `vercel` CLI is provided by the Vercel platform / developer machine and
+
+  // Types and constants that a module exports as part of its own public surface
+  // and also consumes internally (e.g. RailsClientInit, DEFAULT_BRAND_SEPARATOR)
+  // are not dead code.
+  "ignoreExportsUsedInFile": true
+}

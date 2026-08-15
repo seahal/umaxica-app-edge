@@ -14,7 +14,7 @@ describe('org/news application shell', () => {
           <Page />
         </Layout>,
       ),
-    ).toContain('UMAXICA News');
+    ).toContain('UMAXICA ニュース');
     expect(metadata.title).toEqual({
       default: 'News — UMAXICA (ORG)',
       template: '%s — UMAXICA (ORG)',

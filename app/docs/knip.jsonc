@@ -1,0 +1,47 @@
+// Knip boundary for ONE deployment unit: app/docs (Cloudflare Workers).
+//
+// This file is deliberately self-contained: it extends nothing at the
+// repository root, so this directory stays valid if it is ever extracted into
+// its own repository. Run it with `pnpm --dir app/docs exec knip` or
+// `pnpm --filter <pkg> run knip`. Knip finds no pnpm-workspace.yaml at this
+// level, so it analyses this unit alone and never reaches a sibling unit.
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // The runtime entrypoint is read from wrangler.jsonc by Knip's wrangler
+  // plugin, and Next.js filesystem routes from next.config.ts by its next
+  // plugin. Only what neither plugin can see is listed here.
+  "entry": [
+    // Read by `opennextjs-cloudflare build` via filename convention, never imported.
+    "open-next.config.ts",
+    "test/**/*.test.{ts,tsx}",
+    "e2e/**/*.spec.ts"
+  ],
+
+  "project": ["**/*.{ts,tsx}"],
+
+  // `catalog:` version specifiers resolve from the repository-root
+  // pnpm-workspace.yaml, which does not exist inside this unit. That is a real
+  // repository-split coupling (the specifiers must be inlined when splitting),
+  // but it is a version-resolution concern rather than an unused-code one, so
+  // it is excluded here and tracked as a boundary finding instead.
+  "exclude": ["catalogReferences"],
+
+  // Declared but not yet imported anywhere in this unit. `react-aria-components` is
+  // the agreed component library for the shell's interactive controls (see
+  // docs/design/ui-shell-contract.md); it is installed across all fifteen Next
+  // units up front so the archetypes cannot diverge on which library they
+  // reach for. Remove this entry from the unit that gains the first consumer —
+  // it is a placeholder for work not yet done, not a permanent exemption.
+  //
+  // `tailwindcss` is a different case: it is genuinely used, but only from CSS
+  // (`@import 'tailwindcss'` in src/app/style.css). Knip resolves
+  // `@tailwindcss/postcss` from postcss.config.mjs but does not parse CSS
+  // at-rules, so the engine itself has to be named here.
+  "ignoreDependencies": ["react-aria-components", "tailwindcss"],
+
+  // Types and constants that a module exports as part of its own public surface
+  // and also consumes internally (e.g. RailsClientInit, DEFAULT_BRAND_SEPARATOR)
+  // are not dead code.
+  "ignoreExportsUsedInFile": true
+}

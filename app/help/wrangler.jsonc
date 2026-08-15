@@ -83,8 +83,13 @@
    * Pointing production at it would send production traffic to a laptop. A
    * production VPC Service on a production tunnel does not exist yet; until it
    * does, production has no Rails transport and `getRailsClient()` returns
-   * null, so `/rails-health` reports `not-configured` and answers 503.
-   * Fail closed, visibly.
+   * null, so `/health` reports `rails.liveness.kind` as `not-configured` and
+   * answers 503 — on this frame and on all fifteen. Fail closed, visibly.
+   *
+   * That 503 is the whole surface, not a side channel: `/health` carries both
+   * halves since ADR 009, so an unconfigured Rails transport makes the frame
+   * read unhealthy. Create the production VPC Service before pointing a load
+   * balancer or an uptime check at it.
    *
    * To restore it: create the production VPC Service, then add the block here
    * with that service_id. tools/check-workers.mjs enforces that it never

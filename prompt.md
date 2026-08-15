@@ -12,7 +12,7 @@ Use the correct section for your agent below.
 
 ### Claude Code
 
-Run these two commands to install both Cloudflare skills and MCP servers in one step. Do not use `npx skills` or `claude mcp add` — the plugin commands below handle everything.
+Run these two commands to install both Cloudflare skills and MCP servers in one step. Do not use the `skills` CLI or `claude mcp add` — the plugin commands below handle everything.
 
 ```
 claude plugin marketplace add cloudflare/skills
@@ -28,7 +28,7 @@ Then instruct the user to run `/reload-plugins` inside Claude to activate the ne
 First, install skills:
 
 ```
-npx -y skills add cloudflare/skills --skill '*' --yes --global
+pnpm dlx skills add cloudflare/skills --skill '*' --yes --global
 ```
 
 Then register the MCP servers using the default config location for your agent. OAuth triggers automatically on first Cloudflare tool use.

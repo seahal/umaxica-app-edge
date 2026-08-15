@@ -133,9 +133,26 @@ No test files added for `dev/apex`. Consider adding smoke tests if the workspace
 - `pnpm dlx vercel build --yes`: blocked locally because the Vercel token is not valid in this environment
 - `vp check` / `vp test`: not rerun here because the local `vp` wrapper currently fails to resolve `vite-plus/bin/vp`
 
+> Superseded: Vite+ (`vp`) has since been removed. The equivalent commands are
+> now `pnpm run check` and `pnpm run test`. Retained above as a historical record.
+
 ### Note on Deletion
 
 After implementation, it was decided that this workspace was no longer necessary, and it has been intentionally removed from the repository.
+
+### Note on Revival — 2026-08-12
+
+**`dev/apex` exists again, deliberately, and is not going away.** The deletion
+note above is history, not the current state; it was left standing long enough
+that a reader could take it for the present tense.
+
+The workspace is on disk with its own `package.json`, `vitest.config.ts`,
+`vitest.setup.ts`, `.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.json` and
+`knip.jsonc`, so it satisfies the standalone-unit contract
+`test/deployment-unit-boundaries.test.ts` enforces. It is classified `external` in
+`tools/workers-manifest.json` alongside `dev/acme` — Vercel-hosted, no wrangler
+config, no Rails client, no VPC binding — and it has tests now, which closes the
+"Known Gap" noted above.
 
 ### Closes
 

@@ -8,31 +8,39 @@
     "build": "next build",
     "start": "next start --port 5502",
     "deploy": "vercel deploy --prod",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "knip": "knip",
+    "lint": "oxlint --type-aware --fix .",
+    "lint:check": "oxlint --type-aware .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm run format:check && pnpm run lint:check && pnpm run typecheck && pnpm run test"
   },
   "dependencies": {
-    "@opentelemetry/api-logs": "^0.214.0",
-    "@opentelemetry/instrumentation": "^0.214.0",
-    "@opentelemetry/sdk-logs": "^0.214.0",
     "@sentry/nextjs": "^10.51.0",
-    "@vercel/otel": "^2.1.2",
-    "client-only": "^0.0.1",
     "next": "catalog:",
-    "nuqs": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "server-only": "^0.0.1"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@testing-library/dom": "^10.4.1",
+    "@tailwindcss/postcss": "catalog:",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^6.0.1",
-    "jsdom": "^29.0.2",
-    "vite-tsconfig-paths": "^6.1.1",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@vitest/coverage-v8": "4.1.10",
+    "happy-dom": "^20.11.2",
+    "knip": "^6.32.1",
+    "oxfmt": "^0.63.0",
+    "oxlint": "1.78.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "tailwindcss": "catalog:",
+    "vercel": "^58.9.1",
     "vitest": "catalog:"
   }
 }

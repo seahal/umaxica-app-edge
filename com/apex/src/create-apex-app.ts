@@ -5,6 +5,7 @@ import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
 import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
+import { defaultLocale, locales } from './i18n/config';
 import { renderHealthJson, renderHealthPage } from './health-page';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
@@ -25,10 +26,24 @@ type CreateApexAppOptions = {
   service: string;
 };
 
+/*
+ * The status, offline and 404 documents are chrome-free by design (see
+ * docs/design/ui-shell-contract.md §15) but no longer unstyled: they link the
+ * same compiled stylesheet as every other document this unit serves, which the
+ * assets binding answers without invoking the Worker.
+ *
+ * The three class strings are constants because Tailwind scans this file as
+ * plain text — a class name assembled at runtime would not be generated.
+ */
+const STATUS_STYLESHEET = '<link rel="stylesheet" href="/style.css">';
+const STATUS_BODY =
+  'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body';
+const STATUS_HEADING = 'text-2xl font-semibold leading-heading';
+
 function statusPage(status: number, title: string) {
   const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
   return new Response(
-    `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>${title}</h1><p>HTTP ${status}</p><p>${reload}<a href="/">トップへ戻る</a></p></main></body></html>`,
+    `<!doctype html><html lang="${defaultLocale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     {
       status,
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
@@ -52,7 +67,9 @@ export function createApexApp(
     await next();
   });
   app.use('*', apexCsrf);
-  app.use(languageDetector({ supportedLanguages: ['en', 'ja'], fallbackLanguage: 'en' }));
+  // Reads the locale set from this unit's own config rather than repeating
+  // it, so the detector and `<html lang>` cannot disagree.
+  app.use(languageDetector({ supportedLanguages: [...locales], fallbackLanguage: 'en' }));
 
   pageRoutes.use(renderer);
   configurePageRoutes(pageRoutes);
@@ -91,7 +108,7 @@ export function createApexApp(
   });
   app.get('/offline', (c) =>
     c.html(
-      `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a href="/">トップへ戻る</a></p></main></body></html>`,
+      `<!doctype html><html lang="${defaultLocale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     ),
   );
   app.route('/', pageRoutes);

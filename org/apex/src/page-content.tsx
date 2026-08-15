@@ -24,13 +24,24 @@ export function renderAboutContent(language: string | undefined) {
   if (language === 'ja') {
     return (
       <div class="space-y-4">
-        <h2 class="text-3xl font-semibold text-gray-800">このサイトについて</h2>
+        <h1 class="text-3xl font-semibold leading-heading">このサイトについて</h1>
         <p>
-          本ドメイン（<a href="https://umaxica.org">umaxica.org</a>
+          本ドメイン（
+          <a class="text-brand underline" href="https://umaxica.org">
+            umaxica.org
+          </a>
           ）は、一般向けのウェブサイトとして運用いたしておりません。弊社サービスの利用につきましては、
-          <a href="https://umaxica.app">umaxica.app</a>、{' '}
-          <a href="https://umaxica.com">umaxica.com</a>、{' '}
-          <a href="https://umaxica.org">umaxica.org</a>
+          <a class="text-brand underline" href="https://umaxica.app">
+            umaxica.app
+          </a>
+          、{' '}
+          <a class="text-brand underline" href="https://umaxica.com">
+            umaxica.com
+          </a>
+          、{' '}
+          <a class="text-brand underline" href="https://umaxica.org">
+            umaxica.org
+          </a>
           の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。
         </p>
       </div>
@@ -39,12 +50,26 @@ export function renderAboutContent(language: string | undefined) {
 
   return (
     <div class="space-y-4">
-      <h2 class="text-3xl font-semibold text-gray-800">About this site.</h2>
+      <h1 class="text-3xl font-semibold leading-heading">About this site.</h1>
       <p>
-        This domain (<a href="https://umaxica.org">umaxica.org</a>) is not operated as a
-        public-facing website. To access our services, please visit our official websites (
-        <a href="https://umaxica.app">umaxica.app</a>, <a href="https://umaxica.com">umaxica.com</a>
-        , <a href="https://umaxica.org">umaxica.org</a>).
+        This domain (
+        <a class="text-brand underline" href="https://umaxica.org">
+          umaxica.org
+        </a>
+        ) is not operated as a public-facing website. To access our services, please visit our
+        official websites (
+        <a class="text-brand underline" href="https://umaxica.app">
+          umaxica.app
+        </a>
+        ,{' '}
+        <a class="text-brand underline" href="https://umaxica.com">
+          umaxica.com
+        </a>
+        ,{' '}
+        <a class="text-brand underline" href="https://umaxica.org">
+          umaxica.org
+        </a>
+        ).
       </p>
     </div>
   );

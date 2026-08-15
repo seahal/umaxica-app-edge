@@ -164,6 +164,54 @@ const trackedFiles = (() => {
 // e2e spec, both of which read the working tree and so cannot see this gap.
 const REQUIRED_PUBLIC_ASSETS = ['_headers', 'service-worker.js'];
 
+// The one asset that is generated rather than committed: Tailwind's output.
+//
+// The rule above is "must be in git", but what it is really protecting is
+// "CI's clean clone produces the same bytes". A committed copy of compiled CSS
+// would satisfy the letter and lose the spirit — it can silently disagree with
+// the `src/style.css` it came from, and nothing would check that. So this file
+// is held to the stronger property instead, asserted below: its source is
+// tracked, and every script that can upload regenerates it first.
+const GENERATED_PUBLIC_ASSETS = new Map([['public/style.css', 'src/style.css']]);
+
+// Scripts that put bytes on Cloudflare, or that stand in for them locally.
+// `build` is included because CI's build matrix is what proves the generation
+// step works at all.
+const UPLOADING_SCRIPTS = ['build', 'dev', 'deploy', 'deploy:upload', 'upload:ci', 'deploy:ci'];
+
+function checkGeneratedAsset(ws, relative, tracked) {
+  const source = GENERATED_PUBLIC_ASSETS.get(relative);
+  if (!tracked.has(`${ws}/${source}`)) {
+    fail(ws, `${relative} is generated from ${source}, which is not tracked by git`);
+    return;
+  }
+
+  let scripts;
+  try {
+    scripts = JSON.parse(readFileSync(join(root, ws, 'package.json'), 'utf8')).scripts ?? {};
+  } catch {
+    fail(ws, 'package.json is unreadable, so the generated-asset rule cannot be checked');
+    return;
+  }
+
+  if (!scripts['build:css']) {
+    fail(ws, `${relative} is generated but this unit declares no build:css script`);
+    return;
+  }
+
+  for (const name of UPLOADING_SCRIPTS) {
+    const script = scripts[name];
+    if (!script) continue;
+    // Either it regenerates the asset itself, or it delegates to a script that
+    // does — `preview` runs `build`, which runs `build:css`.
+    if (script.includes('build:css') || script.includes('pnpm run build')) continue;
+    fail(
+      ws,
+      `script "${name}" can upload public/ without regenerating ${relative} — prefix it with \`pnpm run build:css &&\``,
+    );
+  }
+}
+
 function checkPublicAssets(ws) {
   const publicDir = join(root, ws, 'public');
   if (!existsSync(publicDir)) {
@@ -181,12 +229,18 @@ function checkPublicAssets(ws) {
   for (const entry of readdirSync(publicDir, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue;
     const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//, '')}`;
-    if (!tracked.has(path)) {
-      fail(
-        ws,
-        `${path} is not tracked by git — wrangler would upload it from this machine and CI would deploy without it`,
-      );
+    if (tracked.has(path)) continue;
+
+    const relative = path.slice(`${ws}/`.length);
+    if (GENERATED_PUBLIC_ASSETS.has(relative)) {
+      checkGeneratedAsset(ws, relative, tracked);
+      continue;
     }
+
+    fail(
+      ws,
+      `${path} is not tracked by git — wrangler would upload it from this machine and CI would deploy without it`,
+    );
   }
 }
 

@@ -8,9 +8,12 @@
 // Node's own (undici) `Request`/`Headers` do not apply that browser-only
 // restriction and match the real Cloudflare Workers (workerd) runtime this
 // code actually runs on — this override does not touch `vitest.config.ts`.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { nextFetch } = vi.hoisted(() => ({ nextFetch: vi.fn() }));
+const { checkRateLimit, nextFetch } = vi.hoisted(() => ({
+  checkRateLimit: vi.fn(),
+  nextFetch: vi.fn(),
+}));
 
 vi.mock('../src/lib/next-handler', () => ({
   default: { fetch: nextFetch },
@@ -19,6 +22,8 @@ vi.mock('../src/lib/next-handler', () => ({
 vi.mock('../src/lib/health-request', () => ({
   sanitizeHealthRequest: (request: Request) => request,
 }));
+
+vi.mock('../src/lib/rate-limit', () => ({ checkRateLimit }));
 
 import worker from '../src/worker';
 
@@ -34,8 +39,17 @@ const ctx = {
 } as unknown as ExecutionContext;
 
 describe('com/core worker.ts dispatch', () => {
+  beforeEach(() => {
+    // `dispatchToRails` logs on every path; keep the reporter clean.
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   afterEach(() => {
+    checkRateLimit.mockReset();
     nextFetch.mockReset();
+    vi.restoreAllMocks();
   });
 
   it('strips the Cookie header entirely before calling handler.fetch for a NEXT-owned request', async () => {
@@ -90,19 +104,74 @@ describe('com/core worker.ts dispatch', () => {
     expect(response.status).toBe(200);
   });
 
-  it('returns 429 before Rails dispatch when the rate limiter rejects the request', async () => {
-    const railsFetch = vi.fn().mockResolvedValue(new Response('{}'));
-    const env = {
-      ...makeEnv({ fetch: railsFetch }),
-      RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) },
-    } as unknown as CloudflareEnv;
+  it('does not dispatch a rate-limited RAILS-owned request to Rails or Next.js', async () => {
+    const railsFetch = vi.fn();
+    checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
+
     const response = await worker.fetch(
       new Request('https://jp.umaxica.com/api/v0/session'),
-      env,
+      makeEnv({ fetch: railsFetch }),
       ctx,
     );
+
     expect(response.status).toBe(429);
     expect(railsFetch).not.toHaveBeenCalled();
+    expect(nextFetch).not.toHaveBeenCalled();
+  });
+
+  it('does not send a rate-limited NEXT-owned request to Next.js', async () => {
+    // The half the deleted `src/middleware.ts` used to cover. It is checked here
+    // now, before OpenNext is invoked at all.
+    checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
+
+    const response = await worker.fetch(new Request('https://jp.umaxica.com/'), makeEnv(), ctx);
+
+    expect(response.status).toBe(429);
+    expect(nextFetch).not.toHaveBeenCalled();
+  });
+
+  it('consults the limiter once per request, with the binding it was given', async () => {
+    nextFetch.mockResolvedValue(new Response('ok', { status: 200 }));
+    const env = makeEnv();
+
+    await worker.fetch(new Request('https://jp.umaxica.com/'), env, ctx);
+
+    expect(checkRateLimit).toHaveBeenCalledTimes(1);
+    expect(checkRateLimit.mock.calls[0]?.[1]).toBe(env.RATE_LIMITER);
+  });
+
+  it.each([
+    '/_next/static/chunks/main.js',
+    '/_next/image?url=%2Ffoo.png&w=64&q=75',
+    '/favicon.ico',
+  ])('exempts %s from the limiter', async (path) => {
+    // Carried over from the matcher the middleware declared. A page with many
+    // images must not spend its budget on its own thumbnails.
+    nextFetch.mockResolvedValue(new Response('asset', { status: 200 }));
+
+    const response = await worker.fetch(
+      new Request(`https://jp.umaxica.com${path}`),
+      makeEnv(),
+      ctx,
+    );
+
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(nextFetch).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(200);
+  });
+
+  it('does not consult the limiter for a blocked path', async () => {
+    // A blocked path reaches no application code either way, so a limiter call
+    // would be spent for nothing.
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.com/health/liveness.json'),
+      makeEnv(),
+      ctx,
+    );
+
+    expect(response.status).toBe(404);
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(nextFetch).not.toHaveBeenCalled();
   });
 
   it('sends /oidc/callback straight to Rails with the query string unchanged and passes through Set-Cookie/redirect unchanged', async () => {
@@ -207,5 +276,62 @@ describe('com/core worker.ts dispatch', () => {
 
     expect(nextFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(503);
+  });
+
+  it.each([
+    [
+      'the VPC binding fetch rejects',
+      () => vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 10.0.0.7:3000')),
+    ],
+    [
+      'the request times out',
+      () =>
+        vi.fn().mockRejectedValue(Object.assign(new Error('timed out'), { name: 'TimeoutError' })),
+    ],
+    [
+      'Workers VPC answers its ProxyError 500',
+      () =>
+        vi.fn().mockResolvedValue(
+          new Response('ProxyError: connection_refused', {
+            status: 500,
+            headers: { 'content-type': 'text/plain' },
+          }),
+        ),
+    ],
+  ])('answers 503 and never reaches Next.js when %s', async (_label, makeRailsFetch) => {
+    const railsFetch = makeRailsFetch();
+    const request = new Request('https://jp.umaxica.com/api/v0/session', {
+      method: 'POST',
+      headers: { cookie: 'session=abc' },
+      body: '{"a":1}',
+    });
+
+    const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
+
+    expect(response.status).toBe(503);
+    // A Rails or transport failure is never an invitation to try Next.js, and
+    // never an invitation to try Rails a second time.
+    expect(nextFetch).not.toHaveBeenCalled();
+    expect(railsFetch).toHaveBeenCalledTimes(1);
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    await expect(response.text()).resolves.not.toContain('ECONNREFUSED');
+  });
+
+  it('keeps a Rails 500 of its own making distinct from a transport failure', async () => {
+    const railsFetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('rails error page', { status: 500, headers: { 'content-type': 'text/html' } }),
+      );
+
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.com/web/v0/thing'),
+      makeEnv({ fetch: railsFetch }),
+      ctx,
+    );
+
+    expect(nextFetch).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.text()).resolves.toBe('rails error page');
   });
 });

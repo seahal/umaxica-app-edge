@@ -8,11 +8,16 @@ export const metadata: Metadata = {
 export default function GlobalNotFound() {
   return (
     <html lang="ja">
-      <body>
-        <main className="status-page">
-          <h1>ページが見つかりません</h1>
+      <body className="bg-gray-50 text-gray-900 leading-body">
+        <main className="grid min-h-screen place-content-center gap-3 p-6 text-center">
+          <h1 className="text-2xl font-semibold leading-heading">ページが見つかりません</h1>
           <p>HTTP 404</p>
-          <a href="/">トップへ戻る</a>
+          <a
+            className="inline-flex min-h-11 items-center justify-self-center rounded-full border border-gray-300 bg-white px-4 py-2 hover:bg-gray-100"
+            href="/"
+          >
+            トップへ戻る
+          </a>
         </main>
       </body>
     </html>

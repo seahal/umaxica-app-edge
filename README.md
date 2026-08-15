@@ -10,8 +10,8 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 
 ## Prerequisites
 
-- Node.js 24.19.0 — Active LTS "Krypton" (`node:24.19.0-trixie`, pinned exactly in `Dockerfile`)
-- [pnpm](https://pnpm.io/) 11.20.0 (pinned in `Dockerfile` and `package.json#packageManager`)
+- Node.js 24.19.0 — Active LTS "Krypton" (declared in `package.json#devEngines.runtime`, matched by `Containerfile` as `node:24.19.0-trixie`)
+- [pnpm](https://pnpm.io/) 11.21.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
 - Docker & Docker Compose (optional)
 
 ## Workspaces
@@ -72,16 +72,35 @@ podman compose up -d && podman compose exec core bash
 The toolchain is plain pnpm scripts backed by standalone Oxfmt, Oxlint, Vitest,
 and tsgo — nothing wraps `next dev` / `next build`.
 
+Every deployment unit exposes the same script contract, and the root scripts are
+thin `pnpm -r` fan-outs over them plus the repository-level files:
+
 ```bash
-pnpm run format          # oxfmt .
-pnpm run format:check    # oxfmt --check .
-pnpm run lint            # oxlint --type-aware --fix .
-pnpm run lint:check      # oxlint --type-aware .
-pnpm run typecheck       # tsgo --noEmit, per app
-pnpm run test            # vitest run
-pnpm run test:cov        # vitest run --coverage
-pnpm --filter <ws> run <script>
+pnpm run format          # each unit's `format`, then oxfmt . at the root
+pnpm run format:check    # each unit's `format:check`, then oxfmt --check .
+pnpm run lint            # each unit's `lint`, then oxlint --type-aware --fix .
+pnpm run lint:check      # each unit's `lint:check`, then oxlint --type-aware .
+pnpm run typecheck       # each unit's `typecheck` (tsgo --noEmit)
+pnpm run test            # each unit's `test`, then the root invariant suite
+pnpm run test:cov        # same, with per-unit coverage thresholds
+pnpm run build           # each unit's native build (Wrangler / OpenNext / Next)
+pnpm run check           # format:check + lint:check + typecheck + test
 ```
+
+Run any of them for a single deployment unit — this is the same command the
+root fan-out uses, and it works from the unit's own directory:
+
+```bash
+pnpm --dir app/core run check     # or: pnpm --filter <pkg> run check
+cd app/core && pnpm run test      # unit owns its vitest config, setup and mocks
+```
+
+Each unit carries its own `vitest.config.ts`, `vitest.setup.ts`,
+`.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.json` and `knip.jsonc`, and
+declares every binary its scripts invoke. Nothing in a unit resolves through a
+repository-root config, so a unit can be extracted into its own repository
+without rewriting its toolchain. `test/deployment-unit-boundaries.test.ts`
+enforces this.
 
 ## Development Environment
 
@@ -89,26 +108,66 @@ pnpm --filter <ws> run <script>
 
 | Tool                                                            | Role                                 | Version   |
 | --------------------------------------------------------------- | ------------------------------------ | --------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.20.0   |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.21.0   |
 | [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x      |
-| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.62.x    |
-| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.77.x    |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.63.x    |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.78.x    |
 | [tsgo](https://github.com/microsoft/typescript-go)              | Type checker (`pnpm run typecheck`)  | 7.0.0-dev |
 | [Vitest](https://vitest.dev/)                                   | Test runner (`pnpm run test`)        | 4.1.x     |
 | [Playwright](https://playwright.dev/)                           | Browser/E2E tests                    | 1.59.x    |
 | [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x     |
 | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.x       |
 
+### Node and pnpm versions
+
+`package.json#devEngines` is the single declaration of both:
+
+```jsonc
+"devEngines": {
+  "runtime":        { "name": "node", "version": "24.19.0", "onFail": "warn" },
+  "packageManager": { "name": "pnpm", "version": "11.21.0", "onFail": "download" }
+}
+```
+
+Three separate things keep that declaration true, and they are worth not
+confusing with one another:
+
+- **Declaration** — `devEngines`, replacing the legacy `packageManager` field.
+  pnpm 11 records the resolved package-manager version in `pnpm-lock.yaml`, which
+  the legacy field does not do below pnpm 12.
+- **Installation** — the Dev Container installs pnpm from the standalone script
+  at a version fixed by `ARG PNPM_VERSION`; CI installs it with
+  [`pnpm/setup`](https://github.com/pnpm/setup), which reads `devEngines`
+  directly. Neither uses Corepack. `pnpm/setup` supplies Node as well, so CI has
+  no separate `setup-node` step and no floating major version.
+- **Enforcement** — pnpm's default `pmOnFail: download` runs the declared version
+  if the invoking one differs, and
+  `test/development-container-security.test.ts` fails if `Containerfile` and
+  `package.json` ever disagree. `runtime.onFail` is `warn`, deliberately not
+  `download`: `download` would have pnpm fetch a second Node.js into
+  `node_modules` instead of using the image's.
+
+Bumping a version therefore means editing `package.json` and `Containerfile`
+together; the test tells you when you have edited only one.
+
 ### Podman / DevContainer
 
 The development environment is started with Dev Containers CLI over rootless Podman.
 
-- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.20.0
-  (Corepack) pre-installed. Both are
+- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.21.0
+  pre-installed via the standalone script documented at <https://pnpm.io/installation>.
+  Both are
   pinned to exact versions so a rebuild reproduces the same toolchain, and both match
   the sibling Rails repo (`seahal/umaxica-apps-jit-global`).
-- **Package manager**: use the directly available `pnpm` command. Bun and the former
-  `pn` convenience alias are intentionally absent.
+- **No Corepack**: the image deletes it (`npm rm --global corepack`) rather than
+  merely declining to call it. Node ships Corepack only below 25.0.0 and pnpm no
+  longer documents it as an installation method, so it is a dependency with an
+  expiry date; removing it also stops `corepack enable` from putting a second
+  `pnpm` on `PATH`. The standalone install under `$PNPM_HOME/bin` is the single
+  source of pnpm in the image.
+- **Package manager**: use the directly available `pnpm` command; the `pn` and `pnx`
+  short commands that ship with pnpm 11 are also on `PATH`. Scripts and documented
+  commands stay on `pnpm`. Bun is intentionally absent.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot

@@ -6,6 +6,23 @@ Make the local Edge development environment — the Hono apex workers and the Ne
 frames running under Podman — reachable from its development / staging FQDNs through Cloudflare
 Tunnel, so a browser anywhere can load the surface a developer is editing.
 
+## Note: `/rails-health` was merged into `/health` (2026-08-12)
+
+`/rails-health` no longer exists on any frame. Each frame's `/health` now answers for both halves —
+Edge's own state and Rails' liveness — in one document, and returns 503 when either half is down.
+See `adr/009-rails-health-entrypoint-and-dispatch-operability.md`.
+
+To read the Rails half:
+
+```bash
+curl -s 127.0.0.1:5406/health | jq '.rails.liveness'
+# { "kind": "not-configured", "latency_ms": 0 }   under `next dev`, which has no VPC binding
+```
+
+The contract tables and gate descriptions below are current. **The recorded observation tables
+further down are not rewritten** — they are measurements taken on a date, and at that date the route
+was `/rails-health`. Read a `/rails-health` column in a results table as `/health`'s `rails` field.
+
 ## Ownership: one connector, in the Rails repository
 
 Edge never runs `cloudflared` and never holds its token. The system has exactly one connector and
@@ -180,7 +197,7 @@ records it as its own outcome rather than a failure.
 | content frame `/`                    | 200, HTML containing `UMAXICA <Frame>`                 | identifies the FRAME only. The string is the same in all three brands' copies, so it cannot say which brand answered                                                                                                            |
 | `info` `/health.json`                | 200, `service` equals the brand, `frame` equals `info` | build-time literals, the content-frame equivalent of the apexes' `service`. This is the only response-level proof against a brand mix-up on a content frame. `docs`/`news`/`help` do not have it yet — see "Known limitations"  |
 | content frame `/_next/static/...`    | 200                                                    | asset URL taken from the page that referenced it, never guessed                                                                                                                                                                 |
-| content frame `/rails-health`        | **503**, `not-configured`                              | `next dev` has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim                                                                                                                |
+| content frame `/health`              | **503**, `rails.liveness.kind` `not-configured`        | `next dev` has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim. The `edge` half of the same document is still `ok` — that is how the two are told apart                       |
 
 ## Verification procedure
 
@@ -219,7 +236,7 @@ pnpm run check:tunnel:apex
 | `acs`   | Access, both halves. A 302 to the `*.cloudflareaccess.com` team domain **passes** the unauthenticated half and proves the connector was never contacted; no Access at all is a **WARN**. Without a service token the remaining gates are **BLOCKED** — unproven, deliberately not PASS. The login URL's query string carries a JWT and is never logged |
 | `orig`  | the connector reached a listening origin. 502/503/521/522/523/530 are reported **BLOCKED**, meaning "that dev server is not running" — an ordinary state, not a failure                                                                                                                                                                                |
 | `ident` | the intended application answered (apex `service`, or the frame marker in the HTML)                                                                                                                                                                                                                                                                    |
-| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames `_next` asset and `/rails-health`                                                                                                                                                                                                                                        |
+| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames `_next` asset and `/health`                                                                                                                                                                                                                                              |
 | `leak`  | no `localhost`, `127.0.0.1`, `edge-core`, or `0.0.0.0` in the redirect target or body                                                                                                                                                                                                                                                                  |
 
 It is deliberately excluded from `check:connectivity` (`all`), because it depends on hostnames

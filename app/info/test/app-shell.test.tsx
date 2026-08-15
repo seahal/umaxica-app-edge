@@ -14,7 +14,7 @@ describe('app/info application shell', () => {
           <Page />
         </Layout>,
       ),
-    ).toContain('UMAXICA Info');
+    ).toContain('UMAXICA インフォメーション');
     expect(metadata.title).toEqual({
       default: 'Info — UMAXICA (APP)',
       template: '%s — UMAXICA (APP)',

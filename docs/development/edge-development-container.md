@@ -1,9 +1,16 @@
 # Edge development container
 
 `Containerfile` builds the Podman-first development image. It pins Node 24.19.0, pnpm
-11.20.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
+11.21.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
 Wrangler through project dependencies, and Tailscale tooling. No credential enters a build
 argument, environment instruction, copy, or image layer.
+
+pnpm comes from the standalone install script at <https://pnpm.io/installation> and lands in
+`$PNPM_HOME/bin`, which is the only pnpm on `PATH`. The image removes Corepack
+(`npm rm --global corepack`) instead of merely not calling it: Node ships Corepack only
+below 25.0.0, and leaving the binary in place would let `corepack enable` shadow the
+standalone install. The pinned version is `ARG PNPM_VERSION`, held equal to
+`package.json#devEngines.packageManager` by `test/development-container-security.test.ts`.
 
 The effective user is `edge`, mapped through rootless `keep-id`. HOME is `/home/edge` and
 the XDG config/cache/data/state paths are writable without sudo. The image creates exact

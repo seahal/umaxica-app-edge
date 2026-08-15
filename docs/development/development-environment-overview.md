@@ -48,8 +48,11 @@ Enter the interactive service with:
 podman compose exec core bash -l
 ```
 
-Node.js is pinned to 24.19.0 and pnpm to 11.20.0. Use `pnpm` directly. Bun and the old
-`pn` alias are not part of the environment.
+Node.js is pinned to 24.19.0 and pnpm to 11.21.0, both declared in
+`package.json#devEngines` and matched by `Containerfile`. pnpm is installed from the
+standalone script, not Corepack, which the image removes outright. Use `pnpm` directly in
+scripts and documented commands; the `pn`/`pnpx`/`pnx` short commands that pnpm 11 installs
+alongside it are on `PATH` too. Bun is not part of the environment.
 
 The runtime/network architecture is documented in
 [cloudflare-development-network.md](cloudflare-development-network.md). Security and

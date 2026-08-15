@@ -8,6 +8,12 @@ const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 const composeFiles = ['compose.yaml', 'compose.credentials.yaml', 'compose.rails.yaml'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 const containerfile = read('Containerfile');
+// Comments explain why Corepack is gone, so assertions about what the image
+// actually does have to read the instructions rather than the prose.
+const instructions = containerfile
+  .split('\n')
+  .filter((line) => !line.trimStart().startsWith('#'))
+  .join('\n');
 const devcontainer = `${read('.devcontainer/devcontainer.json')}\n${read('.devcontainer/compose.override.yml')}`;
 
 describe('development-container security contract', () => {
@@ -102,6 +108,38 @@ describe('development-container security contract', () => {
     );
     expect(read('compose.yaml')).not.toMatch(/\$\{[^}]*(?:TOKEN|SECRET|API_KEY|PASSWORD)[^}]*\}/);
     expect(read('compose.yaml')).not.toContain('CLOUDFLARE_API_TOKEN');
+  });
+
+  it('builds without Corepack', () => {
+    // Node ships Corepack only below 25.0.0, so anything relying on it has an
+    // expiry date. Removing it also keeps `corepack enable` from putting a
+    // second pnpm on PATH ahead of the standalone install.
+    expect(instructions).not.toMatch(/\bcorepack\s+(?:enable|prepare|install)\b/);
+    expect(instructions).toContain('npm rm --global corepack');
+  });
+
+  it('installs pnpm from exactly one source, on a predictable PATH', () => {
+    expect(containerfile).toMatch(/get\.pnpm\.io\/install\.sh/);
+    expect(containerfile).not.toMatch(/npm\s+(?:install|i)\s+--global[^\n]*\bpnpm@/);
+    // pnpm 11 puts the CLI and its `pn`/`pnpx`/`pnx` aliases in PNPM_HOME/bin.
+    // Pointing PATH at PNPM_HOME itself is the v10 layout and leaves no pnpm.
+    expect(containerfile).toMatch(/PATH=[^\n]*\$\{?PNPM_HOME\}?\/bin|PATH=[^\n]*\/pnpm\/bin/);
+  });
+
+  it('pins Node and pnpm identically in the Containerfile and package.json', () => {
+    const { devEngines } = JSON.parse(read('package.json'));
+    expect(containerfile).toContain(`ARG PNPM_VERSION=${devEngines.packageManager.version}`);
+    expect(containerfile).toContain(`ARG NODE_VERSION=${devEngines.runtime.version}-trixie`);
+  });
+
+  it('declares the toolchain versions through devEngines, not the legacy field', () => {
+    const rootPackage = JSON.parse(read('package.json'));
+    expect(rootPackage.packageManager).toBeUndefined();
+    expect(rootPackage.devEngines.packageManager.name).toBe('pnpm');
+    // `download` lets pnpm enforce its own pin; `warn` keeps pnpm from
+    // fetching a second Node.js runtime into the image's node_modules.
+    expect(rootPackage.devEngines.packageManager.onFail).toBe('download');
+    expect(rootPackage.devEngines.runtime.onFail).toBe('warn');
   });
 
   it('keeps TTY and stdin on the interactive core only', () => {

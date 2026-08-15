@@ -35,6 +35,20 @@ const RAILS_FRAMES = BRANDS.flatMap((brand) =>
   FRAMES.map((frame) => ({ brand, frame, workspace: `${brand}/${frame}` })),
 );
 
+/**
+ * Source with comments removed.
+ *
+ * These files explain what they deliberately do NOT do — probe readiness, publish
+ * an `errorMessage` — by naming it. A plain `toContain` would then match the
+ * explanation and fail on the very file that documents the invariant, so the
+ * assertions below read code only.
+ */
+function code(relativePath: string): string {
+  return read(relativePath)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '');
+}
+
 /** Read a `const NAME = <value>;` declaration out of a client copy. */
 function readConstant(source: string, name: string): string | undefined {
   return new RegExp(`const ${name} = (.+);`).exec(source)?.[1];
@@ -52,36 +66,95 @@ describe('rails client layout', () => {
     }
   });
 
-  it.each(RAILS_FRAMES)('$workspace exposes /rails-health as JSON', ({ workspace }) => {
-    /*
-     * One shape across all fifteen frames — a Route Handler answering
-     * `{"rails": {...}}`, 200 when the kind is `ok` and 503 otherwise.
-     *
-     * The cores used to render an HTML status page here instead, and this
-     * assertion used to pin that difference. It cost two parsers in
-     * `tools/verify-edge-connectivity.mjs`, a "`jq` against a core port returns
-     * markup" caveat in the operations doc, and a wrong turn during a manual
-     * walkthrough. The stated reason — that the content frames had no UI to host
-     * such a page — was not true either; they have `layout.tsx` and `style.css`.
-     *
-     * The page is not gone forever, only un-duplicated ahead of a refactor that
-     * was already coming. `docs/design/rails-health-page.md` records what it did
-     * so it can be rebuilt once, deliberately, rather than in fifteen copies.
-     */
-    const route = `${workspace}/src/app/rails-health/route.ts`;
-    const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
+  it.each(RAILS_FRAMES)(
+    '$workspace reports Rails through /health, not /rails-health',
+    ({ workspace }) => {
+      /*
+       * One shape across all fifteen frames — a Route Handler answering
+       *
+       *   { status, timestamp, edge: {...}, rails: { liveness: {...} } }
+       *
+       * 200 when both halves are ok and 503 otherwise.
+       *
+       * This used to be two routes. `/health` reported Edge alone and
+       * `/rails-health` reported Rails alone, so neither could answer whether the
+       * surface as a whole was serving — and `/health` collided by name with
+       * Rails' own `/health` while `core-dispatch.ts` blocks `/health/*` at the
+       * edge, leaving Rails' health namespace unreachable through the public FQDN.
+       * The merge is `adr/009-rails-health-entrypoint-and-dispatch-operability.md`.
+       *
+       * Both former shapes are asserted absent, not merely unmentioned: an HTML
+       * status page (removed earlier; `docs/design/rails-health-page.md` records
+       * what it did) and the JSON Route Handler that replaced it.
+       */
+      const health = `${workspace}/src/app/health/route.ts`;
+      const route = `${workspace}/src/app/rails-health/route.ts`;
+      const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
 
-    expect(existsSync(join(repoRoot, route)), `${route} is missing`).toBe(true);
-    expect(existsSync(join(repoRoot, page)), `${page} must not come back per-frame`).toBe(false);
-  });
+      expect(existsSync(join(repoRoot, health)), `${health} is missing`).toBe(true);
+      expect(existsSync(join(repoRoot, route)), `${route} was merged into /health`).toBe(false);
+      expect(existsSync(join(repoRoot, page)), `${page} must not come back per-frame`).toBe(false);
+    },
+  );
 
-  it('keeps all fifteen /rails-health routes byte-identical', () => {
+  it('keeps all fifteen /health routes byte-identical', () => {
     // Fifteen owned copies, so the failure mode is drift: one edited and
     // fourteen left behind. Nothing at runtime notices.
+    //
+    // The fifteen used to be two groups — the cores read `REVISION` and answered
+    // 503 on failure, the twelve content frames returned a static `{status:'ok'}`
+    // — which is exactly the asymmetry the merge removed.
     const digests = new Set(
-      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/rails-health/route.ts`)),
+      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/health/route.ts`)),
     );
-    expect(digests.size, 'the fifteen route handlers have diverged').toBe(1);
+    expect(digests.size, 'the fifteen health route handlers have diverged').toBe(1);
+  });
+
+  it('keeps all fifteen Rails health probes byte-identical', () => {
+    const digests = new Set(
+      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/lib/rails-health.ts`)),
+    );
+    expect(digests.size, 'the fifteen rails-health copies have diverged').toBe(1);
+  });
+
+  it('probes exactly one Rails path, and requires liveness alone for a healthy verdict', () => {
+    /*
+     * Liveness is the strictest of Rails' three probes, so it is the one that
+     * decides; `/health` is polled often enough that one request per check is
+     * worth keeping. Readiness and startup exist on the Rails side and are
+     * deliberately not read — see ADR 009.
+     *
+     * Pinned because widening this is a real decision with a real cost: every
+     * added probe multiplies the tunnel traffic of the most-polled route in the
+     * repository, across fifteen frames.
+     */
+    for (const { workspace } of RAILS_FRAMES) {
+      const source = code(`${workspace}/src/lib/rails-health.ts`);
+      expect(source).toContain("const RAILS_LIVENESS_PATH = '/health/liveness.json';");
+      expect(source, `${workspace} must not silently start probing readiness`).not.toContain(
+        'readiness.json',
+      );
+      expect(source, `${workspace} must not silently start probing startup`).not.toContain(
+        'startup.json',
+      );
+    }
+  });
+
+  it('never exposes an internal error string through the public health document', () => {
+    /*
+     * The public shape used to carry `errorMessage`, fed by `rails-client.ts`'s
+     * `getErrorMessage(error)` — i.e. an arbitrary exception string on a public
+     * endpoint. `rails-client.ts` keeps it internally, on purpose, so this is
+     * asserted on the two files that actually serialize a response.
+     */
+    for (const { workspace } of RAILS_FRAMES) {
+      for (const file of ['src/lib/rails-health.ts', 'src/app/health/route.ts']) {
+        const source = code(`${workspace}/${file}`);
+        expect(source, `${workspace}/${file} must not publish errorMessage`).not.toContain(
+          'errorMessage',
+        );
+      }
+    }
   });
 
   it.each(RAILS_FRAMES)('$workspace sends its own Rails host', ({ brand, frame, workspace }) => {

@@ -19,11 +19,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=high
 
@@ -32,26 +30,65 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm outdated || true
 
+  # One Knip run per DEPLOYMENT UNIT, not one for the monorepo. The gate answers
+  # "would this unit still hold together as its own repository?", so each run is
+  # scoped to a single unit's directory and its own knip.jsonc. A monorepo-wide
+  # run cannot answer that: a dependency hoisted to the repository root reads as
+  # "listed" from the root even when the owning unit never declares it.
+  #
+  # The job name carries platform and unit (knip:cloudflare:app-core,
+  # knip:vercel:dev-acme) so a red check names the failing deployment directly.
+  # fail-fast is off so one unit's failure does not mask the other twenty.
+  #
+  # Every unit runs on every push: no path filter. Deliberate — a change to the
+  # lockfile, pnpm-workspace.yaml, or the root package.json can flip any unit
+  # from PASS to FAIL without touching that unit's own files, and missing that
+  # costs more than the CI minutes a filter would save.
   knip:
+    name: knip:${{ matrix.platform }}:${{ matrix.unit }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: cloudflare, unit: app-apex, dir: app/apex }
+          - { platform: cloudflare, unit: app-core, dir: app/core }
+          - { platform: cloudflare, unit: app-docs, dir: app/docs }
+          - { platform: cloudflare, unit: app-help, dir: app/help }
+          - { platform: cloudflare, unit: app-info, dir: app/info }
+          - { platform: cloudflare, unit: app-news, dir: app/news }
+          - { platform: cloudflare, unit: com-apex, dir: com/apex }
+          - { platform: cloudflare, unit: com-core, dir: com/core }
+          - { platform: cloudflare, unit: com-docs, dir: com/docs }
+          - { platform: cloudflare, unit: com-help, dir: com/help }
+          - { platform: cloudflare, unit: com-info, dir: com/info }
+          - { platform: cloudflare, unit: com-news, dir: com/news }
+          - { platform: cloudflare, unit: net-apex, dir: net/apex }
+          - { platform: cloudflare, unit: org-apex, dir: org/apex }
+          - { platform: cloudflare, unit: org-core, dir: org/core }
+          - { platform: cloudflare, unit: org-docs, dir: org/docs }
+          - { platform: cloudflare, unit: org-help, dir: org/help }
+          - { platform: cloudflare, unit: org-info, dir: org/info }
+          - { platform: cloudflare, unit: org-news, dir: org/news }
+          - { platform: vercel, unit: dev-apex, dir: dev/apex }
+          - { platform: vercel, unit: dev-acme, dir: dev/acme }
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec knip --include unlisted,unresolved,binaries
+      # No --include filter: the default report already covers unused files,
+      # exports, types, dependencies and devDependencies, and restricting it to
+      # unlisted/unresolved/binaries was hiding the first three.
+      - run: pnpm --dir ${{ matrix.dir }} exec knip
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
 
@@ -71,11 +108,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm run format:check
 
@@ -84,11 +119,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint:check
 
@@ -97,9 +130,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
+      - uses: pnpm/setup@v2
       - run: node tools/check-workers.mjs
 
   typecheck:
@@ -107,11 +138,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
 
@@ -120,11 +149,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:cov
 
@@ -157,10 +184,8 @@ jobs:
           - dev/acme
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v5
+      - uses: pnpm/setup@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C ${{ matrix.target }} run build

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { defaultLocale, isLocale, type Locale } from './i18n/config';
 
 const BRAND_NAME = process.env.BRAND_NAME ?? 'UMAXICA';
 const TITLE_BRAND_NAME = 'UMAXICA';
@@ -7,8 +8,16 @@ const BRAND_TLD = 'DEV';
 /** EM DASH — the UMAXICA title contract is `{PAGE} — UMAXICA ({TLD})`. */
 const BRAND_SEPARATOR = ' — ';
 const SITE_URL = 'umaxica.dev';
-const DEFAULT_LANGUAGE = 'en';
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
+
+/*
+ * Repeated Tailwind class lists, named once. Tailwind scans this file as plain
+ * text, so these have to be whole literals — a class name concatenated at
+ * runtime would never make it into the generated stylesheet.
+ */
+const HEADING = 'text-3xl font-semibold leading-heading';
+const LINK = 'text-brand underline';
+const PAGE_FOOTER = 'mt-12 border-t border-gray-200 pt-4 text-sm text-gray-600';
 
 type HealthPayload = {
   status: 'OK';
@@ -27,14 +36,14 @@ function buildApexTitle(pageName?: string): string {
   return pageName ? `${pageName}${BRAND_SEPARATOR}${root}` : root;
 }
 
-function detectLanguage(c: Context): 'ja' | 'en' {
+function detectLanguage(c: Context): Locale {
   const language =
     c.req.query('lang') ?? c.req.header('accept-language')?.split(',')[0]?.split('-')[0];
-  return language === 'ja' ? 'ja' : 'en';
+  return language !== undefined && isLocale(language) ? language : defaultLocale;
 }
 
 function buildPageShell(options: {
-  lang: 'ja' | 'en';
+  lang: Locale;
   title: string;
   description: string;
   canonical: string;
@@ -52,8 +61,9 @@ function buildPageShell(options: {
   <meta name="description" content="${description}">
   <link rel="canonical" href="${canonical}">
   <meta name="robots" content="${robots}">
+  <link rel="stylesheet" href="/style.css">
 </head>
-<body style="font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6;">
+<body class="mx-auto max-w-3xl bg-gray-50 p-8 text-gray-900 leading-body">
   ${body}
 </body>
 </html>`;
@@ -71,30 +81,31 @@ function buildHealthPayload(): HealthPayload {
 
 function buildHealthPageHtml(brandName: string, payload: HealthPayload): string {
   return `<!doctype html>
-<html lang="${DEFAULT_LANGUAGE}">
+<html lang="${defaultLocale}">
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${buildApexTitle('Health status')}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
+    <link rel="stylesheet" href="/style.css" />
   </head>
-  <body style="font-family: system-ui, sans-serif; margin: 0; padding: 2rem; line-height: 1.6;">
-    <main style="max-width: 720px; margin: 0 auto;">
-      <h1 style="margin: 0 0 1rem;">status</h1>
-      <dl>
-        <dt>status</dt>
+  <body class="bg-gray-50 p-8 text-gray-900 leading-body">
+    <main class="mx-auto max-w-3xl">
+      <h1 class="mb-4 text-3xl font-semibold leading-heading">status</h1>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
+        <dt class="font-medium text-gray-600">status</dt>
         <dd>${payload.status}</dd>
-        <dt>service</dt>
+        <dt class="font-medium text-gray-600">service</dt>
         <dd>${payload.service}</dd>
-        <dt>version</dt>
+        <dt class="font-medium text-gray-600">version</dt>
         <dd>${String(payload.version)}</dd>
-        <dt>edge</dt>
+        <dt class="font-medium text-gray-600">edge</dt>
         <dd>${payload.edge}</dd>
-        <dt>time</dt>
+        <dt class="font-medium text-gray-600">time</dt>
         <dd>${payload.time}</dd>
       </dl>
     </main>
-    <footer style="max-width: 720px; margin: 3rem auto 0;">&copy; ${new Date(payload.time).getUTCFullYear()} ${brandName}</footer>
+    <footer class="mx-auto mt-12 max-w-3xl text-sm text-gray-600">&copy; ${new Date(payload.time).getUTCFullYear()} ${brandName}</footer>
   </body>
 </html>`;
 }
@@ -133,18 +144,22 @@ app.get('/about', (c) => {
   const canonical = `https://${SITE_URL}/about`;
   const body = isJapanese
     ? `
-  <h1>このサイトについて</h1>
-  <p>本ドメイン（<strong>${SITE_URL}</strong>）は、一般向けのウェブサイトとして運用いたしておりません。</p>
-  <p>他のドメインもご訪問ください: <a href="https://umaxica.app">umaxica.app</a>、 <a href="https://umaxica.com">umaxica.com</a>、 <a href="https://umaxica.org">umaxica.org</a>。</p>
-  <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd; color: #666; font-size: 0.9rem;">
+  <main class="space-y-4">
+    <h1 class="${HEADING}">このサイトについて</h1>
+    <p>本ドメイン（<strong>${SITE_URL}</strong>）は、一般向けのウェブサイトとして運用いたしておりません。</p>
+    <p>他のドメインもご訪問ください: <a class="${LINK}" href="https://umaxica.app">umaxica.app</a>、 <a class="${LINK}" href="https://umaxica.com">umaxica.com</a>、 <a class="${LINK}" href="https://umaxica.org">umaxica.org</a>。</p>
+  </main>
+  <footer class="${PAGE_FOOTER}">
     <p>&copy; ${new Date().getUTCFullYear()} ${BRAND_NAME}</p>
   </footer>
 `
     : `
-  <h1>About this site.</h1>
-  <p>This domain (<strong>${SITE_URL}</strong>) is not operated as a public-facing website.</p>
-  <p>You may also visit our other domains: <a href="https://umaxica.app">umaxica.app</a>, <a href="https://umaxica.com">umaxica.com</a>, <a href="https://umaxica.org">umaxica.org</a>.</p>
-  <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd; color: #666; font-size: 0.9rem;">
+  <main class="space-y-4">
+    <h1 class="${HEADING}">About this site.</h1>
+    <p>This domain (<strong>${SITE_URL}</strong>) is not operated as a public-facing website.</p>
+    <p>You may also visit our other domains: <a class="${LINK}" href="https://umaxica.app">umaxica.app</a>, <a class="${LINK}" href="https://umaxica.com">umaxica.com</a>, <a class="${LINK}" href="https://umaxica.org">umaxica.org</a>.</p>
+  </main>
+  <footer class="${PAGE_FOOTER}">
     <p>&copy; ${new Date().getUTCFullYear()} ${BRAND_NAME}</p>
   </footer>
 `;
@@ -172,7 +187,7 @@ app.get('/', (c) => {
  * user, and a platform default cannot satisfy it.
  */
 function renderStatusDocument(status: number, heading: string): Response {
-  const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
+  const reload = status >= 500 ? `<a class="${LINK}" href="">再読み込み</a> · ` : '';
   const html = buildPageShell({
     lang: 'ja',
     title: buildApexTitle(heading),
@@ -180,10 +195,10 @@ function renderStatusDocument(status: number, heading: string): Response {
     canonical: `https://${SITE_URL}/`,
     robots: 'noindex, nofollow',
     body: `
-  <main>
-    <h1>${heading}</h1>
+  <main class="space-y-4">
+    <h1 class="${HEADING}">${heading}</h1>
     <p>HTTP ${status}</p>
-    <p>${reload}<a href="/">トップへ戻る</a></p>
+    <p>${reload}<a class="${LINK}" href="/">トップへ戻る</a></p>
   </main>
 `,
   });
@@ -198,6 +213,4 @@ app.notFound(() => renderStatusDocument(404, 'ページが見つかりません'
 
 app.onError(() => renderStatusDocument(500, '現在、このページを表示できません'));
 
-const fetch = app.fetch.bind(app);
-
-export { app, fetch };
+export { app };

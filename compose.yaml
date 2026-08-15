@@ -130,7 +130,6 @@ services:
       - ALL
     environment:
       CLOUDFLARE_ENV: development
-      VITE_GIT_HOOKS: '0'
     restart: unless-stopped
 
 volumes:

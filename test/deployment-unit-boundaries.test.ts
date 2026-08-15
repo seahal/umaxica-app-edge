@@ -145,4 +145,95 @@ describe('deployment unit boundaries', () => {
 
     expect(violations).toEqual([]);
   });
+
+  // The three checks below cover the *tooling* half of extractability. The two
+  // above prove a unit's source does not reach a sibling; these prove the unit
+  // can still be linted, typechecked and tested once the repository root is
+  // gone. They were previously only prose in each unit's knip.jsonc.
+
+  it('never extends a tsconfig outside its own deployment unit', () => {
+    const violations: string[] = [];
+
+    for (const unit of units) {
+      const tsconfigPath = join(repoRoot, unit, 'tsconfig.json');
+      if (!existsSync(tsconfigPath)) continue;
+      // tsconfig.json is JSONC (comments, trailing commas), so read the one
+      // field this test cares about directly rather than parsing the whole file.
+      const raw = readFileSync(tsconfigPath, 'utf8');
+      const single = raw.match(/"extends"\s*:\s*"([^"]+)"/);
+      const array = raw.match(/"extends"\s*:\s*\[([^\]]*)\]/);
+      const targets = single
+        ? [single[1] as string]
+        : array
+          ? [...(array[1] as string).matchAll(/"([^"]+)"/g)].map((m) => m[1] as string)
+          : [];
+      if (targets.length === 0) continue;
+      for (const target of targets) {
+        // A bare specifier resolves through node_modules (a real dependency),
+        // which survives extraction. Only a relative path can escape the unit.
+        if (!target.startsWith('.')) continue;
+        const resolved = relative(repoRoot, resolve(dirname(tsconfigPath), target));
+        if (owningUnit(resolved) !== unit) {
+          violations.push(`${unit}/tsconfig.json extends ${target} (${resolved})`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('owns the tooling configuration needed to run standalone', () => {
+    const required = ['vitest.config.ts', 'vitest.setup.ts', '.oxlintrc.json', '.oxfmtrc.json'];
+    const missing: string[] = [];
+
+    for (const unit of units) {
+      for (const file of required) {
+        if (!existsSync(join(repoRoot, unit, file))) missing.push(`${unit}/${file}`);
+      }
+    }
+
+    expect(missing).toEqual([]);
+  });
+
+  it('declares every tool binary its own scripts invoke', () => {
+    // Binaries provided by the runtime/toolchain rather than by a package, or
+    // supplied by the deployment platform itself.
+    const ambient = new Set(['node', 'pnpm', 'echo', 'rm', 'cp', 'mkdir', 'cd']);
+    // Binary name -> the package that provides it, where they differ.
+    const provider: Record<string, string> = {
+      tsgo: '@typescript/native-preview',
+      playwright: '@playwright/test',
+      'opennextjs-cloudflare': '@opennextjs/cloudflare',
+      vitest: 'vitest',
+    };
+    const violations: string[] = [];
+
+    for (const unit of units) {
+      const manifestPath = join(repoRoot, unit, 'package.json');
+      if (!existsSync(manifestPath)) continue;
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      const declared = new Set(
+        Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }),
+      );
+
+      for (const [scriptName, body] of Object.entries(manifest.scripts ?? {})) {
+        for (const segment of String(body).split(/&&|\|\||;|\|/)) {
+          // Strip leading `VAR=value` assignments, then take the command word.
+          const command = segment
+            .trim()
+            .replace(/^(?:\w+=\S*\s+)+/, '')
+            .split(/\s+/)[0];
+          if (!command || ambient.has(command)) continue;
+          // `pnpm run <other>` is an intra-unit reference, not a binary.
+          if (command.startsWith('pnpm')) continue;
+          const pkg = provider[command] ?? command;
+          if (!declared.has(pkg)) {
+            violations.push(`${unit}: script "${scriptName}" runs undeclared binary "${command}"`);
+          }
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
 });

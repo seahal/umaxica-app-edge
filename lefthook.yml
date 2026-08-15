@@ -9,6 +9,10 @@ pre-commit:
       glob: '*.{js,jsx,ts,tsx}'
       run: pnpm exec oxlint {staged_files}
 
+# Both hooks stay deliberately thin and root-owned. Each deployment unit now
+# carries the same `lint` / `format:check` / `typecheck` / `test` scripts, so
+# when a unit is extracted this file can be copied into the new repository
+# unchanged — the commands it calls already exist there.
 pre-push:
   commands:
     typecheck:

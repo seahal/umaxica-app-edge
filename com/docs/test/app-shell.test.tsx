@@ -14,7 +14,7 @@ describe('com/docs application shell', () => {
           <Page />
         </Layout>,
       ),
-    ).toContain('UMAXICA Docs');
+    ).toContain('UMAXICA ドキュメント');
     expect(metadata.title).toEqual({
       default: 'Docs — UMAXICA (COM)',
       template: '%s — UMAXICA (COM)',

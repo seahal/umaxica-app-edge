@@ -12,16 +12,16 @@ describe('GET /health', () => {
 
     expect(body).toContain('<title>Health status — UMAXICA (APP)</title>');
     expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
-    expect(body).toContain('<h1>status</h1>');
-    expect(body).toContain('<dt>status</dt>');
+    expect(body).toMatch(/<h1[^>]*>status<\/h1>/);
+    expect(body).toMatch(/<dt[^>]*>status<\/dt>/);
     expect(body).toContain('<dd>OK</dd>');
-    expect(body).toContain('<dt>service</dt>');
+    expect(body).toMatch(/<dt[^>]*>service<\/dt>/);
     expect(body).toContain('<dd>app</dd>');
-    expect(body).toContain('<dt>version</dt>');
+    expect(body).toMatch(/<dt[^>]*>version<\/dt>/);
     expect(body).toContain('<dd>null</dd>');
-    expect(body).toContain('<dt>edge</dt>');
+    expect(body).toMatch(/<dt[^>]*>edge<\/dt>/);
     expect(body).toContain('<dd>cloudflare</dd>');
-    expect(body).toContain('<dt>time</dt>');
+    expect(body).toMatch(/<dt[^>]*>time<\/dt>/);
     expect(body).not.toContain('<header');
   });
 
@@ -37,10 +37,10 @@ describe('GET /health', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
-    expect(body).toContain('<h1>status</h1>');
-    expect(body).toContain('<dt>status</dt>');
+    expect(body).toMatch(/<h1[^>]*>status<\/h1>/);
+    expect(body).toMatch(/<dt[^>]*>status<\/dt>/);
     expect(body).toContain('<dd>OK</dd>');
-    expect(body).toContain('<dt>edge</dt>');
+    expect(body).toMatch(/<dt[^>]*>edge<\/dt>/);
     expect(body).toContain('<dd>cloudflare</dd>');
   });
 
@@ -55,7 +55,7 @@ describe('GET /health', () => {
     const response = await requestFromApp('/health');
     const body = await response.text();
 
-    const timestampMatch = body.match(/<dt>time<\/dt>\s*<dd>([^<]+)<\/dd>/);
+    const timestampMatch = body.match(/<dt[^>]*>time<\/dt>\s*<dd>([^<]+)<\/dd>/);
     expect(timestampMatch?.[1]).toBeTruthy();
 
     const timestamp = timestampMatch?.[1];

@@ -28,9 +28,6 @@ const nextConfig: NextConfig = {
     },
   },
   poweredByHeader: false,
-  compiler: {
-    styledComponents: true,
-  },
 };
 
 export default nextConfig;

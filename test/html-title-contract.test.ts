@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error React is provided by the app workspace, not the root package.
@@ -253,11 +254,14 @@ describe('page title regression guard', () => {
   );
 
   const pages = trackedFiles().filter(
-    (file) => /\/src\/app\/.*page\.tsx$/.test(file) && !REDIRECT_ONLY.has(file),
+    (file) =>
+      /\/src\/app\/.*page\.tsx$/.test(file) &&
+      !REDIRECT_ONLY.has(file) &&
+      existsSync(join(repoRoot, file)),
   );
 
   it('finds the expected number of HTML pages', () => {
-    expect(pages.length).toBe(55);
+    expect(pages.length).toBe(52);
   });
 
   const contentPages = pages.filter((file) => !isIndexPage(file));
