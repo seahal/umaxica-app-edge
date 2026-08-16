@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+
+import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 import {
   BLOCKED,
   FAIL,
@@ -16,7 +18,6 @@ import {
   readRailsOrigin,
   waitFor,
 } from '../tools/verify-edge-connectivity.mjs';
-import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 
 // The checker is the thing that decides whether the network is healthy, so its
 // own control logic has to be pinned. Everything here is pure — no processes are

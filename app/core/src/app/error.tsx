@@ -17,7 +17,7 @@ export default function ErrorPage({
 }) {
   return (
     <main className="grid min-h-screen place-content-center gap-3 p-6 text-center">
-      <h1 className="text-2xl font-semibold leading-heading">現在、このページを表示できません</h1>
+      <h1 className="text-2xl leading-heading font-semibold">現在、このページを表示できません</h1>
       <p>HTTP 500</p>
       <button
         type="button"

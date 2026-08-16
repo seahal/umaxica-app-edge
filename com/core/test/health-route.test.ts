@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { GET } from '../src/app/health/route';
 import {
   setCloudflareContext,
   setCloudflareContextShouldThrow,
 } from './__mocks__/opennext-cloudflare';
-import { GET } from '../src/app/health/route';
 
 /*
  * The unified health entry point: Edge's own state and Rails' liveness in one

@@ -11,7 +11,7 @@ import { expect } from 'vitest';
  */
 export const TLD = 'APP';
 
-const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/;
+const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/u;
 
 /**
  * Surface and runtime names. A user-facing title must never reveal which
@@ -19,10 +19,10 @@ const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/;
  * split routes inside one FQDN invisibly.
  */
 export const FORBIDDEN_TOKEN =
-  /\b(?:auth|core|apex|side|edge|next|next\.js|nextjs|hono|workers?|cloudflare|opennext)\b/i;
+  /\b(?:auth|core|apex|side|edge|next|next\.js|nextjs|hono|workers?|cloudflare|opennext)\b/iu;
 
 export function titlesIn(html: string): string[] {
-  return [...html.matchAll(/<title[^>]*>([\s\S]*?)<\/title>/g)].map((match) => match[1] ?? '');
+  return [...html.matchAll(/<title[^>]*>([\s\S]*?)<\/title>/gu)].map((match) => match[1] ?? '');
 }
 
 type TitleExpectation = {
@@ -48,7 +48,7 @@ export function expectTitleContract(
 
   // 4. UMAXICA in exact uppercase.
   expect(title, `${label}: brand must be exactly "UMAXICA"`).toContain('UMAXICA');
-  expect(title, `${label}: brand casing must not vary`).not.toMatch(/Umaxica|umaxica/);
+  expect(title, `${label}: brand casing must not vary`).not.toMatch(/Umaxica|umaxica/u);
 
   // 5 + 6. EM DASH contract, uppercase TLD matching the deployment family.
   expect(title, `${label}: does not match the UMAXICA title contract`).toMatch(TITLE_CONTRACT);
@@ -63,7 +63,7 @@ export function expectTitleContract(
       `UMAXICA (${TLD})`,
     );
     expect(title, `${label}: page-specific title must precede the EM DASH`).toMatch(
-      new RegExp(`^.+ — UMAXICA \\(${TLD}\\)$`),
+      new RegExp(`^.+ — UMAXICA \\(${TLD}\\)$`, 'u'),
     );
   }
 }
@@ -71,9 +71,13 @@ export function expectTitleContract(
 type ResolvedTitle = string | undefined;
 
 /** Resolve what a Next.js module actually contributes as a title. */
-export async function resolveTitle(module: Record<string, unknown>): Promise<ResolvedTitle> {
-  const generate = module.generateMetadata as undefined | (() => Promise<{ title?: unknown }>);
-  const meta = generate ? await generate() : (module.metadata as { title?: unknown } | undefined);
+export async function resolveTitle(pageModule: Record<string, unknown>): Promise<ResolvedTitle> {
+  const generate = pageModule['generateMetadata'] as
+    | undefined
+    | (() => Promise<{ title?: unknown }>);
+  const meta = generate
+    ? await generate()
+    : (pageModule['metadata'] as { title?: unknown } | undefined);
   const title = meta?.title;
 
   if (typeof title === 'string') {

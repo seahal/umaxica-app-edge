@@ -10,11 +10,17 @@ pre-commit:
       run: pnpm exec oxlint {staged_files}
 
 # Both hooks stay deliberately thin and root-owned. Each deployment unit now
-# carries the same `lint` / `format:check` / `typecheck` / `test` scripts, so
-# when a unit is extracted this file can be copied into the new repository
-# unchanged — the commands it calls already exist there.
+# carries the same `lint` / `lint:types` / `format:check` / `typecheck` / `test`
+# scripts, so when a unit is extracted this file can be copied into the new
+# repository unchanged — the commands it calls already exist there.
+#
+# `pre-commit` runs oxlint WITHOUT `--type-aware` on purpose: the type-aware
+# pass needs a whole program per unit and is measured at ~4s for the tree, which
+# is a pre-push cost, not a per-commit one. `pre-push` and CI both run it.
 pre-push:
   commands:
+    lint-types:
+      run: pnpm run lint:types
     typecheck:
       run: pnpm run typecheck
     test:

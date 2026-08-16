@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
-import { defaultLocale } from '../i18n/config';
-import type { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
-import './style.css';
+import type { ReactNode } from 'react';
+
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
-import { SiteHeader } from '../components/site-header';
+
+import './style.css';
 import { SiteFooter } from '../components/site-footer';
+import { SiteHeader } from '../components/site-header';
+import { defaultLocale } from '../i18n/config';
 
 /*
  * The CSS variable is `--font-inter`, not `--font-sans`: `--font-sans` is
@@ -30,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
        * A flex column so `<main>`'s `flex-1` pushes the footer to the bottom of
        * a short page without anyone measuring a viewport.
        */}
-      <body className="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body">
+      <body className="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900">
         <ServiceWorkerRegistration />
         {/*
          * The shell wraps `{children}` rather than supplying its own `<main>`:

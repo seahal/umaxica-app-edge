@@ -7,7 +7,7 @@
 export default function UnauthorizedPage() {
   return (
     <main className="grid min-h-screen place-content-center gap-3 p-6 text-center">
-      <h1 className="text-2xl font-semibold leading-heading">401 - Unauthorized</h1>
+      <h1 className="text-2xl leading-heading font-semibold">401 - Unauthorized</h1>
       <p>Please log in to access this page.</p>
     </main>
   );

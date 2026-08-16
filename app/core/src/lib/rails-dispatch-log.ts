@@ -102,7 +102,7 @@ const ROUTE_CLASS_PREFIXES: ReadonlyArray<readonly [string, RailsRouteClass]> = 
   ['/oidc', 'oidc'],
 ];
 
-const KNOWN_METHODS: ReadonlySet<string> = new Set([
+const KNOWN_METHODS: ReadonlySet<RailsRequestMethod> = new Set([
   'GET',
   'HEAD',
   'POST',
@@ -112,7 +112,7 @@ const KNOWN_METHODS: ReadonlySet<string> = new Set([
   'OPTIONS',
 ]);
 
-const KNOWN_PROXY_ERROR_CODES: ReadonlySet<string> = new Set([
+const KNOWN_PROXY_ERROR_CODES: ReadonlySet<RailsProxyErrorCode> = new Set([
   'connection_refused',
   'connection_timeout',
   'connection_read_timeout',
@@ -140,16 +140,22 @@ export function classifyRailsRouteClass(pathname: string): RailsRouteClass {
   return 'other';
 }
 
+const isKnownMethod = (value: string): value is RailsRequestMethod =>
+  (KNOWN_METHODS as ReadonlySet<string>).has(value);
+
+const isKnownProxyErrorCode = (value: string): value is RailsProxyErrorCode =>
+  (KNOWN_PROXY_ERROR_CODES as ReadonlySet<string>).has(value);
+
 /** Anything outside the standard set becomes `OTHER` rather than being echoed. */
 export function normalizeRailsMethod(method: string): RailsRequestMethod {
   const upper = method.toUpperCase();
-  return KNOWN_METHODS.has(upper) ? (upper as RailsRequestMethod) : 'OTHER';
+  return isKnownMethod(upper) ? upper : 'OTHER';
 }
 
 /** Anything outside Cloudflare's documented codes becomes `unknown`. */
 export function normalizeProxyErrorCode(code: string): RailsProxyErrorCode {
   const lower = code.toLowerCase();
-  return KNOWN_PROXY_ERROR_CODES.has(lower) ? (lower as RailsProxyErrorCode) : 'unknown';
+  return isKnownProxyErrorCode(lower) ? lower : 'unknown';
 }
 
 export function logRailsDispatch(entry: RailsDispatchLogEntry): void {

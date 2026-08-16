@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
 
-import Layout from '../src/app/layout';
 import GlobalError from '../src/app/global-error';
+import Layout from '../src/app/layout';
 import { defaultLocale } from '../src/i18n/config';
 
 /**
@@ -15,10 +15,10 @@ import { defaultLocale } from '../src/i18n/config';
  * neither can drift into the other.
  */
 
-const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/.exec(html)?.[1];
+const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/u.exec(html)?.[1];
 
 /** Kana and CJK ideographs — present in Japanese copy, absent from English. */
-const JAPANESE = /[぀-ゟ゠-ヿ一-龯]/;
+const JAPANESE = /[぀-ゟ゠-ヿ一-龯]/u;
 
 describe('root layout lang', () => {
   it('declares lang from defaultLocale', () => {

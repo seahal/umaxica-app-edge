@@ -1,10 +1,12 @@
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
+import { GET as health } from '../src/app/health/route';
+import manifest from '../src/app/manifest';
 import robots from '../src/app/robots';
 import sitemap from '../src/app/sitemap';
-import manifest from '../src/app/manifest';
-import { GET as health } from '../src/app/health/route';
 
 const host = 'info-jp.umaxica.org';
 const unitRoot = resolve(import.meta.dirname, '..');

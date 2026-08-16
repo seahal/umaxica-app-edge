@@ -23,8 +23,8 @@ export async function GET() {
         status: 'ok',
         timestamp,
         version: {
-          id: process.env.VERCEL_GIT_COMMIT_SHA,
-          tag: process.env.VERCEL_GIT_COMMIT_REF,
+          id: process.env['VERCEL_GIT_COMMIT_SHA'],
+          tag: process.env['VERCEL_GIT_COMMIT_REF'],
         },
       },
       {

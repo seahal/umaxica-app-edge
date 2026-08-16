@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -15,9 +16,11 @@ const repoRoot = join(import.meta.dirname, '..');
  *   news, help — are ordinary directory names inside a unit, so any pattern
  *   broad enough to catch the first also rejects the second.
  * - `.dependency-cruiser.cjs` COULD express it exactly, on resolved paths with
- *   backreferences, but depcruise needs `typescript` >=2 <7 and this repo ships
- *   `@typescript/native-preview` (tsgo). It cruises 39 modules out of 1000+ TS
- *   sources and reports green, so a rule there would never fire.
+ *   backreferences, but depcruise needs TypeScript's programmatic API and
+ *   declares `typescript` >=2 <7. TypeScript 7.0 does not ship that API — 7.1
+ *   is the stated target — so depcruise reports
+ *   `missing-typescript-transpiler`, cruises 0 dependencies out of 1000+ TS
+ *   sources and exits green. A rule there would never fire.
  *
  * Resolving each specifier against its own directory — what this file does —
  * has neither problem. It is also what makes the repository extractable: a unit
@@ -25,7 +28,7 @@ const repoRoot = join(import.meta.dirname, '..');
  */
 
 function trackedFiles(): string[] {
-  const injected = process.env.EDGE_TRACKED_FILES;
+  const injected = process.env['EDGE_TRACKED_FILES'];
   if (injected !== undefined) {
     return injected.split('\n').filter(Boolean);
   }
@@ -37,11 +40,11 @@ function trackedFiles(): string[] {
 /** The deployment units, read from the mechanical source of truth. */
 function deploymentUnits(): string[] {
   const workspaces = readFileSync(join(repoRoot, 'pnpm-workspace.yaml'), 'utf8');
-  const packages = workspaces.match(/^packages:\n((?:\s+-\s+\S+\n)+)/m)?.[1];
+  const packages = workspaces.match(/^packages:\n((?:\s+-\s+\S+\n)+)/mu)?.[1];
   if (!packages) throw new Error('pnpm-workspace.yaml has no packages: block');
   return packages
     .split('\n')
-    .map((line) => line.replace(/^\s*-\s*/, '').trim())
+    .map((line) => line.replace(/^\s*-\s*/u, '').trim())
     .filter(Boolean);
 }
 
@@ -59,7 +62,7 @@ const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 // double quoted. Only relative specifiers can cross a unit boundary — a bare
 // specifier resolves through node_modules, which the package-dependency test
 // below covers instead.
-const RELATIVE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*|\brequire\s*)\(?\s*['"](\.[^'"]*)['"]/g;
+const RELATIVE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*|\brequire\s*)\(?\s*['"](\.[^'"]*)['"]/gu;
 
 function sourceFilesUnderUnits(): { path: string; unit: string }[] {
   return (
@@ -137,7 +140,7 @@ describe('deployment unit boundaries', () => {
         if (unitPackageNames.has(name) && unitPackageNames.get(name) !== unit) {
           violations.push(`${unit} depends on ${name} (${unitPackageNames.get(name)})`);
         }
-        if (typeof range === 'string' && /^(workspace|link|file):/.test(range)) {
+        if (typeof range === 'string' && /^(workspace|link|file):/u.test(range)) {
           violations.push(`${unit} depends on ${name} via ${range}`);
         }
       }
@@ -160,12 +163,12 @@ describe('deployment unit boundaries', () => {
       // tsconfig.json is JSONC (comments, trailing commas), so read the one
       // field this test cares about directly rather than parsing the whole file.
       const raw = readFileSync(tsconfigPath, 'utf8');
-      const single = raw.match(/"extends"\s*:\s*"([^"]+)"/);
-      const array = raw.match(/"extends"\s*:\s*\[([^\]]*)\]/);
+      const single = raw.match(/"extends"\s*:\s*"([^"]+)"/u);
+      const array = raw.match(/"extends"\s*:\s*\[([^\]]*)\]/u);
       const targets = single
         ? [single[1] as string]
         : array
-          ? [...(array[1] as string).matchAll(/"([^"]+)"/g)].map((m) => m[1] as string)
+          ? [...(array[1] as string).matchAll(/"([^"]+)"/gu)].map((m) => m[1] as string)
           : [];
       if (targets.length === 0) continue;
       for (const target of targets) {
@@ -201,10 +204,15 @@ describe('deployment unit boundaries', () => {
     const ambient = new Set(['node', 'pnpm', 'echo', 'rm', 'cp', 'mkdir', 'cd']);
     // Binary name -> the package that provides it, where they differ.
     const provider: Record<string, string> = {
-      tsgo: '@typescript/native-preview',
+      tsc: 'typescript',
       playwright: '@playwright/test',
       'opennextjs-cloudflare': '@opennextjs/cloudflare',
       vitest: 'vitest',
+      // Hurl is a Rust binary; `@orangeopensource/hurl` is its npm distribution
+      // and ships the bins `hurl` and `hurlfmt`. The command word and the
+      // package name differ, which is exactly what this map is for.
+      hurl: '@orangeopensource/hurl',
+      hurlfmt: '@orangeopensource/hurl',
     };
     const violations: string[] = [];
 
@@ -217,12 +225,12 @@ describe('deployment unit boundaries', () => {
       );
 
       for (const [scriptName, body] of Object.entries(manifest.scripts ?? {})) {
-        for (const segment of String(body).split(/&&|\|\||;|\|/)) {
+        for (const segment of String(body).split(/&&|\|\||;|\|/u)) {
           // Strip leading `VAR=value` assignments, then take the command word.
           const command = segment
             .trim()
-            .replace(/^(?:\w+=\S*\s+)+/, '')
-            .split(/\s+/)[0];
+            .replace(/^(?:\w+=\S*\s+)+/u, '')
+            .split(/\s+/u)[0];
           if (!command || ambient.has(command)) continue;
           // `pnpm run <other>` is an intra-unit reference, not a binary.
           if (command.startsWith('pnpm')) continue;

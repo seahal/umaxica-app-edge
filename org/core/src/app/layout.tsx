@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import { defaultLocale } from '@/i18n/config';
 import { Inter } from 'next/font/google';
+
+import { defaultLocale } from '@/i18n/config';
+
 import './globals.css';
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
 
@@ -27,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={defaultLocale} className={inter.variable}>
-      <body className="bg-gray-50 text-gray-900 leading-body">
+      <body className="bg-gray-50 leading-body text-gray-900">
         <ServiceWorkerRegistration />
         {children}
       </body>

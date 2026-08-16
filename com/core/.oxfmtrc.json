@@ -8,6 +8,11 @@
   "trailingComma": "all",
   "insertFinalNewline": true,
   "sortPackageJson": true,
+  "sortImports": true,
+  "sortTailwindcss": {
+    "stylesheet": "./src/app/globals.css",
+    "functions": ["clsx", "cn", "cva", "tw"]
+  },
   "overrides": [
     {
       "files": ["**/*.json", "**/*.jsonc"],

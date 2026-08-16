@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
 /**
@@ -38,7 +39,7 @@ import { Button } from 'react-aria-components';
  */
 
 export type NavigationLink = {
-  href: string;
+  href: Route;
   label: string;
 };
 
@@ -77,7 +78,7 @@ export function AppChrome({
              * that toggles nothing is worse than no control.
              */}
             <Button
-              className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-gray-300 bg-white px-4 py-2 hovered:bg-gray-100 pressed:bg-gray-200 wide:hidden"
+              className="hovered:bg-gray-100 inline-flex min-h-11 cursor-pointer items-center rounded-full border border-gray-300 bg-white px-4 py-2 wide:hidden pressed:bg-gray-200"
               aria-expanded={open}
               aria-controls="main-navigation"
               onPress={() => setOpen((previous) => !previous)}
@@ -100,11 +101,7 @@ export function AppChrome({
         data-open={open}
       >
         {links.map((link) => (
-          <Link
-            className="rounded-lg px-3 py-2 hover:bg-gray-100"
-            href={link.href as never}
-            key={link.href}
-          >
+          <Link className="rounded-lg px-3 py-2 hover:bg-gray-100" href={link.href} key={link.href}>
             {link.label}
           </Link>
         ))}

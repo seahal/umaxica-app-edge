@@ -6,8 +6,9 @@ vi.mock('@opennextjs/cloudflare', () => ({
   }),
 }));
 
-import { NextRequest } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { NextRequest } from 'next/server';
+
 import { middleware } from '../src/middleware';
 
 describe('com/info middleware', () => {

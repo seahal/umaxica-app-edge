@@ -5,7 +5,7 @@ export class NextResponse extends Response {
     return new NextResponse(null, { status: 200 });
   }
 
-  static json(data: unknown, init?: ResponseInit) {
+  static override json(data: unknown, init?: ResponseInit) {
     const response = Response.json(data, init);
     return new NextResponse(response.body, response);
   }

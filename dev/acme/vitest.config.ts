@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 // Vitest configuration for ONE deployment unit.
 //
 // Deliberately self-contained: it extends nothing at the repository root, so
@@ -6,7 +8,6 @@
 // per CLAUDE.md, duplication across frames is intentional, so that one frame's
 // test requirements never force a change in another frame.
 import { defineConfig } from 'vitest/config';
-import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   oxc: {

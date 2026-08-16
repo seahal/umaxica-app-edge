@@ -24,9 +24,11 @@ export type Meta = {
   twitter?: TwitterMeta;
 };
 
+// Typed against the one variable these helpers touch rather than `unknown`,
+// so `getMeta` can return what it read instead of asserting it back into shape.
 type MetaContext = {
-  get: (key: unknown) => unknown;
-  set: (key: unknown, value: unknown) => void;
+  get: (key: 'meta') => Meta | undefined;
+  set: (key: 'meta', value: Meta) => void;
 };
 
 function toNonEmptyTrimmed(value: string | undefined): string | undefined {
@@ -42,8 +44,7 @@ export function setMeta(c: MetaContext, meta: Meta): void {
 }
 
 export function getMeta(c: MetaContext, defaultMeta?: Meta): Meta | undefined {
-  const meta = c.get('meta');
-  return (meta as Meta | undefined) ?? defaultMeta;
+  return c.get('meta') ?? defaultMeta;
 }
 
 type SeoHeadProps = {

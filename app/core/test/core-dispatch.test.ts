@@ -4,6 +4,7 @@
 // headers (e.g. Cookie) at construction time, unlike Node's (undici) or
 // workerd's.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { blockedCoreResponse, classifyCorePath, dispatchToRails } from '../src/lib/core-dispatch';
 
 const FRAME = 'app/core';

@@ -1,11 +1,20 @@
 import { HTTPException } from 'hono/http-exception';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { createApexApp } from '../src/create-apex-app';
 
 const service = 'org';
 
 afterEach(() => vi.restoreAllMocks());
 
+/*
+ * Every case here needs something injected that the deployed app does not have:
+ * a route that throws `HTTPException`, a route that throws an unexpected error,
+ * or a `RATE_LIMITER` binding that refuses. None is reachable from an HTTP
+ * client, which is why these stay in Vitest while the surfaces they produce
+ * (404, /offline, the security headers on an error response) moved to
+ * `api/`. `app.request()` is the driver here, never the subject.
+ */
 describe('apex error boundary', () => {
   it('preserves deliberate HTTP errors from page routes', async () => {
     const app = createApexApp(
@@ -52,12 +61,5 @@ describe('apex error boundary', () => {
       { RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } },
     );
     expect(response.status).toBe(429);
-  });
-
-  it('serves the HTML health alias', async () => {
-    const app = createApexApp(() => undefined, { service });
-    const response = await app.request('/health.html');
-    expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toContain('text/html');
   });
 });

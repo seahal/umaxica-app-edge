@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+
 import './globals.css';
 
 /*
@@ -25,9 +26,9 @@ export default function GlobalError({
       <head>
         <title>現在、このページを表示できません — UMAXICA (APP)</title>
       </head>
-      <body className="bg-gray-50 text-gray-900 leading-body">
+      <body className="bg-gray-50 leading-body text-gray-900">
         <main className="grid min-h-screen place-content-center gap-3 p-6 text-center">
-          <h1 className="text-2xl font-semibold leading-heading">
+          <h1 className="text-2xl leading-heading font-semibold">
             現在、このページを表示できません
           </h1>
           <p>HTTP 500</p>

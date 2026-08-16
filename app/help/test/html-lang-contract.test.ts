@@ -1,14 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/font/google', () => ({
   Inter: () => ({ variable: 'font-sans' }),
 }));
 
+import NotFound from '../src/app/global-not-found';
 import Layout from '../src/app/layout';
 import Home from '../src/app/page';
-import NotFound from '../src/app/global-not-found';
 import { defaultLocale } from '../src/i18n/config';
 
 /**
@@ -25,10 +25,10 @@ import { defaultLocale } from '../src/i18n/config';
  * Documents that replace the root layout state the language of their own copy.
  */
 
-const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/.exec(html)?.[1];
+const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/u.exec(html)?.[1];
 
 /** Kana and CJK ideographs — present in Japanese copy, absent from English. */
-const JAPANESE = /[぀-ゟ゠-ヿ一-龯]/;
+const JAPANESE = /[぀-ゟ゠-ヿ一-龯]/u;
 
 describe('root layout lang', () => {
   it('declares lang from defaultLocale', () => {

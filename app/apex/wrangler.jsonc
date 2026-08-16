@@ -29,49 +29,16 @@
       "head_sampling_rate": 1
     }
   },
-  /**
-   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
-   *
-   * A wrangler environment deploys to a separate Worker named `<name>-<env>`,
-   * so an `env.production` has to re-declare `name` purely to cancel that
-   * out. Cloudflare's model is that the top level is the real Worker and
-   * environments are the variants, so `wrangler deploy` with no `--env` is
-   * the production deploy.
-   *
-   * The deploy scripts blank CLOUDFLARE_ENV: compose.yaml exports
-   * `CLOUDFLARE_ENV=development`, and with no `--env` that variable alone
-   * would redirect the deploy to `<name>-development`. Measured, not assumed.
-   *
-   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
-   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
-   * through `getPlatformProxy()` and writes every string one into its own
-   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
-   * comes back as `--env=production` and the upload dies looking for an
-   * `env.production` that deliberately does not exist. Measured, not assumed;
-   * tools/check-workers.mjs enforces the separation.
-   */
+  // The top level IS production; there is no `env.production`. Deploy scripts blank
+  // CLOUDFLARE_ENV so a no-`--env` deploy stays production; the tier reaches the
+  // Worker as EDGE_ENV only. tools/check-workers.mjs enforces both.
   "vars": {
     "EDGE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
-  /**
-   * The apex hostname is owned by the development Cloudflare Tunnel, so this
-   * Worker claims no route at all — see adr/008-edge-development-tunnel-exposure.md.
-   *
-   * This used to declare `{ pattern: "<apex>", custom_domain: true }` so that
-   * `wrangler deploy` would reconcile the binding on every production deploy and
-   * stop a hand-edited dashboard entry from pointing the hostname elsewhere. That
-   * property is now the exact hazard: a custom domain and a Tunnel Public
-   * Hostname cannot both own one name, so a production deploy would reclaim the
-   * hostname from the Tunnel and silently break the development route.
-   *
-   * Empty is therefore load-bearing, not a leftover. Restoring the apex domain to
-   * this Worker means removing the Tunnel's Public Hostname entry first, then
-   * putting the `routes` entry back — in that order.
-   *
-   * Named environments DO inherit this key, so `env.development` and
-   * `env.test` keep pinning `"routes": []` for their own reasons.
-   */
+  // Empty on purpose: the apex hostname is owned by the development Tunnel, which
+  // cannot share it with a custom domain — see adr/008-edge-development-tunnel-exposure.md.
+  // Named environments inherit this key, so they pin `"routes": []` too.
   "routes": [],
 
   "env": {
@@ -83,9 +50,8 @@
         "EDGE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
-      // Required, not decorative: `routes` IS inherited by named environments,
-      // so without this an `--env development` deploy reassigns the production
-      // custom domain to `<name>-development`. Measured via `--dry-run`.
+      // Required: `routes` IS inherited, so without this an `--env development`
+      // deploy would reassign the production custom domain.
       "routes": [],
       "observability": {
         "enabled": false,
@@ -119,12 +85,8 @@
         }
       ]
     },
-    /**
-     * `test` is never deployed — it exists so `wrangler dev --env test` and a
-     * future @cloudflare/vitest-pool-workers setup resolve test-tier config.
-     * Only non-inheritable keys are repeated here; inheritable ones (observability,
-     * placement, compatibility_*) fall through from the top level.
-     */
+    // `test` is never deployed — it only resolves test-tier config for
+    // `wrangler dev --env test`. Only non-inheritable keys are repeated here.
     "test": {
       "version_metadata": {
         "binding": "CF_VERSION_METADATA"
@@ -138,9 +100,8 @@
       "kv_namespaces": [
         {
           "binding": "BREAKER_KV",
-          // TODO: point at a test-only namespace once one is provisioned.
-          // Shares production's id today; harmless while test stays local
-          // (miniflare simulates KV in-memory and ignores the id).
+          // TODO: point at a test-only namespace once one exists. Shares production's id
+          // today; harmless while test stays local (miniflare ignores the id).
           "id": "9848aee238284c88ac888f61d9acb471"
         }
       ],
@@ -163,10 +124,7 @@
       "id": "9848aee238284c88ac888f61d9acb471"
     }
   ],
-  /**
-   * Rate Limiting
-   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
-   */
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
   "ratelimits": [
     {
       "name": "RATE_LIMITER",

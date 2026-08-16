@@ -1,6 +1,8 @@
 /** @jsxImportSource hono/jsx */
 import { jsxRenderer } from 'hono/jsx-renderer';
+
 import { brandFromEnv, getBrandName } from './brand';
+import type { ApexEnv } from './create-apex-app';
 import { defaultLocale } from './i18n/config';
 import { SeoHead } from './seo';
 import { AppShell } from './shell';
@@ -16,7 +18,7 @@ import { AppShell } from './shell';
  * permits this link, so the policy is now strictly `'self'` and one fewer
  * constant has to be kept in step with the stylesheet by hand.
  */
-export const renderer = jsxRenderer(({ children }, c) => {
+export const renderer = jsxRenderer<ApexEnv>(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
   const brandName = getBrandName(c.env);
   const language = c.get('language');
@@ -31,7 +33,7 @@ export const renderer = jsxRenderer(({ children }, c) => {
         <link rel="stylesheet" href="/style.css" />
         <script src="/service-worker-register.js" defer></script>
       </head>
-      <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body">
+      <body class="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900">
         <AppShell brandName={brandName} year={currentYear} language={language}>
           {children}
         </AppShell>

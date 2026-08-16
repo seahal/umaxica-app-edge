@@ -1,7 +1,7 @@
 # Edge development container
 
 `Containerfile` builds the Podman-first development image. It pins Node 24.19.0, pnpm
-11.21.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
+11.22.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
 Wrangler through project dependencies, and Tailscale tooling. No credential enters a build
 argument, environment instruction, copy, or image layer.
 
@@ -16,14 +16,21 @@ The effective user is `edge`, mapped through rootless `keep-id`. HOME is `/home/
 the XDG config/cache/data/state paths are writable without sudo. The image creates exact
 tool paths at build time.
 
-Start the credential-free Dev Container through Dev Containers CLI from any directory:
+Start the credential-free Dev Container through Dev Containers CLI from the repository root:
 
 ```bash
-/path/to/umaxica-apps-edge/podman/tools/dcup
+PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
+devcontainer up \
+  --docker-path /usr/bin/podman \
+  --docker-compose-path /usr/bin/podman-compose \
+  --workspace-folder .
 ```
 
-The launcher uses only `/usr/bin/podman` with `/usr/bin/podman-compose`, resolves the repository
-from its own location, and passes that absolute root as `--workspace-folder`.
+There is no launcher script. The engine flag and the `PODMAN_COMPOSE_PROVIDER` variable have
+no `devcontainer.json` equivalent and must be typed; everything else is Compose configuration
+the CLI reads on its own.
+[Dev Containers CLI startup on rootless Podman](devcontainer-cli-podman-startup.md) explains
+why each flag is required and what the removed `podman/tools/dcup` used to enforce.
 
 The optional direct-Compose workflows remain available separately:
 

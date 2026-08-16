@@ -1,5 +1,6 @@
-import type { NextConfig } from 'next';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+import type { NextConfig } from 'next';
+
 import { imageConfig } from './image-config';
 import { imageFontSecurityHeaders } from './security-headers';
 
@@ -19,8 +20,8 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
   typedRoutes: true,
-  images: imageConfig as NextConfig['images'],
-  headers: imageFontSecurityHeaders as NextConfig['headers'],
+  images: imageConfig,
+  headers: imageFontSecurityHeaders,
   allowedDevOrigins: ['localhost', '*.localhost', '172.18.0.2'],
   logging: {
     fetches: {

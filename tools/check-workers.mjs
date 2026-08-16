@@ -5,6 +5,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import {
   collectVpcBindings as vpcBindings,
   loadManifest,
@@ -228,7 +229,7 @@ function checkPublicAssets(ws) {
   const tracked = trackedFiles();
   for (const entry of readdirSync(publicDir, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue;
-    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//, '')}`;
+    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//u, '')}`;
     if (tracked.has(path)) continue;
 
     const relative = path.slice(`${ws}/`.length);
@@ -328,7 +329,7 @@ for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
   if (!existsSync(pkgPath)) continue;
   const scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {};
   for (const [name, body] of Object.entries(scripts)) {
-    if (/--env\s+production/.test(body)) {
+    if (/--env\s+production/u.test(body)) {
       fail(ws, `${name} must not pass --env production — the top level is production`);
     }
     // Per sub-command, because a script chains several with `&&`. A segment
@@ -336,8 +337,8 @@ for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
     // one that does not is at the mercy of the variable.
     for (const segment of body.split('&&')) {
       // `build:next` is plain `next build` — no wrangler, nothing to redirect.
-      if (!/opennextjs-cloudflare|wrangler/.test(segment)) continue;
-      if (/--env\s+\S+/.test(segment)) continue;
+      if (!/opennextjs-cloudflare|wrangler/u.test(segment)) continue;
+      if (/--env\s+\S+/u.test(segment)) continue;
       if (!segment.includes('CLOUDFLARE_ENV=')) {
         fail(
           ws,

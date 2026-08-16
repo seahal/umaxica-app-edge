@@ -6,8 +6,7 @@
   "scripts": {
     "format": "pnpm -r run format && oxfmt .",
     "format:check": "pnpm -r run format:check && oxfmt --check .",
-    "lint": "pnpm -r run lint && oxlint --type-aware --fix .",
-    "lint:check": "pnpm -r run lint:check && oxlint --type-aware .",
+    "lint": "pnpm -r run lint && oxlint --report-unused-disable-directives .",
     "check:workers": "node tools/check-workers.mjs",
     "check:connectivity": "node tools/verify-edge-connectivity.mjs all",
     "check:config": "node tools/verify-edge-connectivity.mjs config",
@@ -28,32 +27,36 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test && EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
     "test:cov": "pnpm -r run test:cov && EDGE_TRACKED_FILES=\"$(git ls-files)\" vitest run",
-    "e2e": "pnpm -r --workspace-concurrency=1 run test:e2e",
+    "test:api": "pnpm -r --workspace-concurrency=1 run test:api",
+    "test:e2e": "pnpm -r --workspace-concurrency=1 run test:e2e",
     "prepare": "lefthook install",
     "build": "pnpm -r run build",
-    "check": "pnpm run format:check && pnpm run lint:check && pnpm run typecheck && pnpm run test"
+    "check": "pnpm run check:static && pnpm run test",
+    "lint:types": "pnpm -r run lint:types && oxlint --type-aware --report-unused-disable-directives .",
+    "lint:fix": "pnpm -r run lint:fix && oxlint --type-aware --fix .",
+    "check:generated": "pnpm -r run check:generated",
+    "check:static": "pnpm run format:check && pnpm run lint && pnpm run lint:types && pnpm run check:generated && pnpm run typecheck && pnpm run knip && pnpm run check:workers"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
-    "dependency-cruiser": "^18.2.0",
     "happy-dom": "^20.11.2",
     "hono": "catalog:",
-    "knip": "^6.32.2",
+    "knip": "catalog:",
     "lefthook": "^2.1.10",
-    "oxfmt": "^0.63.0",
-    "oxlint": "1.78.0",
-    "oxlint-tsgolint": "^7.0.2001",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:",
     "vitest": "^4.1.10",
     "wrangler": "catalog:"
   },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "11.21.0",
+      "version": "11.22.0",
       "onFail": "download"
     },
     "runtime": {

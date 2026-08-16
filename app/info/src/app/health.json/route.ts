@@ -1,5 +1,15 @@
 import { connection } from 'next/server';
 
+// `NODE_ENV` is declared by the Wrangler-generated `NodeJS.ProcessEnv` as a
+// non-optional literal, so `process.env.NODE_ENV ?? null` could never take the
+// null branch — while the identity-route suite deletes the variable to prove
+// that branch works. Read through `Reflect.get`, the declared type stops
+// contradicting the runtime.
+function readNodeEnv(): string | null {
+  const value: unknown = Reflect.get(process.env, 'NODE_ENV');
+  return typeof value === 'string' ? value : null;
+}
+
 /*
  * Which copy of this frame answered — the same role `service` plays in
  * `createApexApp(..., { service })` on the apex workers, and a build-time
@@ -34,7 +44,7 @@ export async function GET() {
       status: 'OK',
       service: SERVICE,
       frame: FRAME,
-      environment: process.env.NODE_ENV ?? null,
+      environment: readNodeEnv(),
       time: new Date().toISOString(),
     },
     { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },

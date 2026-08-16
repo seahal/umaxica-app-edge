@@ -1,23 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { createApexApp } from '../src/create-apex-app';
 
 const service = 'com';
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('apex offline and not-found', () => {
-  it('serves offline HTML and a 404 status page', async () => {
-    const app = createApexApp(() => undefined, { service });
-
-    const offline = await app.request('/offline');
-    expect(offline.status).toBe(200);
-    await expect(offline.text()).resolves.toContain('オフラインです');
-
-    const missing = await app.request('/definitely-missing');
-    expect(missing.status).toBe(404);
-    await expect(missing.text()).resolves.toContain('HTTP 404');
-  });
-
+/*
+ * What `/offline` and the 404 page actually serve is asserted over real HTTP in
+ * `api/status-surfaces.hurl`. What remains here is the one status surface no
+ * HTTP client can reach: the 500 page, which needs a route that throws.
+ *
+ * `app.request()` is the driver, not the subject — the assertion is on the
+ * error boundary's choice of affordance, and reaching it requires injecting a
+ * failing handler that the deployed app deliberately does not have.
+ */
+describe('apex 5xx surface', () => {
   it('uses the 5xx reload affordance on unexpected errors', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const app = createApexApp(

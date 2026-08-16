@@ -168,7 +168,8 @@ function railsUnavailableResponse(reason: 'not-configured' | 'upstream'): Respon
  * agree on the identity of that constructor, and the name is stable in both.
  */
 function isTimeoutError(error: unknown): boolean {
-  const name = (error as { name?: unknown } | null | undefined)?.name;
+  if (typeof error !== 'object' || error === null || !('name' in error)) return false;
+  const name: unknown = error.name;
   return name === 'TimeoutError' || name === 'AbortError';
 }
 
@@ -202,7 +203,7 @@ async function readProxyErrorCode(response: Response): Promise<string | null> {
 
   try {
     const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
-    return /^ProxyError:\s*(\w+)/i.exec(body)?.[1] ?? null;
+    return /^ProxyError:\s*(\w+)/iu.exec(body)?.[1] ?? null;
   } catch {
     // A body that cannot be read is not evidence of anything; leave the
     // response to be passed through as the Rails error it appears to be.

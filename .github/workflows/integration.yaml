@@ -22,6 +22,12 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=high
 
@@ -33,6 +39,12 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm outdated || true
 
@@ -84,6 +96,12 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       # No --include filter: the default report already covers unused files,
       # exports, types, dependencies and devDependencies, and restricting it to
@@ -111,6 +129,12 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm run format:check
 
@@ -122,8 +146,51 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint:check
+      - run: pnpm run lint
+
+  lint-types:
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint:types
+
+  # `wrangler types` is regenerated and then re-checked, so a wrangler.jsonc
+  # change whose bindings were never regenerated fails here rather than
+  # surfacing as a type error nobody can reproduce.
+  generated-types:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:generated
 
   check-workers:
     runs-on: ubuntu-slim
@@ -131,6 +198,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/setup@v2
+        with:
+          # This job needs Node, not node_modules: `tools/check-workers.mjs`
+          # imports only `node:` builtins and its own local lib. Without this,
+          # `install`'s default of true made it install the whole workspace to
+          # run a script that does not read it.
+          install: false
       - run: node tools/check-workers.mjs
 
   typecheck:
@@ -141,6 +214,12 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
 
@@ -152,12 +231,74 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:cov
 
   build:
     runs-on: ubuntu-slim
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - app/apex
+          - dev/apex
+          - app/core
+          - app/docs
+          - app/news
+          - app/help
+          - app/info
+          - com/apex
+          - com/core
+          - com/docs
+          - com/news
+          - com/help
+          - com/info
+          - net/apex
+          - org/apex
+          - org/core
+          - org/docs
+          - org/news
+          - org/help
+          - org/info
+          - dev/acme
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          # `install` defaults to true, so leaving it out ran `pnpm install`
+          # here AND again in the explicit step below — twice per job, across
+          # 53 jobs. The explicit step is the one kept, because
+          # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
+          # the manifests no longer agree with instead of quietly updating it.
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C ${{ matrix.target }} run build
+
+  # The HTTP contract gate. Each unit's `test:api` starts its own server through
+  # `api/run.mjs`, runs Hurl against it and stops it again, so this job needs no
+  # service container and no shell backgrounding — the same command a developer
+  # runs locally.
+  #
+  # `dev/apex` is absent on purpose and not by oversight: its only server is
+  # `vercel dev`, which blocks on interactive device authentication without a
+  # linked project and therefore never listens in CI. That unit keeps its HTTP
+  # assertions in Vitest, which its `test/app.test.ts` header explains.
+  #
+  # `test:e2e` is deliberately NOT here. Playwright needs a browser binary that
+  # neither this workflow nor `Containerfile` installs, so adding the job would
+  # mean adding `playwright install --with-deps` to both; it stays a documented
+  # local gate until that is a decision someone makes on purpose.
+  test-api:
+    runs-on: ubuntu-slim
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -187,5 +328,6 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
+          install: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -C ${{ matrix.target }} run build
+      - run: pnpm -C ${{ matrix.target }} run test:api

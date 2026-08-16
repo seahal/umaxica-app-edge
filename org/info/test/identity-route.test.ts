@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { GET } from '../src/app/health.json/route';
 
 afterEach(() => {
@@ -29,7 +30,11 @@ describe('info identity route', () => {
         environment: null,
       });
     } finally {
-      process.env.NODE_ENV = previous;
+      // Written back through `Reflect.set` for the same reason it was removed
+      // through `Reflect.deleteProperty`: the Wrangler-generated
+      // `NodeJS.ProcessEnv` narrows `NODE_ENV` to the literal declared in
+      // wrangler.jsonc, so a plain assignment is a type error.
+      if (previous !== undefined) Reflect.set(process.env, 'NODE_ENV', previous);
     }
   });
 });

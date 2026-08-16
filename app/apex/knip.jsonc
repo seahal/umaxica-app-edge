@@ -26,7 +26,6 @@
   // script and from CSS (`@import 'tailwindcss'` in src/style.css). Knip reads
   // scripts for binaries but does not parse CSS at-rules, so both are named
   // here rather than reported unused.
-  "ignoreDependencies": ["tailwindcss", "@tailwindcss/cli"],
 
   // Types and constants that a module exports as part of its own public surface
   // and also consumes internally (e.g. RailsClientInit, DEFAULT_BRAND_SEPARATOR)

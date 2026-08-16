@@ -1,8 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
+
 import { expectTitleContract, FORBIDDEN_TOKEN, resolveTitle, TLD } from './utils/title-contract';
 
 vi.mock('next/font/google', () => ({
@@ -62,17 +64,17 @@ describe('page title regression guard', () => {
   it.each(pages.filter((file) => !isIndexPage(file)))(
     '%s declares its own page-specific title',
     async (file) => {
-      const module = (await import(/* @vite-ignore */ `../src/app/${file}`)) as Record<
+      const pageModule = (await import(/* @vite-ignore */ `../src/app/${file}`)) as Record<
         string,
         unknown
       >;
 
       expect(
-        module.metadata !== undefined || module.generateMetadata !== undefined,
+        pageModule['metadata'] !== undefined || pageModule['generateMetadata'] !== undefined,
         `${file}: exports neither metadata nor generateMetadata — a new page must declare a title`,
       ).toBe(true);
 
-      const title = await resolveTitle(module);
+      const title = await resolveTitle(pageModule);
 
       // Rejects metadata = {}, title: '', title: '   ', and title: undefined.
       expect(typeof title, `${file}: resolved title is not a string`).toBe('string');
@@ -95,12 +97,12 @@ describe('page title regression guard', () => {
 
 describe('global-error document', () => {
   it('renders a non-empty <title> in its final HTML', async () => {
-    const module = (await import('../src/app/global-error')) as Record<string, unknown>;
+    const pageModule = (await import('../src/app/global-error')) as Record<string, unknown>;
 
     // A client component cannot export metadata, so the title is asserted on the
     // rendered output rather than on any exported value.
     const html = renderToStaticMarkup(
-      createElement(module.default as never, {
+      createElement(pageModule['default'] as never, {
         error: Object.assign(new Error('boom'), { digest: 'test' }),
         reset: () => {},
       }),

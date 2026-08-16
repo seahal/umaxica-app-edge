@@ -1,6 +1,7 @@
-import { createElement } from 'react';
 import { fireEvent, render } from '@testing-library/react';
+import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import GlobalError from '../src/app/global-error';
 import { ServiceWorkerRegistration } from '../src/components/service-worker-registration';
 

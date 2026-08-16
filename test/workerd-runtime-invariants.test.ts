@@ -13,6 +13,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -44,7 +45,7 @@ describe('Next.js options that workerd cannot honour', () => {
     expect(
       read(`${workspace}/next.config.ts`),
       `${workspace} must not enable cacheComponents — prerendered routes hang in workerd`,
-    ).not.toMatch(/cacheComponents:\s*true/);
+    ).not.toMatch(/cacheComponents:\s*true/u);
   });
 
   it('keeps the Vercel frame out of scope, since it does not run on workerd', () => {

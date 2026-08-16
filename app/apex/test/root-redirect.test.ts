@@ -39,6 +39,29 @@ describe('root-redirect utilities', () => {
     it('returns null for whitespace string', () => {
       expect(resolveRedirectUrl('   ')).toBeNull();
     });
+
+    /*
+     * Open-redirect protection. `resolveRedirectUrl` is an allowlist lookup, so
+     * none of these can produce a URL — but that is a property worth asserting
+     * against the function rather than against the route, because the route
+     * only ever shows the fallback and so cannot distinguish "rejected" from
+     * "accepted something harmless". `api/routes.hurl` proves the route is
+     * wired to this function; these cases prove the function is sound.
+     */
+    it.each([
+      ['a host suffix', 'jp.evil.com'],
+      ['percent-encoded dots', 'jp%2eevil%2ecom'],
+      ['a path separator', 'jp/evil'],
+      ['a backslash', String.raw`jp\evil`],
+      ['a userinfo separator', 'jp@evil.com'],
+      ['a protocol-relative host', '//evil.com'],
+      ['an absolute URL', 'https://evil.com'],
+      ['an embedded space', 'jp us'],
+      ['a numeric code', '123'],
+      ['a null byte', 'jp\0.evil.com'],
+    ])('returns null when the region carries %s', (_label, region) => {
+      expect(resolveRedirectUrl(region)).toBeNull();
+    });
   });
 
   describe(getDefaultRedirectUrl, () => {

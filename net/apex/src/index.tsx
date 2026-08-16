@@ -1,7 +1,9 @@
+/** @jsxImportSource hono/jsx */
 import { timeout } from 'hono/timeout';
+
 import { createApexApp } from './create-apex-app';
-import { setMeta } from './seo';
 import { getAboutMeta, renderAboutContent } from './page-content';
+import { setMeta } from './seo';
 
 const app = createApexApp(
   (pageRoutes) => {

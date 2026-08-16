@@ -1,5 +1,6 @@
-import { connection } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { connection } from 'next/server';
+
 import type { RailsClient } from '../../lib/rails-client';
 import { getRailsClient } from '../../lib/rails-client';
 import { checkRailsLiveness } from '../../lib/rails-health';
@@ -69,7 +70,7 @@ export async function GET() {
   try {
     const timestamp = getTimestamp();
     const context = getCloudflareContext() as { env?: CloudflareEnv };
-    const { id, tag, timestamp: revisionTimestamp } = context?.env?.REVISION ?? {};
+    const { id, tag, timestamp: revisionTimestamp } = context.env?.REVISION ?? {};
 
     return Response.json(
       {

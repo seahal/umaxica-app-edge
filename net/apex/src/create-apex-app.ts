@@ -1,12 +1,14 @@
-import { Hono } from 'hono';
+import type { BaseLogger } from '@hono/structured-logger';
+import { Hono, type Context } from 'hono';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
+
 import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
-import { defaultLocale, locales } from './i18n/config';
 import { renderHealthJson, renderHealthPage } from './health-page';
+import { defaultLocale, locales } from './i18n/config';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
@@ -17,8 +19,18 @@ export type ApexEnv = {
   Bindings: AssetEnv;
   Variables: {
     meta?: Meta;
+    // Set by `apexStructuredLogger`. Declared here so `c.get('logger')` is
+    // typed at every call site instead of being asserted back into shape.
+    logger: BaseLogger;
   };
 };
+
+// Hono types `c.env` as always present. It is not: the app runs with no
+// bindings at all outside the Workers runtime, which is what every
+// `app.request(path)` in the test suite does. Reading it through this
+// widening accessor keeps the guards below honest instead of leaving
+// optional chains the type checker believes are dead.
+const bindings = (c: Context<ApexEnv>): AssetEnv | undefined => c.env;
 
 type ConfigurePageRoutes = (pageRoutes: Hono<ApexEnv>) => void;
 
@@ -62,9 +74,9 @@ export function createApexApp(
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
-    const blocked = await checkRateLimit(c.req.raw, c.env?.RATE_LIMITER);
+    const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
     if (blocked) return blocked;
-    await next();
+    return next();
   });
   app.use('*', apexCsrf);
   // Reads the locale set from this unit's own config rather than repeating
@@ -100,7 +112,7 @@ export function createApexApp(
   app.get('/health.html', timeout(2000), (c) => renderHealthPage(c.env, options));
   app.get('/health.json', timeout(2000), (c) => renderHealthJson(c.env, options));
   app.get('/revision', (c) => {
-    const { id = null, tag = null, timestamp = null } = c.env?.CF_VERSION_METADATA ?? {};
+    const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
     return c.json({ id, tag, timestamp }, 200, {
       'Cache-Control': 'no-store',
       'X-Robots-Tag': 'noindex, nofollow',

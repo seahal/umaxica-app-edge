@@ -1,13 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/font/google', () => ({
   Inter: () => ({ variable: 'font-sans' }),
 }));
 
-import Layout from '../src/app/layout';
 import NotFound from '../src/app/global-not-found';
+import Layout from '../src/app/layout';
 import { defaultLocale } from '../src/i18n/config';
 
 /**
@@ -19,7 +19,7 @@ import { defaultLocale } from '../src/i18n/config';
  * derivation: changing `defaultLocale` alone must not leave `lang` behind.
  */
 
-const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/.exec(html)?.[1];
+const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/u.exec(html)?.[1];
 
 describe('root layout lang', () => {
   it('declares lang from defaultLocale', () => {

@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+
 import { defaultLocale, isLocale, type Locale } from './i18n/config';
 
-const BRAND_NAME = process.env.BRAND_NAME ?? 'UMAXICA';
+const BRAND_NAME = process.env['BRAND_NAME'] ?? 'UMAXICA';
 const TITLE_BRAND_NAME = 'UMAXICA';
 const BRAND_TLD = 'DEV';
 /** EM DASH — the UMAXICA title contract is `{PAGE} — UMAXICA ({TLD})`. */
@@ -73,7 +74,7 @@ function buildHealthPayload(): HealthPayload {
   return {
     status: 'OK',
     service: 'dev',
-    version: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+    version: process.env['VERCEL_GIT_COMMIT_SHA'] ?? null,
     edge: 'vercel',
     time: new Date().toISOString(),
   };
@@ -177,7 +178,7 @@ app.get('/about', (c) => {
 });
 
 app.get('/', (c) => {
-  const redirectUrl = process.env.DEV_CORE_URL ?? 'https://www.umaxica.dev/';
+  const redirectUrl = process.env['DEV_CORE_URL'] ?? 'https://www.umaxica.dev/';
   return c.redirect(redirectUrl, 301);
 });
 

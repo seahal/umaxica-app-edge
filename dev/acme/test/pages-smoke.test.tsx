@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+
 import HomePage from '../src/app/page';
 
 describe('dev/acme pages render without throwing', () => {

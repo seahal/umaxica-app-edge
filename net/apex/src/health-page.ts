@@ -17,7 +17,10 @@ type HealthPageOptions = {
   service: string;
 };
 
-function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPayload {
+// `env` is optional because it genuinely is: the bindings object is absent
+// outside the Workers runtime, which is why the reads below are guarded. The
+// parameter used to claim otherwise, which made those guards look dead.
+function buildHealthPayload(env: AssetEnv | undefined, options: HealthPageOptions): HealthPayload {
   return {
     status: 'OK',
     service: options.service,

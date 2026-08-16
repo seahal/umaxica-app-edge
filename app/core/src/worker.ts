@@ -1,7 +1,7 @@
 import { blockedCoreResponse, classifyCorePath, dispatchToRails } from './lib/core-dispatch';
 import { sanitizeHealthRequest } from './lib/health-request';
-import { checkRateLimit } from './lib/rate-limit';
 import nextWorker from './lib/next-handler';
+import { checkRateLimit } from './lib/rate-limit';
 
 /**
  * First code the Workers runtime invokes for every request to this frame's Core

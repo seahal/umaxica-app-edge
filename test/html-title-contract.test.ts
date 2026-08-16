@@ -1,20 +1,13 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { setCloudflareContext } from '@opennextjs/cloudflare';
 import { describe, expect, it, vi } from 'vitest';
+
 // @ts-expect-error React is provided by the app workspace, not the root package.
 import { createElement } from '../app/core/node_modules/react';
 import { renderToStaticMarkup } from '../app/core/node_modules/react-dom/server';
-import { setCloudflareContext } from '@opennextjs/cloudflare';
-import appApex from '../app/apex/src/index';
-import comApex from '../com/apex/src/index';
-import orgApex from '../org/apex/src/index';
-import netApex from '../net/apex/src/index';
-import { createApexApp as createAppApex } from '../app/apex/src/create-apex-app';
-import { createApexApp as createComApex } from '../com/apex/src/create-apex-app';
-import { createApexApp as createOrgApex } from '../org/apex/src/create-apex-app';
-import { createApexApp as createNetApex } from '../net/apex/src/create-apex-app';
-import { app as devApex } from '../dev/apex/src/app';
 
 // Every workspace resolves `next/font/google` to the same physical package, so
 // mocking that resolved path once covers all 16 root layouts. A bare
@@ -35,12 +28,12 @@ import * as comDocsLayout from '../com/docs/src/app/layout';
 import * as comHelpLayout from '../com/help/src/app/layout';
 import * as comInfoLayout from '../com/info/src/app/layout';
 import * as comNewsLayout from '../com/news/src/app/layout';
+import * as devAcmeLayout from '../dev/acme/src/app/layout';
 import * as orgCoreLayout from '../org/core/src/app/layout';
 import * as orgDocsLayout from '../org/docs/src/app/layout';
 import * as orgHelpLayout from '../org/help/src/app/layout';
 import * as orgInfoLayout from '../org/info/src/app/layout';
 import * as orgNewsLayout from '../org/news/src/app/layout';
-import * as devAcmeLayout from '../dev/acme/src/app/layout';
 
 type LayoutMetadata = { metadata: { title: { default: string; template: string } } };
 
@@ -102,7 +95,7 @@ const SATELLITE_ROLE: Record<string, string> = {
   news: 'News',
 };
 
-const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/;
+const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/u;
 
 /**
  * Surface and runtime names. A user-facing title must never reveal which
@@ -110,10 +103,10 @@ const TITLE_CONTRACT = /^(?:.+ — )?UMAXICA \((APP|COM|ORG|NET|DEV)\)$/;
  * split routes inside one FQDN invisibly.
  */
 const FORBIDDEN_TOKEN =
-  /\b(?:auth|core|apex|side|edge|next|next\.js|nextjs|hono|workers?|cloudflare|opennext)\b/i;
+  /\b(?:auth|core|apex|side|edge|next|next\.js|nextjs|hono|workers?|cloudflare|opennext)\b/iu;
 
 function trackedFiles(): string[] {
-  const injected = process.env.EDGE_TRACKED_FILES;
+  const injected = process.env['EDGE_TRACKED_FILES'];
   if (injected !== undefined) {
     return injected.split('\n').filter(Boolean);
   }
@@ -123,7 +116,7 @@ function trackedFiles(): string[] {
 }
 
 function titlesIn(html: string): string[] {
-  return [...html.matchAll(/<title[^>]*>([\s\S]*?)<\/title>/g)].map((match) => match[1] ?? '');
+  return [...html.matchAll(/<title[^>]*>([\s\S]*?)<\/title>/gu)].map((match) => match[1] ?? '');
 }
 
 type TitleExpectation = {
@@ -148,7 +141,7 @@ function expectTitleContract(html: string, { tld, requirePageSpecific, label }: 
 
   // 4. UMAXICA in exact uppercase.
   expect(title, `${label}: brand must be exactly "UMAXICA"`).toContain('UMAXICA');
-  expect(title, `${label}: brand casing must not vary`).not.toMatch(/Umaxica|umaxica/);
+  expect(title, `${label}: brand casing must not vary`).not.toMatch(/Umaxica|umaxica/u);
 
   // 5 + 6. EM DASH contract, uppercase TLD matching the deployment family.
   expect(title, `${label}: does not match the UMAXICA title contract`).toMatch(TITLE_CONTRACT);
@@ -163,7 +156,7 @@ function expectTitleContract(html: string, { tld, requirePageSpecific, label }: 
       `UMAXICA (${tld})`,
     );
     expect(title, `${label}: page-specific title must precede the EM DASH`).toMatch(
-      new RegExp(`^.+ — UMAXICA \\(${tld}\\)$`),
+      new RegExp(`^.+ — UMAXICA \\(${tld}\\)$`, 'u'),
     );
   }
 }
@@ -188,8 +181,10 @@ type ResolvedTitle = string | undefined;
 
 /** Resolve what a Next.js module actually contributes as a title. */
 async function resolveTitle(module: Record<string, unknown>): Promise<ResolvedTitle> {
-  const generate = module.generateMetadata as undefined | (() => Promise<{ title?: unknown }>);
-  const meta = generate ? await generate() : (module.metadata as { title?: unknown } | undefined);
+  const generate = module['generateMetadata'] as undefined | (() => Promise<{ title?: unknown }>);
+  const meta = generate
+    ? await generate()
+    : (module['metadata'] as { title?: unknown } | undefined);
   const title = meta?.title;
 
   if (typeof title === 'string') {
@@ -255,13 +250,13 @@ describe('page title regression guard', () => {
 
   const pages = trackedFiles().filter(
     (file) =>
-      /\/src\/app\/.*page\.tsx$/.test(file) &&
+      /\/src\/app\/.*page\.tsx$/u.test(file) &&
       !REDIRECT_ONLY.has(file) &&
       existsSync(join(repoRoot, file)),
   );
 
   it('finds the expected number of HTML pages', () => {
-    expect(pages.length).toBe(52);
+    expect(pages.length).toBe(64);
   });
 
   const contentPages = pages.filter((file) => !isIndexPage(file));
@@ -270,7 +265,7 @@ describe('page title regression guard', () => {
     const module = (await import(/* @vite-ignore */ `../${file}`)) as Record<string, unknown>;
 
     expect(
-      module.metadata !== undefined || module.generateMetadata !== undefined,
+      module['metadata'] !== undefined || module['generateMetadata'] !== undefined,
       `${file}: exports neither metadata nor generateMetadata — a new page must declare a title`,
     ).toBe(true);
 
@@ -347,7 +342,7 @@ describe('global-not-found documents', () => {
 
     // This document replaces the root layout, so no template can apply to it:
     // the title must be absolute and self-contained.
-    const title = (module.metadata as { title?: { absolute?: string } })?.title;
+    const title = (module['metadata'] as { title?: { absolute?: string } })?.title;
     expect(title?.absolute, `${file}: expected an absolute title`).toBeTypeOf('string');
 
     expectTitleContract(`<title>${title?.absolute}</title>`, {
@@ -357,7 +352,7 @@ describe('global-not-found documents', () => {
     });
 
     // It must still be a complete document.
-    const html = renderToStaticMarkup(createElement(module.default as never));
+    const html = renderToStaticMarkup(createElement(module['default'] as never));
     expect(html, `${file}: must render a full document`).toContain('<html');
   });
 });
@@ -380,7 +375,7 @@ describe('global-error documents', () => {
     // A client component cannot export metadata, so the title is asserted on the
     // rendered output rather than on any exported value.
     const html = renderToStaticMarkup(
-      createElement(module.default as never, {
+      createElement(module['default'] as never, {
         error: Object.assign(new Error('boom'), { digest: 'test' }),
         reset: () => {},
       }),
@@ -445,136 +440,29 @@ describe('rate limited 429 documents', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Guard C — Hono workers, asserted on the real HTTP response
+// Guards C and C2 — REMOVED, and where they went
 // ---------------------------------------------------------------------------
-
-describe('Hono apex HTML routes', () => {
-  const workers = [
-    ['app', appApex, createAppApex],
-    ['com', comApex, createComApex],
-    ['org', orgApex, createOrgApex],
-    ['net', netApex, createNetApex],
-  ] as const;
-
-  const env = { CF_VERSION_METADATA: {} };
-
-  it.each(workers)(
-    '%s apex serves contract-conforming HTML on every route',
-    async (family, app) => {
-      const tld = FAMILY_TLD[family] ?? '';
-
-      for (const path of ['/about', '/health', '/health.html', '/offline']) {
-        const response = await app.request(path, {}, env);
-        expect(response.headers.get('content-type'), `${family} ${path}`).toContain('text/html');
-        expectTitleContract(await response.text(), {
-          tld,
-          requirePageSpecific: true,
-          label: `${family} apex ${path}`,
-        });
-      }
-
-      const notFound = await app.request('/definitely-missing', {}, env);
-      expect(notFound.status).toBe(404);
-      expectTitleContract(await notFound.text(), {
-        tld,
-        requirePageSpecific: true,
-        label: `${family} apex 404`,
-      });
-    },
-  );
-
-  it.each(workers)(
-    '%s apex serves a contract-conforming 500 document',
-    async (family, _app, factory) => {
-      const app = factory(
-        (pageRoutes) => {
-          pageRoutes.get('/boom', () => {
-            throw new Error('induced failure');
-          });
-        },
-        { service: family },
-      );
-
-      const response = await app.request('/boom', {}, env);
-      expect(response.status).toBe(500);
-      expectTitleContract(await response.text(), {
-        tld: FAMILY_TLD[family] ?? '',
-        requirePageSpecific: true,
-        label: `${family} apex 500`,
-      });
-    },
-  );
-
-  it.each(workers)('%s apex leaves non-HTML responses untouched', async (family, app) => {
-    const healthJson = await app.request('/health.json', {}, env);
-    expect(healthJson.headers.get('content-type')).toContain('application/json');
-    const health = (await healthJson.json()) as Record<string, unknown>;
-    expect(Object.keys(health).sort()).toEqual(
-      ['edge', 'environment', 'service', 'status', 'time', 'version'].sort(),
-    );
-    expect(health).not.toHaveProperty('title');
-
-    const revision = await app.request('/revision', {}, env);
-    expect(revision.headers.get('content-type')).toContain('application/json');
-    const body = (await revision.json()) as Record<string, unknown>;
-    expect(Object.keys(body).sort()).toEqual(['id', 'tag', 'timestamp']);
-    expect(body).not.toHaveProperty('title');
-
-    // The apex root is a redirect, not an HTML document.
-    const root = await app.request('/', {}, env);
-    expect([301, 302, 400]).toContain(root.status);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Guard C2 — dev/apex, including the error documents this repository now owns
-// ---------------------------------------------------------------------------
-
-describe('dev apex HTML routes', () => {
-  it('serves contract-conforming HTML on every HTML route', async () => {
-    for (const path of ['/about', '/health', '/health.html']) {
-      const response = await devApex.request(path);
-      expectTitleContract(await response.text(), {
-        tld: 'DEV',
-        requirePageSpecific: true,
-        label: `dev apex ${path}`,
-      });
-    }
-  });
-
-  it('owns its 404 document rather than deferring to the platform default', async () => {
-    const response = await devApex.request('/definitely-missing');
-    expect(response.status).toBe(404);
-    expect(response.headers.get('content-type')).toContain('text/html');
-    expectTitleContract(await response.text(), {
-      tld: 'DEV',
-      requirePageSpecific: true,
-      label: 'dev apex 404',
-    });
-  });
-
-  it('owns its 500 document rather than deferring to the platform default', async () => {
-    // A fresh instance: Hono seals its router once the first request is matched,
-    // so the throwing route has to be registered before this app serves anything.
-    vi.resetModules();
-    const { app } = (await import('../dev/apex/src/app')) as { app: typeof devApex };
-    app.get('/__contract-boom', () => {
-      throw new Error('induced failure');
-    });
-
-    const response = await app.request('/__contract-boom');
-    expect(response.status).toBe(500);
-    expect(response.headers.get('content-type')).toContain('text/html');
-    expectTitleContract(await response.text(), {
-      tld: 'DEV',
-      requirePageSpecific: true,
-      label: 'dev apex 500',
-    });
-  });
-
-  it('leaves non-HTML responses untouched', async () => {
-    const healthJson = await devApex.request('/health.json');
-    expect(healthJson.headers.get('content-type')).toContain('application/json');
-    expect(await healthJson.json()).not.toHaveProperty('title');
-  });
-});
+//
+// This file used to end with two guards that drove the four Cloudflare apex
+// workers and dev/apex through `app.request()` and asserted the title contract,
+// the content types, the exact `/health.json` and `/revision` key sets and the
+// root redirect status. The response was the subject, so under this
+// repository's three-layer split they belong to Hurl, not to Vitest:
+//
+//   /about, /health, /health.html, /offline, 404   -> <unit>/api/title-contract.hurl
+//   /health.json and /revision key sets            -> the same file, as
+//                                                     `jsonpath "$.*" count`
+//   the root redirect and its Location             -> <unit>/api/routes.hurl
+//   the 500 document (needs a throwing route)      -> <unit>/test/title-contract.ts
+//   dev/apex, all of the above                     -> dev/apex/test/*.ts, which is
+//                                                     the documented exception —
+//                                                     see that unit's app.test.ts
+//
+// One property genuinely changed hands rather than moving: these guards ran the
+// four brands from ONE `it.each`, so a rule could not be satisfied in `app` and
+// forgotten in `org`. That cross-brand sweep now lives in Guards A, B, A2, D1,
+// D2 and D3 above — which still cover all sixteen Next frames and all twelve
+// satellite middlewares from one table — plus `TITLE_CONTRACT` and
+// `FORBIDDEN_TOKEN` here, which each unit's own `api/title-contract.hurl`
+// restates verbatim. The regexes agreeing is now a copy, not a shared constant.
+// If they drift, the place to notice is here.

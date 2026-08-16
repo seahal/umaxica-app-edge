@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { imageConfig } from '../image-config';
 
 describe('imageConfig', () => {

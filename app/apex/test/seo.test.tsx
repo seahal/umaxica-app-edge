@@ -1,8 +1,19 @@
 /** @jsxImportSource hono/jsx */
 import { Hono } from 'hono';
 import { renderToString } from 'hono/jsx/dom/server';
+
 import { SeoHead, getMeta, setMeta, type Meta } from '../src/seo';
 
+/*
+ * The seo module in isolation. The throwaway `new Hono()` apps below are a
+ * rendering harness, not a server: they exist to drive `SeoHead` with metadata
+ * shapes this unit's one page never produces — Open Graph tags, Twitter cards,
+ * an explicit canonical, a bare brand-only title. What `/about` actually emits
+ * is asserted over real HTTP in `api/routes.hurl`.
+ *
+ * That split is the reason these stay in Vitest: an input the deployed app has
+ * no route for cannot be reached by an HTTP client at all.
+ */
 describe('seo helpers', () => {
   it('setMeta makes metadata available via getMeta', async () => {
     const app = new Hono();

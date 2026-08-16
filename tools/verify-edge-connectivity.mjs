@@ -19,6 +19,7 @@
 import { spawn } from 'node:child_process';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import {
   describeServiceIdProblem,
   loadManifest,
@@ -73,7 +74,7 @@ export function loadSurfaces(manifest = loadManifest()) {
   return manifest.railsBacked.map((ws) => {
     const [brand, frame] = ws.split('/');
     const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
-    const port = Number(/--port\s+(\d+)/.exec(pkg.scripts?.dev ?? '')?.[1]);
+    const port = Number(/--port\s+(\d+)/u.exec(pkg.scripts?.dev ?? '')?.[1]);
     if (!Number.isInteger(port)) {
       throw new Error(`${ws}: could not read a --port from its dev script`);
     }
@@ -127,7 +128,7 @@ export function loadTunnelSurfaces(manifest = loadManifest()) {
   return workspaces.map(({ ws, runtime }) => {
     const [brand, frame] = ws.split('/');
     const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
-    const port = Number(/--port\s+(\d+)/.exec(pkg.scripts?.dev ?? '')?.[1]);
+    const port = Number(/--port\s+(\d+)/u.exec(pkg.scripts?.dev ?? '')?.[1]);
     if (!Number.isInteger(port)) {
       throw new Error(`${ws}: could not read a --port from its dev script`);
     }
@@ -189,7 +190,7 @@ export function tunnelHostFor(brand, frame, env = process.env) {
 /** The Rails origin a frame will send, read from its rails-client copy. */
 export function readRailsOrigin(ws) {
   const source = readFileSync(join(repoRoot, ws, 'src/lib/rails-client.ts'), 'utf8');
-  return /PRIVATE_RAILS_ORIGIN\s*=\s*'([^']+)'/.exec(source)?.[1] ?? null;
+  return /PRIVATE_RAILS_ORIGIN\s*=\s*'([^']+)'/u.exec(source)?.[1] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,7 +288,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
   if (output.includes('not logged in') || output.includes('you are not authenticated')) {
     return { transport: BLOCKED, layer: 'Wrangler auth', detail: 'no Cloudflare session' };
   }
-  if (/vpc service .*not found|could not find vpc service|service_id/.test(output)) {
+  if (/vpc service .*not found|could not find vpc service|service_id/u.test(output)) {
     return {
       transport: FAIL,
       layer: 'Binding',
@@ -318,7 +319,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
         return { transport: FAIL, layer, detail: `${code}: ${detail}`, code };
       }
     }
-    if (/timeout|aborted|timederror/.test(haystack)) {
+    if (/timeout|aborted|timederror/u.test(haystack)) {
       return { transport: FAIL, layer: 'Workers VPC', detail: 'timed out with no documented code' };
     }
     return {
@@ -340,7 +341,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
     // report "Rails answered 500" when Rails answered nothing at all — the tunnel
     // did — which is exactly the layer confusion this tool exists to prevent.
     // Checked before the status, because the status alone cannot distinguish it.
-    const proxyError = /ProxyError:\s*([a-z_]+)/i.exec(probe.body ?? '')?.[1];
+    const proxyError = /ProxyError:\s*([a-z_]+)/iu.exec(probe.body ?? '')?.[1];
     if (proxyError) {
       const known = TRANSPORT_CODES.find(([code]) => code === proxyError);
       return {
@@ -458,7 +459,10 @@ export function extractInterfaceBlock(source, name) {
 // Small utilities
 // ---------------------------------------------------------------------------
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 /**
  * Poll until `check()` resolves truthy or the deadline passes. Never a fixed
@@ -576,12 +580,15 @@ async function stopAll() {
 }
 
 let cleaningUp = false;
+// Declared once and registered twice rather than defined inside the loop: one
+// handler closing over one `cleaningUp` is what makes the second signal a no-op.
+const cleanUpAndExit = () => {
+  if (cleaningUp) return;
+  cleaningUp = true;
+  void stopAll().finally(() => process.exit(130));
+};
 for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => {
-    if (cleaningUp) return;
-    cleaningUp = true;
-    void stopAll().finally(() => process.exit(130));
-  });
+  process.on(signal, cleanUpAndExit);
 }
 
 // ---------------------------------------------------------------------------
@@ -672,10 +679,10 @@ async function readCloudflareAuth() {
 
 async function modeConfig(report, surfaces, manifest) {
   const checker = await run('node', ['tools/check-workers.mjs']);
-  if (checker.code !== 0) {
-    report.note(FAIL, `check-workers failed:\n${tail(checker.stdout + checker.stderr, 20)}`);
-  } else {
+  if (checker.code === 0) {
     report.note(PASS, `check-workers: ${checker.stdout.trim()}`);
+  } else {
+    report.note(FAIL, `check-workers failed:\n${tail(checker.stdout + checker.stderr, 20)}`);
   }
 
   const railsHosts = new Map();
@@ -689,21 +696,19 @@ async function modeConfig(report, surfaces, manifest) {
       const declared = (config.env?.vpc?.vpc_services ?? []).filter(
         (v) => v.binding === manifest.vpcBinding,
       );
-      if (declared.length !== 1) {
-        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
-      } else {
+      if (declared.length === 1) {
         const idProblem = describeServiceIdProblem(declared[0].service_id);
         if (idProblem) problems.push(idProblem);
         if (declared[0].remote !== true) problems.push('vpc_services must set remote: true');
+      } else {
+        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
       }
     }
 
     // The generated types are what the application actually compiles against,
     // so a binding present in wrangler.jsonc but absent here still fails at use.
     const typesPath = join(repoRoot, surface.ws, 'cloudflare-env.d.ts');
-    if (!existsSync(typesPath)) {
-      problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
-    } else {
+    if (existsSync(typesPath)) {
       const types = readFileSync(typesPath, 'utf8');
       const previewBlock = extractInterfaceBlock(types, 'VpcEnv');
       if (previewBlock === null) {
@@ -717,13 +722,15 @@ async function modeConfig(report, surfaces, manifest) {
           problems.push(`cloudflare-env.d.ts ${envName} must not declare ${manifest.vpcBinding}`);
         }
       }
+    } else {
+      problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
     }
 
     const origin = readRailsOrigin(surface.ws);
-    if (!origin) {
-      problems.push('could not read PRIVATE_RAILS_ORIGIN from rails-client.ts');
-    } else {
+    if (origin) {
       railsHosts.set(surface.key, new URL(origin).host);
+    } else {
+      problems.push('could not read PRIVATE_RAILS_ORIGIN from rails-client.ts');
     }
 
     report.record(
@@ -753,15 +760,15 @@ async function modeConfig(report, surfaces, manifest) {
       host === expected ? host : `sends Host ${host}, expected ${expected}`,
     );
   }
-  if (hosts.length !== surfaces.length) {
-    report.note(
-      FAIL,
-      `Rails Host must be distinct per frame; ${surfaces.length} frames share ${hosts.length} hosts`,
-    );
-  } else {
+  if (hosts.length === surfaces.length) {
     report.note(
       PASS,
       `Rails Host: ${surfaces.length} frames, ${hosts.length} distinct entry points`,
+    );
+  } else {
+    report.note(
+      FAIL,
+      `Rails Host must be distinct per frame; ${surfaces.length} frames share ${hosts.length} hosts`,
     );
   }
 
@@ -891,7 +898,7 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
   }
 
   const verdict = classifyProbeOutcome({ probe, wranglerOutput: worker.output });
-  const bindingLine = /env\.UMAXICA_APPS_EDGE_CF_WORKERS_VPC[^\n]*/.exec(worker.output)?.[0];
+  const bindingLine = /env\.UMAXICA_APPS_EDGE_CF_WORKERS_VPC[^\n]*/u.exec(worker.output)?.[0];
 
   for (const surface of surfaces) {
     const detail =
@@ -1257,7 +1264,7 @@ export function buildLinkIndex(surfaces = loadSurfaces()) {
 
 function renderLinksHtml(index) {
   const esc = (s) =>
-    s.replace(/[&<>"]/g, (c) => `&${{ '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot' }[c]};`);
+    s.replace(/[&<>"]/gu, (c) => `&${{ '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot' }[c]};`);
   const row = (f) => `
     <tr>
       <th scope="row"><code>${esc(f.ws)}</code><span class="port">:${f.port}</span></th>
@@ -1387,8 +1394,8 @@ async function resolvesInDns(host) {
 
 function classifyTransportError(error) {
   const text = String(error?.message ?? error);
-  if (/certificate|TLS|SSL|ERR_TLS/i.test(text)) return `TLS failed: ${text}`;
-  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(text)) return `DNS failed: ${text}`;
+  if (/certificate|TLS|SSL|ERR_TLS/iu.test(text)) return `TLS failed: ${text}`;
+  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/iu.test(text)) return `DNS failed: ${text}`;
   return `transport failed: ${text}`;
 }
 
@@ -1402,7 +1409,7 @@ function classifyTransportError(error) {
  * than by a status code, because a 302 on its own is also how `net/apex` and the
  * apex `/` behave.
  */
-const ACCESS_TEAM_DOMAIN = /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//i;
+const ACCESS_TEAM_DOMAIN = /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//iu;
 
 function accessRedirect(response) {
   const location = response.headers.get('location') ?? '';
@@ -1425,7 +1432,7 @@ function accessServiceTokenHeaders() {
 
 /** Anything that would reveal the origin's own address to a browser. */
 function findLocalLeak(text) {
-  return /localhost|127\.0\.0\.1|edge-core|0\.0\.0\.0/.exec(text ?? '')?.[0] ?? null;
+  return /localhost|127\.0\.0\.1|edge-core|0\.0\.0\.0/u.exec(text ?? '')?.[0] ?? null;
 }
 
 async function modeTunnel(report, surfaces) {
@@ -1670,23 +1677,23 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
   const identity = health.status === 200 ? parseSurfaceIdentityJson(health.body) : null;
   const brandOk = identity !== null && identity.service === brand && identity.frame === frame;
 
-  const identityStatus = !frameOk ? FAIL : identity === null ? WARN : brandOk ? PASS : FAIL;
+  const identityStatus = frameOk ? (identity === null ? WARN : brandOk ? PASS : FAIL) : FAIL;
   report.record(
     'Tunnel identity',
     key,
     identityStatus,
-    !frameOk
-      ? `HTTP ${landing.status}, "${marker.value}" absent — wrong frame or not rendered`
-      : identity === null
+    frameOk
+      ? identity === null
         ? `HTML carries "${marker.value}"; brand UNPROVEN — /health.json ${health.status}`
         : brandOk
           ? `HTML carries "${marker.value}"; /health.json service=${identity.service} frame=${identity.frame}`
-          : `/health.json says service=${identity.service} frame=${identity.frame}, want ${brand}/${frame} — WRONG SURFACE`,
+          : `/health.json says service=${identity.service} frame=${identity.frame}, want ${brand}/${frame} — WRONG SURFACE`
+      : `HTTP ${landing.status}, "${marker.value}" absent — wrong frame or not rendered`,
   );
 
   // A dev-server asset URL taken from the page it was served with, so the check
   // cannot pass against a stale or guessed hash.
-  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/.exec(landing.body)?.[1] ?? null;
+  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/u.exec(landing.body)?.[1] ?? null;
   const asset = assetPath
     ? await httpGet(`${base}${assetPath}`, 15_000, authHeaders).catch((e) => ({
         status: 0,

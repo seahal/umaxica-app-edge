@@ -1,16 +1,17 @@
-import { createElement } from 'react';
 import { fireEvent, render } from '@testing-library/react';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import ErrorPage from '../src/app/error';
+import GlobalError from '../src/app/global-error';
+import GlobalNotFound from '../src/app/global-not-found';
+import OfflinePage from '../src/app/offline/page';
+import { GET } from '../src/app/revision/route';
 import {
   setCloudflareContext,
   setCloudflareContextShouldThrow,
 } from './__mocks__/opennext-cloudflare';
-import ErrorPage from '../src/app/error';
-import OfflinePage from '../src/app/offline/page';
-import GlobalNotFound from '../src/app/global-not-found';
-import GlobalError from '../src/app/global-error';
-import { GET } from '../src/app/revision/route';
 
 function clickButton(container: HTMLElement, label: string) {
   const button = Array.from(container.querySelectorAll('button')).find(

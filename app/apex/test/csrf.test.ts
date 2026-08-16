@@ -1,6 +1,14 @@
-import { Hono } from 'hono';
-import { apexCsrf, isAllowedApexOrigin } from '../src/csrf';
+import { isAllowedApexOrigin } from '../src/csrf';
 
+/*
+ * The origin predicate only. Whether `apexCsrf` is mounted, and whether it
+ * actually refuses a cross-origin POST, is asserted over real HTTP in
+ * `api/csrf.hurl` — the two tests that used to live here could not tell: one
+ * mounted the middleware on a throwaway `new Hono()` (so it stayed green if
+ * `create-apex-app.ts` dropped it) and the other invoked the middleware against
+ * a hand-built fake context, which asserted the shape of the mock as much as
+ * the behaviour of the code.
+ */
 describe('apex CSRF config', () => {
   it('validates production and localhost apex origins', () => {
     expect(isAllowedApexOrigin('https://umaxica.com')).toBe(true);
@@ -18,49 +26,5 @@ describe('apex CSRF config', () => {
     expect(isAllowedApexOrigin('http://abc123.com-apex.workers.dev')).toBe(false);
     expect(isAllowedApexOrigin('https://workers.dev')).toBe(false);
     expect(isAllowedApexOrigin('https://preview.attacker-account.workers.dev')).toBe(false);
-  });
-
-  it('rejects cross-site form POST requests', async () => {
-    const app = new Hono();
-    app.use('*', apexCsrf);
-    app.post('/submit', (c) => c.text('ok'));
-
-    const response = await app.request('/submit', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded',
-        'sec-fetch-site': 'cross-site',
-      },
-      body: 'a=1',
-    });
-
-    expect(response.status).toBe(403);
-  });
-
-  it('allows form POST middleware execution from trusted apex origins', async () => {
-    const next = vi.fn();
-    const headers = {
-      'content-type': 'application/x-www-form-urlencoded',
-      origin: 'https://umaxica.app',
-      'sec-fetch-site': 'cross-site',
-    };
-    function header(): Record<string, string>;
-    function header(name: string): string | undefined;
-    function header(name?: string): string | Record<string, string> | undefined {
-      return name ? headers[name as keyof typeof headers] : headers;
-    }
-
-    await apexCsrf(
-      {
-        req: {
-          method: 'POST',
-          url: 'https://umaxica.app/submit',
-          header,
-        },
-      } as never,
-      next,
-    );
-
-    expect(next).toHaveBeenCalledOnce();
   });
 });

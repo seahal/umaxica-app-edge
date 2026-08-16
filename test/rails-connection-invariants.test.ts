@@ -18,7 +18,9 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import { readWranglerConfig as readWrangler } from '../tools/lib/wrangler-config.mjs';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -45,13 +47,13 @@ const RAILS_FRAMES = BRANDS.flatMap((brand) =>
  */
 function code(relativePath: string): string {
   return read(relativePath)
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/.*$/gm, '');
+    .replace(/\/\*[\s\S]*?\*\//gu, '')
+    .replace(/\/\/.*$/gmu, '');
 }
 
 /** Read a `const NAME = <value>;` declaration out of a client copy. */
 function readConstant(source: string, name: string): string | undefined {
-  return new RegExp(`const ${name} = (.+);`).exec(source)?.[1];
+  return new RegExp(`const ${name} = (.+);`, 'u').exec(source)?.[1];
 }
 
 describe('rails client layout', () => {
@@ -217,9 +219,9 @@ describe('rails client layout', () => {
         scripts?: { dev?: string };
       };
 
-      expect(source).toContain("localEnv.EDGE_LOCAL_NODE_RUNTIME === '1'");
-      expect(source).toContain("localEnv.EDGE_LOCAL_RAILS_ENABLED === '1'");
-      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /);
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1'");
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'");
+      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /u);
     }
   });
 
@@ -299,7 +301,7 @@ describe('workers vpc bindings', () => {
     expect(config).toContain('"vpc"');
     expect(config).toContain('"test"');
 
-    const declarations = config.match(new RegExp(VPC_BINDING, 'g')) ?? [];
+    const declarations = config.match(new RegExp(VPC_BINDING, 'gu')) ?? [];
     expect(declarations, `${workspace} must declare the binding exactly once`).toHaveLength(1);
 
     // The one declaration sits between the "vpc" and "test" keys — i.e. inside
@@ -351,7 +353,7 @@ describe('workers vpc bindings', () => {
      * after a migration — fails loudly.
      */
     const serviceIds = RAILS_FRAMES.flatMap(({ workspace }) =>
-      [...read(`${workspace}/wrangler.jsonc`).matchAll(/"service_id":\s*"([^"]+)"/g)].map(
+      [...read(`${workspace}/wrangler.jsonc`).matchAll(/"service_id":\s*"([^"]+)"/gu)].map(
         (match) => match[1],
       ),
     );

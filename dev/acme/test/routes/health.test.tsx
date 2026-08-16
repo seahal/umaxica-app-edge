@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { GET } from '../../src/app/health/route';
 
 describe('dev/acme health route', () => {

@@ -1,6 +1,6 @@
+import { PageMain } from '@/components/page-main';
 import { defaultLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
-import { PageMain } from '@/components/page-main';
 
 export default async function PageIndex() {
   const dict = await getDictionary(defaultLocale);

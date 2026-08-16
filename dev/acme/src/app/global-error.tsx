@@ -2,6 +2,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { useCallback, useEffect } from 'react';
+
 import './globals.css';
 
 /*
@@ -27,7 +28,7 @@ export default function GlobalError({
       <head>
         <title>現在、このページを表示できません — UMAXICA (DEV)</title>
       </head>
-      <body className="bg-linear-to-b from-canvas-top to-canvas font-serif text-ink leading-body">
+      <body className="bg-linear-to-b from-canvas-top to-canvas font-serif leading-body text-ink">
         <main className="grid min-h-screen place-content-center gap-3 p-6 text-center">
           <h1 className="text-5xl leading-heading">500</h1>
           <p className="text-muted">Something went wrong.</p>

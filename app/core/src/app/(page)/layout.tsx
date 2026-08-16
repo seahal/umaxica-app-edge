@@ -1,7 +1,7 @@
-import { defaultLocale } from '@/i18n/config';
-import { getDictionary } from '@/i18n/dictionaries';
 import { AppChrome } from '@/components/app-chrome';
 import { SiteFooter } from '@/components/site-footer';
+import { defaultLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/dictionaries';
 
 const BRAND_NAME = 'UMAXICA';
 

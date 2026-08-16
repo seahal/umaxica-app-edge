@@ -21,11 +21,13 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import * as appCore from '../app/core/src/lib/core-dispatch';
+import { classifyRailsRouteClass } from '../app/core/src/lib/rails-dispatch-log';
 import * as comCore from '../com/core/src/lib/core-dispatch';
 import * as orgCore from '../org/core/src/lib/core-dispatch';
-import { classifyRailsRouteClass } from '../app/core/src/lib/rails-dispatch-log';
 
 const repoRoot = join(import.meta.dirname, '..');
 const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
@@ -131,7 +133,7 @@ describe('route ownership contract', () => {
 
 describe('the three Cores stay one implementation', () => {
   /** Normalizes away the one line that differs by design: the public hostname. */
-  const normalize = (source: string) => source.replace(/jp\.umaxica\.(app|com|org)/g, 'jp.HOST');
+  const normalize = (source: string) => source.replace(/jp\.umaxica\.(app|com|org)/gu, 'jp.HOST');
 
   it('keeps core-dispatch.ts identical apart from the public hostname', () => {
     const digests = new Set(
@@ -176,8 +178,8 @@ describe('the three Cores stay one implementation', () => {
       const digests = new Set(
         CORES.map(({ brand }) =>
           read(`${brand}/core/${file}`)
-            .replace(/jp\.umaxica\.(app|com|org)/g, 'jp.HOST')
-            .replace(/(app|com|org)\/core/g, 'BRAND/core'),
+            .replace(/jp\.umaxica\.(app|com|org)/gu, 'jp.HOST')
+            .replace(/(app|com|org)\/core/gu, 'BRAND/core'),
         ),
       );
       expect(digests.size, `${file} has diverged between the three Cores`).toBe(1);
@@ -195,10 +197,10 @@ describe('one Rails timeout budget per frame', () => {
      * failure this catches.
      */
     for (const { brand } of CORES) {
-      const dispatch = /const RAILS_DISPATCH_TIMEOUT_MS = (\d+);/.exec(
+      const dispatch = /const RAILS_DISPATCH_TIMEOUT_MS = (\d+);/u.exec(
         read(`${brand}/core/src/lib/core-dispatch.ts`),
       )?.[1];
-      const client = /const RAILS_FETCH_TIMEOUT_MS = (\d+);/.exec(
+      const client = /const RAILS_FETCH_TIMEOUT_MS = (\d+);/u.exec(
         read(`${brand}/core/src/lib/rails-client.ts`),
       )?.[1];
 

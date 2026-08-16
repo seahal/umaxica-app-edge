@@ -22,6 +22,14 @@ packages:
   - org/news
 
 allowBuilds:
+  # Unlike every other entry here, hurl has NO prebuilt binary inside the
+  # tarball: the npm package is a thin installer whose postinstall fetches the
+  # Rust binary for the host platform from the project's GitHub release. Denying
+  # the script does not degrade the package, it leaves `hurl` absent and
+  # `pnpm test:api` failing with ENOENT. This is the one place in the toolchain
+  # where `ignore-scripts=true` has to be relaxed, and it is relaxed for a
+  # version-pinned devDependency that never reaches a Worker bundle.
+  '@orangeopensource/hurl': true
   # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
   # which nothing here uses: every Tailwind invocation in this repository is a
   # one-shot `build:css`. The package ships prebuilt binaries for the platforms
@@ -36,6 +44,13 @@ allowBuilds:
 
 catalog:
   '@cloudflare/workers-types': ^5.20260810.1
+  # Hurl is a Rust binary; this package is the official npm distribution of it
+  # (bins `hurl` and `hurlfmt`). Installing it as a devDependency rather than
+  # documenting a `brew`/`apt`/`cargo` step is what keeps pnpm the only entry
+  # point a contributor needs — and what makes the HTTP-contract suite run at
+  # the same version on a laptop and in CI. Catalogued for the same reason the
+  # rest of the toolchain is: twenty-one units must not drift apart.
+  '@orangeopensource/hurl': ^8.0.4
   '@opennextjs/cloudflare': ^1.19.11
   # Tailwind v4 has no JS config file: the theme is declared in each unit's own
   # stylesheet with `@theme`. `@tailwindcss/postcss` is the engine the Next
@@ -48,9 +63,20 @@ catalog:
   '@types/node': ^26.2.0
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
+  dependency-cruiser: ^18.2.0
   hono: ^4.13.2
+  knip: ^6.32.2
   next: ^16.3.0
   nuqs: ^2.9.5
+  # The static analysis toolchain. These were literal strings in twenty-two
+  # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
+  # the root), which is exactly the failure a catalog exists to prevent: a lint
+  # or type rule that fires in CI and not on a developer's machine is worse than
+  # the rule being off. oxlint and oxlint-tsgolint in particular have to move
+  # together — tsgolint is the type-aware backend oxlint shells out to.
+  oxfmt: ^0.63.0
+  oxlint: 1.78.0
+  oxlint-tsgolint: ^7.0.2001
   react: ^19.2.0
   react-aria-components: ^1.20.0
   react-dom: ^19.2.0
@@ -61,6 +87,12 @@ catalog:
   # the units that actually render a React Aria component install it; v2 is the
   # Tailwind v4 line (v1.x is for Tailwind v3).
   tailwindcss-react-aria-components: ^2.2.0
+  # TypeScript 7.0 went stable on 2026-07-08 and `tsc` is now the native (Go)
+  # compiler itself; `tsgo` only survives as the binary name inside the
+  # `@typescript/native-preview` nightlies, which this repository no longer
+  # installs. Every unit declares `typescript: catalog:` explicitly rather than
+  # leaning on root hoisting, so an extracted unit still resolves a compiler.
+  typescript: ^7.0.2
   vitest: ^4.1.10
   wrangler: ^4.123.0
 
@@ -125,6 +157,31 @@ overrides:
   # resolution failure instead of a reintroduced advisory. Re-check when the
   # advisory is retired or when core >= 2.8.0 becomes the floor everywhere.
   '@opentelemetry/core': '>=2.8.0'
+  # Advisory floors for transitive dev-only dependencies. Every entry below is
+  # reached through a devDependency (the `vercel` CLI in dev/acme and dev/apex,
+  # or vite/vitest), so none of them ship in a Worker bundle — but `pnpm audit`
+  # is a gate here, and the packages that pull them pin ranges we do not
+  # control. A floor turns "whatever the parent resolved" into a version the
+  # advisory database is clean on, and fails resolution loudly if a future bump
+  # would reintroduce one. Drop an entry once its parent's own range has moved
+  # past the floor on its own.
+  #
+  # Where a package is live on two majors, the floor is keyed per major so the
+  # override cannot drag a consumer across a breaking boundary.
+  '@tootallnate/once': '>=2.0.1'
+  ajv@8: '>=8.18.0'
+  # GHSA-g7r4-m6w7-qqqr only touches 0.27.3–0.28.0; the 0.25.x copy vite still
+  # resolves is unaffected and is deliberately left where it is.
+  esbuild@0.27: '>=0.28.1'
+  js-yaml@4: '>=4.3.1'
+  minimatch@10: '>=10.2.3'
+  path-to-regexp@6: '>=6.3.0'
+  path-to-regexp@8: '>=8.4.0'
+  smol-toml: '>=1.6.1'
+  tar: '>=7.5.21'
+  # The 5.x line is unpatched for the advisories that name `<6.27.0`, so there
+  # is no in-major floor to take: @vercel/node's undici@5 has to move to 6.
+  undici: '>=6.28.0'
 
 peerDependencyRules:
   allowAny:

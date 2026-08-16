@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { dispatchToRails } from '../../src/lib/core-dispatch';
 import {
   classifyRailsRouteClass,
   logRailsDispatch,
@@ -7,7 +9,6 @@ import {
   normalizeRailsMethod,
   type RailsDispatchLogEntry,
 } from '../../src/lib/rails-dispatch-log';
-import { dispatchToRails } from '../../src/lib/core-dispatch';
 
 let emitted: { channel: 'log' | 'warn' | 'error'; line: string }[] = [];
 

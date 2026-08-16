@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type * as NextServer from 'next/server';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type * as NextServer from 'next/server';
 
 const mocks = vi.hoisted(() => ({
   checkRailsLiveness: vi.fn(),
@@ -38,13 +38,13 @@ vi.mock('../src/lib/rails-health', () => ({
 
 const RAILS_OK = { liveness: { kind: 'ok', status: 200, latency_ms: 3 } } as const;
 
+import PageLayout from '../src/app/(page)/layout';
 import GlobalError from '../src/app/global-error';
 import GlobalNotFound from '../src/app/global-not-found';
 import { GET as getHealth } from '../src/app/health/route';
 import RootLayout, { metadata } from '../src/app/layout';
 import Loading from '../src/app/loading';
 import manifest from '../src/app/manifest';
-import PageLayout from '../src/app/(page)/layout';
 import robots from '../src/app/robots';
 import sitemap from '../src/app/sitemap';
 import UnauthorizedPage from '../src/app/unauthorized';

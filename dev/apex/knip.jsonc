@@ -26,7 +26,6 @@
   // script and from CSS (`@import 'tailwindcss'` in src/style.css). Knip reads
   // scripts for binaries but does not parse CSS at-rules, so both are named
   // here rather than reported unused.
-  "ignoreDependencies": ["tailwindcss", "@tailwindcss/cli"],
 
   // knip itself is repository-owned tooling (like oxlint/oxfmt/lefthook) and is
   // intentionally NOT duplicated into every unit's package.json. On extraction,

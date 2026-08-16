@@ -5,15 +5,17 @@
 
 ## Toolchain
 
-This project uses plain **pnpm** scripts for orchestration, with each tool (Next.js, Oxlint, Oxfmt, Vitest, tsgo, Playwright, Lefthook) invoked directly rather than through a wrapper CLI.
+This project uses plain **pnpm** scripts for orchestration, with each tool (Next.js, Oxlint, Oxfmt, tsc, Vitest, Hurl, Playwright, Lefthook) invoked directly rather than through a wrapper CLI. pnpm is the only package manager: npm, npx, yarn and bun are not used, `pnpm-lock.yaml` is the only lockfile, and `test/package-manager-invariants.test.ts` fails if another one is ever tracked.
 
 - Install: `pnpm install`
 - Format: `pnpm run format` / `pnpm run format:check`
-- Lint: `pnpm run lint` / `pnpm run lint:check`
+- Lint: `pnpm run lint` / `pnpm run lint:types` (`lint:fix` is the only one that rewrites code)
 - Type check: `pnpm run typecheck`
-- Test: `pnpm run test` / `pnpm run test:cov`
+- Test: `pnpm run test` / `pnpm run test:cov` (Vitest — see **Test layers** below)
+- HTTP test: `pnpm run test:api` (Hurl)
+- Browser test: `pnpm run test:e2e` (Playwright)
 - Build: `pnpm run build`
-- Everything at once: `pnpm run check`
+- Everything static, then unit tests: `pnpm run check`
 - Per-workspace: `pnpm --filter <workspace> run <script>` or `pnpm --dir <unit> run <script>`
 
 The root scripts are `pnpm -r` fan-outs over per-unit scripts of the same name; every deployment unit implements the same contract and can run it standalone from its own directory.
@@ -21,6 +23,53 @@ The root scripts are `pnpm -r` fan-outs over per-unit scripts of the same name; 
 Import test utilities from `vitest` (not a wrapper package). Oxlint config is `.oxlintrc.json` and Oxfmt config is `.oxfmtrc.json` — each deployment unit has its own copy of both, alongside its own `tsconfig.json`, `vitest.config.ts`, `vitest.setup.ts` and `knip.jsonc`; the root copies apply to repo-level files only. Do not replace a unit's copy with a root `extends` or a shared package — `test/deployment-unit-boundaries.test.ts` enforces this. Type-aware linting works via `oxlint-tsgolint`, invoked automatically by `oxlint --type-aware`.
 
 Tests are per-unit: running vitest from the repo root executes only `test/`, the repository-level invariant suite. A unit's tests live in `<unit>/test/` and run via `pnpm --dir <unit> run test`.
+
+## Test layers
+
+Three tools, split by **responsibility, not by capability**. Each can technically
+do the others' job; none may.
+
+| Layer           | Tool       | Lives in       | Answers                            |
+| --------------- | ---------- | -------------- | ---------------------------------- |
+| `pnpm test`     | Vitest     | `<unit>/test/` | did the internal logic break?      |
+| `pnpm test:api` | Hurl       | `<unit>/api/`  | did the HTTP contract break?       |
+| `pnpm test:e2e` | Playwright | `<unit>/e2e/`  | did the user's browser path break? |
+
+What decides where a test goes is **what the assertion is about**, never what the
+tool can reach:
+
+- An assertion on a **response** — status, headers, body, cookies, redirects —
+  goes in a `.hurl` file and runs against a real server. It must not import from
+  `src/` and must not call `app.request()`.
+- An assertion on something **no HTTP client can produce** — a route that throws,
+  an injected `RATE_LIMITER`, a Workers binding, a `console` line — stays in
+  Vitest. `app.request()` is allowed there as the _driver_; say so in a comment,
+  because the next reader cannot tell the two apart from the code alone.
+- An assertion needing a **real engine** — rendering, the accessibility tree,
+  service-worker activation, offline navigation — goes in Playwright. Status
+  codes and `Content-Type` do not belong in a `.spec.ts`.
+
+Duplicating one behaviour across layers is allowed only when the layers fail for
+different reasons. `POST /sign/in → Set-Cookie → GET /me` in Hurl, the JWT parser
+behind it in Vitest, and the login screen in Playwright is a valid three-layer
+split; the same `GET /health → 200` in all three is not.
+
+`pnpm test:api` starts its own server: each unit's `api/run.mjs` spawns
+`pnpm run dev`, waits, runs Hurl and stops it — reusing a server that is already
+listening, so `pnpm run dev` in another terminal is unaffected. `EDGE_API_BASE`
+points the same files at a deployment and spawns nothing. Each unit's
+`api/README.md` restates this locally and names the Vitest file every `.hurl`
+file replaced.
+
+Two things are deliberately not true yet, and should not be quietly "fixed":
+
+- `dev/apex` has **no `test:api`** — the one exception to the split. Its only
+  server is `vercel dev`, which blocks on interactive device authentication, so
+  no Hurl suite can run in CI or a clean checkout. See the header of
+  `dev/apex/test/app.test.ts`.
+- CI runs `test:api` but **not** `test:e2e`: no browser binary is installed by
+  `Containerfile` or by the workflow. Run `pnpm exec playwright install chromium`
+  before `test:e2e` locally.
 
 ## Logging
 
@@ -74,7 +123,7 @@ on how it is wired; the short version:
 `wrangler types` and are **gitignored in every unit**. Do not commit them.
 
 Each frame's `typecheck` runs `cf-typegen` first, so a fresh clone regenerates
-them before `tsgo` needs them; the apex workers do not, because they compile
+them before `tsc` needs them; the apex workers do not, because they compile
 without the generated file. Regenerating produces no git diff, which is the point
 — a committed copy can silently disagree with the `wrangler.jsonc` it came from,
 and nothing checks that. `tools/verify-edge-connectivity.mjs` reports a missing
@@ -83,7 +132,8 @@ file as "run cf-typegen" rather than as a failure, for the same reason.
 ## Review Checklist for Agents
 
 - [ ] Run `pnpm install` after pulling remote changes and before getting started.
-- [ ] Run `pnpm run format:check`, `pnpm run lint:check`, `pnpm run typecheck`, and `pnpm run test` to validate changes.
+- [ ] Run `pnpm run check` to validate changes — `format:check`, `lint`, `lint:types`, `check:generated`, `typecheck`, `knip`, `check:workers`, then `test`.
+- [ ] Run `pnpm run test:api` when you touched anything a client can observe: a route, a header, a redirect, a status, a rendered document.
 
 ## Design Principle
 

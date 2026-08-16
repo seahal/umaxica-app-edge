@@ -1,13 +1,14 @@
 import { within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { expectTitleContract, TLD } from './utils/title-contract';
 
 vi.mock('next/font/google', () => ({ Inter: () => ({ variable: 'font-sans' }) }));
 
+import About, { metadata as aboutMetadata } from '../src/app/about/page';
 import Layout from '../src/app/layout';
 import Page from '../src/app/page';
-import About, { metadata as aboutMetadata } from '../src/app/about/page';
 
 /**
  * The UMAXICA application shell, asserted on the emitted document.
@@ -44,7 +45,7 @@ describe('application shell', () => {
     const html = shell(Page);
 
     for (const tag of ['header', 'main', 'footer']) {
-      expect(html.match(new RegExp(`<${tag}[\\s>]`, 'g')) ?? [], `<${tag}>`).toHaveLength(1);
+      expect(html.match(new RegExp(`<${tag}[\\s>]`, 'gu')) ?? [], `<${tag}>`).toHaveLength(1);
     }
 
     expect(html.indexOf('<header')).toBeLessThan(html.indexOf('<main'));
@@ -116,14 +117,14 @@ describe('application shell', () => {
 
     // Utility navigation first, site identity second.
     expect(footer.indexOf('</nav>')).toBeLessThan(footer.indexOf('©'));
-    expect(footer).toMatch(/©\s*\d{4} UMAXICA/);
+    expect(footer).toMatch(/©\s*\d{4} UMAXICA/u);
     expect(
       within(contentinfo).getByRole('link', { name: 'https://help-jp.umaxica.com/' }),
     ).toHaveAttribute('href', 'https://help-jp.umaxica.com/');
   });
 
   it('links only to destinations that exist', () => {
-    const hrefs = [...shell(Page).matchAll(/href="(\/[^"]*)"/g)].map((match) => match[1]);
+    const hrefs = [...shell(Page).matchAll(/href="(\/[^"]*)"/gu)].map((match) => match[1]);
 
     // Neither a privacy nor a terms route exists in this repository, and there
     // is no reusable legal text to build one from, so neither may be linked.
@@ -142,7 +143,7 @@ describe('/about', () => {
 
     expect(html).toContain('<h1');
     expect(html).toContain('このサイトについて');
-    expect(html.match(/<main[\s>]/g) ?? []).toHaveLength(1);
+    expect(html.match(/<main[\s>]/gu) ?? []).toHaveLength(1);
   });
 
   it('names the page in the title without naming the surface or the runtime', () => {

@@ -1,5 +1,6 @@
-import type { AssetEnv } from './security-headers';
 import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
+/** @jsxImportSource hono/jsx */
+import type { AssetEnv } from './security-headers';
 
 const ABOUT_DESCRIPTION =
   'umaxica.app is a UMAXICA platform domain. Services and content are available on dedicated subdomains';
@@ -24,7 +25,7 @@ export function renderAboutContent(language: string | undefined) {
   if (language === 'ja') {
     return (
       <div class="space-y-4">
-        <h1 class="text-3xl font-semibold leading-heading">このサイトについて</h1>
+        <h1 class="text-3xl leading-heading font-semibold">このサイトについて</h1>
         <p>
           本ドメイン（
           <a class="text-brand underline" href="https://umaxica.app">
@@ -50,7 +51,7 @@ export function renderAboutContent(language: string | undefined) {
 
   return (
     <div class="space-y-4">
-      <h1 class="text-3xl font-semibold leading-heading">About this site.</h1>
+      <h1 class="text-3xl leading-heading font-semibold">About this site.</h1>
       <p>
         This domain (
         <a class="text-brand underline" href="https://umaxica.app">

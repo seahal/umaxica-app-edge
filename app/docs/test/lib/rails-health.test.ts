@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { checkRailsLiveness } from '../../src/lib/rails-health';
+
 import type { RailsClient, RailsClientResult } from '../../src/lib/rails-client';
+import { checkRailsLiveness } from '../../src/lib/rails-health';
 
 function makeClient(result: RailsClientResult): RailsClient {
   return {

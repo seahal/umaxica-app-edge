@@ -11,7 +11,7 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 ## Prerequisites
 
 - Node.js 24.19.0 — Active LTS "Krypton" (declared in `package.json#devEngines.runtime`, matched by `Containerfile` as `node:24.19.0-trixie`)
-- [pnpm](https://pnpm.io/) 11.21.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
+- [pnpm](https://pnpm.io/) 11.22.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
 - Docker & Docker Compose (optional)
 
 ## Workspaces
@@ -60,6 +60,14 @@ route — in that order. See `adr/008-edge-development-tunnel-exposure.md`.
 ```bash
 pnpm install
 
+# Git hooks. `.npmrc` sets `ignore-scripts=true`, so the `prepare` script does
+# NOT run on install and the hooks are not installed for you.
+pnpm exec lefthook install
+
+# Browsers for `pnpm run test:e2e`. Neither the image nor CI installs one;
+# Containerfile provides Chromium's shared libraries but no browser binary.
+pnpm exec playwright install chromium
+
 # Run a specific workspace
 pnpm --filter <workspace> run dev   # e.g. com/core, app/core
 
@@ -69,8 +77,8 @@ podman compose up -d && podman compose exec core bash
 
 ## Scripts
 
-The toolchain is plain pnpm scripts backed by standalone Oxfmt, Oxlint, Vitest,
-and tsgo — nothing wraps `next dev` / `next build`.
+The toolchain is plain pnpm scripts backed by standalone Oxfmt, Oxlint, tsc,
+Vitest, Hurl and Playwright — nothing wraps `next dev` / `next build`.
 
 Every deployment unit exposes the same script contract, and the root scripts are
 thin `pnpm -r` fan-outs over them plus the repository-level files:
@@ -78,14 +86,23 @@ thin `pnpm -r` fan-outs over them plus the repository-level files:
 ```bash
 pnpm run format          # each unit's `format`, then oxfmt . at the root
 pnpm run format:check    # each unit's `format:check`, then oxfmt --check .
-pnpm run lint            # each unit's `lint`, then oxlint --type-aware --fix .
-pnpm run lint:check      # each unit's `lint:check`, then oxlint --type-aware .
-pnpm run typecheck       # each unit's `typecheck` (tsgo --noEmit)
-pnpm run test            # each unit's `test`, then the root invariant suite
+pnpm run lint            # each unit's `lint`, then oxlint at the root
+pnpm run lint:types      # the same, with `--type-aware` (needs a whole program)
+pnpm run lint:fix        # the only script that rewrites code
+pnpm run typecheck       # each unit's `typecheck` (cf-typegen, then tsc --noEmit)
+pnpm run test            # each unit's Vitest run, then the root invariant suite
 pnpm run test:cov        # same, with per-unit coverage thresholds
+pnpm run test:api        # each unit's Hurl suite, one unit at a time
+pnpm run test:e2e        # each unit's Playwright run, one unit at a time
 pnpm run build           # each unit's native build (Wrangler / OpenNext / Next)
-pnpm run check           # format:check + lint:check + typecheck + test
+pnpm run check           # check:static + test
+pnpm run check:static    # format:check + lint + lint:types + check:generated
+                         #   + typecheck + knip + check:workers
 ```
+
+`check` deliberately stops short of `test:api` and `test:e2e`: those start
+servers, so they are a separate gate rather than part of the one a pre-push hook
+can afford. See [Testing](#testing) for what each layer is responsible for.
 
 Run any of them for a single deployment unit — this is the same command the
 root fan-out uses, and it works from the unit's own directory:
@@ -106,17 +123,18 @@ enforces this.
 
 ### Toolchain
 
-| Tool                                                            | Role                                 | Version   |
-| --------------------------------------------------------------- | ------------------------------------ | --------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.21.0   |
-| [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x      |
-| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.63.x    |
-| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.78.x    |
-| [tsgo](https://github.com/microsoft/typescript-go)              | Type checker (`pnpm run typecheck`)  | 7.0.0-dev |
-| [Vitest](https://vitest.dev/)                                   | Test runner (`pnpm run test`)        | 4.1.x     |
-| [Playwright](https://playwright.dev/)                           | Browser/E2E tests                    | 1.59.x    |
-| [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x     |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.x       |
+| Tool                                                            | Role                                 | Version |
+| --------------------------------------------------------------- | ------------------------------------ | ------- |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.22.0 |
+| [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x    |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.63.x  |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.78.x  |
+| [TypeScript](https://www.typescriptlang.org/)                   | Type checker (`pnpm run typecheck`)  | 7.0.x   |
+| [Vitest](https://vitest.dev/)                                   | Unit tests (`pnpm run test`)         | 4.1.x   |
+| [Hurl](https://hurl.dev/)                                       | HTTP tests (`pnpm run test:api`)     | 8.0.x   |
+| [Playwright](https://playwright.dev/)                           | Browser E2E (`pnpm run test:e2e`)    | 1.62.x  |
+| [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x   |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.x     |
 
 ### Node and pnpm versions
 
@@ -125,7 +143,7 @@ enforces this.
 ```jsonc
 "devEngines": {
   "runtime":        { "name": "node", "version": "24.19.0", "onFail": "warn" },
-  "packageManager": { "name": "pnpm", "version": "11.21.0", "onFail": "download" }
+  "packageManager": { "name": "pnpm", "version": "11.22.0", "onFail": "download" }
 }
 ```
 
@@ -154,7 +172,7 @@ together; the test tells you when you have edited only one.
 
 The development environment is started with Dev Containers CLI over rootless Podman.
 
-- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.21.0
+- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.22.0
   pre-installed via the standalone script documented at <https://pnpm.io/installation>.
   Both are
   pinned to exact versions so a rebuild reproduces the same toolchain, and both match
@@ -174,15 +192,20 @@ The development environment is started with Dev Containers CLI over rootless Pod
   - Security: Trivy, Gitleaks (via pre-commit hooks)
 - Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
 
-Start the credential-free Dev Container from any working directory:
+Start the credential-free Dev Container from the repository root:
 
 ```bash
-/path/to/umaxica-apps-edge/podman/tools/dcup
+PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
+devcontainer up \
+  --docker-path /usr/bin/podman \
+  --docker-compose-path /usr/bin/podman-compose \
+  --workspace-folder .
 ```
 
-The launcher fixes Dev Containers CLI to `/usr/bin/podman`,
-`/usr/bin/podman-compose`, and this repository root. It rejects root/sudo and adds neither a
-Docker fallback nor host credential mounts.
+There is no launcher script. `PODMAN_COMPOSE_PROVIDER` and `--docker-path` are both mandatory
+and have no `devcontainer.json` equivalent; run the command as the normal rootless user, never
+through `sudo`. See
+[Dev Containers CLI startup on rootless Podman](docs/development/devcontainer-cli-podman-startup.md).
 
 The direct Compose launcher remains available for optional overlays:
 
@@ -242,15 +265,69 @@ The authoritative topology and security documentation begins at
 
 ## Testing
 
-- **Vitest** runs with the `happy-dom` environment and globals enabled.
-- Tests live in each workspace's `test/` directory.
-- Setup file: `vitest.setup.ts` (imports `@testing-library/jest-dom`).
-- Testing libraries: `@testing-library/react`, `@testing-library/user-event`.
+Three tools, split by **responsibility, not by capability**. Each can technically
+do the others' job; none may.
+
+| Layer           | Tool       | Lives in       | Answers                                      |
+| --------------- | ---------- | -------------- | -------------------------------------------- |
+| `pnpm test`     | Vitest     | `<unit>/test/` | did the internal logic break?                |
+| `pnpm test:api` | Hurl       | `<unit>/api/`  | did the HTTP contract break?                 |
+| `pnpm test:e2e` | Playwright | `<unit>/e2e/`  | did the user's path through a browser break? |
+
+The rule that decides where something goes is **what the assertion is about**,
+not what the tool can reach:
+
+- If the assertion is on a **response** — status, headers, body, cookies,
+  redirects — it belongs in a `.hurl` file and runs against a real server.
+- If the assertion is on **something no HTTP client can produce** — a route that
+  throws, an injected `RATE_LIMITER`, a Workers binding, a `console` line — it
+  stays in Vitest. There `app.request()` is the driver and the assertion is
+  elsewhere; every such case says so in a comment.
+- If the assertion needs a **real engine** — rendering, the accessibility tree,
+  service-worker activation, offline navigation — it belongs in Playwright.
+
+Duplication across layers is allowed only when the layers have different failure
+modes. `POST /sign/in → Set-Cookie → GET /me` is a Hurl test, the JWT parser
+behind it is a Vitest test, and the login screen is a Playwright test; the same
+`GET /health → 200` in all three is not.
+
+Each unit's `api/README.md` states this contract locally and names the Vitest
+file each `.hurl` file replaced.
+
+### Running them
 
 ```bash
-pnpm exec vitest run path/to/file.test.ts   # run a single test file
-pnpm exec vitest run -t "test name"         # run tests matching a name
+pnpm run test                              # every unit, then the root invariants
+pnpm --dir app/core run test               # one unit
+pnpm exec vitest run path/to/file.test.ts  # one file
+pnpm exec vitest run -t "test name"        # one test
+
+pnpm --dir app/core run test:api           # starts a server, runs Hurl, stops it
+EDGE_API_BASE=https://preview.example run  # ...or point it at a deployment
+pnpm --dir app/core run test:e2e           # Playwright, with its own webServer
 ```
+
+`test:api` needs no running server: each unit's `api/run.mjs` starts one, waits
+for it, and stops it — and reuses one that is already listening, so
+`pnpm run dev` in another terminal keeps working. Setting `EDGE_API_BASE` targets
+an existing deployment and spawns nothing.
+
+**Vitest** runs with the `happy-dom` environment and globals enabled, from each
+unit's own `vitest.config.ts` and `vitest.setup.ts`
+(`@testing-library/jest-dom`, `@testing-library/react`).
+
+Two caveats worth knowing before a first run:
+
+- **Playwright browsers are not installed** by the image or by CI. Run
+  `pnpm exec playwright install chromium` once before `test:e2e`.
+- **`dev/apex` has no `test:api`**, and this is the single exception to the
+  split above. Its only server is `vercel dev`, which blocks on interactive
+  device authentication without a linked project, so no Hurl suite can run in CI
+  or a clean checkout. Its HTTP assertions stay in Vitest; the header of
+  `dev/apex/test/app.test.ts` records why and what would retire them.
+
+CI runs `test:api` for the other twenty units. It does not run `test:e2e`, for
+the browser reason above.
 
 ## TypeScript
 
@@ -258,7 +335,8 @@ Strict mode is enabled across the monorepo. Key compiler options:
 `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`.
 Module resolution is `Bundler`.
 
-> Do not modify the configurations for Oxlint, Oxfmt, tsgo, or Vitest without
+> Do not modify the configurations for Oxlint, Oxfmt, TypeScript, Vitest, Hurl or
+> Playwright without
 > explicit user permission.
 
 ## Production Environment
@@ -290,8 +368,12 @@ Notes:
   that CI expected a `*-post` Worker while the workspace config uses `*-docs`,
   the Cloudflare Workers Build is still connected to the removed `post` Worker —
   reconnect or recreate that build for the matching docs Worker before deploying.
-- `npm --dir` is not a valid flag. If the platform requires npm, use
-  `npm --prefix app/docs run deploy:upload` instead.
+- `npm --dir` is not a valid flag — but neither is reaching for npm here. pnpm
+  is the only package manager this repository supports, `pnpm-lock.yaml` is the
+  only lockfile it tracks, and `test/package-manager-invariants.test.ts` fails
+  the build if another one appears. Use `pnpm --dir app/docs run deploy:upload`.
+  If a platform genuinely cannot run pnpm, that is a platform decision to make
+  deliberately, not a flag to swap.
 - **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
   The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
   as `--env=production`. The top level of every `wrangler.jsonc` here _is_
@@ -347,8 +429,10 @@ authenticated Core session material.
 ## Review Checklist for Agents
 
 - [ ] Run `pnpm install` after pulling remote changes and before getting started.
-- [ ] Run `pnpm run format:check`, `pnpm run lint:check`, `pnpm run typecheck`,
-      and `pnpm run test` to validate changes.
+- [ ] Run `pnpm run check` — `format:check`, `lint`, `lint:types`,
+      `check:generated`, `typecheck`, `knip`, `check:workers`, then `test`.
+- [ ] Run `pnpm run test:api` when you touched anything a client can observe:
+      a route, a header, a redirect, a status, a rendered document.
 
 ## Notes
 

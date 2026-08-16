@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import { PageHero } from '../../components/page-hero';
 
 /**

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { app } from '../src/app';
 import { expectTitleContract } from './utils/title-contract';
+
+/*
+ * Response assertions driven through `app.request()`. See the header of
+ * `test/app.test.ts` for why this unit alone keeps them in Vitest instead of
+ * moving them to an `api/*.hurl` suite.
+ */
 
 describe('dev apex HTML routes', () => {
   it('serves contract-conforming HTML on every HTML route', async () => {

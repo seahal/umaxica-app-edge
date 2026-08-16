@@ -554,7 +554,7 @@ Also established in the same run:
   catch-all 404 is a required part of the configuration rather than a hardening extra.
 - **Leak scan clean.** No `localhost`, `127.0.0.1`, `0.0.0.0`, `edge-core` or `10.89.*` in the body
   or in any `Location`, on any of the three. `/` sets no `Location` at all.
-- **Repository checks pass** with the change in place: `format:check`, `lint:check`, `typecheck`,
+- **Repository checks pass** with the change in place: `format:check`, `lint`, `lint:types`, `typecheck`,
   and 1247 tests across 165 files.
 
 Nothing outside the three `info` workspaces, the identity test, and the checker's `ident` gate was

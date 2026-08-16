@@ -197,7 +197,7 @@ and nothing else in that family. Two things enforce it:
   pnpm's strict layout already makes a direct import unresolvable from a unit.
 - Each of the fifteen units bans them by name in `.oxlintrc.json`, as a second
   `no-restricted-imports` pattern group alongside the `shared/` one. Verified to
-  fire: importing `react-aria` fails `lint:check`, importing
+  fire: importing `react-aria` fails `lint`, importing
   `react-aria-components` does not.
 
 The one foreseeable exception is `@internationalized/date`, whose `CalendarDate`

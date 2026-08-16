@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
 import { ServiceWorkerRegistration } from '../src/components/service-worker-registration';
 
 function removeServiceWorker() {

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
+
 import { app } from '../src/app';
 import { defaultLocale, isLocale, locales } from '../src/i18n/config';
+
+/*
+ * Response assertions driven through `app.request()`. See the header of
+ * `test/app.test.ts` for why this unit alone keeps them in Vitest instead of
+ * moving them to an `api/*.hurl` suite.
+ */
 
 /**
  * `<html lang>` must state the language the document is actually written in.
@@ -11,7 +18,7 @@ import { defaultLocale, isLocale, locales } from '../src/i18n/config';
  * `defaultLocale`. Both used to read from ad-hoc string literals.
  */
 
-const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/.exec(html)?.[1];
+const langOf = (html: string): string | undefined => /<html[^>]*\slang="([^"]*)"/u.exec(html)?.[1];
 
 describe('locale config', () => {
   it('treats every declared locale as a locale, and nothing else', () => {
