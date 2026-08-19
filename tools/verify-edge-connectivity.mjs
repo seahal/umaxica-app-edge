@@ -716,11 +716,16 @@ async function modeConfig(report, surfaces, manifest) {
       } else if (!previewBlock.includes(manifest.vpcBinding)) {
         problems.push(`cloudflare-env.d.ts VpcEnv does not declare ${manifest.vpcBinding}`);
       }
-      for (const envName of ['DevelopmentEnv', 'TestEnv']) {
-        const block = extractInterfaceBlock(types, envName);
-        if (block?.includes(manifest.vpcBinding)) {
-          problems.push(`cloudflare-env.d.ts ${envName} must not declare ${manifest.vpcBinding}`);
-        }
+      const developmentBlock = extractInterfaceBlock(types, 'DevelopmentEnv');
+      if (developmentBlock === null) {
+        problems.push('cloudflare-env.d.ts declares no DevelopmentEnv — run cf-typegen');
+      } else if (!developmentBlock.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts DevelopmentEnv does not declare ${manifest.vpcBinding}`);
+      }
+      // `test` is the one tier that must stay without a Rails transport.
+      const testBlock = extractInterfaceBlock(types, 'TestEnv');
+      if (testBlock?.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts TestEnv must not declare ${manifest.vpcBinding}`);
       }
     } else {
       problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
@@ -813,26 +818,37 @@ async function modeConfig(report, surfaces, manifest) {
     `Development VPC Service: ${manifest.vpcDevelopmentServiceId}${devService ? ' (verified)' : ''}`,
   );
   report.note(
-    productionServices.size ? PASS : WARN,
+    productionServices.size ? PASS : FAIL,
     productionServices.size
       ? `Production VPC Service: ${[...productionServices].join(', ')}`
-      : 'Production VPC Service: none — env.production declares no binding, so production fails closed (ADR 006)',
+      : 'Production VPC Service: none — the top level (production) declares no binding, so deployed frames answer rails not-configured',
   );
 
+  // Sharing one Service across the two tiers is the bootstrap topology, not a
+  // misconfiguration: AWS production Rails does not exist, so the only way to
+  // exercise the deployed edge → VPC → tunnel → Rails path is against local
+  // Rails. It is reported as a WARN rather than a PASS because it is a state to
+  // leave, and the risk it carries is real — production Rails connectivity is
+  // only as available as a developer's machine. See ADR 006.
   const shared = [...productionServices].includes(manifest.vpcDevelopmentServiceId);
   if (shared) {
     report.note(
-      FAIL,
-      'Environment isolation: production reuses the development VPC Service — it is bound to the development tunnel',
+      manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId ? WARN : FAIL,
+      manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId
+        ? 'Environment isolation: BOOTSTRAP — production shares the development VPC Service, so deployed production Rails traffic terminates on a developer machine. Cut over by provisioning a production VPC Service and changing vpcProductionServiceId'
+        : 'Environment isolation: a frame was left on the development VPC Service after the AWS cutover',
     );
   } else {
     report.note(PASS, 'Environment isolation: production and development share no service_id');
   }
 
-  if (process.env.STRICT_ENV_ISOLATION === '1' && productionServices.size === 0) {
+  if (
+    process.env.STRICT_ENV_ISOLATION === '1' &&
+    manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId
+  ) {
     report.note(
       FAIL,
-      'STRICT_ENV_ISOLATION: no production VPC Service exists yet (expected once the production tunnel is created)',
+      'STRICT_ENV_ISOLATION: production still uses the bootstrap (development) VPC Service — expected once the production tunnel exists',
     );
   }
 
@@ -1014,7 +1030,9 @@ async function modeNext(report, surfaces) {
 
   report.note(
     SKIP,
-    "/health's Rails half under next dev is never VPC evidence — env.development carries no binding. See mode `vpc`.",
+    "/health's Rails half under next dev is never VPC evidence. `next dev` is a Node process: it " +
+      'holds no wrangler binding whatever `env.development` declares, and answers from the ' +
+      'EDGE_LOCAL_* Node transport or not at all. See mode `vpc`.',
   );
 }
 
@@ -1455,8 +1473,9 @@ async function modeTunnel(report, surfaces) {
 
   report.note(
     SKIP,
-    'Tunnel reachability is not VPC evidence. These frames run on `next dev`/`wrangler dev`, ' +
-      'which carry no VPC binding, so /health answers rails not-configured by design. See mode `vpc`.',
+    'Tunnel reachability is not VPC evidence: a Tunnel route does not hand a process a Workers ' +
+      'binding. Under `next dev` the Rails half comes from the local Node transport, or reports ' +
+      'not-configured. See mode `vpc`.',
   );
   report.note(
     SKIP,

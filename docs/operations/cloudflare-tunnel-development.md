@@ -146,7 +146,7 @@ Cloudflare Workers runtime traffic is a different graph and does not pass throug
 
 ```text
 local workerd (pnpm preview:vpc) ── remote VPC binding ── development VPC Service ── Tunnel ── Rails
-deployed Worker                  ── production VPC binding (absent: fails closed)
+deployed Worker                  ── production VPC binding ── (bootstrap) the same development VPC Service ── Tunnel ── Rails
 ```
 
 A Tunnel route does not turn a local Node process into a Workers runtime, and it does not supply a

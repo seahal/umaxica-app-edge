@@ -23,10 +23,10 @@ describe('Renderer layout', () => {
     app.use(renderer);
     app.get('/', (c) => c.render(<p>Test content</p>));
 
-    const res = await app.request('/', {}, { BRAND_NAME: 'UMAXCA' });
+    const res = await app.request('/', {}, { BRAND_NAME: 'UMAXICA' });
     const body = await res.text();
 
-    expect(body).toContain('UMAXCA');
-    expect(body).toContain('<title>UMAXCA (NET)</title>');
+    expect(body).toContain('UMAXICA');
+    expect(body).toContain('<title>UMAXICA (NET)</title>');
   });
 });

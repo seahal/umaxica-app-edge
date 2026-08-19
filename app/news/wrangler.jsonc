@@ -40,61 +40,39 @@
   "placement": {
     "mode": "smart"
   },
-  /**
-   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
-   *
-   * Wrangler environments deploy to a *separate* Worker named
-   * `<name>-<env>`, so an `env.production` has to re-declare `name` just to
-   * cancel that out — fighting the tool to stand still. Cloudflare's own model
-   * is that the top level is the real Worker and environments are the variants,
-   * so `wrangler deploy` with no `--env` deploys production and every
-   * `--env` is a non-production variant.
-   *
-   * The deploy scripts blank CLOUDFLARE_ENV for this reason: the container
-   * exports `CLOUDFLARE_ENV=development`, and with no `--env` flag that
-   * variable alone would silently redirect a production deploy to
-   * `<name>-development`. Measured, not assumed.
-   *
-   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
-   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
-   * through `getPlatformProxy()` and writes every string one into its own
-   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
-   * comes back as `--env=production` and the upload dies looking for an
-   * `env.production` that deliberately does not exist. Measured, not assumed;
-   * tools/check-workers.mjs enforces the separation.
-   *
-   * Non-inheritable keys (vars, services, images, version_metadata, ratelimits,
-   * vpc_services, …) do NOT reach `env.*` from here — also measured: wrangler
-   * warns "not inherited by environments" and the environment resolves with no
-   * bindings at all. So production values sitting here cannot leak into a
-   * development session.
-   */
+  // The top level IS production; there is no `env.production`.
+  // Deploy scripts blank CLOUDFLARE_ENV so a no-`--env` deploy stays production, and the
+  // tier reaches the Worker as EDGE_ENV only. tools/check-workers.mjs enforces both.
   "vars": {
     "EDGE_ENV": "production",
     "NODE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
 
-  /**
-   * No `vpc_services` here — deliberately, and this is not an omission.
-   *
-   * The only VPC Service that exists (019f5fe0-287f-7040-9f2f-036cb5b21df7) is
-   * bound to the development tunnel and terminates on a developer's machine.
-   * Pointing production at it would send production traffic to a laptop. A
-   * production VPC Service on a production tunnel does not exist yet; until it
-   * does, production has no Rails transport and `getRailsClient()` returns
-   * null, so `/health` reports `rails.liveness.kind` as `not-configured` and
-   * answers 503 — on this frame and on all fifteen. Fail closed, visibly.
-   *
-   * That 503 is the whole surface, not a side channel: `/health` carries both
-   * halves since ADR 009, so an unconfigured Rails transport makes the frame
-   * read unhealthy. Create the production VPC Service before pointing a load
-   * balancer or an uptime check at it.
-   *
-   * To restore it: create the production VPC Service, then add the block here
-   * with that service_id. tools/check-workers.mjs enforces that it never
-   * equals the development one.
-   */
+  // BOOTSTRAP: production points at the DEVELOPMENT VPC Service, on purpose.
+  //
+  // AWS production Rails does not exist yet, and neither does a production tunnel. The one
+  // VPC Service that exists terminates on a developer's machine, so a deployed production
+  // Worker reaches local Rails through it. That is the point: it is the only way to exercise
+  // the real deployed path — Cloudflare edge → Workers VPC → VPC Service → tunnel → Rails —
+  // before AWS exists. Production Rails connectivity therefore depends on a laptop being up.
+  //
+  // No `remote` key here. `remote: true` is a LOCAL-development flag; it makes wrangler proxy
+  // the binding out to Cloudflare instead of simulating it, and has no meaning for a deployed
+  // Worker, which owns the real binding either way.
+  // https://developers.cloudflare.com/workers/development-testing/#remote-bindings
+  //
+  // AWS cutover, in this order: provision a production tunnel and a production VPC Service,
+  // then replace ONLY the `service_id` below. The binding name and every line of application
+  // code stay as they are — `getRailsClient()` selects the VPC transport by the presence of
+  // the runtime binding, never by an environment name.
+  // See adr/006-development-workers-vpc-transport.md.
+  "vpc_services": [
+    {
+      "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+      "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+    }
+  ],
 
   "env": {
     "development": {
@@ -103,6 +81,37 @@
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
+      // The ordinary development loop reaches Rails over the real binding.
+      //
+      // `remote: true` is what makes that possible: wrangler runs this Worker's code in
+      // local workerd and proxies only this binding out to Cloudflare, which is the
+      // documented way to reach a VPC Service in local development.
+      // https://developers.cloudflare.com/workers-vpc/configuration/vpc-services/
+      //
+      // It has a price, and it is not optional. Wrangler classifies a VPC Service as a
+      // resource that can never be simulated locally, so ANY local tooling that resolves
+      // this environment opens a remote proxy session — and that session cannot be
+      // authenticated with an API token, only with an interactive `wrangler login`.
+      // Without one, measured 2026-08-16:
+      //   pnpm preview  — fails outright; the OpenNext CLI reads vars through
+      //                   getPlatformProxy() and the throw aborts the command.
+      //   pnpm dev      — keeps serving, but loses EVERY Cloudflare binding, not just
+      //                   this one: the failed session leaves the Cloudflare context
+      //                   unpopulated, so REVISION/IMAGES/RATE_LIMITER go with it and
+      //                   `pnpm test:api` fails on /revision. `wrangler login` is now a
+      //                   prerequisite of the development loop.
+      // See adr/006-development-workers-vpc-transport.md.
+      //
+      // The Node fallback in `src/lib/rails-client.ts` is unaffected and still guarded by
+      // EDGE_LOCAL_NODE_RUNTIME + EDGE_LOCAL_RAILS_ENABLED: a wrangler binding is not
+      // something a plain Node process can hold, so the two transports stay distinct.
+      "vpc_services": [
+        {
+          "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+          "remote": true
+        }
+      ],
       "version_metadata": {
         "binding": "REVISION"
       },
@@ -126,22 +135,10 @@
         }
       ]
     },
-    /**
-     * `vpc` is the Cloudflare-integration development tier: local workerd
-     * (`opennextjs-cloudflare preview --env vpc`) with the VPC binding resolved
-     * remotely against the real development VPC Service. It is the only
-     * environment that carries `vpc_services`, and it is never deployed.
-     *
-     * It was called `preview` until it became clear that Cloudflare already
-     * uses "preview" for Preview URLs — the versioned URLs of a *deployed*
-     * Worker — which is close to the opposite of what this is.
-     *
-     * `remote: true` runs this Worker's code locally and proxies only the
-     * binding to Cloudflare, so a session needs `wrangler login` (an API token
-     * cannot open one). That cost is why the binding lives here and not in
-     * `env.development` — `pnpm dev` and `pnpm preview` stay credential-free.
-     * See adr/006-development-workers-vpc-transport.md.
-     */
+    // `vpc` runs this Worker locally with the VPC binding proxied to the real development VPC
+    // Service (`remote: true`, so it needs `wrangler login`). Never deployed, and kept out of
+    // `env.development` so `pnpm dev` stays credential-free.
+    // See adr/006-development-workers-vpc-transport.md.
     "vpc": {
       "images": {
         "binding": "IMAGES"
@@ -178,12 +175,8 @@
         }
       ]
     },
-    /**
-     * `test` is never deployed — it exists so `wrangler dev --env test` and a
-     * future @cloudflare/vitest-pool-workers setup resolve test-tier config.
-     * Only non-inheritable keys are repeated here; inheritable ones (observability,
-     * placement, assets, compatibility_*) fall through from the top level.
-     */
+    // `test` is never deployed — it only resolves test-tier config for
+    // `wrangler dev --env test`. Only non-inheritable keys are repeated here.
     "test": {
       "images": {
         "binding": "IMAGES"

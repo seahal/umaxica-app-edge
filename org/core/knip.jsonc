@@ -22,7 +22,7 @@
     // reflects that, and tracked as a cross-deployment coupling finding.
   ],
 
-  "project": ["**/*.{ts,tsx}"],
+  "project": ["**/*.{ts,tsx,css}"],
 
   // `catalog:` version specifiers resolve from the repository-root
   // pnpm-workspace.yaml, which does not exist inside this unit. That is a real
@@ -30,18 +30,6 @@
   // but it is a version-resolution concern rather than an unused-code one, so
   // it is excluded here and tracked as a boundary finding instead.
   "exclude": ["catalogReferences"],
-
-  // `react-aria-components` no longer needs a suppression here: this unit is
-  // the first consumer the shell contract anticipated, importing `Button` in
-  // src/components/app-chrome.tsx.
-  //
-  // Tailwind is reached only from CSS — `@import 'tailwindcss'` and
-  // `@plugin 'tailwindcss-react-aria-components'` in src/app/globals.css, and
-  // `@tailwindcss/postcss` from postcss.config.mjs. Knip resolves the PostCSS
-  // plugin from the config but does not parse CSS at-rules, so the two
-  // CSS-only packages are declared here rather than reported unused. They are
-  // load-bearing: removing either leaves the unit without a stylesheet.
-  "ignoreDependencies": ["tailwindcss", "tailwindcss-react-aria-components"],
 
   // Types and constants that a module exports as part of its own public surface
   // and also consumes internally (e.g. RailsClientInit, DEFAULT_BRAND_SEPARATOR)

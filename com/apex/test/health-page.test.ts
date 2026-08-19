@@ -23,7 +23,7 @@ describe('renderHealthPage', () => {
 
     vi.stubGlobal('Response', ThrowOnceResponse);
 
-    const response = renderHealthPage({ BRAND_NAME: 'UMAXCA' }, { service: 'app' });
+    const response = renderHealthPage({ BRAND_NAME: 'UMAXICA' }, { service: 'app' });
 
     expect(response.status).toBe(503);
     expect(response.headers.get('content-type')).toBe('text/html; charset=UTF-8');

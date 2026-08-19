@@ -22,16 +22,23 @@ Path 5 is inbound and browser-facing; paths 2–4 are outbound, server-to-server
 connector and nothing else. A Tunnel route on path 5 does not give the local process a Workers
 runtime or a Workers binding — that is what paths 3 and 4 are for.
 
-| Path            | Caller/runtime                                | Destination                                              | Authentication/product                                | Failure behavior                                                              | Validation                                             | Status after repository implementation |
-| --------------- | --------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------- |
-| Private Rails   | `next dev`, local Node                        | `<frame>.<brand>.localhost:3000` on `EDGE_RAILS_NETWORK` | Rootless Podman network; no Access credential         | Missing overlay returns `not-configured`; unreachable network reports failure | `scripts/check-rails`, `pnpm run check:local`          | Runtime verification required          |
-| Access/Tunnel   | `scripts/check-tunnel`                        | `EDGE_TUNNEL_RAILS_URL`                                  | Dedicated Access service token; Rails-owned Tunnel    | Missing token is `BLOCKED`; Access/Tunnel/backend failures stay distinct      | `scripts/check-tunnel`                                 | Credential verification required       |
-| Development VPC | local workerd probe or OpenNext `preview:vpc` | configured development VPC Service, then Rails           | Wrangler dedicated OAuth; real `remote: true` binding | Missing binding/auth/service fails closed; no Node fallback                   | `scripts/check-vpc`, `pnpm run check:preview:vpc`      | Credential verification required       |
-| Production VPC  | deployed production Worker                    | production VPC Service                                   | Workers runtime binding                               | Binding is intentionally absent, so Rails is `not-configured`                 | static binding invariants; future production procedure | `DEFERRED`                             |
+| Path            | Caller/runtime                                      | Destination                                              | Authentication/product                                 | Failure behavior                                                                                               | Validation                                         | Status after repository implementation        |
+| --------------- | --------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------- |
+| Private Rails   | `next dev`, local Node                              | `<frame>.<brand>.localhost:3000` on `EDGE_RAILS_NETWORK` | Rootless Podman network; no Access credential          | Missing overlay returns `not-configured`; unreachable network reports failure                                  | `scripts/check-rails`, `pnpm run check:local`      | Runtime verification required                 |
+| Access/Tunnel   | `scripts/check-tunnel`                              | `EDGE_TUNNEL_RAILS_URL`                                  | Dedicated Access service token; Rails-owned Tunnel     | Missing token is `BLOCKED`; Access/Tunnel/backend failures stay distinct                                       | `scripts/check-tunnel`                             | Credential verification required              |
+| Development VPC | local workerd: `pnpm preview`, `preview:vpc`, probe | configured development VPC Service, then Rails           | Interactive `wrangler login`; an API token is rejected | Without a session `preview` aborts; `next dev` keeps serving and logs one unhandled rejection, with no binding | `scripts/check-vpc`, `pnpm run check:preview:vpc`  | Blocked: no OAuth session in this environment |
+| Production VPC  | deployed production Worker                          | **bootstrap: the development VPC Service**, then Rails   | Workers runtime binding, no `remote`                   | Binding present; a stopped local Rails/tunnel makes production report 503                                      | static binding invariants; `pnpm run check:config` | Bootstrap — AWS cutover pending               |
 
 The URL host passed to Workers VPC supplies Host/SNI semantics; the VPC Service determines
-routing. Tests pin each frame host and the shared development service ID. Production config
-must never reuse that development service.
+routing. Tests pin each frame host and the shared development service ID.
+
+Production deliberately shares that development service **for now**. AWS production Rails does not
+exist, and pointing the deployed Worker at the one service that does is the only way to exercise the
+real edge → Workers VPC → VPC Service → Tunnel → Rails path before it does. The cost is stated
+plainly: production Rails connectivity is only as available as the developer machine behind the
+tunnel. `tools/workers-manifest.json` holds the two ids as separate fields so the AWS cutover is a
+change to `vpcProductionServiceId` and the fifteen top-level `service_id`s, with no application
+change. See ADR 006.
 
 | Edge dev exposure | browser | sixteen published FQDNs, then `edge-core:<port>` | Cloudflare Access on all sixteen, whole host, no `/health*` Bypass | Container or dev server down returns 502, reported BLOCKED not FAIL; unauthenticated is 302 to the team domain | `pnpm run check:tunnel:edge` | `COMPLETE` (2026-08-11) |
 

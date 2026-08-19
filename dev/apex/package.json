@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "knip": "knip",
+    "knip": "knip --treat-config-hints-as-errors",
     "lint": "oxlint --report-unused-disable-directives .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
@@ -25,19 +25,19 @@
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "catalog:",
     "@tailwindcss/cli": "catalog:",
-    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/jest-dom": "catalog:",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "4.1.10",
-    "happy-dom": "^20.11.2",
+    "@vitest/coverage-v8": "catalog:",
+    "happy-dom": "catalog:",
     "knip": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vercel": "^58.9.1",
+    "vercel": "catalog:",
     "vitest": "catalog:"
   }
 }

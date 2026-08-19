@@ -1,5 +1,6 @@
 {
   "name": "umaxica-apps-edge-org-docs",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,7 +20,7 @@
     "test:cov": "vitest run --coverage",
     "test:api": "node api/run.mjs",
     "test:e2e": "playwright test",
-    "knip": "knip",
+    "knip": "knip --treat-config-hints-as-errors",
     "lint": "oxlint --report-unused-disable-directives .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
@@ -27,7 +28,8 @@
     "lint:types": "oxlint --type-aware --report-unused-disable-directives .",
     "lint:fix": "oxlint --type-aware --fix .",
     "check:generated": "pnpm run cf-typegen && CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts --check",
-    "check:static": "pnpm run format:check && pnpm run lint && pnpm run lint:types && pnpm run check:generated && pnpm run typecheck && pnpm run knip"
+    "check:static": "pnpm run format:check && pnpm run lint && pnpm run lint:types && pnpm run check:generated && pnpm run typecheck && pnpm run knip",
+    "check:size": "size-limit"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "catalog:",
@@ -35,24 +37,26 @@
     "react": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
-    "server-only": "^0.0.1"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@orangeopensource/hurl": "catalog:",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "catalog:",
+    "@size-limit/file": "catalog:",
     "@tailwindcss/postcss": "catalog:",
-    "@testing-library/jest-dom": "^7.0.1",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitest/coverage-v8": "4.1.10",
-    "happy-dom": "^20.11.2",
+    "@vitest/coverage-v8": "catalog:",
+    "happy-dom": "catalog:",
     "knip": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
+    "size-limit": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",

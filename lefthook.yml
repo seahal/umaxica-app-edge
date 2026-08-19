@@ -8,6 +8,19 @@ pre-commit:
     lint:
       glob: '*.{js,jsx,ts,tsx}'
       run: pnpm exec oxlint {staged_files}
+    # Scoped to what is being committed, like format and lint above: a
+    # dictionary miss is a one-word fix and finding it here costs a second,
+    # while finding it in CI costs a round trip. `--no-must-find-files` keeps
+    # the hook quiet when the glob matched nothing lefthook could pass on.
+    spelling:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,yaml,yml,md,css}'
+      run: pnpm exec cspell lint --no-progress --no-must-find-files {staged_files}
+    # Only fires when a manifest or the catalog is staged, which is the only way
+    # a version can drift. Reads all twenty-two manifests when it does, and is
+    # measured at well under a second — the whole check is JSON parsing.
+    deps:
+      glob: '{package.json,pnpm-workspace.yaml,*/*/package.json}'
+      run: pnpm run check:deps
 
 # Both hooks stay deliberately thin and root-owned. Each deployment unit now
 # carries the same `lint` / `lint:types` / `format:check` / `typecheck` / `test`
@@ -17,11 +30,61 @@ pre-commit:
 # `pre-commit` runs oxlint WITHOUT `--type-aware` on purpose: the type-aware
 # pass needs a whole program per unit and is measured at ~4s for the tree, which
 # is a pre-push cost, not a per-commit one. `pre-push` and CI both run it.
+#
+# `pre-push` runs sequentially, CHEAPEST FIRST, and `piped: true` is what makes
+# that ordering mean anything: without it lefthook runs every command even after
+# one has failed, so a misspelt word still costs a full test run before it is
+# reported. With it, the hook stops at the first failure and the ordering below
+# decides how long a developer waits. Measured on the development container,
+# 2026-08-18:
+#
+#   check:deps          0.35s
+#   check:architecture  0.55s
+#   knip                1.19s   (all twenty-one units, --workspace-concurrency=1)
+#   check:spelling      17.35s  (1637 files)
+#   lint:types / typecheck / test — the pre-existing, much larger costs
+#
+# `parallel: true` was considered and not taken; it is also mutually exclusive
+# with `piped`. These commands are all read-only, so running them together would
+# be safe, but it trades a little wall-clock for interleaved output and for
+# losing the early exit — and on this hook the early exit is worth more than the
+# overlap, because the two slowest commands are the two least likely to fail.
+#
+# `check:size` is deliberately absent. It measures build OUTPUT, so it would
+# require building sixteen Next.js units before every push. That cost belongs in
+# CI, where the build matrix already exists and the measurement is free.
+# `priority` is not decoration. Lefthook orders commands ALPHABETICALLY unless
+# one is set, which put `lint-types` ahead of `spelling` here purely because "l"
+# sorts before "s" — measured, not assumed. The numbers below are the measured
+# cost order and have to stay in step with it.
 pre-push:
+  piped: true
   commands:
+    deps:
+      priority: 1
+      run: pnpm run check:deps
+    architecture:
+      priority: 2
+      run: pnpm run check:architecture
+    # Dead code. pre-commit cannot do this one at all: whether an export is
+    # unused is a property of the whole unit, not of the staged files.
+    knip:
+      priority: 3
+      run: pnpm run knip
+    # Spelling, whole tree. pre-commit already checked the staged files; what
+    # this adds is the case pre-commit structurally cannot see — a change to
+    # cspell.config.yaml or .cspell/project-words.txt that breaks a file nobody
+    # touched.
+    spelling:
+      priority: 4
+      run: pnpm run check:spelling
+    # The pre-existing gates, unchanged and last.
     lint-types:
+      priority: 5
       run: pnpm run lint:types
     typecheck:
+      priority: 6
       run: pnpm run typecheck
     test:
+      priority: 7
       run: pnpm run test

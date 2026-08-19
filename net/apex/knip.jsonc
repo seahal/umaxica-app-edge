@@ -13,7 +13,7 @@
   // plugin. Only what neither plugin can see is listed here.
   "entry": ["test/**/*.test.{ts,tsx}", "e2e/**/*.spec.ts"],
 
-  "project": ["**/*.{ts,tsx}"],
+  "project": ["**/*.{ts,tsx,css}"],
 
   // `catalog:` version specifiers resolve from the repository-root
   // pnpm-workspace.yaml, which does not exist inside this unit. That is a real

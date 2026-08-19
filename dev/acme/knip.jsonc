@@ -13,7 +13,7 @@
   // Only what no plugin can see is listed here.
   "entry": ["test/**/*.test.{ts,tsx}", "e2e/**/*.spec.ts"],
 
-  "project": ["**/*.{ts,tsx}"],
+  "project": ["**/*.{ts,tsx,css}"],
 
   // `catalog:` version specifiers resolve from the repository-root
   // pnpm-workspace.yaml, which does not exist inside this unit. That is a real
@@ -21,12 +21,6 @@
   // but it is a version-resolution concern rather than an unused-code one, so
   // it is excluded here and tracked as a boundary finding instead.
   "exclude": ["catalogReferences"],
-
-  // `tailwindcss` is used only from CSS (`@import 'tailwindcss'` in
-  // src/app/globals.css). Knip resolves `@tailwindcss/postcss` from
-  // postcss.config.mjs but does not parse CSS at-rules, so the engine itself
-  // has to be named here.
-  "ignoreDependencies": ["tailwindcss"],
 
   // knip itself is repository-owned tooling (like oxlint/oxfmt/lefthook) and is
   // intentionally NOT duplicated into every unit's package.json. On extraction,

@@ -30,6 +30,12 @@ function loadWrangler(ws) {
 // Keys Wrangler does NOT inherit into `env.*`. A key present at the top level
 // but absent from an environment silently drops that binding once `--env` is
 // passed, so every environment has to repeat them.
+//
+// `vpc_services` is deliberately NOT in this list even though wrangler treats it
+// the same way. "Repeat it everywhere" is a syntax rule; which environment may
+// hold a Rails transport is an architecture decision, and the two disagree —
+// `env.test` must carry no VPC binding at all. It gets its own per-environment
+// policy below instead.
 const NON_INHERITABLE = [
   'vars',
   'kv_namespaces',
@@ -37,7 +43,6 @@ const NON_INHERITABLE = [
   'images',
   'version_metadata',
   'ratelimits',
-  'vpc_services',
   'durable_objects',
   'r2_buckets',
   'd1_databases',
@@ -112,6 +117,105 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test']) {
     );
     if (missing.length > 0) {
       fail(ws, `env.${envName} is missing non-inheritable keys: ${missing.join(', ')}`);
+    }
+  }
+}
+
+// Where a Rails-backed Worker may hold the Workers VPC binding, and on which
+// terms. This models the architecture rather than wrangler's syntax: wrangler
+// would happily accept the binding in `env.test`, and the reason it must not be
+// there is ours, not the tool's.
+//
+// `remote` is a LOCAL-development flag. It makes wrangler run this Worker's code
+// in local workerd and proxy only the binding out to the real Cloudflare
+// resource; on a deployed Worker it means nothing, because there is no local
+// simulation to override.
+// https://developers.cloudflare.com/workers/development-testing/#remote-bindings
+//
+// So `remote: true` in `env.vpc` is required (local workerd cannot simulate a
+// VPC Service) and its absence at the top level is required too — not because a
+// deployed Worker would break, but because a key that does nothing where it sits
+// reads as though it does something.
+//
+// serviceId is read from the manifest per tier: the two ids are equal during the
+// AWS bootstrap and stop being equal at cutover, and this table does not care
+// which of those is true today.
+const VPC_POLICY = [
+  {
+    // The top level IS production. During the bootstrap it points at the
+    // development VPC Service on purpose — see the manifest and ADR 006.
+    label: 'top-level (production)',
+    read: (config) => config.vpc_services,
+    required: true,
+    remote: false,
+    serviceId: (m) => m.vpcProductionServiceId,
+  },
+  {
+    // `pnpm preview:vpc` — local workerd against the real development Service.
+    label: 'env.vpc',
+    read: (config) => config.env?.vpc?.vpc_services,
+    required: true,
+    remote: true,
+    serviceId: (m) => m.vpcDevelopmentServiceId,
+  },
+  {
+    // The ordinary development loop, which now reaches Rails over the real
+    // binding. This costs `pnpm dev` and `pnpm preview` an interactive
+    // `wrangler login`: a VPC Service has no local simulator, so resolving this
+    // environment always opens a remote proxy session, and that session rejects
+    // API-token authentication. Measured; ADR 006 records it.
+    label: 'env.development',
+    read: (config) => config.env?.development?.vpc_services,
+    required: true,
+    remote: true,
+    serviceId: (m) => m.vpcDevelopmentServiceId,
+  },
+  {
+    // Never deployed and never given a Rails transport: a test tier that can
+    // reach a real Rails is not a test tier.
+    label: 'env.test',
+    read: (config) => config.env?.test?.vpc_services,
+    required: false,
+  },
+];
+
+function checkVpcPolicy(ws, config) {
+  for (const rule of VPC_POLICY) {
+    const declared = (rule.read(config) ?? []).filter((v) => v.binding === manifest.vpcBinding);
+
+    if (!rule.required) {
+      if (declared.length > 0) {
+        fail(ws, `${rule.label} must not declare vpc_services binding ${manifest.vpcBinding}`);
+      }
+      continue;
+    }
+
+    if (declared.length !== 1) {
+      fail(
+        ws,
+        `${rule.label} must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
+      );
+      continue;
+    }
+
+    const expectedId = rule.serviceId(manifest);
+    if (declared[0].service_id !== expectedId) {
+      fail(
+        ws,
+        `${rule.label} vpc_services service_id must be ${expectedId} (found ${declared[0].service_id})`,
+      );
+    }
+    if (rule.remote && declared[0].remote !== true) {
+      fail(
+        ws,
+        `${rule.label} vpc_services must set remote: true — local workerd cannot simulate a VPC Service`,
+      );
+    }
+    if (!rule.remote && declared[0].remote === true) {
+      fail(
+        ws,
+        `${rule.label} vpc_services must not set remote: true — it is a local-development flag with no meaning on a deployed Worker`,
+      );
     }
   }
 }
@@ -253,70 +357,7 @@ for (const ws of manifest.railsBacked) {
   checkOpenNext(ws, config);
   checkPublicAssets(ws);
 
-  // The VPC binding lives in `env.vpc` and nowhere else.
-  //
-  // `remote: true` does not mean "unusable locally" — it runs this Worker's
-  // code in local workerd and proxies only the binding out to Cloudflare, which
-  // is the supported way to reach a VPC Service in development. What it does
-  // cost is a `wrangler login` session at start-up (an API token cannot open
-  // one). Confining the binding to `vpc` keeps that cost on the one command
-  // that opts into it (`pnpm preview:vpc`) and leaves `pnpm dev` /
-  // `pnpm preview` needing no Cloudflare account at all.
-  //
-  // Bindings are not inherited into `env.*`, so this placement is structural:
-  // no other environment can acquire the binding by accident.
-  // See adr/006-development-workers-vpc-transport.md.
-  const declared = (config.env?.vpc?.vpc_services ?? []).filter(
-    (v) => v.binding === manifest.vpcBinding,
-  );
-
-  if (declared.length !== 1) {
-    fail(
-      ws,
-      `env.vpc must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
-    );
-  }
-  if (declared[0] && declared[0].service_id !== manifest.vpcDevelopmentServiceId) {
-    fail(
-      ws,
-      `env.vpc vpc_services service_id must be ${manifest.vpcDevelopmentServiceId} (found ${declared[0].service_id})`,
-    );
-  }
-  if (declared[0] && declared[0].remote !== true) {
-    fail(
-      ws,
-      'env.vpc vpc_services must set remote: true — local workerd cannot simulate a VPC Service',
-    );
-  }
-
-  for (const envName of ['development', 'test']) {
-    if ((config.env?.[envName]?.vpc_services ?? []).length > 0) {
-      fail(
-        ws,
-        `env.${envName} must not declare vpc_services — it would force every local dev session to authenticate to Cloudflare`,
-      );
-    }
-  }
-
-  // The top level is production. A binding here would be a *production*
-  // binding, and the only VPC Service that exists is on the development tunnel,
-  // terminating on a developer's machine.
-  //
-  // Note this is NOT about leaking into `env.*`: non-inheritable keys declared
-  // at the top level do not reach environments at all — wrangler warns "not
-  // inherited by environments" and the environment resolves with no bindings.
-  // Measured, because the previous comment here asserted the opposite.
-  const topLevel = (config.vpc_services ?? []).filter((v) => v.binding === manifest.vpcBinding);
-  if (topLevel.length > 0) {
-    if (topLevel.some((v) => v.service_id === manifest.vpcDevelopmentServiceId)) {
-      fail(
-        ws,
-        `top-level (production) vpc_services must not reuse the development service_id ${manifest.vpcDevelopmentServiceId} — it is on the development tunnel`,
-      );
-    }
-    // A real production VPC Service is the intended end state, so a distinct
-    // id here is allowed and only has to be well-formed.
-  }
+  checkVpcPolicy(ws, config);
 }
 
 // Deploying production means running with no `--env`, and CLOUDFLARE_ENV picks

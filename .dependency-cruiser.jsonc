@@ -1,0 +1,111 @@
+// Dependency architecture rules for the repository's JavaScript surface.
+//
+// SCOPE, AND WHY IT IS NOT THE WHOLE TREE
+//
+// dependency-cruiser cannot see this repository's TypeScript. v18.2.0 (the
+// latest release) reaches for TypeScript's programmatic compiler API and
+// declares `typescript: >=2.0.0 <7.0.0`; this repository is on TypeScript 7.0.2,
+// which does not publish that API. Run against a TS directory it reports
+//
+//     ✔ no dependency violations found (0 modules, 0 dependencies cruised)
+//     ‼ missing-typescript-transpiler: ... => Support for typescript@>=7 will
+//       follow when its API is published and stable.
+//
+// A gate that passes because it parsed nothing is worse than no gate, so this
+// configuration is pointed only at the JavaScript the tool CAN parse. The
+// TypeScript-side invariants are owned elsewhere — see
+// docs/development/static-analysis-and-hygiene.md for the ownership table and
+// for the condition under which this file should grow.
+//
+// The JavaScript graph is small and fully enumerated: tools/*.mjs plus the
+// twenty per-unit api/run.mjs Hurl runners. scripts/ is deliberately absent —
+// every file there is `#!/usr/bin/env bash`, which no JS parser reads.
+{
+  "forbidden": [
+    {
+      "name": "no-circular",
+      "comment": "A cycle between modules makes initialisation order load-bearing and undoes the tree-shaking every bundler here relies on. Zero cycles exist today; this keeps it that way. oxlint's import/no-cycle holds the same line for TypeScript, which this tool cannot read.",
+      "severity": "error",
+      "from": {},
+      "to": { "circular": true }
+    },
+    {
+      "name": "not-to-unresolvable",
+      "comment": "An import that resolves to nothing is a runtime crash waiting for the one code path that reaches it. tools/check-workers.mjs runs in CI without node_modules installed, so a stray package import here fails a job that has no way to satisfy it.",
+      "severity": "error",
+      "from": {},
+      "to": { "couldNotResolve": true }
+    },
+    {
+      "name": "not-to-dev-dep",
+      "comment": "These files run as deployment and verification tooling, including in the check-workers CI job that deliberately skips `pnpm install`. Reaching a devDependency from one is the failure that job is shaped to avoid.",
+      "severity": "error",
+      "from": { "path": "^tools/", "pathNot": "\\.(spec|test)\\.(js|mjs|cjs)$" },
+      "to": { "dependencyTypes": ["npm-dev"] }
+    },
+    {
+      "name": "no-non-package-json",
+      "comment": "An import that resolves only because a package was hoisted into the root node_modules is a dependency nobody declared. It disappears the moment the hoisting layout changes, and it breaks the repository-split promise every unit in this tree is built around.",
+      "severity": "error",
+      "from": {},
+      "to": { "dependencyTypes": ["unknown", "undetermined", "npm-no-pkg", "npm-unknown"] }
+    },
+    {
+      "name": "no-deprecated-core",
+      "comment": "Deprecated Node core modules are removed on a schedule this repository does not control.",
+      "severity": "error",
+      "from": {},
+      "to": {
+        "dependencyTypes": ["core"],
+        "path": "^(punycode|domain|constants|sys|_linklist|_stream_wrap)$"
+      }
+    },
+
+    // ---- Rules that encode THIS repository's current, verified structure ----
+
+    {
+      "name": "tools-not-to-test",
+      "comment": "tools/ is production tooling: it is invoked by pnpm scripts, by CI jobs and by operators. test/ is the repository-level invariant suite and depends on tools/, never the reverse. Allowing the back-edge would put test fixtures on a deployment path.",
+      "severity": "error",
+      "from": { "path": "^tools/" },
+      "to": { "path": "^test/" }
+    },
+    {
+      "name": "tools-lib-is-a-leaf",
+      "comment": "tools/lib/ is the shared implementation layer (wrangler-config.mjs), consumed by the tools/*.mjs entrypoints. It must not reach back up into an entrypoint — that is the cycle-in-waiting this layering exists to prevent, and it is the only local edge in the whole JavaScript graph.",
+      "severity": "error",
+      "from": { "path": "^tools/lib/" },
+      "to": { "path": "^tools/(?!lib/)" }
+    },
+    {
+      "name": "api-runner-is-self-contained",
+      "comment": "Each unit's api/run.mjs spawns that unit's dev server, runs Hurl and stops it. All twenty are node:-builtins-only today, and that is what lets a unit be extracted into its own repository with its HTTP-contract suite intact. Any non-core import here — a shared helper, a sibling unit, an npm package — breaks that promise, so it fails rather than being discovered during an extraction.",
+      "severity": "error",
+      "from": { "path": "api/run\\.mjs$" },
+      "to": { "dependencyTypesNot": ["core"] }
+    }
+  ],
+
+  "options": {
+    "doNotFollow": {
+      "path": ["node_modules"]
+    },
+    "exclude": {
+      "path": ["\\.wrangler/", "\\.next/", "\\.open-next/", "^coverage/", "^dist/"]
+    },
+    // `no-orphans` is deliberately NOT enabled. Every module in scope except
+    // tools/lib/wrangler-config.mjs is a CLI entrypoint reached through a pnpm
+    // script or a CI `run:` line, never through an import, so an orphan check
+    // would report the entire graph. That is the rule not fitting the shape of
+    // the code, not the code being wrong — and suppressing it per-file would be
+    // exactly the ignore-until-green pattern this repository avoids.
+    "tsPreCompilationDeps": false,
+    "enhancedResolveOptions": {
+      "exportsFields": ["exports"],
+      "conditionNames": ["import", "require", "node", "default"]
+    },
+    "reporterOptions": {
+      "text": { "highlightFocused": true }
+    }
+  }
+}

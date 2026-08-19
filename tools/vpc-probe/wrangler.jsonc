@@ -9,17 +9,10 @@
   // `pnpm run check:vpc` via `wrangler dev`.
   "workers_dev": false,
 
-  // Deliberately TOP LEVEL, which the fifteen frames are forbidden from doing.
-  //
-  // Their rule exists because a top-level binding is inherited by
-  // `env.development`, which would force every ordinary `pnpm dev` to
-  // authenticate to Cloudflare. This Worker declares no environments at all, is
-  // absent from pnpm-workspace.yaml, and has no deploy script — so there is no
-  // environment to leak into and nothing that could ship it. Placing the binding
-  // in an `env` block here would mean it is never resolved.
-  //
-  // tools/check-workers.mjs asserts all of the above. Do not "fix" this to match
-  // the frames. See adr/006-development-workers-vpc-transport.md.
+  // Deliberately TOP LEVEL, unlike the fifteen frames: this Worker declares no environments,
+  // is not in pnpm-workspace.yaml and has no deploy script, so the binding cannot leak into
+  // one or ship — and inside an `env` block it would never resolve. tools/check-workers.mjs
+  // asserts this. See adr/006-development-workers-vpc-transport.md.
   "vpc_services": [
     {
       "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",

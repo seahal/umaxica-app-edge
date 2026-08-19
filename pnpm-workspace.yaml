@@ -44,6 +44,12 @@ allowBuilds:
 
 catalog:
   '@cloudflare/workers-types': ^5.20260810.1
+  # The Hono structured-logger middleware, wired in every apex Worker's
+  # create-apex-app.ts. Four units, one version — catalogued for the same reason
+  # as everything else here: nothing but this file can hold them together, and a
+  # logger that emits a different JSON shape per surface defeats the point of
+  # `observability.logs.enabled` collecting them into one stream.
+  '@hono/structured-logger': ^0.1.0
   # Hurl is a Rust binary; this package is the official npm distribution of it
   # (bins `hurl` and `hurlfmt`). Installing it as a devDependency rather than
   # documenting a `brew`/`apt`/`cargo` step is what keeps pnpm the only entry
@@ -52,6 +58,18 @@ catalog:
   # rest of the toolchain is: twenty-one units must not drift apart.
   '@orangeopensource/hurl': ^8.0.4
   '@opennextjs/cloudflare': ^1.19.11
+  # The browser-test runtime, in twenty-one units. It pins the wire protocol as
+  # well as the API, so two units on different minors drive two different
+  # browsers. This sat as an identical literal in every manifest with nothing
+  # enforcing it — syncpack's catalog policy now does (see .syncpackrc.json).
+  '@playwright/test': ^1.62.1
+  # Size Limit's file plugin. `size-limit` itself and its plugins must move in
+  # lockstep — the plugin package declares an EXACT peer on the runner
+  # ("size-limit": "13.0.3"), so a drift here is a resolution failure, not a
+  # subtle one. The preset packages are deliberately not used: @size-limit/time
+  # (which preset-app pulls in) needs a headless Chrome that neither CI nor the
+  # Containerfile installs — the same reason `test:e2e` is not a CI gate.
+  '@size-limit/file': ^13.0.3
   # Tailwind v4 has no JS config file: the theme is declared in each unit's own
   # stylesheet with `@theme`. `@tailwindcss/postcss` is the engine the Next
   # frames run through PostCSS; `@tailwindcss/cli` is the same engine as a
@@ -60,10 +78,25 @@ catalog:
   # unit so the twenty-one units cannot drift onto different Tailwind versions.
   '@tailwindcss/cli': ^4.3.3
   '@tailwindcss/postcss': ^4.3.3
+  # The DOM-assertion and DOM-implementation halves of the Vitest setup. Every
+  # unit's vitest.setup.ts imports `@testing-library/jest-dom`, and every
+  # vitest.config.ts names happy-dom as its environment, so a per-unit drift
+  # here changes what a test MEANS rather than whether it runs.
+  '@testing-library/jest-dom': ^7.0.1
+  '@testing-library/react': ^16.3.2
   '@types/node': ^26.2.0
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
+  # Exact, not a range, and deliberately so: V8 coverage remapping has to match
+  # the vitest it instruments, and this was already an exact literal in all
+  # twenty-two manifests. Catalogued to keep it that way from one place.
+  '@vitest/coverage-v8': 4.1.10
+  # The spell checker. Pinned here rather than per unit because the dictionary
+  # it reads (.cspell/project-words.txt) is repository-wide: a unit resolving a
+  # different major could disagree about what the config file even means.
+  cspell: ^10.0.1
   dependency-cruiser: ^18.2.0
+  happy-dom: ^20.11.2
   hono: ^4.13.2
   knip: ^6.32.2
   next: ^16.3.0
@@ -80,6 +113,17 @@ catalog:
   react: ^19.2.0
   react-aria-components: ^1.20.0
   react-dom: ^19.2.0
+  # A zero-code marker package: importing it in a module that a client component
+  # reaches makes the BUILD fail rather than shipping server code to a browser.
+  # It is a build-time contract in fifteen units, so it has to be one version.
+  server-only: ^0.0.1
+  # The frontend performance budget runner. See '@size-limit/file' above for why
+  # the two move together and why no preset is used.
+  size-limit: ^13.0.3
+  # Workspace dependency-consistency checking. It reads this very file — the
+  # catalog definitions and the `catalog:` specifiers pointing at them — so it
+  # belongs to the repository root rather than to any unit.
+  syncpack: ^15.3.3
   tailwindcss: ^4.3.3
   # The official Tailwind plugin for react-aria-components, which turns the
   # library's `data-hovered` / `data-pressed` / `data-focus-visible` attributes
@@ -93,6 +137,11 @@ catalog:
   # installs. Every unit declares `typescript: catalog:` explicitly rather than
   # leaning on root hoisting, so an extracted unit still resolves a compiler.
   typescript: ^7.0.2
+  # The Vercel CLI, in the two units that deploy there (dev/acme, dev/apex). It
+  # is both the deploy command and — through `vercel dev` — the only local
+  # server dev/apex has, so the two units disagreeing about it would mean they
+  # are not testing against the same platform emulation.
+  vercel: ^58.9.1
   vitest: ^4.1.10
   wrangler: ^4.123.0
 

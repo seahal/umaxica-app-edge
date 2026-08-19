@@ -98,8 +98,8 @@
       "kv_namespaces": [
         {
           "binding": "BREAKER_KV",
-          // TODO: point at a test-only namespace once one exists. Shares production's id
-          // today; harmless while test stays local (miniflare ignores the id).
+          // TODO: point at a test-only namespace once one exists. Shares production's id today;
+          // harmless while test stays local (miniflare ignores the id).
           "id": "c6e6da19377c4d878faefac24e2a1b42"
         }
       ],

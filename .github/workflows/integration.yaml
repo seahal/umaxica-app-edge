@@ -106,7 +106,11 @@ jobs:
       # No --include filter: the default report already covers unused files,
       # exports, types, dependencies and devDependencies, and restricting it to
       # unlisted/unresolved/binaries was hiding the first three.
-      - run: pnpm --dir ${{ matrix.dir }} exec knip
+      #
+      # `run knip`, not `exec knip`: the script carries
+      # `--treat-config-hints-as-errors`, and calling the binary directly would
+      # have left CI running a weaker check than the one a developer runs.
+      - run: pnpm --dir ${{ matrix.dir }} run knip
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
 
@@ -154,6 +158,49 @@ jobs:
           install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
+
+  # The three repository-level hygiene gates. Each is one `pnpm run check:*`,
+  # the same command Lefthook and a developer run — no tool flags live in this
+  # file, so a red check here is reproducible by copying one line.
+  #
+  # None of them has a `--fix` counterpart in CI. `syncpack fix` exists as
+  # `pnpm run fix:deps`, and it is a local command on purpose: a workflow that
+  # repairs the tree hides the drift it was hired to report.
+  architecture:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:architecture
+
+  deps:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:deps
+
+  spelling:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:spelling
 
   lint-types:
     runs-on: ubuntu-slim
@@ -281,6 +328,17 @@ jobs:
           install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C ${{ matrix.target }} run build
+      # The performance budget, measured on the output the step above just
+      # produced. It lives here rather than in a job of its own because the only
+      # way to size a bundle is to have built it, and building the sixteen
+      # Next.js units a second time would double this matrix to buy nothing.
+      #
+      # `--if-present` is what carries dev/apex: it is the one unit that serves
+      # no browser JavaScript at all — src/app.ts renders HTML from template
+      # literals and public/ holds only style.css — so it has no
+      # .size-limit.json, no `check:size` script, and nothing to measure.
+      # Without the flag pnpm exits 1 on the missing script.
+      - run: pnpm -C ${{ matrix.target }} run --if-present check:size
 
   # The HTTP contract gate. Each unit's `test:api` starts its own server through
   # `api/run.mjs`, runs Hurl against it and stops it again, so this job needs no

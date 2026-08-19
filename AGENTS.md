@@ -15,10 +15,17 @@ This project uses plain **pnpm** scripts for orchestration, with each tool (Next
 - HTTP test: `pnpm run test:api` (Hurl)
 - Browser test: `pnpm run test:e2e` (Playwright)
 - Build: `pnpm run build`
+- Dead code / unused dependencies: `pnpm run knip`
+- Dependency architecture: `pnpm run check:architecture` (dependency-cruiser)
+- Version consistency: `pnpm run check:deps` (syncpack; `fix:deps` rewrites manifests and is local-only)
+- Spelling: `pnpm run check:spelling` (CSpell)
+- Browser bundle budget: `pnpm run check:size` (Size Limit — needs `pnpm run build` first, so it is NOT in `check:static`)
 - Everything static, then unit tests: `pnpm run check`
 - Per-workspace: `pnpm --filter <workspace> run <script>` or `pnpm --dir <unit> run <script>`
 
-The root scripts are `pnpm -r` fan-outs over per-unit scripts of the same name; every deployment unit implements the same contract and can run it standalone from its own directory.
+The root scripts are `pnpm -r` fan-outs over per-unit scripts of the same name; every deployment unit implements the same contract and can run it standalone from its own directory. The three repository-level checks (`check:architecture`, `check:deps`, `check:spelling`) are the exception: they ask about the repository as a whole, so they run once from the root rather than fanning out.
+
+`docs/development/static-analysis-and-hygiene.md` is normative on which tool owns which question, where each gate runs, why dependency-cruiser is scoped to JavaScript only, how the performance budgets were measured, and what has to be true before an ignore is acceptable. Read it before adding a suppression to any of these tools.
 
 Import test utilities from `vitest` (not a wrapper package). Oxlint config is `.oxlintrc.json` and Oxfmt config is `.oxfmtrc.json` — each deployment unit has its own copy of both, alongside its own `tsconfig.json`, `vitest.config.ts`, `vitest.setup.ts` and `knip.jsonc`; the root copies apply to repo-level files only. Do not replace a unit's copy with a root `extends` or a shared package — `test/deployment-unit-boundaries.test.ts` enforces this. Type-aware linting works via `oxlint-tsgolint`, invoked automatically by `oxlint --type-aware`.
 
@@ -92,6 +99,28 @@ token, a body, a query string, a user id, an internal hostname or a VPC service 
 has no route into a log line. If you need a new field, add it to the type as a
 closed union — do not widen one to `string`.
 
+## Cookies
+
+**Browser code reads and writes cookies through the Cookie Store API — the global
+`cookieStore` — and through nothing else.** Do not add a cookie library to any
+unit, and do not reach for `document.cookie`: the API is asynchronous, returns
+`CookieListItem` objects rather than one string to parse, and costs no bundle
+bytes, so a wrapper has nothing left to wrap. Nothing in a browser touches a
+cookie today, and no wrapper module should be written before a feature needs one.
+
+This governs the browser only. Hono's `hono/cookie` and the `languageDetector`
+that sets `language` in the apex workers, Next.js on the server, and every cookie
+Rails owns all stay exactly as they are. One consequence of the ADR 007 boundary
+is worth knowing before you start: `*/core/src/worker.ts` deletes every
+`Set-Cookie` from the Next-owned response, so a cookie the browser can see cannot
+be issued by Next.js — only by an apex worker or by Rails.
+
+`docs/development/browser-cookie-access.md` is normative on this: the five
+constraints an implementer hits (`HttpOnly`, secure context, async, a support
+floor below our browserslist, and a DOM type that declares the global
+non-optional), and where the code goes when there is code. Read it before writing
+anything that touches a cookie in a browser.
+
 ## Styling
 
 **Tailwind CSS v4 is the styling layer.** There is no other one: no CSS Modules,
@@ -132,7 +161,8 @@ file as "run cf-typegen" rather than as a failure, for the same reason.
 ## Review Checklist for Agents
 
 - [ ] Run `pnpm install` after pulling remote changes and before getting started.
-- [ ] Run `pnpm run check` to validate changes — `format:check`, `lint`, `lint:types`, `check:generated`, `typecheck`, `knip`, `check:workers`, then `test`.
+- [ ] Run `pnpm run check` to validate changes — `format:check`, `lint`, `lint:types`, `check:generated`, `typecheck`, `knip`, `check:workers`, `check:architecture`, `check:deps`, `check:spelling`, then `test`.
+- [ ] Run `pnpm run build && pnpm run check:size` when you touched anything that reaches a browser bundle.
 - [ ] Run `pnpm run test:api` when you touched anything a client can observe: a route, a header, a redirect, a status, a rendered document.
 
 ## Design Principle
