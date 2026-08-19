@@ -5,7 +5,19 @@
   "compatibility_date": "2026-02-27",
   "compatibility_flags": ["nodejs_als"],
   "main": "./src/index.tsx",
-  "assets": { "directory": "./public" },
+  // No `directory`: this is the INPUT config, and `vite build` writes an output
+  // wrangler.json whose `assets.directory` points at the client build. Setting
+  // it here would describe a directory that the deployed Worker never uses.
+  //
+  // Both handling modes are "none" on purpose, and they are the guard that
+  // keeps `/` reachable. Cloudflare matches assets BEFORE the Worker runs, so
+  // any HTML asset can take a route away from Hono without failing anything.
+  // This unit ships no HTML assets at all, so "none" costs nothing and means a
+  // stray index.html could not silently answer `/` in place of the homepage
+  // route. `run_worker_first` is deliberately NOT set: it would invoke the
+  // Worker for every asset request, turning free static-asset serving into
+  // billed invocations, and it is not needed to reach the Worker here.
+  "assets": { "html_handling": "none", "not_found_handling": "none" },
   "version_metadata": {
     "binding": "CF_VERSION_METADATA"
   },

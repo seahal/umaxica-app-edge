@@ -57,7 +57,8 @@ xpath "normalize-space(//footer//nav/following-sibling::p//a)" == "https://umaxi
 # `<style>` whose sha256 was hand-maintained in the CSP; it is a static asset
 # now, so no document may carry an inline stylesheet or a `style` attribute —
 # `style-src-attr 'none'` would drop the latter anyway.
-xpath "//link[@rel='stylesheet'][@href='/style.css']" exists
+xpath "count(//link[@rel='stylesheet'])" == 1
+xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/
 xpath "count(//style)" == 0
 xpath "count(//*[@style])" == 0
 
@@ -66,6 +67,8 @@ xpath "count(//*[@style])" == 0
 xpath "count(//a[@href='/privacy'])" == 0
 xpath "count(//a[@href='/terms'])" == 0
 xpath "count(//a[@href='/preferences'])" == 0
+[Captures]
+stylesheet_url: xpath "string(//link[@rel='stylesheet']/@href)"
 
 
 # Rather than compare the shell's hrefs against a hand-kept allowlist, ask the
@@ -81,7 +84,9 @@ HTTP 200
 [Asserts]
 header "content-type" matches /json/
 
-GET {{base}}/style.css
+# Captured from the document above rather than written down: the URL differs
+# between `vite dev` and a build. See api/status-surfaces.hurl.
+GET {{base}}{{stylesheet_url}}
 HTTP 200
 
 GET {{base}}/service-worker-register.js
@@ -109,4 +114,5 @@ xpath "count(//nav)" == 0
 xpath "count(//footer//nav)" == 0
 xpath "count(//a[@href='/about'])" == 0
 # Chrome-free, not unstyled: it links the same compiled stylesheet.
-xpath "//link[@rel='stylesheet'][@href='/style.css']" exists
+xpath "count(//link[@rel='stylesheet'])" == 1
+xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/
