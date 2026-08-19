@@ -111,8 +111,9 @@ export function loadSurfaces(manifest = loadManifest()) {
  * The `core` frames are excluded deliberately, not incidentally. `jp.umaxica.{app,com,org}`
  * is a shared FQDN where Rails owns some paths and Next.js the rest, so it needs
  * path-level ingress rather than a whole-host route, and it is a separate piece
- * of work. `dev/apex` and `dev/acme` are excluded too: they are Vercel-targeted,
- * and neither binds anything but container loopback.
+ * of work. `dev/apex` is excluded too: `umaxica.dev` is not delegated to
+ * Cloudflare DNS, so there is no Cloudflare-side hostname for the Tunnel to
+ * publish it on, even though the unit now deploys to Workers like the rest.
  *
  * Ports come from each workspace's own `dev` script, the same way `loadSurfaces`
  * does it, so they cannot drift from what actually listens.

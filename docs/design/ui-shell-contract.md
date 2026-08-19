@@ -23,15 +23,17 @@ HTML surface.
 | ------------- | ------------------------------------- | ------------------------------ |
 | **core**      | `{app,com,org}/core`                  | Next.js App Router on OpenNext |
 | **satellite** | `{app,com,org}/{docs,help,info,news}` | Next.js App Router on OpenNext |
-| **apex**      | `{app,com,org,net}/apex`              | Hono JSX                       |
+| **apex**      | `{app,com,dev,net,org}/apex`          | Hono JSX                       |
 
 Within an archetype the shell sources are byte-identical across `app`/`com`/`org`
-(and `net` for apex); only the TLD literal differs. Treat an archetype as one
-thing: a change that applies to it applies to every unit in it.
+(and `net`/`dev` for apex); only the TLD literal differs. Treat an archetype as
+one thing: a change that applies to it applies to every unit in it.
 
-`dev/acme` and `dev/apex` have no `wrangler.jsonc` and no shell at all. They are
-outside this contract. That is recorded here so their absence reads as a decision
-rather than an oversight.
+`dev/apex` used to sit outside this contract: it had no `wrangler.jsonc` and no
+shell, because it was a Vercel edge function that built HTML from template
+literals. It moved onto Cloudflare Workers and the apex archetype, so it is now
+inside the contract like the other four. `dev/acme`, the Next.js application
+that shared the `.dev` domain, was deleted.
 
 ## 2. Why the shell is duplicated
 
@@ -142,11 +144,18 @@ owns:
   `@tailwindcss/postcss` and nothing else; and
 - its own stylesheet carrying its own `@theme` block.
 
-The four apex Workers and `dev/apex` have no bundler that can process CSS —
-`wrangler deploy` bundles the entrypoint and copies `public/` byte for byte — so
-they run `@tailwindcss/cli` in a `build:css` script instead, compiling to
-`public/style.css`, which the assets binding serves ahead of the Worker. The
-generated file is gitignored, like the other generated artefacts in AGENTS.md.
+The five apex Workers build through Vite, so they run `@tailwindcss/vite` like
+the frames run `@tailwindcss/postcss`. This was not always true: `wrangler
+deploy` bundles the entrypoint and copies `public/` byte for byte, so before
+Vite there was no bundler in that path at all and the units compiled CSS with
+`@tailwindcss/cli` into a `public/style.css` that could not carry a content
+hash. Vite emits the stylesheet into the client build with a hash in its name,
+which is what lets `public/_headers` mark it `immutable` — an unhashed asset is
+revalidated on every document, because Cloudflare serves static assets as
+`public, max-age=0, must-revalidate` unless the filename is fingerprinted.
+
+`src/assets.ts` is the single place each unit names the resulting URL. The whole
+`dist/` tree is gitignored, like the other generated artefacts in AGENTS.md.
 
 **Do not introduce a shared Tailwind preset, a shared theme package or a root
 `postcss.config`.** The duplication is the same deliberate duplication as §2, and
@@ -347,16 +356,16 @@ cause to touch it.
 
 ### Allowed
 
-| Difference               | core                        | satellite               | apex                                                      | Why it is allowed                                                                                                        |
-| ------------------------ | --------------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Main navigation          | yes, 6 routes               | none                    | none                                                      | Satellites and apex serve a single surface; inventing destinations produces dead links                                   |
-| Menu button              | yes                         | none                    | none                                                      | A disclosure with nothing to disclose is a dead control                                                                  |
-| Where the shell is wired | `src/app/(page)/layout.tsx` | `src/app/layout.tsx`    | `src/renderer.tsx`                                        | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free |
-| CSS delivery             | `globals.css` via PostCSS   | `style.css` via PostCSS | `src/style.css` → `public/style.css` via the Tailwind CLI | apex has no bundler that can process CSS, so it compiles ahead of `wrangler deploy` and links the result (§3a)           |
-| Client components        | one (the disclosure)        | none                    | n/a                                                       | Only state justifies a client component                                                                                  |
-| Breakpoint               | 800px (`wide:`)             | none                    | none                                                      | Only core has a layout that must reflow; wrapping flex rows need no media query                                          |
-| React Aria               | **`Button`, imported**      | installed, no importer  | **not possible**                                          | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)           |
-| Tailwind RAC plugin      | installed                   | none                    | none                                                      | The plugin only earns its place where a React Aria component is actually rendered                                        |
+| Difference               | core                        | satellite               | apex                                                    | Why it is allowed                                                                                                        |
+| ------------------------ | --------------------------- | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Main navigation          | yes, 6 routes               | none                    | none                                                    | Satellites and apex serve a single surface; inventing destinations produces dead links                                   |
+| Menu button              | yes                         | none                    | none                                                    | A disclosure with nothing to disclose is a dead control                                                                  |
+| Where the shell is wired | `src/app/(page)/layout.tsx` | `src/app/layout.tsx`    | `src/renderer.tsx`                                      | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free |
+| CSS delivery             | `globals.css` via PostCSS   | `style.css` via PostCSS | `src/style.css` → hashed `/assets/style-*.css` via Vite | apex builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)            |
+| Client components        | one (the disclosure)        | none                    | n/a                                                     | Only state justifies a client component                                                                                  |
+| Breakpoint               | 800px (`wide:`)             | none                    | none                                                    | Only core has a layout that must reflow; wrapping flex rows need no media query                                          |
+| React Aria               | **`Button`, imported**      | installed, no importer  | **not possible**                                        | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)           |
+| Tailwind RAC plugin      | installed                   | none                    | none                                                    | The plugin only earns its place where a React Aria component is actually rendered                                        |
 
 ### Drift — resolved
 

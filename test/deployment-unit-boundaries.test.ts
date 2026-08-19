@@ -81,10 +81,10 @@ describe('deployment unit boundaries', () => {
   it('reads a plausible set of units from pnpm-workspace.yaml', () => {
     // Everything below is only as strong as this list. If the parse silently
     // returned nothing, every assertion would vacuously pass.
-    expect(units.length).toBeGreaterThanOrEqual(21);
+    expect(units.length).toBeGreaterThanOrEqual(20);
     expect(units).toContain('app/core');
     expect(units).toContain('net/apex');
-    expect(units).toContain('dev/acme');
+    expect(units).toContain('dev/apex');
   });
 
   it('finds source files to check', () => {

@@ -38,7 +38,6 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 | `app/news` | Service news        | `news.umaxica.app` | 5407     |
 | `app/help` | Service help        | `help.umaxica.app` | 5408     |
 | `dev/apex` | Apex/static worker  | `umaxica.dev`      | 5501     |
-| `dev/acme` | Development app     | `umaxica.dev`      | 5502     |
 
 `{com,org,app}/apex` are lightweight Hono workers (root redirect, `/health`,
 `/about`); `{com,org,app}/core` are the Next.js applications behind them at

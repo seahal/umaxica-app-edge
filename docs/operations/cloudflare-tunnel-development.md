@@ -83,9 +83,11 @@ Out of scope:
 - **Rails.** Its ingress (`core-jp.*`, `side-jp.*`) is unchanged.
 - **Cloudflare Access on the twelve content frames.** Deferred until the four apexes are proven.
   Access on the apexes is in scope — see "Cloudflare Access".
-- **`dev/apex` and `dev/acme`.** The `.dev` zone is delegated to Vercel DNS
-  (`ns1/ns2.vercel-dns.com`), not Cloudflare, and neither workspace binds anything but container
-  loopback.
+- **`dev/apex`.** It deploys to Cloudflare Workers now, but the `.dev` zone is still delegated
+  to Vercel DNS (`ns1/ns2.vercel-dns.com`), so Cloudflare has no hostname to publish it on and the
+  workspace binds container loopback only. Moving the zone to Cloudflare DNS is the prerequisite
+  for both a custom domain and the `www` redirect rule — see
+  `docs/operations/net-www-canonicalisation.md`. (`dev/acme` was deleted.)
 
 ## Architecture
 
@@ -328,9 +330,9 @@ waits until stale HTML is actually observed. If it is, bypass cache on the sixte
 5 describes, and note that `public/_headers` (`/_next/static/* → immutable`) is interpreted by
 Workers Assets and does not apply on this path.
 
-**Do not add ingress for:** `{app,com,org}/core` (5405/5105/5305, out of scope), `dev/apex` and
-`dev/acme` (5501/5502, out of scope), the wrangler OAuth callback (8976), or the wrangler
-inspectors (9101/9201/9301/9401, not published at all).
+**Do not add ingress for:** `{app,com,org}/core` (5405/5105/5305, out of scope), `dev/apex`
+(5501, out of scope while `.dev` is off Cloudflare DNS), the wrangler OAuth callback (8976), or the
+wrangler inspectors (9101/9201/9301/9401/9501, not published at all).
 
 ## Verification evidence
 
@@ -1254,8 +1256,8 @@ Deliberately outside this work, so that "not verified" is never mistaken for "ve
 
 - **The Workers VPC transport.** `Next.js → Workers VPC → Rails` is a different graph and is
   untouched; a Tunnel route neither creates nor replaces a Workers binding.
-- **`dev/apex` and `dev/acme`.** `umaxica.dev` is delegated to Vercel DNS, outside the Cloudflare
-  boundary, and both bind container loopback only.
+- **`dev/apex`.** `umaxica.dev` is still delegated to Vercel DNS, outside the Cloudflare
+  boundary, so the unit binds container loopback only even though it now deploys to Workers.
 - **The Rails surfaces.** `auth`, `side-jp`, `palm-jp`, `www`, and the Rails connector itself are
   the Rails repository's; Edge measured them read-only and configured none of them.
 

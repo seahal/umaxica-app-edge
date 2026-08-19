@@ -1,5 +1,5 @@
 {
-  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding at the top level (which IS production), in env.development and in env.vpc; env.test carries none. contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: Vercel-hosted, no wrangler config.",
+  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding at the top level (which IS production), in env.development and in env.vpc; env.test carries none. contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: hosted outside Cloudflare, no wrangler config; empty since dev/acme was removed and dev/apex moved onto Workers.",
   "vpcBinding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
   "$vpcDevelopmentServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on <frame>.<brand>.localhost:3000. Verify with `wrangler vpc service get <id>`.",
   "vpcDevelopmentServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
@@ -24,5 +24,5 @@
   ],
   "contentSurface": [],
   "standalone": ["app/apex", "com/apex", "dev/apex", "net/apex", "org/apex"],
-  "external": ["dev/acme"]
+  "external": []
 }

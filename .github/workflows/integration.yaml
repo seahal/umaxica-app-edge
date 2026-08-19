@@ -55,7 +55,7 @@ jobs:
   # "listed" from the root even when the owning unit never declares it.
   #
   # The job name carries platform and unit (knip:cloudflare:app-core,
-  # knip:vercel:dev-acme) so a red check names the failing deployment directly.
+  # knip:cloudflare:dev-apex) so a red check names the failing deployment directly.
   # fail-fast is off so one unit's failure does not mask the other twenty.
   #
   # Every unit runs on every push: no path filter. Deliberate — a change to the
@@ -90,7 +90,6 @@ jobs:
           - { platform: cloudflare, unit: org-info, dir: org/info }
           - { platform: cloudflare, unit: org-news, dir: org/news }
           - { platform: cloudflare, unit: dev-apex, dir: dev/apex }
-          - { platform: vercel, unit: dev-acme, dir: dev/acme }
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/setup@v2
@@ -315,7 +314,6 @@ jobs:
           - org/news
           - org/help
           - org/info
-          - dev/acme
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/setup@v2
@@ -376,7 +374,6 @@ jobs:
           - org/news
           - org/help
           - org/info
-          - dev/acme
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/setup@v2

@@ -28,7 +28,6 @@ import * as comDocsLayout from '../com/docs/src/app/layout';
 import * as comHelpLayout from '../com/help/src/app/layout';
 import * as comInfoLayout from '../com/info/src/app/layout';
 import * as comNewsLayout from '../com/news/src/app/layout';
-import * as devAcmeLayout from '../dev/acme/src/app/layout';
 import * as orgCoreLayout from '../org/core/src/app/layout';
 import * as orgDocsLayout from '../org/docs/src/app/layout';
 import * as orgHelpLayout from '../org/help/src/app/layout';
@@ -53,7 +52,6 @@ const ROOT_LAYOUTS: Record<string, LayoutMetadata> = {
   'org/help': orgHelpLayout as LayoutMetadata,
   'org/info': orgInfoLayout as LayoutMetadata,
   'org/news': orgNewsLayout as LayoutMetadata,
-  'dev/acme': devAcmeLayout as LayoutMetadata,
 };
 vi.mock('@sentry/nextjs', () => ({ captureException: () => {} }));
 
@@ -206,7 +204,7 @@ describe('root layout metadata', () => {
   const apps = nextApps();
 
   it('covers every Next.js deployment unit', () => {
-    expect(apps.length).toBe(16);
+    expect(apps.length).toBe(15);
   });
 
   it('has a statically imported layout for every unit', () => {
@@ -256,7 +254,7 @@ describe('page title regression guard', () => {
   );
 
   it('finds the expected number of HTML pages', () => {
-    expect(pages.length).toBe(64);
+    expect(pages.length).toBe(63);
   });
 
   const contentPages = pages.filter((file) => !isIndexPage(file));
@@ -365,7 +363,7 @@ describe('global-error documents', () => {
   const files = trackedFiles().filter((file) => file.endsWith('/src/app/global-error.tsx'));
 
   it('exists for every Next.js unit', () => {
-    expect(files.length).toBe(16);
+    expect(files.length).toBe(15);
   });
 
   it.each(files)('%s renders a non-empty <title> in its final HTML', async (file) => {

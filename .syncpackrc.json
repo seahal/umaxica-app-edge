@@ -13,7 +13,7 @@
   "versionGroups": [
     {
       "label": "Single-consumer dependencies stay literal — a catalog entry with one reader is indirection, not a contract. Re-evaluate an entry the moment a second unit declares it.",
-      "dependencies": ["lefthook", "@sentry/nextjs"],
+      "dependencies": ["lefthook"],
       "isIgnored": true
     },
     {

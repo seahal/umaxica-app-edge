@@ -140,8 +140,12 @@ bump does not fail the gate, tight enough that a stray client component does.
 | `com/core`                                 | 197.67 kB | 218 kB |
 | `org/core`                                 | 197.6 kB  | 218 kB |
 | `app/core`                                 | see below | 218 kB |
-| `dev/acme`                                 | 300.96 kB | 335 kB |
-| `{app,com,org,net}/apex` (4)               | 502 B     | 560 B  |
+| `{app,com,dev,net,org}/apex` (5)           | 502 B     | 560 B  |
+
+`dev/acme` used to hold the largest budget in this table, 300.96 kB against
+335 kB, almost all of it the Sentry SDK. It was deleted along with the rest of
+the Vercel surface; `umaxica.dev` is now served by `dev/apex`, which is a Hono
+Worker on the apex archetype and measures 502 B like its four siblings.
 
 `app/core` could not be measured locally: its development environment binds a
 Workers VPC Service, which wrangler refuses to simulate and can only proxy after

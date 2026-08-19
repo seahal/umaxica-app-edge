@@ -11,7 +11,6 @@ packages:
   - com/help
   - com/info
   - com/news
-  - dev/acme
   - dev/apex
   - net/apex
   - org/apex
@@ -31,12 +30,10 @@ allowBuilds:
   # version-pinned devDependency that never reaches a Worker bundle.
   '@orangeopensource/hurl': true
   # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
-  # which nothing here uses: every Tailwind invocation in this repository is a
-  # one-shot `build:css`. The package ships prebuilt binaries for the platforms
-  # it supports, so declining its build script costs nothing and keeps the
-  # `ignore-scripts=true` posture in .npmrc intact.
+  # which nothing here uses. The package ships prebuilt binaries for the
+  # platforms it supports, so declining its build script costs nothing and keeps
+  # the `ignore-scripts=true` posture in .npmrc intact.
   '@parcel/watcher': false
-  '@sentry/cli': true
   esbuild: true
   lefthook: true
   sharp: true
@@ -158,11 +155,6 @@ catalog:
   # installs. Every unit declares `typescript: catalog:` explicitly rather than
   # leaning on root hoisting, so an extracted unit still resolves a compiler.
   typescript: ^7.0.2
-  # The Vercel CLI, in the two units that deploy there (dev/acme, dev/apex). It
-  # is both the deploy command and — through `vercel dev` — the only local
-  # server dev/apex has, so the two units disagreeing about it would mean they
-  # are not testing against the same platform emulation.
-  vercel: ^58.9.1
   # The build tool for the five apex Hono Workers, and nothing else: the sixteen
   # Next frames build through Next. It is a devDependency everywhere it appears
   # and must stay one — nothing Vite ships may reach a Worker bundle, which is
@@ -178,7 +170,6 @@ catalog:
   wrangler: ^4.124.0
 
 ignoredBuiltDependencies:
-  - '@sentry/cli'
   - esbuild
   - sharp
   - workerd
@@ -224,48 +215,31 @@ minimumReleaseAgeExclude:
 overrides:
   nanoid: ^3.3.17
   vitest: 'catalog:'
-  # A floor against GHSA-8988-4f7v-96qf: unbounded memory allocation in W3C
-  # Baggage propagation, present in @opentelemetry/core < 2.8.0.
-  #
-  # This entry was added when dev/acme depended on @vercel/otel, whose peer
-  # constraint pinned @opentelemetry/core to a vulnerable 2.6.1 and could not be
-  # cleared by bumping @opentelemetry/sdk-logs alone. Those OTel packages were
-  # never imported by dev/acme source (Sentry's instrumentation.ts replaced
-  # them) and have since been removed, so nothing resolves core below 2.8.0
-  # today: the only remaining path is @sentry/nextjs, which already brings
-  # 2.10.0 on its own.
-  #
-  # The floor is kept rather than deleted because it constrains a transitive
-  # dependency no direct dependency pins — a future @sentry/* or Next.js bump
-  # can reintroduce a 2.6.x core silently, and this line turns that into a
-  # resolution failure instead of a reintroduced advisory. Re-check when the
-  # advisory is retired or when core >= 2.8.0 becomes the floor everywhere.
-  '@opentelemetry/core': '>=2.8.0'
   # Advisory floors for transitive dev-only dependencies. Every entry below is
-  # reached through a devDependency (the `vercel` CLI in dev/acme and dev/apex,
-  # or vite/vitest), so none of them ship in a Worker bundle — but `pnpm audit`
-  # is a gate here, and the packages that pull them pin ranges we do not
-  # control. A floor turns "whatever the parent resolved" into a version the
-  # advisory database is clean on, and fails resolution loudly if a future bump
-  # would reintroduce one. Drop an entry once its parent's own range has moved
-  # past the floor on its own.
+  # reached through a devDependency (vite/vitest, wrangler, or the Next.js
+  # toolchain), so none of them ship in a Worker bundle — but `pnpm audit` is a
+  # gate here, and the packages that pull them pin ranges we do not control. A
+  # floor turns "whatever the parent resolved" into a version the advisory
+  # database is clean on, and fails resolution loudly if a future bump would
+  # reintroduce one. Drop an entry once its parent's own range has moved past
+  # the floor on its own.
   #
   # Where a package is live on two majors, the floor is keyed per major so the
   # override cannot drag a consumer across a breaking boundary.
-  '@tootallnate/once': '>=2.0.1'
+  #
+  # Six entries were dropped when dev/acme was deleted and dev/apex moved off
+  # Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
+  # that reached them: @opentelemetry/core, @tootallnate/once, undici, both
+  # path-to-regexp majors, and tar. Nothing in the tree resolves those packages
+  # now, so the floors constrained nothing — and a floor with no consumer reads
+  # as protection while providing none.
   ajv@8: '>=8.18.0'
   # GHSA-g7r4-m6w7-qqqr only touches 0.27.3–0.28.0; the 0.25.x copy vite still
   # resolves is unaffected and is deliberately left where it is.
   esbuild@0.27: '>=0.28.1'
   js-yaml@4: '>=4.3.1'
   minimatch@10: '>=10.2.3'
-  path-to-regexp@6: '>=6.3.0'
-  path-to-regexp@8: '>=8.4.0'
   smol-toml: '>=1.6.1'
-  tar: '>=7.5.21'
-  # The 5.x line is unpatched for the advisories that name `<6.27.0`, so there
-  # is no in-major floor to take: @vercel/node's undici@5 has to move to 6.
-  undici: '>=6.28.0'
 
 peerDependencyRules:
   allowAny:

@@ -46,8 +46,9 @@
     "noEmit": true,
     // The one flag deliberately left loose, and the only compiler setting in this
     // block that is not maximally strict. `--skipLibCheck false` was measured on
-    // this tree: 352 errors in a Next frame, 344 in a satellite, 95 in dev/apex,
-    // 23 in dev/acme — and not one of them is in code this repository owns. They
+    // this tree: 352 errors in a Next frame, 344 in a satellite and 95 in the
+    // then-Vercel dev/apex — and not one of them is in code this repository
+    // owns. They
     // are TS2300/TS2687/TS2717/TS2451 duplicate-identifier collisions between the
     // Cloudflare Workers runtime declarations (the Wrangler-generated
     // `cloudflare-env.d.ts`, `@cloudflare/workers-types`, miniflare) and the DOM
