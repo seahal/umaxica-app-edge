@@ -59,7 +59,8 @@ xpath "string(//meta[@name='robots']/@content)" == "index,follow"
 xpath "string(//meta[@name='twitter:card']/@content)" == "summary_large_image"
 xpath "//link[@rel='manifest'][@href='/manifest.webmanifest']" exists
 xpath "//link[@rel='icon'][@href='/favicon.ico']" exists
-xpath "//link[@rel='stylesheet'][@href='/style.css']" exists
+xpath "count(//link[@rel='stylesheet'])" == 1
+xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/
 xpath "//script[@src='/service-worker-register.js']" exists
 xpath "//head" exists
 xpath "//body" exists

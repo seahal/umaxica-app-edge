@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
 
+import { styleUrl } from './assets';
 import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
@@ -47,7 +48,7 @@ type CreateApexAppOptions = {
  * The three class strings are constants because Tailwind scans this file as
  * plain text — a class name assembled at runtime would not be generated.
  */
-const STATUS_STYLESHEET = '<link rel="stylesheet" href="/style.css">';
+const STATUS_STYLESHEET = `<link rel="stylesheet" href="${styleUrl}">`;
 const STATUS_BODY =
   'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body';
 const STATUS_HEADING = 'text-2xl font-semibold leading-heading';

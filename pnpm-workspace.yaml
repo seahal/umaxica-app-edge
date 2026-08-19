@@ -43,6 +43,16 @@ allowBuilds:
   workerd: true
 
 catalog:
+  # The Cloudflare Vite plugin. It runs the Worker inside workerd during `vite
+  # dev` and owns the production build: `vite build` emits the Worker bundle,
+  # the client assets and an OUTPUT `wrangler.json` whose `assets.directory`
+  # points at the client build. That is why no apex `wrangler.jsonc` declares
+  # `assets.directory` any more, and why `wrangler deploy` must not be passed
+  # `--config` — it reads the generated config out of the build output.
+  #
+  # Its peer range pins wrangler at ^4.124.0, which is what moved the wrangler
+  # entry below off ^4.123.0.
+  '@cloudflare/vite-plugin': ^1.53.0
   '@cloudflare/workers-types': ^5.20260810.1
   # The Hono structured-logger middleware, wired in every apex Worker's
   # create-apex-app.ts. Four units, one version — catalogued for the same reason
@@ -71,13 +81,24 @@ catalog:
   # Containerfile installs — the same reason `test:e2e` is not a CI gate.
   '@size-limit/file': ^13.0.3
   # Tailwind v4 has no JS config file: the theme is declared in each unit's own
-  # stylesheet with `@theme`. `@tailwindcss/postcss` is the engine the Next
-  # frames run through PostCSS; `@tailwindcss/cli` is the same engine as a
-  # binary, which is how the apex Hono Workers get a stylesheet at all — they
-  # have no bundler that could process CSS. Both are pinned here rather than per
-  # unit so the twenty-one units cannot drift onto different Tailwind versions.
+  # stylesheet with `@theme`. One engine, three delivery mechanisms, one per
+  # bundler the estate actually has:
+  #
+  #   @tailwindcss/postcss  the sixteen Next frames, through PostCSS
+  #   @tailwindcss/vite     the five apex Hono Workers, through Vite
+  #   @tailwindcss/cli      nothing, today — see below
+  #
+  # `@tailwindcss/cli` was how the apex Workers got a stylesheet before they had
+  # a bundler: `wrangler deploy` bundles the entrypoint and copies `public/`
+  # byte for byte, so nothing in that path could process CSS. It stays only
+  # while apex units remain unmigrated; the last one to move to Vite should
+  # delete this entry rather than leave it as a catalogue of a dead toolchain.
+  #
+  # All three are pinned here rather than per unit so the twenty-one units
+  # cannot drift onto different Tailwind versions.
   '@tailwindcss/cli': ^4.3.3
   '@tailwindcss/postcss': ^4.3.3
+  '@tailwindcss/vite': ^4.3.3
   # The DOM-assertion and DOM-implementation halves of the Vitest setup. Every
   # unit's vitest.setup.ts imports `@testing-library/jest-dom`, and every
   # vitest.config.ts names happy-dom as its environment, so a per-unit drift
@@ -142,8 +163,19 @@ catalog:
   # server dev/apex has, so the two units disagreeing about it would mean they
   # are not testing against the same platform emulation.
   vercel: ^58.9.1
+  # The build tool for the five apex Hono Workers, and nothing else: the sixteen
+  # Next frames build through Next. It is a devDependency everywhere it appears
+  # and must stay one — nothing Vite ships may reach a Worker bundle, which is
+  # the property `pnpm --dir <unit> run build` then inspecting `dist/` checks.
+  #
+  # Vitest already resolves a transitive copy of Vite; this entry is the direct,
+  # version-pinned one, so the two cannot disagree about which major is in play.
+  vite: ^8.2.1
   vitest: ^4.1.10
-  wrangler: ^4.123.0
+  # Floor set by `@cloudflare/vite-plugin`'s peer range (^4.124.0), not chosen
+  # independently. Bumping the plugin without bumping this is a resolution
+  # failure rather than a subtle one.
+  wrangler: ^4.124.0
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
@@ -178,13 +210,16 @@ minimumReleaseAgeStrict: true
 minimumReleaseAgeIgnoreMissingTime: false
 
 # Live exceptions, not dead config: with the delay in force these are the pins
-# that were bumped inside their own release window. Both are toolchain-only and
-# pinned exactly, so the exposure is a deliberate, reviewed version rather than
+# that were bumped inside their own release window. Toolchain-only and pinned
+# exactly, so the exposure is a deliberate, reviewed version rather than
 # "whatever is newest". Re-check when bumping — an entry kept past its bump is
 # a standing hole.
+#
+# `wrangler@4.120.1` was dropped when the catalog floor moved to ^4.124.0 for
+# `@cloudflare/vite-plugin`'s peer range: 4.124.0 cleared the delay on its own,
+# so the exception had nothing left to except.
 minimumReleaseAgeExclude:
   - miniflare@5.20260804.0-alpha
-  - wrangler@4.120.1
 
 overrides:
   nanoid: ^3.3.17

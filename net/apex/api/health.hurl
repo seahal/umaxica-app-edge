@@ -40,7 +40,8 @@ header "x-robots-tag" == "noindex, nofollow"
 xpath "string(//html/@lang)" == "ja"
 xpath "string(//title)" == "Health status — UMAXICA (NET)"
 xpath "string(//meta[@name='robots']/@content)" == "noindex, nofollow"
-xpath "//link[@rel='stylesheet'][@href='/style.css']" exists
+xpath "count(//link[@rel='stylesheet'])" == 1
+xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/
 xpath "normalize-space(//h1)" == "status"
 # The HTML page and the JSON payload are two renderings of one payload, so the
 # definition list must carry the same values the JSON does.

@@ -1,3 +1,4 @@
+import { styleUrl } from './assets';
 import { BRAND_TLD, buildBrandTitle, getBrandName } from './brand';
 import { defaultLocale } from './i18n/config';
 import type { AssetEnv } from './security-headers';
@@ -39,7 +40,7 @@ function buildHealthPageHtml(brandName: string, payload: HealthPayload): string 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${buildBrandTitle('Health status', { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="${styleUrl}" />
   </head>
   <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body">
     <main class="mx-auto w-full max-w-7xl grow px-4 py-8">
@@ -74,7 +75,7 @@ function buildHealthErrorHtml(brandName: string, timestampIso: string): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${buildBrandTitle(undefined, { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="${styleUrl}" />
   </head>
   <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body">
     <main class="mx-auto w-full max-w-7xl grow px-4 py-8">
