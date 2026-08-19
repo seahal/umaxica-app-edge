@@ -26,6 +26,7 @@ NXDOMAIN
 
 # --- The toolchain, by package or binary name ---
 nuqs
+Pulumi      # named in docs/operations/ only to record that it is NOT used
 tsgolint
 hurlfmt
 syncpackrc

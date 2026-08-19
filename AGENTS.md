@@ -132,15 +132,16 @@ no CSS-in-JS, no `tailwind.config.*` (v4 keeps the theme in CSS), and no static
 on how it is wired; the short version:
 
 - Every unit owns **its own** stylesheet with its own `@theme`, and each of the
-  sixteen Next units owns its own `postcss.config.mjs`. There is no shared
+  fifteen Next units owns its own `postcss.config.mjs`. There is no shared
   preset, no root config and nothing to `extends` —
   `test/deployment-unit-boundaries.test.ts` enforces that, as it does for every
   other per-unit config.
-- The five Hono units have no bundler that can process CSS, so they run
-  `@tailwindcss/cli` in a `build:css` script that every `dev`, `build` and
-  `deploy` path runs first, and link the result. `tools/check-workers.mjs`
-  checks that: `public/style.css` is the one asset allowed to be untracked, and
-  only because its source is tracked and every uploading script regenerates it.
+- The five Hono apex units run the same engine through `@tailwindcss/vite`,
+  because they build with Vite. Vite emits the stylesheet into `dist/client`
+  with a content hash in its name, which is what lets `public/_headers` mark
+  `/assets/*` `immutable` — Cloudflare serves static assets
+  `max-age=0, must-revalidate` unless the filename is fingerprinted. Each unit
+  names the resulting URL once, in `src/assets.ts`; nothing hard-codes it.
 - Visual rules go in the markup as utilities. A new CSS rule needs a written
   reason why a utility cannot express it — today each stylesheet has exactly
   four, and `@apply` is never one of them. A repeated run of utilities is a

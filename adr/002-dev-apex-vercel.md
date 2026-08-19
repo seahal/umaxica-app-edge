@@ -1,6 +1,14 @@
 # Plan 002: Create `dev/apex` — Hono on Vercel
 
-## Status: Completed (partial — see Outcome)
+## Status: Superseded 2026-08-19 by [ADR 012](012-apex-vite-build-and-static-assets.md)
+
+**`dev/apex` no longer runs on Vercel.** It deploys to Cloudflare Workers on
+the shared apex archetype, and the Vercel surface this record describes —
+`vercel.json`, `api/index.ts` and `hono/vercel`'s `handle` — has been deleted.
+The record is kept unedited below because it is the history of how the unit
+came to exist, which is still true.
+
+_Originally: Completed (partial — see Outcome)._
 
 ## GitHub Issue
 
@@ -153,6 +161,19 @@ The workspace is on disk with its own `package.json`, `vitest.config.ts`,
 `tools/workers-manifest.json` alongside `dev/acme` — Vercel-hosted, no wrangler
 config, no Rails client, no VPC binding — and it has tests now, which closes the
 "Known Gap" noted above.
+
+### Note on Supersession — 2026-08-19
+
+The Vercel hosting decided here was reversed by
+[ADR 012](012-apex-vite-build-and-static-assets.md). `dev/apex` is now a
+Cloudflare Worker built with Vite, classified `standalone` in
+`tools/workers-manifest.json` rather than `external`, and `dev/acme` — named
+above as its companion — was deleted along with the rest of the Vercel surface.
+
+The two exceptions this record's hosting choice created are closed with it:
+`dev/apex` is in the `test-api` CI matrix, because `vite dev` starts without the
+interactive device authentication `vercel dev` required, and it carries a
+`check:size` budget.
 
 ### Closes
 
