@@ -23,8 +23,3 @@ export const resolveRedirectUrl = (regionParam: string | null | undefined) => {
 };
 
 export const getDefaultRedirectUrl = () => allowedUrls[DEFAULT_REGION];
-
-export const buildRegionErrorPayload = () => ({
-  error: 'region_not_supported',
-  message: 'Unable to determine a safe redirect target',
-});

@@ -1,8 +1,4 @@
-import {
-  buildRegionErrorPayload,
-  getDefaultRedirectUrl,
-  resolveRedirectUrl,
-} from '../src/root-redirect';
+import { getDefaultRedirectUrl, resolveRedirectUrl } from '../src/root-redirect';
 
 describe('root-redirect utilities', () => {
   describe(resolveRedirectUrl, () => {
@@ -67,23 +63,6 @@ describe('root-redirect utilities', () => {
   describe(getDefaultRedirectUrl, () => {
     it('returns the default region URL (jp)', () => {
       expect(getDefaultRedirectUrl()).toBe('https://jp.umaxica.app/');
-    });
-  });
-
-  describe(buildRegionErrorPayload, () => {
-    it('returns the correct error payload structure', () => {
-      const payload = buildRegionErrorPayload();
-      expect(payload).toStrictEqual({
-        error: 'region_not_supported',
-        message: 'Unable to determine a safe redirect target',
-      });
-    });
-
-    it('returns a new object on each call', () => {
-      const payload1 = buildRegionErrorPayload();
-      const payload2 = buildRegionErrorPayload();
-      expect(payload1).not.toBe(payload2);
-      expect(payload1).toStrictEqual(payload2);
     });
   });
 });

@@ -17,9 +17,10 @@ const app = createApexApp(
       }
 
       // Always a URL: the default region is a constant key of `allowedUrls`.
-      // The 400 branch that used to sit behind a truthiness check here was
-      // unreachable; `buildRegionErrorPayload` remains the documented shape for
-      // callers that do have to reject a region.
+      // There is deliberately no rejection branch. An unrecognised `ri` is not
+      // an error to report back — it is a value that fails the allowlist, and
+      // the safe answer is the default region rather than a 400 that tells a
+      // prober its guess was parsed.
       return c.redirect(getDefaultRedirectUrl(), 301);
     });
 

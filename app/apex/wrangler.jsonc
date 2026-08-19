@@ -80,12 +80,6 @@
           "persist": true
         }
       },
-      "kv_namespaces": [
-        {
-          "binding": "BREAKER_KV",
-          "id": "9848aee238284c88ac888f61d9acb471"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -109,14 +103,6 @@
       },
       // See the note in `env.development` — blocks route inheritance.
       "routes": [],
-      "kv_namespaces": [
-        {
-          "binding": "BREAKER_KV",
-          // TODO: point at a test-only namespace once one exists. Shares production's id today;
-          // harmless while test stays local (miniflare ignores the id).
-          "id": "9848aee238284c88ac888f61d9acb471"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
@@ -130,12 +116,6 @@
     }
   },
   "placement": { "mode": "smart" },
-  "kv_namespaces": [
-    {
-      "binding": "BREAKER_KV",
-      "id": "9848aee238284c88ac888f61d9acb471"
-    }
-  ],
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
   "ratelimits": [
     {
