@@ -41,10 +41,11 @@ interface CruiseOutput {
 
 /**
  * The JavaScript surface, enumerated: four modules under tools/ and one
- * api/run.mjs per unit that has an HTTP-contract suite. Twenty of the
- * twenty-one units have one — dev/apex does not, because `vercel dev` cannot
- * be started non-interactively. A floor rather than an equality, so adding a
- * unit does not fail this test, but losing the graph does.
+ * api/run.mjs per unit that has an HTTP-contract suite. Every unit has one now
+ * — dev/apex gained its suite when it moved from Vercel to Workers, where the
+ * server is `vite dev` and starts non-interactively. A floor rather than an
+ * equality, so adding a unit does not fail this test, but losing the graph
+ * does.
  */
 const MINIMUM_MODULES = 20;
 

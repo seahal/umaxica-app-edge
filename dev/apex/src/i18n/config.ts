@@ -6,14 +6,11 @@
  * across the boundary cannot be extracted into its own repository
  * (`test/deployment-unit-boundaries.test.ts`).
  *
- * Unlike the other apexes, this unit negotiates a locale per request, so
- * `defaultLocale` is the fallback rather than the only answer. Documents that
- * are not negotiated — the health page — still state it explicitly.
+ * `defaultLocale` is the single source of truth for `<html lang>` on every
+ * document this unit emits — the JSX renderer, the health page, the status
+ * pages and the offline page — each of which used to carry its own literal.
+ * `locales` is the set the request-level language detector accepts.
+ * `test/html-lang-contract.test.tsx` pins that the emitters agree.
  */
-export const defaultLocale = 'en';
+export const defaultLocale = 'ja';
 export const locales = ['en', 'ja'] as const;
-export type Locale = (typeof locales)[number];
-
-export function isLocale(value: string): value is Locale {
-  return locales.some((locale) => locale === value);
-}

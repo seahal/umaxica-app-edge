@@ -89,7 +89,7 @@ jobs:
           - { platform: cloudflare, unit: org-help, dir: org/help }
           - { platform: cloudflare, unit: org-info, dir: org/info }
           - { platform: cloudflare, unit: org-news, dir: org/news }
-          - { platform: vercel, unit: dev-apex, dir: dev/apex }
+          - { platform: cloudflare, unit: dev-apex, dir: dev/apex }
           - { platform: vercel, unit: dev-acme, dir: dev/acme }
     steps:
       - uses: actions/checkout@v5
@@ -307,6 +307,7 @@ jobs:
           - com/news
           - com/help
           - com/info
+          - dev/apex
           - net/apex
           - org/apex
           - org/core
@@ -333,22 +334,17 @@ jobs:
       # way to size a bundle is to have built it, and building the sixteen
       # Next.js units a second time would double this matrix to buy nothing.
       #
-      # `--if-present` is what carries dev/apex: it is the one unit that serves
-      # no browser JavaScript at all — src/app.ts renders HTML from template
-      # literals and public/ holds only style.css — so it has no
-      # .size-limit.json, no `check:size` script, and nothing to measure.
-      # Without the flag pnpm exits 1 on the missing script.
+      # `--if-present` is kept as a guard rather than a carve-out: every unit
+      # in this matrix now declares `check:size`, including dev/apex, which
+      # gained a .size-limit.json when it moved onto Workers and the shared
+      # apex archetype. The flag means adding a unit without a budget fails
+      # loudly at review rather than silently at the pnpm exit code.
       - run: pnpm -C ${{ matrix.target }} run --if-present check:size
 
   # The HTTP contract gate. Each unit's `test:api` starts its own server through
   # `api/run.mjs`, runs Hurl against it and stops it again, so this job needs no
   # service container and no shell backgrounding — the same command a developer
   # runs locally.
-  #
-  # `dev/apex` is absent on purpose and not by oversight: its only server is
-  # `vercel dev`, which blocks on interactive device authentication without a
-  # linked project and therefore never listens in CI. That unit keeps its HTTP
-  # assertions in Vitest, which its `test/app.test.ts` header explains.
   #
   # `test:e2e` is deliberately NOT here. Playwright needs a browser binary that
   # neither this workflow nor `Containerfile` installs, so adding the job would

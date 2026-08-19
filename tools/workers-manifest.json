@@ -23,6 +23,6 @@
     "org/info"
   ],
   "contentSurface": [],
-  "standalone": ["app/apex", "com/apex", "net/apex", "org/apex"],
-  "external": ["dev/acme", "dev/apex"]
+  "standalone": ["app/apex", "com/apex", "dev/apex", "net/apex", "org/apex"],
+  "external": ["dev/acme"]
 }

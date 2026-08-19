@@ -4,8 +4,10 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ESNext", "DOM"],
-    "types": ["node", "vitest/globals"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
     "esModuleInterop": true,
+    "types": ["vitest/globals", "node"],
     // The quality policy every deployment unit shares, byte-identical in all
     // twenty-one tsconfigs. It is repeated rather than `extends`-ed: a unit has to
     // stay valid when it is lifted out into its own repository, which

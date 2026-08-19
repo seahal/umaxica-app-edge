@@ -68,15 +68,18 @@ points the same files at a deployment and spawns nothing. Each unit's
 `api/README.md` restates this locally and names the Vitest file every `.hurl`
 file replaced.
 
-Two things are deliberately not true yet, and should not be quietly "fixed":
+One thing is deliberately not true yet, and should not be quietly "fixed":
 
-- `dev/apex` has **no `test:api`** — the one exception to the split. Its only
-  server is `vercel dev`, which blocks on interactive device authentication, so
-  no Hurl suite can run in CI or a clean checkout. See the header of
-  `dev/apex/test/app.test.ts`.
 - CI runs `test:api` but **not** `test:e2e`: no browser binary is installed by
   `Containerfile` or by the workflow. Run `pnpm exec playwright install chromium`
   before `test:e2e` locally.
+
+There used to be a second exception — `dev/apex` had no `test:api`, because its
+only server was `vercel dev`, which blocks on interactive device authentication
+and so never listened in CI. That unit now runs on Cloudflare Workers with
+`vite dev` as its server, so it carries the same nine `.hurl` files as every
+other apex and is in the `test-api` matrix. All twenty-one units implement the
+same contract; none is exempt from the split.
 
 ## Logging
 

@@ -11,12 +11,13 @@
  * tokens — and the handful of rules that have to reach every element in the
  * document rather than the ones this unit happens to write by hand.
  *
- * This unit has no bundler that could process CSS: it is a Hono app behind a
- * single Vercel function. `@tailwindcss/cli` compiles this file to
- * `public/style.css` in the `build:css` script, which `deploy` runs first, and
- * Vercel serves `public/` from the filesystem before it applies the catch-all
- * rewrite in vercel.json. The `source('../src')` is explicit because the CLI
- * runs from the unit root rather than from this directory.
+ * This unit has no bundler that could process CSS: `wrangler deploy` bundles
+ * `src/index.tsx` and copies `public/` byte for byte. `@tailwindcss/cli`
+ * therefore compiles this file to `public/style.css` in the `build:css`
+ * script, and the assets binding serves it at `/style.css` — ahead of the
+ * Worker, so it costs no invocation and is cached across every page. The
+ * `source('../src')` is explicit because the CLI runs from the unit root
+ * rather than from this directory.
  */
 
 @import 'tailwindcss' source('../src');
@@ -52,8 +53,9 @@
    * defaults, so a second breakpoint cannot be written without editing this
    * block — the rule is mechanical rather than a convention to remember.
    *
-   * This unit uses none: it is a single centred column that needs no reflow.
-   * The token is here so every unit in the repository shares one theme.
+   * This archetype uses none: its header and footer are wrapping flex rows, so
+   * they hold from phone to desktop without a media query. The token is here
+   * so that the three archetypes share one theme rather than three.
    */
   --breakpoint-*: initial;
   --breakpoint-wide: 50rem;
