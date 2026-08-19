@@ -3,9 +3,20 @@
 ## Status: Implemented 2026-08-19
 
 Five units — `{app,com,dev,net,org}/apex` — build with Vite and
-`@cloudflare/vite-plugin`. Vite is a build tool and reaches no deployed Worker.
-`dev/apex` moved from Vercel to Cloudflare Workers, `dev/acme` was deleted, and
-the NET-series apexes answer `/` with a page instead of a redirect.
+`@cloudflare/vite-plugin`. `dev/apex` moved from Vercel to Cloudflare Workers,
+`dev/acme` was deleted, and the NET-series apexes answer `/` with a page instead
+of a redirect.
+
+**The line Vite sits on is build time versus run time, not development versus
+production.** `vite build` produces the **production** artefact — the deployed
+Worker bundle and the hashed assets — as well as backing `vite dev` locally. It
+is CI's build step and cannot be dropped from it. What Vite never does is run in
+production: nothing it installs reaches the deployed Worker, and production
+starts no Node process and no server.
+
+This distinction is stated here because it is easy to read "build tool" as
+"development-only tool" and conclude that CI does not need Vite. It does; a
+build is how the production artefact exists at all.
 
 This record supersedes `adr/002-dev-apex-vercel.md`. It does not touch it: that
 is a closed record, and `adr/README.md` is explicit about not rewriting those.
@@ -41,6 +52,15 @@ on its own or not adopted.
 `@cloudflare/vite-plugin`. `vite dev` replaces `wrangler dev`. Vite,
 `@cloudflare/vite-plugin` and `@tailwindcss/vite` are devDependencies in every
 unit; `dependencies` stays at `hono` and `@hono/structured-logger`.
+
+`vite build` is the **production** build — `deploy`, `deploy:upload`,
+`upload:ci` and `deploy:ci` all run it first, and `wrangler deploy` then uploads
+what it produced. Vite being a devDependency describes _when_ it runs, not
+_which environment it builds for_: it is absent from the running Worker, not
+from the release path. The three lines below are only intelligible under that
+reading — a dev-only tool would have no `CLOUDFLARE_ENV` production hazard, no
+output `wrangler.json` for `wrangler deploy` to read, and no dead-code
+elimination of the dev branch in `src/assets.ts`.
 
 **Evidence.** Cloudflare serves static assets with
 `Cache-Control: public, max-age=0, must-revalidate` unless told otherwise, and

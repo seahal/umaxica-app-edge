@@ -5,7 +5,7 @@
 
 ## Toolchain
 
-This project uses plain **pnpm** scripts for orchestration, with each tool (Next.js, Oxlint, Oxfmt, tsc, Vitest, Hurl, Playwright, Lefthook) invoked directly rather than through a wrapper CLI. pnpm is the only package manager: npm, npx, yarn and bun are not used, `pnpm-lock.yaml` is the only lockfile, and `test/package-manager-invariants.test.ts` fails if another one is ever tracked.
+This project uses plain **pnpm** scripts for orchestration, with each tool (Next.js, Vite, Oxlint, Oxfmt, tsc, Vitest, Hurl, Playwright, Lefthook) invoked directly rather than through a wrapper CLI. pnpm is the only package manager: npm, npx, yarn and bun are not used, `pnpm-lock.yaml` is the only lockfile, and `test/package-manager-invariants.test.ts` fails if another one is ever tracked.
 
 - Install: `pnpm install`
 - Format: `pnpm run format` / `pnpm run format:check`
@@ -14,7 +14,7 @@ This project uses plain **pnpm** scripts for orchestration, with each tool (Next
 - Test: `pnpm run test` / `pnpm run test:cov` (Vitest — see **Test layers** below)
 - HTTP test: `pnpm run test:api` (Hurl)
 - Browser test: `pnpm run test:e2e` (Playwright)
-- Build: `pnpm run build`
+- Build: `pnpm run build` (Next.js in the fifteen frames; **Vite** in the five apex Workers)
 - Dead code / unused dependencies: `pnpm run knip`
 - Dependency architecture: `pnpm run check:architecture` (dependency-cruiser)
 - Version consistency: `pnpm run check:deps` (syncpack; `fix:deps` rewrites manifests and is local-only)
@@ -22,6 +22,14 @@ This project uses plain **pnpm** scripts for orchestration, with each tool (Next
 - Browser bundle budget: `pnpm run check:size` (Size Limit — needs `pnpm run build` first, so it is NOT in `check:static`)
 - Everything static, then unit tests: `pnpm run check`
 - Per-workspace: `pnpm --filter <workspace> run <script>` or `pnpm --dir <unit> run <script>`
+
+**Vite builds the apex Workers, and it builds them for production.** `vite build`
+produces the deployed Worker bundle and the hashed assets; `deploy` and the CI
+upload scripts all run it first. It is a devDependency because it does not run in
+production, not because it only builds for development — a build is how the
+production artefact exists at all, so CI cannot drop it. Nothing Vite installs
+reaches the deployed Worker, and production starts no Node process and no server.
+`adr/012-apex-vite-build-and-static-assets.md` is normative.
 
 The root scripts are `pnpm -r` fan-outs over per-unit scripts of the same name; every deployment unit implements the same contract and can run it standalone from its own directory. The three repository-level checks (`check:architecture`, `check:deps`, `check:spelling`) are the exception: they ask about the repository as a whole, so they run once from the root rather than fanning out.
 
