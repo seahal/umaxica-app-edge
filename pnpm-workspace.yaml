@@ -29,18 +29,18 @@ allowBuilds:
   workerd: true
 
 catalog:
-  '@cloudflare/workers-types': ^5.20260810.1
-  '@opennextjs/cloudflare': ^1.19.11
+  '@cloudflare/workers-types': ^5.20260820.1
+  '@opennextjs/cloudflare': ^1.20.2
   '@types/node': ^26.2.0
-  '@types/react': ^19.2.14
-  '@types/react-dom': ^19.2.3
-  hono: ^4.13.1
-  next: ^16.3.0
-  nuqs: ^2.9.5
-  react: ^19.2.0
-  react-dom: ^19.2.0
-  vitest: ^4.1.10
-  wrangler: ^4.120.1
+  '@types/react': ^19.2.18
+  '@types/react-dom': ^19.2.4
+  hono: ^4.13.3
+  next: ^16.3.1
+  nuqs: ^2.10.0
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  vitest: ^4.1.11
+  wrangler: ^4.125.0
 
 ignoredBuiltDependencies:
   - '@sentry/cli'
@@ -74,14 +74,12 @@ minimumReleaseAgeStrict: true
 # from a silent loss of protection into a loud failure.
 minimumReleaseAgeIgnoreMissingTime: false
 
-# Live exceptions, not dead config: with the delay in force these are the pins
-# that were bumped inside their own release window. Both are toolchain-only and
-# pinned exactly, so the exposure is a deliberate, reviewed version rather than
-# "whatever is newest". Re-check when bumping — an entry kept past its bump is
-# a standing hole.
-minimumReleaseAgeExclude:
-  - miniflare@5.20260804.0-alpha
-  - wrangler@4.120.1
+# Live exceptions, not dead config: entries here are pins that were bumped
+# inside their own release window, so re-check them on every bump — an entry
+# kept past its bump is a standing hole. Empty today: the previous exceptions
+# (miniflare@5.20260804.0-alpha, wrangler@4.120.1) have both been superseded by
+# versions that clear the delay on their own.
+minimumReleaseAgeExclude: []
 
 overrides:
   nanoid: ^3.3.17

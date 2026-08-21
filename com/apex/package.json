@@ -17,7 +17,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@hono/structured-logger": "^0.1.0",
+    "@hono/structured-logger": "^1.0.0",
     "hono": "catalog:"
   },
   "devDependencies": {
