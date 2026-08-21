@@ -40,7 +40,9 @@ scripts/dev-start --rails --credentials
 The base mode is credential-free and Rails-independent. `--rails` joins an existing
 rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or guesses one.
 `--credentials` adds Podman Secrets, the Wrangler/OpenCode state volumes, and the
-loopback-only Wrangler OAuth callback.
+loopback-only Wrangler OAuth callback. That callback is no longer the recommended way to
+authenticate Wrangler — see [wrangler-authentication.md](wrangler-authentication.md) — but
+the state volume it adds is still what makes a session survive recreating the container.
 
 Enter the interactive service with:
 
@@ -54,4 +56,5 @@ Node.js is pinned to 24.19.0 and pnpm to 11.20.0. Use `pnpm` directly. Bun and t
 The runtime/network architecture is documented in
 [cloudflare-development-network.md](cloudflare-development-network.md). Security and
 credential rules are in [container-security-policy.md](container-security-policy.md) and
-[credential-and-secret-management.md](credential-and-secret-management.md).
+[credential-and-secret-management.md](credential-and-secret-management.md); logging
+Wrangler in is [wrangler-authentication.md](wrangler-authentication.md).

@@ -49,9 +49,11 @@ needed dedicated credential to `.secrets/` and Podman Secret instead.
 | `dev_claude_api_key`                  | `.secrets/claude_api_key`                  | Claude `apiKeyHelper`                       |
 | `dev_codex_api_key`                   | `.secrets/codex_api_key`                   | Codex login stdin                           |
 
-Wrangler uses dedicated container OAuth state, not an API-token secret. OpenCode Go uses
-its supported interactive login and container-only `auth.json`. Tailscale has no key in
-this refresh.
+Wrangler uses dedicated container OAuth state, not an API-token secret, and obtains it
+interactively rather than receiving it — use the Device Authorization Grant, which needs
+neither the credential overlay nor a published callback port. See
+[wrangler-authentication.md](wrangler-authentication.md). OpenCode Go uses its supported
+interactive login and container-only `auth.json`. Tailscale has no key in this refresh.
 
 ## Rotation, revocation, and incidents
 

@@ -120,6 +120,23 @@ describe('rails client layout', () => {
     expect([...timeouts][0]).toBeDefined();
   });
 
+  it('agrees on the Rails health path across all fifteen copies', () => {
+    /*
+     * Pinned, not merely agreed, because `tools/vpc-probe/probe.mjs` hard-codes
+     * the same path and the test below derives its expectation from here. If
+     * this moved and the probe did not, `check:vpc` would keep measuring a path
+     * the application no longer requests — and would keep passing while every
+     * frame 404s.
+     */
+    const paths = new Set(
+      RAILS_FRAMES.map(({ workspace }) =>
+        readConstant(read(`${workspace}/src/lib/rails-health.ts`), 'RAILS_HEALTH_PATH'),
+      ),
+    );
+    expect(paths.size, 'the fifteen health paths have diverged').toBe(1);
+    expect([...paths][0]).toBe("'/health/liveness.json'");
+  });
+
   it('keeps Access credentials and public fallback origins out of every application runtime', () => {
     for (const { workspace } of RAILS_FRAMES) {
       const config = read(`${workspace}/wrangler.jsonc`);
@@ -311,5 +328,51 @@ describe('workers vpc bindings', () => {
         `${workspace} production must not reuse the development VPC service`,
       ).not.toContain(developmentId);
     }
+  });
+});
+
+describe('vpc probe', () => {
+  const probe = read('tools/vpc-probe/probe.mjs');
+
+  it('measures the same destination the application requests', () => {
+    /*
+     * The probe is the only evidence `check:vpc` reports, and it imports no
+     * application code by design — so nothing links its destination to the
+     * frames' own. That independence is the point (a green `/rails-health` is
+     * consistent with a broken binding), but it also means the two can drift
+     * apart silently: the probe would answer 200 for a host the frames never
+     * address, and the acceptance run would call the transport proven.
+     *
+     * Reconstructed here from the frames rather than repeated, so the
+     * expectation cannot be updated by editing this file alone.
+     *
+     * `app/core` specifically: the probe's own comment names it, and it is the
+     * host that regressed on 2026-08-21 when Rails' route constraints listed
+     * only the PUBLIC host and dropped `core.app.localhost`. Every path under
+     * that host 404d — root included, which served the Rails welcome page —
+     * while the other twelve frames answered 200.
+     */
+    const origin = readConstant(read('app/core/src/lib/rails-client.ts'), 'PRIVATE_RAILS_ORIGIN');
+    const path = readConstant(read('app/core/src/lib/rails-health.ts'), 'RAILS_HEALTH_PATH');
+    const expected = `'${origin?.slice(1, -1)}${path?.slice(1, -1)}'`;
+
+    expect(readConstant(probe, 'RAILS_URL'), 'probe destination drifted from app/core').toBe(
+      expected,
+    );
+  });
+
+  it('never lets request input select the destination', () => {
+    /*
+     * A fixed module constant is what keeps this Worker from becoming a way to
+     * fetch an arbitrary URL from inside the private network. The handler
+     * therefore ignores its request argument, and the binding is called with
+     * the constant itself — not with anything derived from the request.
+     */
+    expect(probe, 'the probe handler must ignore its request argument').toContain(
+      'async fetch(_request, env)',
+    );
+    expect(probe, 'the binding must be called with the RAILS_URL constant').toContain(
+      'binding.fetch(RAILS_URL',
+    );
   });
 });
