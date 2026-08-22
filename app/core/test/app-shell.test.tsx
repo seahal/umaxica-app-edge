@@ -17,6 +17,10 @@ vi.mock('next/font/google', () => ({
 
 vi.mock('next/navigation', () => ({
   notFound: mocks.notFound,
+  // `AppChrome` reads the pathname to place `aria-current="page"`. This file
+  // asserts what the shell renders, not which entry is marked — that is
+  // `test/ui-shell-contract.test.tsx` — so one fixed route is enough.
+  usePathname: () => '/',
 }));
 
 vi.mock('next/server', async (importOriginal) => ({

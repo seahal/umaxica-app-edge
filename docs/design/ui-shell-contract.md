@@ -7,15 +7,33 @@ you are editing before you change a shell file.
 It is prose on purpose. The Edge tier shares no UI code — every unit owns its own
 copy of its shell, stylesheet, theme and i18n config — so there is no
 module whose signature would break when two units disagree. What holds them
-together is this document plus each unit's own `test/ui-shell-contract.test.tsx`,
-and neither replaces the other: the tests prove a unit does what it says, this
-document says what all of them are supposed to do and why.
+together is this document plus each unit's own shell-contract test, and neither
+replaces the other: the tests prove a unit does what it says, this document says
+what all of them are supposed to do and why.
+
+"Each unit's own test" is not one file name. The fifteen Next.js frames assert
+this contract in `test/ui-shell-contract.test.tsx`, by rendering the layout as a
+function; the five apex Workers assert it in `api/ui-shell-contract.hurl`, by
+XPath over a real response. Both make the same assertions — landmarks, document
+order, accessible names, which destinations are reachable, and no CSS class in
+sight — and neither is the archetype cutting a corner.
+
+apex is in the other layer on purpose, and the reason is worth keeping because
+it looks like an inconsistency until you read it. AGENTS.md puts assertions
+about a **response** in Hurl and assertions about **internal logic** in Vitest.
+A Next layout is a function this repository can call, so its shell is internal
+logic; an apex document only exists as a Worker response. apex did have a
+`test/ui-shell-contract.test.tsx` once, and it was deleted rather than kept —
+reaching the document through happy-dom needed a regex that stripped
+`<link rel="stylesheet">` out of the HTML before parsing, because happy-dom
+would otherwise try to fetch it over a network no unit test has. XPath over a
+real response needs none of that. **Do not "restore" the missing file.**
 
 ---
 
 ## 1. Scope
 
-Normative for the 19 deployment units that serve HTML — every directory with a
+Normative for the 20 deployment units that serve HTML — every directory with a
 `wrangler.jsonc` except `tools/vpc-probe`, which is a `probe.mjs` Worker with no
 HTML surface.
 
@@ -35,6 +53,11 @@ literals. It moved onto Cloudflare Workers and the apex archetype, so it is now
 inside the contract like the other four. `dev/acme`, the Next.js application
 that shared the `.dev` domain, was deleted.
 
+That move is why the count above is 20 rather than the 19 this document said
+for a while: the table below has summed to 20 since `dev/apex` joined, and the
+prose had not caught up. 15 Next frames + 5 apex Workers, and `tools/vpc-probe`
+outside.
+
 ## 2. Why the shell is duplicated
 
 A unit that imports from a sibling cannot be extracted into its own repository.
@@ -42,12 +65,12 @@ A unit that imports from a sibling cannot be extracted into its own repository.
 stylesheet states the working rule in its own header: _"Copy this file when the
 rules change; do not import it from a sibling or a shared package."_
 
-So duplication here is not debt. A shared UI package would couple nineteen
+So duplication here is not debt. A shared UI package would couple twenty
 independently deployed Workers to one release, which is a larger problem than
 three copies of a footer. **The thing to avoid is not duplication — it is
 duplication without a written reason.** That is what §8 is for.
 
-This is also why Tailwind arrives as twenty-one `@theme` blocks rather than one
+This is also why Tailwind arrives as twenty `@theme` blocks rather than one
 shared preset (§3a). Tailwind v4 keeps its theme in CSS, so there is nothing to
 `extends` and nothing to hoist — the duplication has the same reason as the rest.
 
@@ -119,7 +142,7 @@ is a decision, not a detail.
 
 | Concern                                                                 | Library                                                | Where it is installed                        |
 | ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- |
-| Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty-one units                         |
+| Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty units that serve HTML             |
 | Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen Next units                       |
 | URL / search-param state                                                | **`nuqs`**, catalog `^2.9.5`                           | **Catalog only — not installed in any unit** |
 
@@ -308,7 +331,7 @@ to routes that exist:
 
 | Item        | Where it points | Status                                                                                   |
 | ----------- | --------------- | ---------------------------------------------------------------------------------------- |
-| About       | `/about`        | present on all 19 units                                                                  |
+| About       | `/about`        | present on all 20 units                                                                  |
 | Preferences | —               | **route removed** — every `test/ui-shell-contract.test.tsx` now asserts it is not linked |
 | Privacy     | —               | **no route, no reusable text** → not linked                                              |
 | Terms       | —               | **no route, no reusable text** → not linked                                              |
@@ -356,16 +379,19 @@ cause to touch it.
 
 ### Allowed
 
-| Difference               | core                        | satellite               | apex                                                    | Why it is allowed                                                                                                        |
-| ------------------------ | --------------------------- | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Main navigation          | yes, 6 routes               | none                    | none                                                    | Satellites and apex serve a single surface; inventing destinations produces dead links                                   |
-| Menu button              | yes                         | none                    | none                                                    | A disclosure with nothing to disclose is a dead control                                                                  |
-| Where the shell is wired | `src/app/(page)/layout.tsx` | `src/app/layout.tsx`    | `src/renderer.tsx`                                      | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free |
-| CSS delivery             | `globals.css` via PostCSS   | `style.css` via PostCSS | `src/style.css` → hashed `/assets/style-*.css` via Vite | apex builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)            |
-| Client components        | one (the disclosure)        | none                    | n/a                                                     | Only state justifies a client component                                                                                  |
-| Breakpoint               | 800px (`wide:`)             | none                    | none                                                    | Only core has a layout that must reflow; wrapping flex rows need no media query                                          |
-| React Aria               | **`Button`, imported**      | installed, no importer  | **not possible**                                        | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)           |
-| Tailwind RAC plugin      | installed                   | none                    | none                                                    | The plugin only earns its place where a React Aria component is actually rendered                                        |
+| Difference                  | core                              | satellite                         | apex                                                    | Why it is allowed                                                                                                                               |
+| --------------------------- | --------------------------------- | --------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main navigation             | yes, 6 routes                     | none                              | none                                                    | Satellites and apex serve a single surface; inventing destinations produces dead links                                                          |
+| Menu button                 | yes                               | none                              | none                                                    | A disclosure with nothing to disclose is a dead control                                                                                         |
+| Where the shell is wired    | `src/app/(page)/layout.tsx`       | `src/app/layout.tsx`              | `src/renderer.tsx`                                      | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free                        |
+| CSS delivery                | `globals.css` via PostCSS         | `style.css` via PostCSS           | `src/style.css` → hashed `/assets/style-*.css` via Vite | apex builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)                                   |
+| Client components           | one (the disclosure)              | none                              | n/a                                                     | Only state justifies a client component                                                                                                         |
+| Breakpoint                  | 800px (`wide:`)                   | none                              | none                                                    | Only core has a layout that must reflow; wrapping flex rows need no media query                                                                 |
+| React Aria                  | **`Button`, imported**            | installed, no importer            | **not possible**                                        | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)                                  |
+| Tailwind RAC plugin         | installed                         | none                              | none                                                    | The plugin only earns its place where a React Aria component is actually rendered                                                               |
+| `aria-current`              | on the matching entry             | none                              | none                                                    | Only core has a main navigation, so only core has an entry to mark (§12)                                                                        |
+| `error.tsx`, `/offline`     | outside the shell                 | **inside the shell**              | n/a                                                     | Follows from where the shell is wired: core scopes it to `(page)`, the satellites wire it into the root layout (§15)                            |
+| Where the shell is asserted | `test/ui-shell-contract.test.tsx` | `test/ui-shell-contract.test.tsx` | `api/ui-shell-contract.hurl`                            | A Next layout is a function this repo can call; an apex document only exists as a response, and AGENTS.md puts response assertions in Hurl (§1) |
 
 ### Drift — resolved
 
@@ -375,7 +401,7 @@ Japanese labels for About. That table is gone because the values are.
 
 Adopting Tailwind forced the decision rather than deferring it — a utility names
 a scale step, so `1200px`, `1120px` and `80rem` cannot all survive as
-`max-w-*`. One token set now applies to all nineteen shell units, drawn from
+`max-w-*`. One token set now applies to all twenty shell units, drawn from
 Tailwind's stock scale except where §9 pins a value:
 
 | Concern           | Resolved value                                             |
@@ -522,18 +548,89 @@ Required, and already true:
 - Accessible names on every `<nav>` — there is more than one per document, so
   `aria-label` is required to tell main navigation from utility navigation.
 - The disclosure is operable by keyboard and reflects state in `aria-expanded`.
+- A skip link, first in the document, pointing at a `<main>` that can take focus.
+- `aria-current="page"` on the navigation entry the reader is on, where the unit
+  has a navigation.
 
-Not yet true anywhere. Measured across all 19 units:
+The last two closed together across all 20 units, and the rest of this section
+is what that landed as.
+
+### The skip link
+
+`<a href="#main-content">` as the first focusable element of every document that
+carries the shell, targeting `<main id="main-content" tabindex="-1">`.
+
+The `tabindex` is the half that is easy to leave out and the half that does the
+work. Without it the browser scrolls to the fragment and leaves focus on the
+link, so the reader's next Tab returns to the header they just asked to skip —
+the control appears to work and does not. Every unit asserts both halves, and
+asserts the link is the **first focusable element** rather than merely the first
+link — a skip link a reader has to Tab to is not one. In Vitest that is a
+`querySelector` over every focusable selector; in Hurl it is the same union in
+XPath:
+
+```
+xpath "string((//a|//button|//input|//select|//textarea|//*[@tabindex])[1]/@href)" == "#main-content"
+```
+
+Where it is placed follows where each archetype already puts its shell:
+
+| Archetype | Placed in                    | Target                                                     |
+| --------- | ---------------------------- | ---------------------------------------------------------- |
+| core      | `src/app/(page)/layout.tsx`  | `<PageMain>`                                               |
+| satellite | `src/app/layout.tsx`         | `<PageHero>`, **and** `error.tsx` and `/offline` — see §15 |
+| apex      | `src/shell.tsx` (`AppShell`) | the `<main>` `AppShell` renders                            |
+
+**It is hidden by a transform, not by `sr-only`.** Both keep the link in the
+accessibility tree and focusable, which `display: none` and `visibility: hidden`
+would not. The difference is that `sr-only` has to be undone by `not-sr-only`,
+whose `position: static` then has to be overridden back to `absolute` in the
+same `focus:` variant — two utilities fighting over one property, decided by the
+order Tailwind happens to emit them in. `-translate-y-full` and
+`focus:translate-y-0` set one custom property, and the second compiles to
+`.focus\:translate-y-0:focus`, which carries a pseudo-class the first does not —
+so it wins on specificity, not on emission order. That was checked in the
+compiled stylesheet rather than assumed:
+
+```css
+.-translate-y-full {
+  --tw-translate-y: -100%;
+  translate: …;
+}
+.focus\:translate-y-0:focus {
+  --tw-translate-y: 0px;
+  translate: …;
+}
+```
+
+There is deliberately no `transition`: an instant position change is not motion,
+which is what keeps the last row of the table below vacuous.
+
+### `aria-current`
+
+`aria-current="page"` on the main-navigation entry matching the current route.
+Only `*/core` has a main navigation, so only `*/core` marks anything; a unit that
+gains one later inherits the rule. `app-chrome.tsx` reads `usePathname()`, which
+is free — it is already the one client component the shell needs.
+
+**The match is exact.** ARIA defines `page` as "the current page within a set of
+pages", so an ancestor is not it: on `/configuration/account` the
+`/configuration` entry stays unmarked rather than announcing a page the reader
+is not on. `/home` and `/doctor` are unmarked for the same reason — served, but
+not entries in this set. Entries that do not match carry no attribute at all
+rather than `aria-current="false"`, which is what the default already means.
+
+### Still open
 
 | Gap                                      | Target behaviour when implemented                                                                                                                                                                                                                                                                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **No skip link** (0 units)               | First focusable element in the document, visually hidden until focused, `href="#main-content"`, with `<main id="main-content" tabindex="-1">` so the target actually receives focus. Same markup in all three archetypes.                                                                                  |
-| **No `aria-current`** (0 units)          | `aria-current="page"` on the main-navigation link matching the current route. Applies to `*/core` today; to any unit that gains a navigation later.                                                                                                                                                        |
 | **No reduced-motion handling** (0 units) | There is currently **no motion anywhere** — no `transition`, `animation`, `@keyframes` or `scroll-behavior` in any shell stylesheet. So nothing is broken today. The rule is a precondition: any motion introduced into the shell ships with `@media (prefers-reduced-motion: reduce)` in the same change. |
 
-Do not close these unit-by-unit. Each is an archetype-wide change, and a skip link
-that exists on four units out of nineteen is worse than none, because a reader
-learns to expect it.
+Do not close a gap like this unit-by-unit. Each is an archetype-wide change, and
+a skip link that exists on four units out of twenty is worse than none, because
+a reader learns to expect it. That is why the two closed above closed everywhere
+in one change, including on the archetype that had no shell test to close them
+against until the same change gave it one.
 
 ## 13. Internationalisation
 
@@ -546,15 +643,27 @@ Three mechanisms coexist. This is recorded as fact, not endorsed:
 | apex      | inline `LABELS: Record<'en'\|'ja', …>` in `src/shell.tsx`, plus `hono/language` `languageDetector` | **Yes** — `supportedLanguages: ['en','ja']`, `fallbackLanguage: 'en'`                             |
 
 Labels that must correspond in meaning across locales regardless of mechanism —
-About, Privacy, Terms, Preferences, Menu. In use today:
+About, Privacy, Terms, Preferences, Menu, Skip to main content. In use today:
 
-| Concept                              | ja                                                     | en                   |
-| ------------------------------------ | ------------------------------------------------------ | -------------------- |
-| About                                | `概要` (core) / `このサイトについて` (satellite, apex) | `About`              |
-| Preferences                          | `環境設定`                                             | `Preferences`        |
-| Menu                                 | `メニュー`                                             | `Menu`               |
-| Main navigation (accessible name)    | `メインナビゲーション`                                 | `Main navigation`    |
-| Utility navigation (accessible name) | `ユーティリティナビゲーション`                         | `Utility navigation` |
+| Concept                              | ja                                                     | en                     |
+| ------------------------------------ | ------------------------------------------------------ | ---------------------- |
+| About                                | `概要` (core) / `このサイトについて` (satellite, apex) | `About`                |
+| Preferences                          | `環境設定`                                             | `Preferences`          |
+| Menu                                 | `メニュー`                                             | `Menu`                 |
+| Skip to main content                 | `本文へスキップ`                                       | `Skip to main content` |
+| Main navigation (accessible name)    | `メインナビゲーション`                                 | `Main navigation`      |
+| Utility navigation (accessible name) | `ユーティリティナビゲーション`                         | `Utility navigation`   |
+
+The skip link is the first label added since the three mechanisms were recorded,
+and it went through each of them rather than around any: `nav.skip` in core's
+two dictionaries, a Japanese literal in the satellites' `SkipLink`, an entry in
+apex's `LABELS` record. That is the rule working as intended — the machinery
+stayed put, and what had to agree was the meaning.
+
+It is also the first label whose English half is reachable in production.
+`labelsFor()` in apex returns the English shell for a reader who negotiates
+`en`, so `Skip to main content` renders; core's `en.json` still has no call site
+that asks for it (open gap 5).
 
 ### Unresolved: apex declares a language it may not be writing in
 
@@ -603,60 +712,103 @@ every unit, page, error document and 429 response.
 A machine-readable or failure document with navigation in it is worse than one
 without.
 
-| Surface                                                             | What it is                                                                                                                                                                                                   |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/health` (core, satellite)                                         | **JSON.** Edge state and Rails liveness in one document; `no-store`, `X-Robots-Tag: noindex`; **503 when Rails liveness fails** (ADR 009). Not a page. Do not add chrome, do not change the status contract. |
-| `/health`, `/health.html` (apex)                                    | **HTML**, but chrome-free: no `<header>`, no navigation, a `<dl>` of Worker status and a bare `<footer>© year BRAND</footer>` that is deliberately _not_ the shell footer.                                   |
-| `/health.json` (apex)                                               | JSON.                                                                                                                                                                                                        |
-| `/revision`                                                         | JSON.                                                                                                                                                                                                        |
-| `robots.txt`, `sitemap.xml`                                         | Generated routes.                                                                                                                                                                                            |
-| apex `/`                                                            | A region redirect, not a document.                                                                                                                                                                           |
-| 429 responses                                                       | Hand-written HTML; title contract applies, shell does not.                                                                                                                                                   |
-| `error.tsx`, `global-error.tsx`, `global-not-found.tsx`, `/offline` | Chrome-free by design. `global-error` and `global-not-found` replace the root layout entirely, which is correct for a failure document.                                                                      |
+| Surface                                    | What it is                                                                                                                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/health` (core, satellite)                | **JSON.** Edge state and Rails liveness in one document; `no-store`, `X-Robots-Tag: noindex`; **503 when Rails liveness fails** (ADR 009). Not a page. Do not add chrome, do not change the status contract. |
+| `/health`, `/health.html` (apex)           | **HTML**, but chrome-free: no `<header>`, no navigation, a `<dl>` of Worker status and a bare `<footer>© year BRAND</footer>` that is deliberately _not_ the shell footer.                                   |
+| `/health.json` (apex)                      | JSON.                                                                                                                                                                                                        |
+| `/revision`                                | JSON.                                                                                                                                                                                                        |
+| `robots.txt`, `sitemap.xml`                | Generated routes.                                                                                                                                                                                            |
+| apex `/`                                   | A region redirect, not a document.                                                                                                                                                                           |
+| 429 responses                              | Hand-written HTML; title contract applies, shell does not.                                                                                                                                                   |
+| `global-error.tsx`, `global-not-found.tsx` | Chrome-free on every unit: both replace the root layout entirely, which is correct for a failure document.                                                                                                   |
+| `error.tsx`, `/offline`                    | **Archetype-dependent — see below.** Chrome-free on core; inside the shell on the satellites.                                                                                                                |
 
 Note that `/health` means different things in different archetypes — Edge+Rails
 with a 503 path on core and satellite, Worker-only with a 200 on apex. That is a
 real difference in what the endpoint answers, not a shell question, and it is
 recorded here only so nobody "unifies" the two by accident.
 
+### `error.tsx` and `/offline` are only chrome-free on core
+
+This table used to list them as chrome-free everywhere, and that was wrong for
+the twelve satellites. It follows from where each archetype wires the shell
+(§8): core scopes it to the `(page)` route group, so `src/app/error.tsx` and
+`src/app/offline/` sit outside it and render bare. The satellites wire the shell
+into the **root** layout, so both documents render inside it and carry the
+header, the footer — and, since §12, the skip link the layout places ahead of
+them.
+
+That last part is the consequence worth stating, because it is a way to ship a
+broken control: a skip link on a document whose `<main>` has no `id` lands
+nowhere, and the document it would land nowhere on is the one a reader reaches
+when something has already failed. So on the satellites `error.tsx` and
+`/offline` carry `id="main-content"` and `tabIndex={-1}` exactly as `PageHero`
+does, and their unit's `test/ui-shell-contract.test.tsx` asserts it.
+
+The difference itself is allowed — a failure document that keeps the shell and
+one that drops it are both defensible — but it is a difference, and a change to
+either archetype's status surfaces has to ask which one it is editing.
+
 ## 16. Conformance and open gaps
 
-Conforming today, all 19 units: landmark set and order; brand as link, not
+Conforming today, all 20 units: landmark set and order; brand as link, not
 heading; single `<h1>` in `<main>`; header actions slot; navigation as a sibling
 of the header; two-layer footer with a named utility nav and a rendered canonical
 URL; no dead links; the title contract; chrome-free status surfaces; the shared
 tokens in §9; the typography rules in §10; one token set across all three
-archetypes (§8); one breakpoint, enforced by the theme (§11).
+archetypes (§8); one breakpoint, enforced by the theme (§11); a skip link ahead
+of the header targeting a focusable `<main>` (§12); `aria-current="page"` where
+the unit has a navigation (§12); and a `test/ui-shell-contract.test.tsx` that
+proves it (§1).
 
 Closed since the last revision:
 
-- The footer identity row now renders the canonical URL on all 19 units (§7).
+- The footer identity row now renders the canonical URL on all 20 units (§7).
 - The three token sets are one (§8).
 - The status surfaces that shipped unstyled — apex's 404/500/offline and health
   error documents, every `global-error.tsx`, `*/core`'s `unauthorized.tsx` —
   are styled, because a linked or imported stylesheet costs nothing.
+- **The skip link and `aria-current` landed on all 20 units (§12).** They were
+  gap 2 in the previous revision. Each landed with its assertions in the layer
+  that archetype already uses — Vitest on the fifteen frames, Hurl on the five
+  apex Workers — which is now stated in §1 and in §8's allowed table, because
+  the split had been left for a reader to infer from a missing file name.
+- **§15 corrected.** It claimed `error.tsx` and `/offline` were chrome-free on
+  every archetype; on the twelve satellites both render inside the root layout
+  and always did. The document, not the code, was wrong.
+- **The unit counts corrected.** The prose said 19 HTML-serving units and
+  twenty-one `@theme` blocks; both are 20, and have been since `dev/apex`
+  joined the contract (§1).
 
 Open:
 
 1. No `<aside>` exists anywhere (§6) — the slot is defined, nothing is drawn.
-2. No skip link, no `aria-current` (§12) — 19 units.
-3. No reduced-motion handling (§12) — currently vacuous; becomes required the
+2. No reduced-motion handling (§12) — currently vacuous; becomes required the
    moment motion is added. Note that Tailwind ships a `motion-reduce:` variant,
    so the precondition is now one utility rather than a media query to author.
-4. Two Japanese labels for About: `概要` vs `このサイトについて` (§8, §13). Left
+3. Two Japanese labels for About: `概要` vs `このサイトについて` (§8, §13). Left
    open deliberately — it is a copy decision, not a token.
-5. Three i18n mechanisms; core carries an `en.json` it never reaches (§13).
-6. apex may declare `lang="ja"` on an English document (§13).
-7. Privacy and Terms have no route and no text (§7).
-8. The canonical origin literal is repeated 2–3× per unit with no resolver (§7).
-9. `react-aria-components` is installed in twelve satellite units with no
+4. Three i18n mechanisms; core carries an `en.json` it never reaches (§13).
+5. apex may declare `lang="ja"` on an English document (§13). The skip link
+   makes this slightly more visible, not worse: an English-negotiated apex page
+   now opens with `Skip to main content` inside a document declaring `lang="ja"`.
+6. Privacy and Terms have no route and no text (§7).
+7. The canonical origin literal is repeated 2–3× per unit with no resolver (§7).
+8. `react-aria-components` is installed in twelve satellite units with no
    importer, so twelve `knip.jsonc` files carry an `ignoreDependencies`
    suppression (§3a). Each is deleted when its unit gains a consumer. The three
    core entries are already gone.
-10. The satellites' 429 document, built as a string in `src/middleware.ts`, is
-    the one HTML surface with no stylesheet. Middleware runs before the route
-    that knows the hashed CSS chunk's URL, so there is nothing to link; it stays
-    unstyled semantic HTML rather than gaining a hand-maintained inline copy.
+9. The satellites' 429 document, built as a string in `src/middleware.ts`, is
+   the one HTML surface with no stylesheet. Middleware runs before the route
+   that knows the hashed CSS chunk's URL, so there is nothing to link; it stays
+   unstyled semantic HTML rather than gaining a hand-maintained inline copy.
+   It has no skip link either, for the same reason it has no shell.
+10. The shell test is named `app-shell.test.tsx` in `app/core` and
+    `application-shell.test.tsx` in `com/core` and `org/core`. Nothing depends
+    on the name, but §1 of this document calls the three units one archetype,
+    and two names for one file is the kind of drift that makes a reader check
+    whether the contents differ too. Rename when someone next touches all three.
 
 ## 17. Changing this contract
 

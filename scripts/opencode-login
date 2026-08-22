@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-echo 'OpenCode Go uses its supported interactive login and container-only auth.json state.'
-echo 'Do not paste the credential into chat and do not copy a host auth.json.'
-exec opencode auth login

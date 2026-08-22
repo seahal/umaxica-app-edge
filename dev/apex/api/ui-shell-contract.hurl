@@ -35,9 +35,27 @@ xpath "count(//header//h1)" == 0
 xpath "count(//main//h1)" == 1
 
 # No dead control in the header. Nothing on this unit toggles, so the header
-# holds the brand link and nothing else interactive.
+# holds the brand link and nothing else interactive. The skip link asserted
+# below is a sibling of `<header>`, not a child, so it is not counted here.
 xpath "count(//header//a)" == 1
 xpath "count(//header//button)" == 0
+
+# The skip link (docs/design/ui-shell-contract.md §12). It has to be the first
+# focusable element in the document — not merely the first link — so the union
+# below is every element that can take focus, taken in document order.
+xpath "count(//a[@href='#main-content'])" == 1
+xpath "string((//a|//button|//input|//select|//textarea|//*[@tabindex])[1]/@href)" == "#main-content"
+# No `Accept-Language` on this request, so the detector falls back to English —
+# the same reason the utility nav reads "Utility navigation" below.
+xpath "normalize-space(//a[@href='#main-content'])" == "Skip to main content"
+
+# ...and its target has to exist and be able to take focus. `tabindex="-1"` is
+# the half that is easy to leave out and the half that does the work: without
+# it the browser scrolls to the fragment and leaves focus on the link, so the
+# reader's next Tab returns to the header they just asked to skip. The control
+# appears to work and does not.
+xpath "string(//main/@id)" == "main-content"
+xpath "string(//main/@tabindex)" == "-1"
 
 # No main navigation, because this unit has no second destination. The only
 # `<nav>` in the document is the footer's.
@@ -103,6 +121,11 @@ HTTP 200
 [Asserts]
 xpath "string(//footer//nav/@aria-label)" == "ユーティリティナビゲーション"
 xpath "normalize-space(//footer//nav//a)" == "このサイトについて"
+# The skip link goes through the same detector. It is the first shell label
+# added since the three i18n mechanisms were recorded (§13), and this is the
+# only archetype where its English half is reachable at all — the assertion in
+# the first request above is that English.
+xpath "normalize-space(//a[@href='#main-content'])" == "本文へスキップ"
 
 
 # `/health` is outside the shell. It is a health check, not a page.
@@ -113,6 +136,10 @@ xpath "count(//header)" == 0
 xpath "count(//nav)" == 0
 xpath "count(//footer//nav)" == 0
 xpath "count(//a[@href='/about'])" == 0
+# No skip link either, and that is right rather than an omission: there is no
+# header and no navigation here to skip past, and a skip link on a document
+# with no chrome is a control that does nothing.
+xpath "count(//a[@href='#main-content'])" == 0
 # Chrome-free, not unstyled: it links the same compiled stylesheet.
 xpath "count(//link[@rel='stylesheet'])" == 1
 xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/

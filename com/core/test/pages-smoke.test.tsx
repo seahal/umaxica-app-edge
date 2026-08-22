@@ -15,6 +15,10 @@ import RootPage from '../src/app/(page)/page';
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn<() => never>(),
+  // `AppChrome` reads the pathname to place `aria-current="page"`. Which entry
+  // is marked is asserted in test/ui-shell-contract.test.tsx; this file only
+  // needs the hook to resolve.
+  usePathname: () => '/',
 }));
 
 vi.mock('@/i18n/config', () => ({

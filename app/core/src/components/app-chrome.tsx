@@ -2,6 +2,7 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -54,6 +55,7 @@ export function AppChrome({
   labels,
 }: Readonly<{ links: readonly NavigationLink[]; labels: ChromeLabels }>) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <>
@@ -100,8 +102,27 @@ export function AppChrome({
         aria-label={labels.primaryNav}
         data-open={open}
       >
+        {/*
+         * `aria-current="page"` marks the entry the reader is on (contract
+         * §12). The match is exact on purpose. ARIA defines `page` as "the
+         * current page within a set of pages", so an ancestor is not it:
+         * `/configuration/account` leaves `/configuration` unmarked rather
+         * than claiming to be the page the reader is looking at. `/home` and
+         * `/doctor` are unmarked for the same reason — they are served, but
+         * they are not entries in this set.
+         *
+         * `undefined` rather than `"false"` on the five entries that do not
+         * match: the attribute is then absent, which is exactly what its
+         * default already means, so emitting it would add markup that says
+         * nothing.
+         */}
         {links.map((link) => (
-          <Link className="rounded-lg px-3 py-2 hover:bg-gray-100" href={link.href} key={link.href}>
+          <Link
+            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+            aria-current={pathname === link.href ? 'page' : undefined}
+            href={link.href}
+            key={link.href}
+          >
             {link.label}
           </Link>
         ))}

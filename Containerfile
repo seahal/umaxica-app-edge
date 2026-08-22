@@ -9,7 +9,7 @@ ARG OPENCODE_VERSION=1.18.16
 ARG CONTAINER_UID=1000
 ARG CONTAINER_GID=1000
 ARG CONTAINER_USER=edge
-ARG CONTAINER_GROUP=group
+ARG CONTAINER_GROUP=edge
 
 FROM node:${NODE_VERSION} AS development
 
@@ -92,6 +92,10 @@ RUN npm rm --global corepack \
     "opencode-ai@${OPENCODE_VERSION}" \
   && npm cache clean --force
 
+# The group is named after the user on purpose. Devcontainer features are
+# third-party scripts, and several of them (grok-build among them) chown their
+# state with a literal `${_REMOTE_USER}:${_REMOTE_USER}` — a group named
+# anything else makes those installs fail with "chown: invalid group".
 RUN set -eux; \
   base_user=node; \
   base_group=node; \
@@ -135,7 +139,7 @@ ENV HOME=/home/edge \
     PATH=/home/edge/.local/bin:/home/edge/.local/share/pnpm/bin:${PATH}
 
 WORKDIR /home/edge/workspace
-USER edge:group
+USER edge:edge
 
 # Standalone install per https://pnpm.io/installation. This is the single source
 # of pnpm in the image: it needs no root, so it runs after the USER switch and

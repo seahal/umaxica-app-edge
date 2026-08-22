@@ -7,6 +7,7 @@
   "notifications": { "title": "Notifications", "wip": "Work in progress" },
   "about": { "title": "About" },
   "nav": {
+    "skip": "Skip to main content",
     "menu": "Menu",
     "primary": "Main navigation",
     "utility": "Utility navigation"

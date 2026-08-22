@@ -30,20 +30,21 @@ them, and `scripts/dev-start` still enforces its own copies on the direct Compos
 
 ## Direct Compose modes
 
-The separate direct Compose entrypoint remains available for the optional Rails and credential
+The separate direct Compose entrypoint remains available for the optional Rails and Tunnel
 overlays:
 
 ```bash
 scripts/dev-start
 scripts/dev-start --rails
-scripts/dev-start --credentials
-scripts/dev-start --rails --credentials
+scripts/dev-start --tunnel
+scripts/dev-start --rails --tunnel
 ```
 
-The base mode is credential-free and Rails-independent. `--rails` joins an existing
-rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or guesses one.
-`--credentials` adds Podman Secrets, the Wrangler/OpenCode state volumes, and the
-loopback-only Wrangler OAuth callback.
+Every mode is credential-free: there is no credential overlay any more. `--rails` joins an
+existing rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or
+guesses one. `--tunnel` adds the Cloudflare Tunnel network from `compose.custom.yaml`.
+Credentials are obtained inside the running container through browser logins — see
+[Credential and secret management](credential-and-secret-management.md).
 
 Enter the interactive service with:
 

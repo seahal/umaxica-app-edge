@@ -7,6 +7,7 @@ import { ServiceWorkerRegistration } from '../components/service-worker-registra
 import './style.css';
 import { SiteFooter } from '../components/site-footer';
 import { SiteHeader } from '../components/site-header';
+import { SkipLink } from '../components/skip-link';
 import { defaultLocale } from '../i18n/config';
 
 /*
@@ -34,6 +35,12 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
        */}
       <body className="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900">
         <ServiceWorkerRegistration />
+        {/*
+         * First in document order, and therefore the first thing a keyboard
+         * reader reaches. `position: absolute`, so the flex column below is
+         * unaffected and `<main>`'s `flex-1` still decides the layout.
+         */}
+        <SkipLink />
         {/*
          * The shell wraps `{children}` rather than supplying its own `<main>`:
          * every page under this layout — including `error.tsx` and `/offline` —

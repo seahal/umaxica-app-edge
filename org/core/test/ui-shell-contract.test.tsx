@@ -4,7 +4,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('next/navigation', () => ({ redirect: vi.fn(), notFound: vi.fn() }));
+/*
+ * `AppChrome` reads `usePathname()` to decide which navigation entry carries
+ * `aria-current="page"`. The hook reads a router context that does not exist
+ * under `renderToStaticMarkup`, so the mock supplies the value — and holds it
+ * in a mutable box rather than a fixed return, which is what lets the
+ * current-page tests below move the reader from route to route.
+ */
+const navigation = vi.hoisted(() => ({ pathname: '/' }));
+
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn(),
+  notFound: vi.fn(),
+  usePathname: () => navigation.pathname,
+}));
 
 import PageLayout from '../src/app/(page)/layout';
 import { AppChrome } from '../src/components/app-chrome';
@@ -14,6 +27,7 @@ import { getDictionary } from '../src/i18n/dictionaries';
 
 afterEach(() => {
   vi.clearAllMocks();
+  navigation.pathname = '/';
   document.body.innerHTML = '';
 });
 
@@ -143,6 +157,35 @@ describe('application shell', () => {
     ).toHaveAttribute('href', 'https://jp.umaxica.org/');
   });
 
+  it('opens the document with a skip link that actually moves focus', async () => {
+    const dom = await shellDom();
+    const dict = await getDictionary(defaultLocale);
+
+    const skip = dom.getByRole('link', { name: dict.nav.skip });
+    expect(skip).toHaveAttribute('href', '#main-content');
+
+    /*
+     * "First focusable element in the document" is the requirement, not "first
+     * link" — and it matters most on this archetype, where the alternative is
+     * tabbing past the brand, the menu trigger and six navigation entries. The
+     * selector is every element that can take focus, so anything inserted ahead
+     * of the skip link later fails here rather than silently demoting it.
+     */
+    expect(document.body.querySelector('a, button, input, select, textarea, [tabindex]')).toBe(
+      skip,
+    );
+
+    /*
+     * The target has to exist and has to be programmatically focusable.
+     * Without `tabindex="-1"` the browser scrolls to the fragment and leaves
+     * focus on the link, so the next Tab returns to the navigation the reader
+     * just asked to skip — the control appears to work and does not.
+     */
+    const main = dom.getByRole('main');
+    expect(main).toHaveAttribute('id', 'main-content');
+    expect(main).toHaveAttribute('tabindex', '-1');
+  });
+
   it('links only to destinations this unit serves', async () => {
     const hrefs = [...(await shell()).matchAll(/href="(\/[^"]*)"/gu)].map((match) => match[1]);
 
@@ -230,5 +273,66 @@ describe('menu disclosure', () => {
 
     expect(screen.getByRole('link', { name: '概要' })).toHaveAttribute('href', '/about');
     expect(screen.getByRole('link', { name: labels.brand })).toHaveAttribute('href', '/');
+  });
+});
+
+/**
+ * `aria-current="page"` on the navigation entry the reader is on
+ * (docs/design/ui-shell-contract.md §12).
+ *
+ * The match is exact, and these tests are where that decision is written down.
+ * ARIA defines `page` as "the current page within a set of pages", so an
+ * ancestor is not it — marking `/configuration` while the reader is on
+ * `/configuration/account` would announce a page they are not on. This
+ * archetype is the only one with a main navigation, so it is the only one with
+ * anything to mark.
+ */
+describe('current-page marking', () => {
+  const labels = { brand: 'UMAXICA', menu: 'メニュー', primaryNav: 'メインナビゲーション' };
+
+  const links = [
+    { href: '/' as const, label: 'ホーム' },
+    { href: '/explore' as const, label: '探索' },
+    { href: '/configuration' as const, label: '設定' },
+  ];
+
+  const markedEntries = () =>
+    within(screen.getByRole('navigation', { name: labels.primaryNav }))
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('aria-current') === 'page');
+
+  it('marks exactly the entry the reader is on', () => {
+    navigation.pathname = '/explore';
+    render(<AppChrome links={links} labels={labels} />);
+
+    expect(markedEntries().map((link) => link.textContent)).toEqual(['探索']);
+  });
+
+  it('marks the home entry only on an exact match, never on every route', () => {
+    navigation.pathname = '/';
+    render(<AppChrome links={links} labels={labels} />);
+
+    expect(markedEntries().map((link) => link.textContent)).toEqual(['ホーム']);
+  });
+
+  it('marks nothing on a served route that is not itself an entry', () => {
+    // `/configuration/account` is real, and `/home` and `/doctor` are too —
+    // none of them is one of the six destinations in this set.
+    navigation.pathname = '/configuration/account';
+    render(<AppChrome links={links} labels={labels} />);
+
+    expect(markedEntries()).toHaveLength(0);
+  });
+
+  it('leaves the unmarked entries with no attribute rather than a negative one', () => {
+    navigation.pathname = '/explore';
+    render(<AppChrome links={links} labels={labels} />);
+
+    const nav = within(screen.getByRole('navigation', { name: labels.primaryNav }));
+    const home = nav.getByRole('link', { name: 'ホーム' });
+
+    // `aria-current="false"` is the default already; emitting it would add
+    // markup that says nothing.
+    expect(home).not.toHaveAttribute('aria-current');
   });
 });

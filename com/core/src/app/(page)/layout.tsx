@@ -1,5 +1,6 @@
 import { AppChrome } from '@/components/app-chrome';
 import { SiteFooter } from '@/components/site-footer';
+import { SkipLink } from '@/components/skip-link';
 import { defaultLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
 
@@ -46,6 +47,12 @@ export default async function PageLayout({
 
   return (
     <div className="grid min-h-screen grid-rows-[auto_1fr_auto] wide:grid-cols-[15rem_minmax(0,1fr)]">
+      {/*
+       * First in document order, and therefore the first thing a keyboard
+       * reader reaches. It is `position: absolute`, so it claims no grid track
+       * and the four shell rows below are unaffected.
+       */}
+      <SkipLink label={dict.nav.skip} />
       <AppChrome
         links={links}
         labels={{

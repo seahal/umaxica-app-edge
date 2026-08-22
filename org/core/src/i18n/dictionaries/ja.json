@@ -7,6 +7,7 @@
   "notifications": { "title": "通知", "wip": "準備中" },
   "about": { "title": "概要" },
   "nav": {
+    "skip": "本文へスキップ",
     "menu": "メニュー",
     "primary": "メインナビゲーション",
     "utility": "ユーティリティナビゲーション"

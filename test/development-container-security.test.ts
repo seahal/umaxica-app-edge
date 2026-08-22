@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
-const composeFiles = ['compose.yaml', 'compose.credentials.yaml', 'compose.rails.yaml'] as const;
+const composeFiles = ['compose.yaml', 'compose.rails.yaml'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 const containerfile = read('Containerfile');
 // Comments explain why Corepack is gone, so assertions about what the image
@@ -138,20 +138,25 @@ describe('development-container security contract', () => {
     expect(devcontainer).not.toMatch(/dangerously-skip-permissions|bypassPermissions/iu);
   });
 
-  it('pins secret registration to rootless files with defensive checks', () => {
-    const setup = read('scripts/setup-secrets');
-    for (const required of [
-      'umask 077',
-      'SUDO_UID',
-      "stat -c '%F'",
-      "stat -c '%a'",
-      'git check-ignore',
-      '.containerignore',
-      '.dockerignore',
-      'podman secret create --replace',
-    ]) {
-      expect(setup).toContain(required);
-    }
+  it('has no long-lived credential injection path left', () => {
+    // Credentials are obtained inside the container through browser flows
+    // (`gh auth login --web`, `scripts/wrangler-login`, `claude` /login,
+    // `codex login`, `cloudflared access login`) and are never persisted.
+    // The credential overlay, its Podman Secrets, and scripts/setup-secrets
+    // are gone; nothing may reintroduce them.
+    expect(existsSync(join(repoRoot, 'compose.credentials.yaml'))).toBe(false);
+    expect(existsSync(join(repoRoot, 'scripts/setup-secrets'))).toBe(false);
+    expect(compose).not.toContain('/run/secrets');
+    expect(compose).not.toMatch(/^\s*secrets:/mu);
+
+    const scripts = ['dev-start', 'wrangler-login', 'github-readonly-check', 'check-tunnel']
+      .map((name) => read(`scripts/${name}`))
+      .join('\n');
+    expect(scripts).not.toContain('/run/secrets');
+    expect(scripts).not.toContain('--credentials');
+  });
+
+  it('still proves the secret input directory cannot enter the build context', () => {
     expect(read('scripts/verify-build-context')).toContain('build-context-canary');
   });
 });

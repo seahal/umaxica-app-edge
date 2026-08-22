@@ -11,13 +11,21 @@
  * tokens — and the handful of rules that have to reach every element in the
  * document rather than the ones this unit happens to write by hand.
  *
- * This unit has no bundler that could process CSS: `wrangler deploy` bundles
- * `src/index.tsx` and copies `public/` byte for byte. `@tailwindcss/cli`
- * therefore compiles this file to `public/style.css` in the `build:css`
- * script, and the assets binding serves it at `/style.css` — ahead of the
- * Worker, so it costs no invocation and is cached across every page. The
- * `source('../src')` is explicit because the CLI runs from the unit root
- * rather than from this directory.
+ * Vite compiles this file through `@tailwindcss/vite` and emits it into
+ * `dist/client` with a content hash in the filename; `src/assets.ts` is the one
+ * place that URL is named, and `public/_headers` is what marks the result
+ * `immutable` (ADR 012, and docs/design/ui-shell-contract.md §3a). Cloudflare
+ * matches the static asset before the Worker runs, so the stylesheet costs no
+ * invocation and is cached across every document this unit serves.
+ *
+ * This replaced a `@tailwindcss/cli` `build:css` step that wrote an unhashed
+ * `public/style.css`. The hash is the whole reason for the change: Cloudflare
+ * serves static assets `public, max-age=0, must-revalidate` unless the filename
+ * is fingerprinted, so the old file was revalidated on every single document.
+ *
+ * `source('../src')` stays explicit rather than relying on automatic detection,
+ * so the scan root is a stated fact of this file rather than a consequence of
+ * where the build happens to run from.
  */
 
 @import 'tailwindcss' source('../src');

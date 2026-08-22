@@ -36,7 +36,7 @@ The optional direct-Compose workflows remain available separately:
 
 ```bash
 scripts/dev-build
-scripts/dev-start [--rails] [--credentials]
+scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 node --version
 pnpm --version

@@ -209,9 +209,14 @@ through `sudo`. See
 The direct Compose launcher remains available for optional overlays:
 
 ```bash
-scripts/dev-start [--rails] [--credentials]
+scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 ```
+
+There is no credential overlay. Every credential is obtained inside the running
+container through a browser flow and is discarded when the container is
+recreated — see
+[Credential and secret management](docs/development/credential-and-secret-management.md).
 
 #### Getting an interactive shell
 

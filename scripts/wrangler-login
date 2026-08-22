@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ ! -f /run/secrets/dev_github_token ]]; then
-  echo 'ERROR: start the credential overlay first: scripts/dev-start --credentials' >&2
-  exit 1
-fi
-
+# Browser OAuth against Cloudflare. The callback lands on 127.0.0.1:8976, which
+# compose.yaml publishes. No API token is mounted and none is stored on the
+# host: the resulting credential lives only in this container.
 exec pnpm exec wrangler login \
   --callback-host=0.0.0.0 \
   --callback-port=8976 \

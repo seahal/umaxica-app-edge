@@ -7,7 +7,9 @@ import { expectTitleContract, TLD } from './utils/title-contract';
 vi.mock('next/font/google', () => ({ Inter: () => ({ variable: 'font-sans' }) }));
 
 import About, { metadata as aboutMetadata } from '../src/app/about/page';
+import ErrorPage from '../src/app/error';
 import Layout from '../src/app/layout';
+import OfflinePage from '../src/app/offline/page';
 import Page from '../src/app/page';
 
 /**
@@ -123,6 +125,33 @@ describe('application shell', () => {
     ).toHaveAttribute('href', 'https://help-jp.umaxica.app/');
   });
 
+  it('opens the document with a skip link that actually moves focus', () => {
+    const dom = shellDom(Page);
+
+    const skip = dom.getByRole('link', { name: '本文へスキップ' });
+    expect(skip).toHaveAttribute('href', '#main-content');
+
+    /*
+     * "First focusable element in the document" is the requirement, not "first
+     * link" — a skip link a reader has to Tab to is not one. The selector is
+     * every element that can take focus, so a `<button>` or a `tabindex`
+     * inserted ahead of it later fails here rather than silently demoting it.
+     */
+    expect(document.body.querySelector('a, button, input, select, textarea, [tabindex]')).toBe(
+      skip,
+    );
+
+    /*
+     * The target has to exist and has to be programmatically focusable.
+     * Without `tabindex="-1"` the browser scrolls to the fragment and leaves
+     * focus on the link, so the next Tab returns to the header the reader just
+     * asked to skip — the control appears to work and does not.
+     */
+    const main = dom.getByRole('main');
+    expect(main).toHaveAttribute('id', 'main-content');
+    expect(main).toHaveAttribute('tabindex', '-1');
+  });
+
   it('links only to destinations that exist', () => {
     const hrefs = [...shell(Page).matchAll(/href="(\/[^"]*)"/gu)].map((match) => match[1]);
 
@@ -134,6 +163,41 @@ describe('application shell', () => {
     expect(hrefs).not.toContain('/preferences');
 
     expect(new Set(hrefs)).toEqual(new Set(['/', '/about']));
+  });
+});
+
+/*
+ * `error.tsx` and `/offline` render inside the root layout on this archetype —
+ * their own comments say so — so they carry the header, the footer and the skip
+ * link the layout places ahead of both. The skip link is only honest on them if
+ * their `<main>` is a target too: a control that appears on a failure document
+ * and lands nowhere is worse than no control.
+ *
+ * This is a real archetype difference and not an oversight. On the core
+ * archetype the shell is scoped to the `(page)` route group, so its `error.tsx`
+ * and `/offline` are genuinely chrome-free, carry no skip link, and therefore
+ * have nothing to satisfy.
+ */
+describe('the other documents that carry this shell', () => {
+  const mainOf = (markup: string) => {
+    document.body.innerHTML = markup;
+    return within(document.body).getByRole('main');
+  };
+
+  it('gives error.tsx a focusable skip-link target', () => {
+    const main = mainOf(
+      renderToStaticMarkup(<ErrorPage error={new Error('boom')} reset={() => undefined} />),
+    );
+
+    expect(main).toHaveAttribute('id', 'main-content');
+    expect(main).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('gives /offline a focusable skip-link target', () => {
+    const main = mainOf(renderToStaticMarkup(<OfflinePage />));
+
+    expect(main).toHaveAttribute('id', 'main-content');
+    expect(main).toHaveAttribute('tabindex', '-1');
   });
 });
 

@@ -1,61 +1,67 @@
 # Credential and secret management
 
 ```text
-dedicated container credential
+browser login, initiated from inside the container
         ↓
-local .secrets/ file (0700 directory, 0600 files)
+short-lived credential issued by the identity provider
         ↓
-rootless Podman Secret Store
+container-local process state only
         ↓
-/run/secrets runtime delivery
-        ↓
-credential-specific process
+discarded when the container is recreated
 ```
 
-Neither `.secrets/` nor Podman's default secret backend is described as encrypted storage.
-Filesystem permissions, a dedicated identity, narrow authority, rotation, and revocation
-are part of the boundary.
+**No credential enters this repository or this container from the host.** There is no
+`.secrets/` registration flow, no Podman Secret Store delivery, no `/run/secrets` mount,
+and no host bind of `~/.ssh`, `~/.config/gh`, `~/.gitconfig`, `~/.claude`, or `~/.codex`.
+Long-lived API tokens were retired entirely: the failure mode they carried — a credential
+that stays valid long after the container that read it is gone — is the thing this design
+removes.
 
-## Registration
+Nothing is persisted. Recreating the container means logging in again, and that is the
+point: an abandoned container leaks nothing.
 
-Create `.secrets` without sudo:
+## Obtaining credentials
 
-```bash
-install -d -m 0700 .secrets
-```
+Run these inside `core`, after `scripts/dev-start`:
 
-Place only dedicated container credentials in the expected files, set mode `0600`, then
-register one or all names:
+| Need                | Command                                                           | Flow                    |
+| ------------------- | ----------------------------------------------------------------- | ----------------------- |
+| GitHub + HTTPS Git  | `gh auth login --web --git-protocol https && gh auth setup-git`   | OAuth device flow       |
+| Cloudflare Wrangler | `scripts/wrangler-login`                                          | OAuth, callback on 8976 |
+| Cloudflare Access   | `cloudflared access login <url>` (`scripts/check-tunnel` prompts) | Access browser login    |
+| Claude Code         | `claude`, then `/login`                                           | OAuth                   |
+| Codex               | `codex login`                                                     | OAuth                   |
 
-```bash
-scripts/setup-secrets dev_github_token
-scripts/setup-secrets
-podman secret ls
-```
+`scripts/wrangler-login` passes `--callback-host=0.0.0.0 --callback-port=8976`; the port is
+published on host loopback only by `compose.yaml`, which is what lets the host browser
+complete the redirect.
 
-The script refuses root/sudo, symlinks, non-regular files, empty files, unsafe modes,
-missing ignore rules, and non-rootless Podman. It never prints values.
+Git remotes must be HTTPS. `~/.ssh` is not mounted and no SSH key exists in the container,
+so `git@github.com:` remotes cannot authenticate — `gh auth setup-git` wires the HTTPS
+credential helper instead.
 
-`scripts/dev-start` also refuses unmasked `.dev.vars`, `.env.local`, test-local, or
-production-local files. The known legacy root `.env` and frame `.env.development.local`
-paths are masked by value-free mounts, so they cannot enter the container. Migrate any
-needed dedicated credential to `.secrets/` and Podman Secret instead.
+## Workspace credential inputs stay out
 
-| Podman Secret                         | Local source                               | Consumer                                    |
-| ------------------------------------- | ------------------------------------------ | ------------------------------------------- |
-| `dev_github_token`                    | `.secrets/github_token`                    | GitHub read-only check and HTTPS Git helper |
-| `dev_cloudflare_access_client_id`     | `.secrets/cloudflare_access_client_id`     | `check-tunnel` only                         |
-| `dev_cloudflare_access_client_secret` | `.secrets/cloudflare_access_client_secret` | `check-tunnel` only                         |
-| `dev_claude_api_key`                  | `.secrets/claude_api_key`                  | Claude `apiKeyHelper`                       |
-| `dev_codex_api_key`                   | `.secrets/codex_api_key`                   | Codex login stdin                           |
+`scripts/dev-start` refuses to start when an unmasked `.dev.vars`, `.env.local`,
+`.env.test.local`, or `.env.production.local` exists in the workspace. The known legacy
+root `.env` and per-frame `.env.development.local` paths are masked by value-free mounts,
+and `.secrets/` is masked by an empty read-only volume, so none of them can enter the
+container even if a file is left behind on the host.
 
-Wrangler uses dedicated container OAuth state, not an API-token secret. OpenCode Go uses
-its supported interactive login and container-only `auth.json`. Tailscale has no key in
-this refresh.
+`scripts/verify-build-context` proves the same for image builds with a canary file, and
+`test/development-container-security.test.ts` fails the suite if a host identity mount, a
+container-runtime socket, a `secrets:` block, or a `/run/secrets` reference is reintroduced.
 
 ## Rotation, revocation, and incidents
 
-Create a replacement at the issuer, overwrite the local file, rerun `scripts/setup-secrets
-<name>`, and recreate the credential overlay. Revoke the old credential after validation.
-For suspected exposure, stop the credential overlay, revoke first, remove the Podman Secret,
-rotate the identity, and inspect repository history without printing values.
+Rotation is not a procedure here — credentials expire on their own and are reissued by the
+next browser login. For a suspected exposure, revoke the session at the issuer (GitHub
+`Settings → Applications`, the Cloudflare dashboard, the Anthropic or OpenAI console) and
+remove the container:
+
+```bash
+scripts/dev-stop
+podman container rm -f umaxica-apps-edge-dc-core-1
+```
+
+There is no host-side file to overwrite and no Podman Secret to delete.

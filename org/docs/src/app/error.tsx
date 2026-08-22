@@ -4,6 +4,11 @@
  * A failure document. It renders inside the root layout, so it carries the
  * shell's header and footer and takes the remaining height with `flex-1`.
  *
+ * Carrying the shell is also why this `<main>` needs `id="main-content"` and
+ * `tabIndex={-1}`: the layout put a skip link ahead of the header on this
+ * document too, and a skip link whose target is missing on the one page a
+ * reader reaches when something has already gone wrong is worse than none.
+ *
  * The reset control stays a plain `<button>`. It hand-maintains no keyboard,
  * focus or ARIA behaviour for React Aria to take over — the element already
  * carries all of it — and the shell contract reserves the library for the
@@ -16,7 +21,11 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   return (
-    <main className="grid flex-1 place-content-center gap-3 p-6 text-center">
+    <main
+      className="grid flex-1 place-content-center gap-3 p-6 text-center"
+      id="main-content"
+      tabIndex={-1}
+    >
       <h1 className="text-2xl leading-heading font-semibold">現在、このページを表示できません</h1>
       <p>HTTP 500</p>
       <button

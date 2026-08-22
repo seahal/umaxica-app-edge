@@ -87,7 +87,7 @@ corrected service and health-check configuration silently fails to take effect.
 
 ## Direct Compose modes
 
-`scripts/dev-build`, `scripts/dev-start [--rails] [--credentials] [--tunnel]`, and
+`scripts/dev-build`, `scripts/dev-start [--rails] [--tunnel]`, and
 `scripts/dev-stop` are a separate, still-supported path that drives Compose directly. They
 carry their own root/rootless and credential-file preflights and are unaffected by the
 launcher's removal. See
