@@ -32,4 +32,25 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-void initOpenNextCloudflareForDev();
+// `remoteBindings: false` is load-bearing, not a default being restated.
+//
+// `initOpenNextCloudflareForDev(options?: GetPlatformProxyOptions)` forwards its
+// options straight to `getPlatformProxy()`, whose `remoteBindings` option
+// defaults to **true** (wrangler 4.125.0). Its guard is only
+// `shouldContextInitializationRun()` — the presence of `AsyncLocalStorage` — so
+// despite the name it also runs during `next build`, not just `next dev`.
+//
+// A Workers VPC binding has no local simulation, so with the default wrangler
+// must open a remote proxy session for it. This Worker declares `vpc_services`
+// at the top level (production) and in `env.development`, so every build tried
+// to reach Cloudflare. Locally that merely succeeded slowly against a logged-in
+// session; in CI it failed outright:
+//
+//   Failed to start the remote proxy session. ... it's necessary to set a
+//   CLOUDFLARE_API_TOKEN environment variable for wrangler to work
+//
+// Node dev does not need the binding either: it reaches Rails directly over the
+// private Podman network, gated on EDGE_LOCAL_NODE_RUNTIME +
+// EDGE_LOCAL_RAILS_ENABLED (`src/lib/rails-client.ts`). Only the workerd preview
+// (`--env development`) uses the remote binding.
+void initOpenNextCloudflareForDev({ remoteBindings: false });

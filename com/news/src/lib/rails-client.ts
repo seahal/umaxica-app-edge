@@ -203,28 +203,48 @@ export function createRailsClient(
 /**
  * Two mutually exclusive transports, selected by an actual runtime capability.
  *
- * 1. VPC binding       → Workers/workerd. Cloudflare grants the real binding.
- * 2. Explicit Node dev → direct private Podman network, with no Access token.
- * 3. Neither           → null, reported as `not-configured`. Fail closed.
+ * 1. Local Node dev  → direct private Podman network, with no Access token.
+ * 2. VPC binding     → Workers/workerd. Cloudflare grants the real binding.
+ * 3. Neither         → null, reported as `not-configured`. Fail closed.
  *
- * Requiring both local flags matters: the Rails overlay is container-wide, but
- * only the `next dev` scripts set EDGE_LOCAL_NODE_RUNTIME. A workerd preview
- * launched from that same container therefore cannot inherit a fabricated
- * fallback when its VPC binding is absent.
+ * **The local-Node check runs first, and the order is load-bearing.**
+ *
+ * `next.config.ts` passes `remoteBindings: false` so that `next dev` and
+ * `next build` never open a Cloudflare remote-proxy session — a Workers VPC
+ * binding has no local simulation, so with the default they would, and CI has
+ * no token. But wrangler still *materialises the binding*, as a stub that
+ * throws on use:
+ *
+ *   Binding UMAXICA_APPS_EDGE_CF_WORKERS_VPC needs to be run remotely
+ *
+ * So under `next dev` the binding is *truthy but non-functional*. Testing it
+ * first — as this function used to — makes every local Rails call report
+ * `unreachable` and makes the direct transport below dead code. Nothing else
+ * fails to say so.
+ *
+ * `EDGE_LOCAL_NODE_RUNTIME` is set only by the `dev` scripts, so workerd preview
+ * and the deployed Worker never take this branch and reach the real binding
+ * exactly as before. Requiring `EDGE_LOCAL_RAILS_ENABLED` as well matters
+ * because the Rails overlay is container-wide: without it, Node dev fails closed
+ * to `not-configured` rather than borrowing a transport it was not granted.
+ *
+ * This is still a branch on runtime *capability*, never on an environment name.
  */
 export function getRailsClient(): RailsClient | null {
+  const isLocalNodeRuntime = readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1';
+
+  if (isLocalNodeRuntime) {
+    if (readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1') {
+      return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
+    }
+    return null;
+  }
+
   const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
 
   const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
   if (binding) {
     return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
-  }
-
-  if (
-    readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1' &&
-    readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'
-  ) {
-    return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
   }
 
   return null;
