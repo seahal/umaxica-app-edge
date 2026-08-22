@@ -375,6 +375,62 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
   };
 }
 
+/**
+ * Decide whether the Rails entry point this frame addresses is the one that
+ * answered.
+ *
+ * `Direct VPC → Rails` cannot answer this. One VPC Service carries all fifteen
+ * frames and routing comes wholly from the Service record, so the `Host` header
+ * — taken from `PRIVATE_RAILS_ORIGIN` in application code — is the only thing
+ * selecting a namespace. A wrong host therefore does not fail: it reaches a
+ * different namespace and answers 200, which every transport-level gate reads
+ * as success.
+ *
+ * Rails reports the namespace it dispatched to as `<frame>/<brand>`, so that
+ * misroute becomes visible here and nowhere else.
+ *
+ * A missing `namespace` is WARN, not FAIL: nothing is known to be wrong, but
+ * the identity is unproven, and the two must not be reported as the same thing.
+ */
+export function classifyIdentity({ surface, entry, transport }) {
+  if (transport !== PASS) {
+    return { status: BLOCKED, detail: 'transport did not arrive, so identity is unproven' };
+  }
+  if (entry?.status !== 200) {
+    return {
+      status: BLOCKED,
+      detail: `Rails answered ${entry?.status}, so identity is unproven`,
+    };
+  }
+
+  let document = null;
+  try {
+    document = JSON.parse(entry.body ?? '');
+  } catch {
+    document = null;
+  }
+  if (document === null || typeof document !== 'object') {
+    return {
+      status: FAIL,
+      detail: 'Rails answered 200 but the body is not a JSON liveness document',
+    };
+  }
+
+  const expected = `${surface.frame}/${surface.brand}`;
+  const actual = document.namespace;
+
+  if (typeof actual !== 'string' || actual.length === 0) {
+    return {
+      status: WARN,
+      detail: `no namespace field, so the answering entry point is unproven (expected ${expected})`,
+    };
+  }
+  if (actual !== expected) {
+    return { status: FAIL, detail: `answered from ${actual}, expected ${expected}` };
+  }
+  return { status: PASS, detail: `answered from ${actual}` };
+}
+
 // ---------------------------------------------------------------------------
 // /rails-health parsing
 // ---------------------------------------------------------------------------
@@ -857,12 +913,15 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
   let probe = null;
   try {
     const ready = await waitFor(
-      async () => (await httpGet(`http://127.0.0.1:${PROBE_PORT}/`, 20_000)).status > 0,
+      // `/ready` answers without touching the binding. Polling `/` would run
+      // the real probe on every attempt, sending fifteen requests to Rails per
+      // poll — the same mistake `readinessUrl` documents for the `next` mode.
+      async () => (await httpGet(`http://127.0.0.1:${PROBE_PORT}/ready`, 20_000)).status > 0,
       { timeoutMs: 120_000, onGiveUp: () => worker.exited },
     );
 
     if (ready.ok) {
-      const response = await httpGet(`http://127.0.0.1:${PROBE_PORT}/`, 30_000);
+      const response = await httpGet(`http://127.0.0.1:${PROBE_PORT}/`, 60_000);
       try {
         probe = JSON.parse(response.body);
       } catch {
@@ -873,32 +932,84 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
     await worker.stop();
   }
 
-  const verdict = classifyProbeOutcome({ probe, wranglerOutput: worker.output });
   const bindingLine = /env\.UMAXICA_APPS_EDGE_CF_WORKERS_VPC[^\n]*/.exec(worker.output)?.[0];
+  const entries = Array.isArray(probe?.results) ? probe.results : null;
+
+  // No per-target results means the probe never got as far as fetching — the
+  // binding was absent, wrangler could not authenticate, or the worker died.
+  // One verdict then describes every surface, because one cause does.
+  if (!entries) {
+    const verdict = classifyProbeOutcome({ probe, wranglerOutput: worker.output });
+    for (const surface of surfaces) {
+      report.record(
+        'Direct VPC → Rails',
+        surface.key,
+        verdict.transport,
+        `${verdict.layer}: ${verdict.detail}`,
+      );
+      report.record('VPC identity', surface.key, BLOCKED, 'no response to identify');
+    }
+    if (bindingLine) report.note(PASS, `Binding resolved: ${bindingLine.trim()}`);
+    report.note(verdict.transport, `Layer ${verdict.layer}: ${verdict.detail}`);
+    report.note(SKIP, `full log: ${worker.logPath}`);
+    return;
+  }
+
+  let misrouted = 0;
+  let unidentified = 0;
 
   for (const surface of surfaces) {
-    const detail =
+    const entry = entries.find((candidate) => candidate.key === surface.key);
+    if (!entry) {
+      report.record('Direct VPC → Rails', surface.key, FAIL, 'the probe carries no target for it');
+      report.record('VPC identity', surface.key, BLOCKED, 'not probed');
+      continue;
+    }
+
+    const verdict = classifyProbeOutcome({ probe: entry, wranglerOutput: worker.output });
+    report.record(
+      'Direct VPC → Rails',
+      surface.key,
+      verdict.transport,
       verdict.transport === PASS
         ? `${verdict.detail} (shared VPC Service ${manifest.vpcDevelopmentServiceId})`
-        : `${verdict.layer}: ${verdict.detail}`;
-    report.record('Direct VPC → Rails', surface.key, verdict.transport, detail);
+        : `${verdict.layer}: ${verdict.detail}`,
+    );
+
+    const identity = classifyIdentity({ surface, entry, transport: verdict.transport });
+    report.record('VPC identity', surface.key, identity.status, identity.detail);
+    if (identity.status === FAIL) misrouted += 1;
+    if (identity.status === WARN) unidentified += 1;
+
+    if (verdict.transport === PASS && verdict.layer === 'Rails' && verdict.status !== 200) {
+      report.note(FAIL, `Rails layer [${surface.key}]: ${verdict.detail}`);
+    }
+    if (verdict.transport !== PASS) {
+      report.note(verdict.transport, `Layer ${verdict.layer} [${surface.key}]: ${verdict.detail}`);
+    }
   }
 
   if (bindingLine) report.note(PASS, `Binding resolved: ${bindingLine.trim()}`);
-  if (verdict.transport === PASS && verdict.layer === 'Rails' && verdict.status !== 200) {
-    report.note(FAIL, `Rails layer: ${verdict.detail}`);
-  }
-  if (verdict.transport !== PASS) {
-    report.note(verdict.transport, `Layer ${verdict.layer}: ${verdict.detail}`);
-    report.note(SKIP, `full log: ${worker.logPath}`);
-  }
   if (verbose && probe) {
     report.note(PASS, `probe response: ${JSON.stringify(probe)}`);
   }
 
+  if (misrouted > 0) {
+    report.note(
+      FAIL,
+      `Identity: ${misrouted} surface(s) were answered by the wrong Rails namespace — one VPC Service carries all fifteen, so a wrong Host still returns 200`,
+    );
+  }
+  if (unidentified > 0) {
+    report.note(
+      WARN,
+      `Identity: ${unidentified} surface(s) answered without a namespace field, so which entry point replied is unproven`,
+    );
+  }
+
   report.note(
     SKIP,
-    'All surfaces share one VPC Service, so this is one transport exercised three times, not three paths.',
+    'One VPC Service carries all fifteen frames, so `VPC→` is one transport measured fifteen times. `ident` is not: each frame sends its own Host and only its own namespace may answer.',
   );
 }
 

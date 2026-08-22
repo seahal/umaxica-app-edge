@@ -334,45 +334,60 @@ describe('workers vpc bindings', () => {
 describe('vpc probe', () => {
   const probe = read('tools/vpc-probe/probe.mjs');
 
-  it('measures the same destination the application requests', () => {
+  it('covers every frame, at the destination that frame requests', () => {
     /*
      * The probe is the only evidence `check:vpc` reports, and it imports no
-     * application code by design — so nothing links its destination to the
+     * application code by design — so nothing links its destinations to the
      * frames' own. That independence is the point (a green `/rails-health` is
      * consistent with a broken binding), but it also means the two can drift
-     * apart silently: the probe would answer 200 for a host the frames never
+     * apart silently: the probe would answer 200 for hosts the frames never
      * address, and the acceptance run would call the transport proven.
      *
-     * Reconstructed here from the frames rather than repeated, so the
-     * expectation cannot be updated by editing this file alone.
+     * Reconstructed here from the fifteen frames rather than repeated, so the
+     * expectation cannot be updated by editing this file alone. All fifteen
+     * must appear: one VPC Service carries them all, so a single host standing
+     * in for the rest would prove the transport and nothing about dispatch.
      *
-     * `app/core` specifically: the probe's own comment names it, and it is the
-     * host that regressed on 2026-08-21 when Rails' route constraints listed
-     * only the PUBLIC host and dropped `core.app.localhost`. Every path under
-     * that host 404d — root included, which served the Rails welcome page —
-     * while the other twelve frames answered 200.
+     * The list went from one host to fifteen after 2026-08-21, when Rails'
+     * route constraints listed only the PUBLIC host and dropped
+     * `core.app.localhost`. Every path under that host 404d — root included,
+     * which served the Rails welcome page — while the other twelve frames
+     * answered 200, and probing one host could not have told those apart.
      */
-    const origin = readConstant(read('app/core/src/lib/rails-client.ts'), 'PRIVATE_RAILS_ORIGIN');
-    const path = readConstant(read('app/core/src/lib/rails-health.ts'), 'RAILS_HEALTH_PATH');
-    const expected = `'${origin?.slice(1, -1)}${path?.slice(1, -1)}'`;
+    const targets = [
+      ...read('tools/vpc-probe/probe.mjs').matchAll(/\{ key: '([^']+)', url: '([^']+)' \}/g),
+    ].map(([, key, url]) => ({ key, url }));
 
-    expect(readConstant(probe, 'RAILS_URL'), 'probe destination drifted from app/core').toBe(
-      expected,
-    );
+    const expected = RAILS_FRAMES.map(({ brand, frame, workspace }) => {
+      const origin = readConstant(
+        read(`${workspace}/src/lib/rails-client.ts`),
+        'PRIVATE_RAILS_ORIGIN',
+      );
+      const path = readConstant(read(`${workspace}/src/lib/rails-health.ts`), 'RAILS_HEALTH_PATH');
+      return {
+        key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
+        url: `${origin?.slice(1, -1)}${path?.slice(1, -1)}`,
+      };
+    });
+
+    expect(targets, 'probe targets drifted from the frames').toEqual(expected);
   });
 
-  it('never lets request input select the destination', () => {
+  it('never lets request input select a destination', () => {
     /*
-     * A fixed module constant is what keeps this Worker from becoming a way to
-     * fetch an arbitrary URL from inside the private network. The handler
-     * therefore ignores its request argument, and the binding is called with
-     * the constant itself — not with anything derived from the request.
+     * A fixed list of module constants is what keeps this Worker from becoming
+     * a way to fetch an arbitrary URL from inside the private network. The
+     * handler does read its request, but only to answer readiness — every call
+     * to the binding must pass a target's own url and nothing derived from the
+     * caller.
      */
-    expect(probe, 'the probe handler must ignore its request argument').toContain(
-      'async fetch(_request, env)',
+    const destinations = [...probe.matchAll(/binding\.fetch\(([^,)]+)/g)].map(([, arg]) =>
+      arg.trim(),
     );
-    expect(probe, 'the binding must be called with the RAILS_URL constant').toContain(
-      'binding.fetch(RAILS_URL',
+    expect(destinations, 'the binding must only be called with a target url').toEqual(['url']);
+
+    expect(probe, 'readiness must not touch the binding').toContain(
+      "new URL(request.url).pathname === '/ready'",
     );
   });
 });
