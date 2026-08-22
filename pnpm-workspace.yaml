@@ -11,7 +11,6 @@ packages:
   - com/help
   - com/info
   - com/news
-  - dev/acme
   - dev/apex
   - net/apex
   - org/apex
@@ -22,28 +21,155 @@ packages:
   - org/news
 
 allowBuilds:
-  '@sentry/cli': true
+  # Unlike every other entry here, hurl has NO prebuilt binary inside the
+  # tarball: the npm package is a thin installer whose postinstall fetches the
+  # Rust binary for the host platform from the project's GitHub release. Denying
+  # the script does not degrade the package, it leaves `hurl` absent and
+  # `pnpm test:api` failing with ENOENT. This is the one place in the toolchain
+  # where `ignore-scripts=true` has to be relaxed, and it is relaxed for a
+  # version-pinned devDependency that never reaches a Worker bundle.
+  '@orangeopensource/hurl': true
+  # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
+  # which nothing here uses. The package ships prebuilt binaries for the
+  # platforms it supports, so declining its build script costs nothing and keeps
+  # the `ignore-scripts=true` posture in .npmrc intact.
+  '@parcel/watcher': false
   esbuild: true
   lefthook: true
   sharp: true
   workerd: true
 
 catalog:
+  # The Cloudflare Vite plugin. It runs the Worker inside workerd during `vite
+  # dev` and owns the production build: `vite build` emits the Worker bundle,
+  # the client assets and an OUTPUT `wrangler.json` whose `assets.directory`
+  # points at the client build. That is why no apex `wrangler.jsonc` declares
+  # `assets.directory` any more, and why `wrangler deploy` must not be passed
+  # `--config` — it reads the generated config out of the build output.
+  #
+  # Its peer range pins wrangler at ^4.124.0, which is what moved the wrangler
+  # entry below off ^4.123.0.
+  '@cloudflare/vite-plugin': ^1.53.0
   '@cloudflare/workers-types': ^5.20260810.1
+  # The Hono structured-logger middleware, wired in every apex Worker's
+  # create-apex-app.ts. Four units, one version — catalogued for the same reason
+  # as everything else here: nothing but this file can hold them together, and a
+  # logger that emits a different JSON shape per surface defeats the point of
+  # `observability.logs.enabled` collecting them into one stream.
+  '@hono/structured-logger': ^0.1.0
+  # Hurl is a Rust binary; this package is the official npm distribution of it
+  # (bins `hurl` and `hurlfmt`). Installing it as a devDependency rather than
+  # documenting a `brew`/`apt`/`cargo` step is what keeps pnpm the only entry
+  # point a contributor needs — and what makes the HTTP-contract suite run at
+  # the same version on a laptop and in CI. Catalogued for the same reason the
+  # rest of the toolchain is: twenty-one units must not drift apart.
+  '@orangeopensource/hurl': ^8.0.4
   '@opennextjs/cloudflare': ^1.19.11
+  # The browser-test runtime, in twenty-one units. It pins the wire protocol as
+  # well as the API, so two units on different minors drive two different
+  # browsers. This sat as an identical literal in every manifest with nothing
+  # enforcing it — syncpack's catalog policy now does (see .syncpackrc.json).
+  '@playwright/test': ^1.62.1
+  # Size Limit's file plugin. `size-limit` itself and its plugins must move in
+  # lockstep — the plugin package declares an EXACT peer on the runner
+  # ("size-limit": "13.0.3"), so a drift here is a resolution failure, not a
+  # subtle one. The preset packages are deliberately not used: @size-limit/time
+  # (which preset-app pulls in) needs a headless Chrome that neither CI nor the
+  # Containerfile installs — the same reason `test:e2e` is not a CI gate.
+  '@size-limit/file': ^13.0.3
+  # Tailwind v4 has no JS config file: the theme is declared in each unit's own
+  # stylesheet with `@theme`. One engine, three delivery mechanisms, one per
+  # bundler the estate actually has:
+  #
+  #   @tailwindcss/postcss  the sixteen Next frames, through PostCSS
+  #   @tailwindcss/vite     the five apex Hono Workers, through Vite
+  #   @tailwindcss/cli      nothing, today — see below
+  #
+  # `@tailwindcss/cli` was how the apex Workers got a stylesheet before they had
+  # a bundler: `wrangler deploy` bundles the entrypoint and copies `public/`
+  # byte for byte, so nothing in that path could process CSS. It stays only
+  # while apex units remain unmigrated; the last one to move to Vite should
+  # delete this entry rather than leave it as a catalogue of a dead toolchain.
+  #
+  # All three are pinned here rather than per unit so the twenty-one units
+  # cannot drift onto different Tailwind versions.
+  '@tailwindcss/cli': ^4.3.3
+  '@tailwindcss/postcss': ^4.3.3
+  '@tailwindcss/vite': ^4.3.3
+  # The DOM-assertion and DOM-implementation halves of the Vitest setup. Every
+  # unit's vitest.setup.ts imports `@testing-library/jest-dom`, and every
+  # vitest.config.ts names happy-dom as its environment, so a per-unit drift
+  # here changes what a test MEANS rather than whether it runs.
+  '@testing-library/jest-dom': ^7.0.1
+  '@testing-library/react': ^16.3.2
   '@types/node': ^26.2.0
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
-  hono: ^4.13.1
+  # Exact, not a range, and deliberately so: V8 coverage remapping has to match
+  # the vitest it instruments, and this was already an exact literal in all
+  # twenty-two manifests. Catalogued to keep it that way from one place.
+  '@vitest/coverage-v8': 4.1.10
+  # The spell checker. Pinned here rather than per unit because the dictionary
+  # it reads (.cspell/project-words.txt) is repository-wide: a unit resolving a
+  # different major could disagree about what the config file even means.
+  cspell: ^10.0.1
+  dependency-cruiser: ^18.2.0
+  happy-dom: ^20.11.2
+  hono: ^4.13.2
+  knip: ^6.32.2
   next: ^16.3.0
   nuqs: ^2.9.5
+  # The static analysis toolchain. These were literal strings in twenty-two
+  # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
+  # the root), which is exactly the failure a catalog exists to prevent: a lint
+  # or type rule that fires in CI and not on a developer's machine is worse than
+  # the rule being off. oxlint and oxlint-tsgolint in particular have to move
+  # together — tsgolint is the type-aware backend oxlint shells out to.
+  oxfmt: ^0.63.0
+  oxlint: 1.78.0
+  oxlint-tsgolint: ^7.0.2001
   react: ^19.2.0
+  react-aria-components: ^1.20.0
   react-dom: ^19.2.0
+  # A zero-code marker package: importing it in a module that a client component
+  # reaches makes the BUILD fail rather than shipping server code to a browser.
+  # It is a build-time contract in fifteen units, so it has to be one version.
+  server-only: ^0.0.1
+  # The frontend performance budget runner. See '@size-limit/file' above for why
+  # the two move together and why no preset is used.
+  size-limit: ^13.0.3
+  # Workspace dependency-consistency checking. It reads this very file — the
+  # catalog definitions and the `catalog:` specifiers pointing at them — so it
+  # belongs to the repository root rather than to any unit.
+  syncpack: ^15.3.3
+  tailwindcss: ^4.3.3
+  # The official Tailwind plugin for react-aria-components, which turns the
+  # library's `data-hovered` / `data-pressed` / `data-focus-visible` attributes
+  # into first-class variants (`hovered:`, `pressed:`, `focus-visible:`). Only
+  # the units that actually render a React Aria component install it; v2 is the
+  # Tailwind v4 line (v1.x is for Tailwind v3).
+  tailwindcss-react-aria-components: ^2.2.0
+  # TypeScript 7.0 went stable on 2026-07-08 and `tsc` is now the native (Go)
+  # compiler itself; `tsgo` only survives as the binary name inside the
+  # `@typescript/native-preview` nightlies, which this repository no longer
+  # installs. Every unit declares `typescript: catalog:` explicitly rather than
+  # leaning on root hoisting, so an extracted unit still resolves a compiler.
+  typescript: ^7.0.2
+  # The build tool for the five apex Hono Workers, and nothing else: the sixteen
+  # Next frames build through Next. It is a devDependency everywhere it appears
+  # and must stay one — nothing Vite ships may reach a Worker bundle, which is
+  # the property `pnpm --dir <unit> run build` then inspecting `dist/` checks.
+  #
+  # Vitest already resolves a transitive copy of Vite; this entry is the direct,
+  # version-pinned one, so the two cannot disagree about which major is in play.
+  vite: ^8.2.1
   vitest: ^4.1.10
-  wrangler: ^4.120.1
+  # Floor set by `@cloudflare/vite-plugin`'s peer range (^4.124.0), not chosen
+  # independently. Bumping the plugin without bumping this is a resolution
+  # failure rather than a subtle one.
+  wrangler: ^4.124.0
 
 ignoredBuiltDependencies:
-  - '@sentry/cli'
   - esbuild
   - sharp
   - workerd
@@ -75,30 +201,48 @@ minimumReleaseAgeStrict: true
 minimumReleaseAgeIgnoreMissingTime: false
 
 # Live exceptions, not dead config: with the delay in force these are the pins
-# that were bumped inside their own release window. Both are toolchain-only and
-# pinned exactly, so the exposure is a deliberate, reviewed version rather than
+# that were bumped inside their own release window. Toolchain-only and pinned
+# exactly, so the exposure is a deliberate, reviewed version rather than
 # "whatever is newest". Re-check when bumping — an entry kept past its bump is
 # a standing hole.
+#
+# `wrangler@4.120.1` was dropped when the catalog floor moved to ^4.124.0 for
+# `@cloudflare/vite-plugin`'s peer range: 4.124.0 cleared the delay on its own,
+# so the exception had nothing left to except.
 minimumReleaseAgeExclude:
   - miniflare@5.20260804.0-alpha
-  - wrangler@4.120.1
 
 overrides:
   nanoid: ^3.3.17
   vitest: 'catalog:'
-  # @opentelemetry/sdk-logs@0.214.0 (reached through @vercel/otel in dev/acme)
-  # pulls @opentelemetry/core@2.6.1, which is vulnerable to GHSA-8988-4f7v-96qf:
-  # unbounded memory allocation in W3C Baggage propagation, fixed in 2.8.0.
-  # Bumping sdk-logs alone does not clear it — @vercel/otel's peer constraint
-  # holds the old core in place. 2.10.0 is already resolved elsewhere in this
-  # tree via @sentry/nextjs, so this override dedupes onto a version that is
-  # already installed rather than introducing a new one.
-  '@opentelemetry/core': '>=2.8.0'
+  # Advisory floors for transitive dev-only dependencies. Every entry below is
+  # reached through a devDependency (vite/vitest, wrangler, or the Next.js
+  # toolchain), so none of them ship in a Worker bundle — but `pnpm audit` is a
+  # gate here, and the packages that pull them pin ranges we do not control. A
+  # floor turns "whatever the parent resolved" into a version the advisory
+  # database is clean on, and fails resolution loudly if a future bump would
+  # reintroduce one. Drop an entry once its parent's own range has moved past
+  # the floor on its own.
+  #
+  # Where a package is live on two majors, the floor is keyed per major so the
+  # override cannot drag a consumer across a breaking boundary.
+  #
+  # Six entries were dropped when dev/acme was deleted and dev/apex moved off
+  # Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
+  # that reached them: @opentelemetry/core, @tootallnate/once, undici, both
+  # path-to-regexp majors, and tar. Nothing in the tree resolves those packages
+  # now, so the floors constrained nothing — and a floor with no consumer reads
+  # as protection while providing none.
+  ajv@8: '>=8.18.0'
+  # GHSA-g7r4-m6w7-qqqr only touches 0.27.3–0.28.0; the 0.25.x copy vite still
+  # resolves is unaffected and is deliberately left where it is.
+  esbuild@0.27: '>=0.28.1'
+  js-yaml@4: '>=4.3.1'
+  minimatch@10: '>=10.2.3'
+  smol-toml: '>=1.6.1'
 
 peerDependencyRules:
   allowAny:
-    - vite
     - vitest
   allowedVersions:
-    vite: '*'
     vitest: '*'

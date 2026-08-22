@@ -1,4 +1,5 @@
 import { vi, describe, it, expect } from 'vitest';
+
 import { checkRateLimit } from '../src/rate-limit';
 
 describe(checkRateLimit, () => {
@@ -17,7 +18,7 @@ describe(checkRateLimit, () => {
     };
     const result = await checkRateLimit(request, mockRateLimiter);
     expect(result).toBeNull();
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'root:192.168.1.1' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '192.168.1.1' });
   });
 
   it('returns 429 response when rate limit is exceeded', async () => {
@@ -39,10 +40,10 @@ describe(checkRateLimit, () => {
       limit: vi.fn().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'root:unknown' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'unknown' });
   });
 
-  it('derives the key from the first path segment', async () => {
+  it('keeps the key independent of the attacker-controlled path', async () => {
     const request = new Request('http://localhost/health.json', {
       headers: { 'cf-connecting-ip': '10.0.0.1' },
     });
@@ -50,6 +51,6 @@ describe(checkRateLimit, () => {
       limit: vi.fn().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'health.json:10.0.0.1' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '10.0.0.1' });
   });
 });

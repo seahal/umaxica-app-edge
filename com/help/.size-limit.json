@@ -1,0 +1,8 @@
+[
+  {
+    "name": "client JavaScript (baseline 184.42 kB, budget = +10%)",
+    "path": ".next/static/chunks/**/*.js",
+    "gzip": true,
+    "limit": "205 kB"
+  }
+]

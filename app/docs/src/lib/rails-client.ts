@@ -49,9 +49,15 @@ export interface RailsClient {
   fetch(path: string, init?: RailsClientInit): Promise<RailsClientResult>;
 }
 
-interface RailsLocalNodeEnv {
-  EDGE_LOCAL_NODE_RUNTIME?: string;
-  EDGE_LOCAL_RAILS_ENABLED?: string;
+// Read one variable at a time rather than asserting the whole of `process.env`
+// into a shape it does not have. The Wrangler-generated `NodeJS.ProcessEnv`
+// declares only the three bindings from wrangler.jsonc, so these two names are
+// not on it at all — which is what the old
+// `process.env as unknown as RailsLocalNodeEnv` was hiding, the one
+// double-assertion left in this repository's source.
+function readLocalFlag(name: string): string | undefined {
+  const value: unknown = Reflect.get(process.env, name);
+  return typeof value === 'string' ? value : undefined;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -115,7 +121,7 @@ async function readProxyError(response: Response): Promise<string | null> {
 
   try {
     const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
-    return /^ProxyError:\s*\w+/i.test(body) ? body : null;
+    return /^ProxyError:\s*\w+/iu.test(body) ? body : null;
   } catch {
     // A body that cannot be read is not evidence of anything; leave the
     // response to be reported as the http-error it appears to be.
@@ -214,8 +220,10 @@ export function getRailsClient(): RailsClient | null {
     return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
   }
 
-  const localEnv = process.env as unknown as RailsLocalNodeEnv;
-  if (localEnv.EDGE_LOCAL_NODE_RUNTIME === '1' && localEnv.EDGE_LOCAL_RAILS_ENABLED === '1') {
+  if (
+    readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1' &&
+    readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'
+  ) {
     return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
   }
 

@@ -3,9 +3,10 @@
  *
  * The design is recorded in `adr/005-rails-edge-workers-vpc-connection.md` and
  * amended by `adr/006-development-workers-vpc-transport.md`: one Cloudflare
- * Workers VPC binding, declared in `env.vpc` alone (the top level is production); paths sent to Rails
- * exactly as given, with no frame prefix; and no Rails dependency in the apex
- * workers.
+ * Workers VPC binding, declared per tier that needs it — the top level (which IS
+ * production), `env.development` and `env.vpc`, never `env.test`; paths sent to
+ * Rails exactly as given, with no frame prefix; and no Rails dependency in the
+ * apex workers.
  *
  * Fifteen frames each own a byte-identical copy of the client (deliberately —
  * `CLAUDE.md` forbids extracting a shared module), so the failure mode is drift:
@@ -18,7 +19,9 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import { readWranglerConfig as readWrangler } from '../tools/lib/wrangler-config.mjs';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -35,9 +38,23 @@ const RAILS_FRAMES = BRANDS.flatMap((brand) =>
   FRAMES.map((frame) => ({ brand, frame, workspace: `${brand}/${frame}` })),
 );
 
+/**
+ * Source with comments removed.
+ *
+ * These files explain what they deliberately do NOT do — probe readiness, publish
+ * an `errorMessage` — by naming it. A plain `toContain` would then match the
+ * explanation and fail on the very file that documents the invariant, so the
+ * assertions below read code only.
+ */
+function code(relativePath: string): string {
+  return read(relativePath)
+    .replace(/\/\*[\s\S]*?\*\//gu, '')
+    .replace(/\/\/.*$/gmu, '');
+}
+
 /** Read a `const NAME = <value>;` declaration out of a client copy. */
 function readConstant(source: string, name: string): string | undefined {
-  return new RegExp(`const ${name} = (.+);`).exec(source)?.[1];
+  return new RegExp(`const ${name} = (.+);`, 'u').exec(source)?.[1];
 }
 
 describe('rails client layout', () => {
@@ -52,36 +69,95 @@ describe('rails client layout', () => {
     }
   });
 
-  it.each(RAILS_FRAMES)('$workspace exposes /rails-health as JSON', ({ workspace }) => {
-    /*
-     * One shape across all fifteen frames — a Route Handler answering
-     * `{"rails": {...}}`, 200 when the kind is `ok` and 503 otherwise.
-     *
-     * The cores used to render an HTML status page here instead, and this
-     * assertion used to pin that difference. It cost two parsers in
-     * `tools/verify-edge-connectivity.mjs`, a "`jq` against a core port returns
-     * markup" caveat in the operations doc, and a wrong turn during a manual
-     * walkthrough. The stated reason — that the content frames had no UI to host
-     * such a page — was not true either; they have `layout.tsx` and `style.css`.
-     *
-     * The page is not gone forever, only un-duplicated ahead of a refactor that
-     * was already coming. `docs/design/rails-health-page.md` records what it did
-     * so it can be rebuilt once, deliberately, rather than in fifteen copies.
-     */
-    const route = `${workspace}/src/app/rails-health/route.ts`;
-    const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
+  it.each(RAILS_FRAMES)(
+    '$workspace reports Rails through /health, not /rails-health',
+    ({ workspace }) => {
+      /*
+       * One shape across all fifteen frames — a Route Handler answering
+       *
+       *   { status, timestamp, edge: {...}, rails: { liveness: {...} } }
+       *
+       * 200 when both halves are ok and 503 otherwise.
+       *
+       * This used to be two routes. `/health` reported Edge alone and
+       * `/rails-health` reported Rails alone, so neither could answer whether the
+       * surface as a whole was serving — and `/health` collided by name with
+       * Rails' own `/health` while `core-dispatch.ts` blocks `/health/*` at the
+       * edge, leaving Rails' health namespace unreachable through the public FQDN.
+       * The merge is `adr/009-rails-health-entrypoint-and-dispatch-operability.md`.
+       *
+       * Both former shapes are asserted absent, not merely unmentioned: an HTML
+       * status page (removed earlier; `docs/design/rails-health-page.md` records
+       * what it did) and the JSON Route Handler that replaced it.
+       */
+      const health = `${workspace}/src/app/health/route.ts`;
+      const route = `${workspace}/src/app/rails-health/route.ts`;
+      const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
 
-    expect(existsSync(join(repoRoot, route)), `${route} is missing`).toBe(true);
-    expect(existsSync(join(repoRoot, page)), `${page} must not come back per-frame`).toBe(false);
-  });
+      expect(existsSync(join(repoRoot, health)), `${health} is missing`).toBe(true);
+      expect(existsSync(join(repoRoot, route)), `${route} was merged into /health`).toBe(false);
+      expect(existsSync(join(repoRoot, page)), `${page} must not come back per-frame`).toBe(false);
+    },
+  );
 
-  it('keeps all fifteen /rails-health routes byte-identical', () => {
+  it('keeps all fifteen /health routes byte-identical', () => {
     // Fifteen owned copies, so the failure mode is drift: one edited and
     // fourteen left behind. Nothing at runtime notices.
+    //
+    // The fifteen used to be two groups — the cores read `REVISION` and answered
+    // 503 on failure, the twelve content frames returned a static `{status:'ok'}`
+    // — which is exactly the asymmetry the merge removed.
     const digests = new Set(
-      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/rails-health/route.ts`)),
+      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/health/route.ts`)),
     );
-    expect(digests.size, 'the fifteen route handlers have diverged').toBe(1);
+    expect(digests.size, 'the fifteen health route handlers have diverged').toBe(1);
+  });
+
+  it('keeps all fifteen Rails health probes byte-identical', () => {
+    const digests = new Set(
+      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/lib/rails-health.ts`)),
+    );
+    expect(digests.size, 'the fifteen rails-health copies have diverged').toBe(1);
+  });
+
+  it('probes exactly one Rails path, and requires liveness alone for a healthy verdict', () => {
+    /*
+     * Liveness is the strictest of Rails' three probes, so it is the one that
+     * decides; `/health` is polled often enough that one request per check is
+     * worth keeping. Readiness and startup exist on the Rails side and are
+     * deliberately not read — see ADR 009.
+     *
+     * Pinned because widening this is a real decision with a real cost: every
+     * added probe multiplies the tunnel traffic of the most-polled route in the
+     * repository, across fifteen frames.
+     */
+    for (const { workspace } of RAILS_FRAMES) {
+      const source = code(`${workspace}/src/lib/rails-health.ts`);
+      expect(source).toContain("const RAILS_LIVENESS_PATH = '/health/liveness.json';");
+      expect(source, `${workspace} must not silently start probing readiness`).not.toContain(
+        'readiness.json',
+      );
+      expect(source, `${workspace} must not silently start probing startup`).not.toContain(
+        'startup.json',
+      );
+    }
+  });
+
+  it('never exposes an internal error string through the public health document', () => {
+    /*
+     * The public shape used to carry `errorMessage`, fed by `rails-client.ts`'s
+     * `getErrorMessage(error)` — i.e. an arbitrary exception string on a public
+     * endpoint. `rails-client.ts` keeps it internally, on purpose, so this is
+     * asserted on the two files that actually serialize a response.
+     */
+    for (const { workspace } of RAILS_FRAMES) {
+      for (const file of ['src/lib/rails-health.ts', 'src/app/health/route.ts']) {
+        const source = code(`${workspace}/${file}`);
+        expect(source, `${workspace}/${file} must not publish errorMessage`).not.toContain(
+          'errorMessage',
+        );
+      }
+    }
   });
 
   it.each(RAILS_FRAMES)('$workspace sends its own Rails host', ({ brand, frame, workspace }) => {
@@ -120,23 +196,6 @@ describe('rails client layout', () => {
     expect([...timeouts][0]).toBeDefined();
   });
 
-  it('agrees on the Rails health path across all fifteen copies', () => {
-    /*
-     * Pinned, not merely agreed, because `tools/vpc-probe/probe.mjs` hard-codes
-     * the same path and the test below derives its expectation from here. If
-     * this moved and the probe did not, `check:vpc` would keep measuring a path
-     * the application no longer requests — and would keep passing while every
-     * frame 404s.
-     */
-    const paths = new Set(
-      RAILS_FRAMES.map(({ workspace }) =>
-        readConstant(read(`${workspace}/src/lib/rails-health.ts`), 'RAILS_HEALTH_PATH'),
-      ),
-    );
-    expect(paths.size, 'the fifteen health paths have diverged').toBe(1);
-    expect([...paths][0]).toBe("'/health/liveness.json'");
-  });
-
   it('keeps Access credentials and public fallback origins out of every application runtime', () => {
     for (const { workspace } of RAILS_FRAMES) {
       const config = read(`${workspace}/wrangler.jsonc`);
@@ -161,9 +220,9 @@ describe('rails client layout', () => {
         scripts?: { dev?: string };
       };
 
-      expect(source).toContain("localEnv.EDGE_LOCAL_NODE_RUNTIME === '1'");
-      expect(source).toContain("localEnv.EDGE_LOCAL_RAILS_ENABLED === '1'");
-      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /);
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1'");
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'");
+      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /u);
     }
   });
 
@@ -217,40 +276,114 @@ describe('apex workers stay independent of Rails', () => {
 
 describe('workers vpc bindings', () => {
   /*
-   * The binding is declared exactly once per frame, inside `env.vpc`.
+   * Where the binding may live, asserted from the parsed config rather than from
+   * where a string happens to sit in the file.
    *
-   * wrangler does NOT inherit bindings into `env` blocks, so placement is the
-   * whole enforcement mechanism:
+   * wrangler does NOT inherit bindings into `env` blocks, so every tier that
+   * needs one declares its own — and `env.test` deliberately declares none: a
+   * test tier that can reach a real Rails is not a test tier.
    *
-   * - not in `development`/`test`, because the binding is `remote: true` and
-   *   would force every local dev session to authenticate to Cloudflare.
-   *   `pnpm dev` and `pnpm preview` needing no Cloudflare account is a property
-   *   worth keeping.
-   * - not at the top level, because **the top level is production** (there is
-   *   no `env.production`), and the only VPC Service that exists today is on
-   *   the *development* tunnel, terminating on a developer's machine. A
-   *   production Worker pointed at it would leave the production network
-   *   entirely. See adr/006-development-workers-vpc-transport.md.
+   * The top level IS production, and during the AWS bootstrap it points at the
+   * *development* VPC Service on purpose. See
+   * `adr/006-development-workers-vpc-transport.md` and the
+   * `vpcProductionServiceId` note in `tools/workers-manifest.json`.
    *
-   * `tools/check-workers.mjs` asserts the same thing from the parsed config;
-   * this is the textual belt to its braces.
+   * `tools/check-workers.mjs` enforces the same table; this is the belt to its
+   * braces, and it is deliberately structural — the previous version asserted
+   * the binding appeared textually between the `"vpc"` and `"test"` keys, which
+   * stopped being expressible the moment a second tier legitimately had one.
    */
-  it.each(RAILS_FRAMES)('$workspace declares the binding once, in env.vpc', ({ workspace }) => {
-    const config = read(`${workspace}/wrangler.jsonc`);
+  const manifest = JSON.parse(read('tools/workers-manifest.json')) as {
+    vpcBinding: string;
+    vpcDevelopmentServiceId: string;
+    vpcProductionServiceId: string;
+  };
 
-    expect(config).toContain('"env"');
-    expect(config).toContain('"development"');
-    expect(config).toContain('"vpc"');
-    expect(config).toContain('"test"');
+  interface VpcEntry {
+    binding: string;
+    service_id: string;
+    remote?: boolean;
+  }
 
-    const declarations = config.match(new RegExp(VPC_BINDING, 'g')) ?? [];
-    expect(declarations, `${workspace} must declare the binding exactly once`).toHaveLength(1);
+  const bindingsAt = (workspace: string, path: 'top' | 'development' | 'vpc' | 'test') => {
+    const { config } = readWrangler(`${workspace}/wrangler.jsonc`);
+    const entries: VpcEntry[] =
+      path === 'top' ? (config?.vpc_services ?? []) : (config?.env?.[path]?.vpc_services ?? []);
+    return entries.filter((entry) => entry.binding === VPC_BINDING);
+  };
 
-    // The one declaration sits between the "vpc" and "test" keys — i.e. inside
-    // the vpc block, not an adjacent environment.
-    const at = config.indexOf(VPC_BINDING);
-    expect(at).toBeGreaterThan(config.indexOf('"vpc"'));
-    expect(at).toBeLessThan(config.indexOf('"test"'));
+  it.each(RAILS_FRAMES)(
+    '$workspace binds production to the bootstrap VPC service, without remote',
+    ({ workspace }) => {
+      /*
+       * `remote: true` is a local-development flag — it makes wrangler proxy the
+       * binding out to Cloudflare instead of simulating it locally, and has no
+       * effect on a deployed Worker
+       * (https://developers.cloudflare.com/workers/development-testing/#remote-bindings).
+       * Production is asserted not to carry it, so the key never reads as though
+       * it were doing something on the deployed path.
+       */
+      const declared = bindingsAt(workspace, 'top');
+      expect(
+        declared,
+        `${workspace} top level (production) must bind ${VPC_BINDING} once`,
+      ).toHaveLength(1);
+      expect(declared[0]?.service_id).toBe(manifest.vpcProductionServiceId);
+      expect(declared[0]?.remote, 'production must not set remote: true').not.toBe(true);
+    },
+  );
+
+  it.each(RAILS_FRAMES)(
+    '$workspace keeps env.vpc on the remote development binding',
+    ({ workspace }) => {
+      const declared = bindingsAt(workspace, 'vpc');
+      expect(declared, `${workspace} env.vpc must bind ${VPC_BINDING} once`).toHaveLength(1);
+      expect(declared[0]?.service_id).toBe(manifest.vpcDevelopmentServiceId);
+      expect(declared[0]?.remote, 'local workerd cannot simulate a VPC Service').toBe(true);
+    },
+  );
+
+  it.each(RAILS_FRAMES)(
+    '$workspace gives env.development the remote binding too',
+    ({ workspace }) => {
+      /*
+       * The ordinary development loop reaches Rails over the real transport rather
+       * than over a Node-only path that shares nothing with production.
+       *
+       * The property this gives up is the one ADR 006 decision 1 was protecting:
+       * `pnpm dev` and `pnpm preview` no longer work without an interactive
+       * `wrangler login`. That is not a side effect of `remote: true` being
+       * *chosen* here — wrangler classifies a VPC Service as a resource with no
+       * local simulator, so resolving this environment opens a remote proxy
+       * session either way, and that session rejects API-token authentication.
+       */
+      const declared = bindingsAt(workspace, 'development');
+      expect(declared, `${workspace} env.development must bind ${VPC_BINDING} once`).toHaveLength(
+        1,
+      );
+      expect(declared[0]?.service_id).toBe(manifest.vpcDevelopmentServiceId);
+      expect(declared[0]?.remote).toBe(true);
+    },
+  );
+
+  it.each(RAILS_FRAMES)(
+    '$workspace keeps the Node transport independent of the binding',
+    ({ workspace }) => {
+      /*
+       * A wrangler binding is not something a plain Node `next dev` process can
+       * hold, so the two transports must stay separately gated. This is asserted
+       * because the temptation after Phase 2 is to conclude that `env.development`
+       * having a binding makes the local flags redundant. It does not: they select
+       * a different transport, in a runtime that has no bindings at all.
+       */
+      const source = read(`${workspace}/src/lib/rails-client.ts`);
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1'");
+      expect(source).toContain("readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'");
+    },
+  );
+
+  it.each(RAILS_FRAMES)('$workspace gives env.test no Rails transport', ({ workspace }) => {
+    expect(bindingsAt(workspace, 'test')).toHaveLength(0);
   });
 
   it.each(RAILS_FRAMES)('$workspace has no env.production at all', ({ workspace }) => {
@@ -269,64 +402,54 @@ describe('workers vpc bindings', () => {
     expect(Object.keys(config?.env ?? {})).not.toContain('production');
   });
 
-  it.each(RAILS_FRAMES)('$workspace declares no VPC binding at the top level', ({ workspace }) => {
-    /*
-     * Fail closed rather than fail outward. With no binding and no explicitly
-     * enabled local-Node transport, `getRailsClient()` returns null and
-     * `/rails-health` reports `not-configured` and answers 503 — a visible,
-     * correct absence.
-     *
-     * Restoring production means creating a production VPC Service on a
-     * production tunnel and adding the block here. The next assertion is what
-     * stops that restoration from re-using the development service.
-     */
-    const { config } = readWrangler(`${workspace}/wrangler.jsonc`);
-
-    expect(
-      config?.vpc_services ?? [],
-      `${workspace} top level (production) must carry no vpc_services`,
-    ).toHaveLength(0);
-  });
-
-  it('points every frame at the same development VPC service', () => {
+  it('points every frame at the same service per tier', () => {
     /*
      * One development Rails, so one VPC service shared by all fifteen frames.
      * Written as an assertion so a divergence — a frame left on an old service
-     * after a migration — fails loudly.
+     * after a migration — fails loudly. Asserted per tier rather than over every
+     * `service_id` string in the file, which stopped distinguishing the tiers as
+     * soon as more than one of them had a binding.
      */
-    const serviceIds = RAILS_FRAMES.flatMap(({ workspace }) =>
-      [...read(`${workspace}/wrangler.jsonc`).matchAll(/"service_id":\s*"([^"]+)"/g)].map(
-        (match) => match[1],
-      ),
-    );
-
-    expect(serviceIds).toHaveLength(RAILS_FRAMES.length);
-    expect(new Set(serviceIds).size).toBe(1);
+    for (const tier of ['top', 'vpc'] as const) {
+      const ids = new Set(
+        RAILS_FRAMES.map(({ workspace }) => bindingsAt(workspace, tier)[0]?.service_id),
+      );
+      expect(ids.size, `the fifteen ${tier} service_ids have diverged`).toBe(1);
+    }
   });
 
-  it('never lets production reuse the development VPC service', () => {
+  it('keeps the AWS cutover a one-line change, and records that it has not happened', () => {
     /*
-     * The single assertion that makes "production cannot reach development
-     * Rails" mechanical rather than procedural. It holds vacuously while the
-     * top level declares no binding, and starts biting the moment somebody adds
-     * one — which is exactly when it is needed.
+     * The former invariant here was "production must never reuse the development
+     * service_id". That rule is retired, not bypassed: it described a topology in
+     * which production had no transport at all, and it would now forbid the
+     * bootstrap this repository deliberately runs — a deployed production Worker
+     * reaching local Rails so that the real edge → VPC → tunnel → Rails path is
+     * exercised before AWS Rails exists.
      *
-     * Read through the parsed config, not by slicing text at a key name: the
-     * text version passed vacuously the moment `env.production` was removed.
+     * What replaces it is a shape rather than a prohibition. The two ids are
+     * separate manifest fields, so the cutover is: provision the production VPC
+     * Service, change `vpcProductionServiceId` and the fifteen top-level
+     * `service_id`s, and the equality below simply stops holding. Nothing in
+     * `src/` participates — `getRailsClient()` selects the VPC transport by the
+     * presence of the runtime binding, never by an environment name.
      */
-    const developmentId = JSON.parse(read('tools/workers-manifest.json'))
-      .vpcDevelopmentServiceId as string;
+    expect(manifest.vpcProductionServiceId, 'the manifest must name a production id').toBeDefined();
 
+    if (manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId) {
+      // Bootstrap: still true today, and the assertions above already pin every
+      // frame to it. Stated here so the state is recorded rather than implied.
+      expect(manifest.vpcDevelopmentServiceId).toBeTruthy();
+      return;
+    }
+
+    // Post-cutover: production has left the development tunnel, and no frame may
+    // be left behind on it.
     for (const { workspace } of RAILS_FRAMES) {
-      const { config } = readWrangler(`${workspace}/wrangler.jsonc`);
-      const productionIds = (config?.vpc_services ?? []).map(
-        (entry: { service_id: string }) => entry.service_id,
-      );
-
       expect(
-        productionIds,
-        `${workspace} production must not reuse the development VPC service`,
-      ).not.toContain(developmentId);
+        bindingsAt(workspace, 'top')[0]?.service_id,
+        `${workspace} was left on the development VPC service after the AWS cutover`,
+      ).not.toBe(manifest.vpcDevelopmentServiceId);
     }
   });
 });
@@ -355,7 +478,7 @@ describe('vpc probe', () => {
      * answered 200, and probing one host could not have told those apart.
      */
     const targets = [
-      ...read('tools/vpc-probe/probe.mjs').matchAll(/\{ key: '([^']+)', url: '([^']+)' \}/g),
+      ...read('tools/vpc-probe/probe.mjs').matchAll(/\{ key: '([^']+)', url: '([^']+)' \}/gu),
     ].map(([, key, url]) => ({ key, url }));
 
     const expected = RAILS_FRAMES.map(({ brand, frame, workspace }) => {
@@ -363,7 +486,10 @@ describe('vpc probe', () => {
         read(`${workspace}/src/lib/rails-client.ts`),
         'PRIVATE_RAILS_ORIGIN',
       );
-      const path = readConstant(read(`${workspace}/src/lib/rails-health.ts`), 'RAILS_HEALTH_PATH');
+      const path = readConstant(
+        read(`${workspace}/src/lib/rails-health.ts`),
+        'RAILS_LIVENESS_PATH',
+      );
       return {
         key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
         url: `${origin?.slice(1, -1)}${path?.slice(1, -1)}`,
@@ -381,7 +507,7 @@ describe('vpc probe', () => {
      * to the binding must pass a target's own url and nothing derived from the
      * caller.
      */
-    const destinations = [...probe.matchAll(/binding\.fetch\(([^,)]+)/g)].map(([, arg]) =>
+    const destinations = [...probe.matchAll(/binding\.fetch\(([^,)]+)/gu)].map(([, arg]) =>
       arg.trim(),
     );
     expect(destinations, 'the binding must only be called with a target url').toEqual(['url']);

@@ -1,16 +1,16 @@
+import { redirect } from 'next/navigation';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { redirect } from 'next/navigation';
-import RootPage from '../src/app/(page)/page';
+
 import AboutPage from '../src/app/(page)/about/page';
-import ExplorePage from '../src/app/(page)/explore/page';
-import DoctorPage from '../src/app/(page)/doctor/page';
-import NotificationsPage from '../src/app/(page)/notifications/page';
-import MessagesPage from '../src/app/(page)/messages/page';
-import ConfigurationPage from '../src/app/(page)/configuration/page';
 import AccountPage from '../src/app/(page)/configuration/account/page';
-import PreferencePage from '../src/app/(page)/configuration/preference/page';
+import ConfigurationPage from '../src/app/(page)/configuration/page';
+import DoctorPage from '../src/app/(page)/doctor/page';
+import ExplorePage from '../src/app/(page)/explore/page';
 import HomePage from '../src/app/(page)/home/page';
+import MessagesPage from '../src/app/(page)/messages/page';
+import NotificationsPage from '../src/app/(page)/notifications/page';
+import RootPage from '../src/app/(page)/page';
 
 // Mock i18n dependencies
 vi.mock('next/navigation', () => ({
@@ -46,7 +46,7 @@ vi.mock('@/i18n/dictionaries', () => ({
     messages: { title: 'Messages', wip: 'WIP' },
     configuration: { title: 'Configuration' },
     configuration_account: { title: 'Account' },
-    configuration_preference: { title: 'Preference' },
+    nav: { menu: 'Menu', primary: 'Main navigation', utility: 'Utility navigation' },
   }),
 }));
 
@@ -105,12 +105,6 @@ describe('app/core pages render without throwing', () => {
 
   it('account page renders', async () => {
     const element = await AccountPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('preference page renders', async () => {
-    const element = await PreferencePage();
     const html = renderToStaticMarkup(element);
     expect(html).not.toBe('');
   });

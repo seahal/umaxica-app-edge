@@ -118,7 +118,6 @@ services:
       - '127.0.0.1:5407:5407' # app/news
       - '127.0.0.1:5408:5408' # app/help
       - '127.0.0.1:5501:5501' # dev/apex
-      - '127.0.0.1:5502:5502' # dev/acme
     command: sleep infinity
     tty: true
     stdin_open: true
@@ -130,7 +129,6 @@ services:
       - ALL
     environment:
       CLOUDFLARE_ENV: development
-      VITE_GIT_HOOKS: '0'
     restart: unless-stopped
 
 volumes:

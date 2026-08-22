@@ -9,6 +9,7 @@ vi.mock('@opennextjs/cloudflare', () => ({
 }));
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { getRailsClient } from '../../src/lib/rails-client';
 
 describe('app/help rails client', () => {

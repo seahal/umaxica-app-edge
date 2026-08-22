@@ -1,17 +1,17 @@
+import { redirect } from 'next/navigation';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { redirect } from 'next/navigation';
-import RootPage from '../src/app/(page)/page';
+
 import AboutPage from '../src/app/(page)/about/page';
-import ExplorePage from '../src/app/(page)/explore/page';
-import DoctorPage from '../src/app/(page)/doctor/page';
-import NotificationsPage from '../src/app/(page)/notifications/page';
-import MessagesPage from '../src/app/(page)/messages/page';
-import ConfigurationPage from '../src/app/(page)/configuration/page';
 import AccountPage from '../src/app/(page)/configuration/account/page';
-import PreferencePage from '../src/app/(page)/configuration/preference/page';
+import ConfigurationPage from '../src/app/(page)/configuration/page';
+import DoctorPage from '../src/app/(page)/doctor/page';
+import ExplorePage from '../src/app/(page)/explore/page';
 import HomePage from '../src/app/(page)/home/page';
 import PageLayout from '../src/app/(page)/layout';
+import MessagesPage from '../src/app/(page)/messages/page';
+import NotificationsPage from '../src/app/(page)/notifications/page';
+import RootPage from '../src/app/(page)/page';
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn<() => never>(),
@@ -34,7 +34,7 @@ vi.mock('@/i18n/dictionaries', () => ({
     messages: { title: 'Messages', wip: 'WIP' },
     configuration: { title: 'Configuration' },
     configuration_account: { title: 'Account' },
-    configuration_preference: { title: 'Preference' },
+    nav: { menu: 'Menu', primary: 'Main navigation', utility: 'Utility navigation' },
   }),
 }));
 
@@ -87,12 +87,6 @@ describe('com/core pages render without throwing', () => {
     expect(html).not.toBe('');
   });
 
-  it('preference page renders', async () => {
-    const element = await PreferencePage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
   it('home page redirects to root', () => {
     HomePage();
     expect(redirect).toHaveBeenCalledWith('/');
@@ -101,7 +95,8 @@ describe('com/core pages render without throwing', () => {
   it('renders the localized navigation around page content', async () => {
     const element = await PageLayout({ children: <p>workspace content</p> });
     const html = renderToStaticMarkup(element);
-    expect(html).toContain('Rails health');
+    // The navigation is asserted in full by test/ui-shell-contract.test.tsx.
+    expect(html).toContain('id="main-navigation"');
     expect(html).toContain('workspace content');
   });
 });

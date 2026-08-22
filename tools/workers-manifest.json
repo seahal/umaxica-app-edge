@@ -1,8 +1,10 @@
 {
-  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding in env.vpc ONLY (pnpm preview:vpc; development and test carry no transport, and the top level — which IS production — carries none until a production VPC Service exists). contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: Vercel-hosted, no wrangler config.",
+  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding at the top level (which IS production), in env.development and in env.vpc; env.test carries none. contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: hosted outside Cloudflare, no wrangler config; empty since dev/acme was removed and dev/apex moved onto Workers.",
   "vpcBinding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-  "$vpcDevelopmentServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on core.app.localhost:3000. It is NOT a production resource; production must never point at it. Verify with `wrangler vpc service get <id>`.",
+  "$vpcDevelopmentServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on <frame>.<brand>.localhost:3000. Verify with `wrangler vpc service get <id>`.",
   "vpcDevelopmentServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+  "$vpcProductionServiceIdComment": "BOOTSTRAP: equal to vpcDevelopmentServiceId on purpose. AWS production Rails and a production tunnel do not exist yet, so the deployed production Worker exercises the real edge → Workers VPC → VPC Service → tunnel → Rails path against local Rails. This field is the AWS cutover point: provision the production VPC Service, change this id and the fifteen top-level service_ids, and the two stop being equal. No application code changes. See adr/006-development-workers-vpc-transport.md.",
+  "vpcProductionServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
   "railsBacked": [
     "app/core",
     "app/docs",
@@ -21,6 +23,6 @@
     "org/info"
   ],
   "contentSurface": [],
-  "standalone": ["app/apex", "com/apex", "net/apex", "org/apex"],
-  "external": ["dev/acme", "dev/apex"]
+  "standalone": ["app/apex", "com/apex", "dev/apex", "net/apex", "org/apex"],
+  "external": []
 }

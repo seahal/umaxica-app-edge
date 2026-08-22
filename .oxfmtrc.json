@@ -8,6 +8,7 @@
   "trailingComma": "all",
   "insertFinalNewline": true,
   "sortPackageJson": true,
+  "sortImports": true,
   "overrides": [
     {
       "files": ["**/*.json", "**/*.jsonc"],

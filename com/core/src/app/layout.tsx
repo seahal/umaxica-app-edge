@@ -1,12 +1,24 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+
+import { defaultLocale } from '@/i18n/config';
+
 import './globals.css';
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
 
-const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
+/*
+ * The CSS variable is `--font-inter`, not `--font-sans`: `--font-sans` is
+ * Tailwind's own font token, declared in `globals.css`, and it names this
+ * variable as the first family in the Japanese-aware stack. Pointing both at
+ * the same name would make the token reference itself.
+ */
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'UMAXICA (com)',
+  title: {
+    default: 'UMAXICA (COM)',
+    template: '%s — UMAXICA (COM)',
+  },
   description: 'UMAXICA Corporate Application',
 };
 
@@ -16,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body>
+    <html lang={defaultLocale} className={inter.variable}>
+      <body className="bg-gray-50 leading-body text-gray-900">
         <ServiceWorkerRegistration />
         {children}
       </body>

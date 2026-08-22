@@ -28,7 +28,7 @@
 //
 // This list is generated from the frames and pinned by
 // `test/rails-connection-invariants.test.ts`, so it cannot drift from
-// `PRIVATE_RAILS_ORIGIN` and `RAILS_HEALTH_PATH`.
+// `PRIVATE_RAILS_ORIGIN` and `RAILS_LIVENESS_PATH`.
 const RAILS_TARGETS = [
   { key: 'APP/CORE', url: 'http://core.app.localhost:3000/health/liveness.json' },
   { key: 'APP/DOCS', url: 'http://docs.app.localhost:3000/health/liveness.json' },

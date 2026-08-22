@@ -1,7 +1,28 @@
 # Memo: the `/rails-health` HTML page, as it existed before removal
 
-**Status: removed 2026-08-10.** `/rails-health` now returns JSON on all fifteen
-frames. This memo exists so the page can be rebuilt deliberately rather than
+**Status: page removed 2026-08-10; the route itself removed 2026-08-12.**
+
+`/rails-health` no longer exists. The Rails half it reported was merged into each
+frame's `/health`, which now answers for both halves in one document — see
+`adr/009-rails-health-entrypoint-and-dispatch-operability.md`. Two routes each
+answering half the question meant neither could say whether a surface was
+serving, and `/health` collided by name with Rails' own `/health` while the edge
+blocks `/health/*`, leaving Rails' health namespace unreachable through the
+public FQDN.
+
+Read the rest of this memo as history. Two things in it have outlived the route:
+
+- **The four kinds and the "never renders a Rails body" guarantee both survived**
+  into `rails-health.ts`'s `RailsProbeReport`. So did the reasoning about
+  `unreachable` copy having to stay true for a Workers VPC `ProxyError`.
+- **`errorMessage` did not, and deliberately.** The table below lists it as part
+  of the `unreachable` detail block. It was fed by `rails-client.ts`'s
+  `getErrorMessage(error)` — an arbitrary exception string on a public endpoint —
+  and is gone from the public shape, pinned absent by
+  `test/rails-connection-invariants.test.ts`. Do not reintroduce it if the page
+  comes back.
+
+This memo exists so the page can be rebuilt deliberately rather than
 reconstructed from memory. It is a design note, not a spec — the next version
 should be designed, not restored verbatim.
 
@@ -82,9 +103,10 @@ at commit `5c5fd56` and earlier.
 
 - Build it **once**, in one place, and decide deliberately which frames mount
   it. Fifteen copies of a diagnostics UI is the situation this removal undid.
-- Keep `/rails-health` JSON as the machine contract whatever happens — the
+- Keep the JSON at `/health` as the machine contract whatever happens — the
   connectivity checker and any future monitoring depend on one shape across all
-  fifteen frames. A page should be an addition, at its own path.
+  fifteen frames. A page should be an addition, at its own path, and **not** at
+  `/health`: that path is the machine contract now.
 - Carry over: the four states, the "never renders a Rails body" guarantee, and
   the `unreachable` copy that stays true for a `ProxyError`.
 - Add: dark mode, and the timestamp of the check (the page showed a status but

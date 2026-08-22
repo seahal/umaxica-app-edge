@@ -10,10 +10,20 @@
 > referenced in the Outcome does not exist in this repository. The apex workers
 > no longer contact Rails at all.
 >
-> The current design — a Cloudflare Workers VPC binding, path-prefix frame
-> identification, and per-frame `/rails-health` endpoints — is recorded in
-> [ADR 005](005-rails-edge-workers-vpc-connection.md). This file is kept
-> unedited below the line as a record of what was decided at the time.
+> The current design is a Cloudflare Workers VPC binding, recorded in
+> [ADR 005](005-rails-edge-workers-vpc-connection.md) and amended twice since.
+> Two things this note used to name as current are no longer:
+>
+> - **Path-prefix frame identification** was retracted by
+>   [ADR 006](006-development-workers-vpc-transport.md) §4 — Rails routes on the
+>   path exactly as given and picks the frame off the `Host` header instead.
+> - **Per-frame `/rails-health` endpoints** were removed by
+>   [ADR 009](009-rails-health-entrypoint-and-dispatch-operability.md). Each
+>   frame's `/health` now carries both Edge's own state and Rails' liveness.
+>
+> This file is kept unedited below the line as a record of what was decided at
+> the time. Its `## Outcome` says "Implemented" because it was — and then
+> superseded; that is not a contradiction with the status above.
 
 ## GitHub Issue
 
@@ -232,3 +242,6 @@ Add `RAILS_API_URL?: string` to `HealthBindings.Bindings`.
 - Added `RAILS_API_URL` environment variables to the respective `wrangler.jsonc` configurations.
 - Handled non-2xx responses and unhandled fetch exceptions properly as per the plan's UI requirements.
 - Updated `vp check` and `vp test` to ensure robust type checking and correct DOM assertions across the updated workspaces.
+
+> Superseded: Vite+ (`vp`) has since been removed. The equivalent commands are
+> now `pnpm run check` and `pnpm run test`. Retained above as a historical record.

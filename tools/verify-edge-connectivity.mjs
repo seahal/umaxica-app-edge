@@ -7,18 +7,19 @@
 // The point of this tool is that the paths it tests are NOT interchangeable:
 //
 //   next dev          Node. No VPC binding exists in `env.development`, so
-//                     /rails-health here can never be VPC evidence.
+//                     the Rails half of /health here can never be VPC evidence.
 //   preview           local workerd, `--env development`. No binding either.
 //   preview:vpc       local workerd, `--env vpc`. The real remote binding.
 //   vpc (this tool)   the binding alone, with no application code in the way.
 //
-// `/rails-health` in next dev can prove only the explicitly enabled private
-// Podman path. It is never accepted as VPC or Tunnel evidence. Those paths have
-// their own checks and no transport falls back to another.
+// `/health`'s Rails half in next dev can prove only the explicitly enabled
+// private Podman path. It is never accepted as VPC or Tunnel evidence. Those
+// paths have their own checks and no transport falls back to another.
 
 import { spawn } from 'node:child_process';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import {
   describeServiceIdProblem,
   loadManifest,
@@ -64,24 +65,32 @@ const PREVIEW_PORT = 8787; // opennextjs-cloudflare preview passes no --port.
  * info}` frames, taken whole from tools/workers-manifest.json.
  *
  * Ports come from each workspace's own `dev` script, and the shape of each frame
- * (does it have `/health`? is `/rails-health` a page or a route handler?) is
- * **derived from the files on disk**, never from a hard-coded list of cores. Add
- * `/health` to a content frame and it starts being checked without touching this
- * tool; that is the property that stops the checker drifting from the repo.
+ * (does it have `/health`?) is **derived from the files on disk**, never from a
+ * hard-coded list of cores. Add `/health` to a new frame and it starts being
+ * checked without touching this tool; that is the property that stops the
+ * checker drifting from the repo.
  */
 export function loadSurfaces(manifest = loadManifest()) {
   return manifest.railsBacked.map((ws) => {
     const [brand, frame] = ws.split('/');
     const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
-    const port = Number(/--port\s+(\d+)/.exec(pkg.scripts?.dev ?? '')?.[1]);
+    const port = Number(/--port\s+(\d+)/u.exec(pkg.scripts?.dev ?? '')?.[1]);
     if (!Number.isInteger(port)) {
       throw new Error(`${ws}: could not read a --port from its dev script`);
     }
 
-    // Only the three cores answer /health from a Route Handler; all fifteen
-    // expose /rails-health as JSON. Both facts are read from disk, not assumed.
+    /*
+     * All fifteen answer `/health` from a Route Handler, and that one route now
+     * carries both halves — Edge's own state and Rails' liveness. It replaced
+     * `/rails-health`, which used to report the Rails half separately; two
+     * routes meant two requests per frame per run and neither could answer
+     * "is this surface serving?". See ADR 009.
+     *
+     * Read from disk rather than asserted from the manifest, so a frame that
+     * loses the route is a FAIL here rather than a silent skip: a Rails-backed
+     * frame with no `/health` has no way to report the connection at all.
+     */
     const hasHealthRoute = existsSync(join(repoRoot, ws, 'src/app/health/route.ts'));
-    const hasRailsHealth = existsSync(join(repoRoot, ws, 'src/app/rails-health/route.ts'));
 
     return {
       key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
@@ -91,9 +100,6 @@ export function loadSurfaces(manifest = loadManifest()) {
       pkgName: pkg.name,
       port,
       hasHealthRoute,
-      // false is a FAIL later, not a skip: a Rails-backed frame with no
-      // /rails-health has no way to report the connection at all.
-      hasRailsHealth,
     };
   });
 }
@@ -105,8 +111,9 @@ export function loadSurfaces(manifest = loadManifest()) {
  * The `core` frames are excluded deliberately, not incidentally. `jp.umaxica.{app,com,org}`
  * is a shared FQDN where Rails owns some paths and Next.js the rest, so it needs
  * path-level ingress rather than a whole-host route, and it is a separate piece
- * of work. `dev/apex` and `dev/acme` are excluded too: they are Vercel-targeted,
- * and neither binds anything but container loopback.
+ * of work. `dev/apex` is excluded too: `umaxica.dev` is not delegated to
+ * Cloudflare DNS, so there is no Cloudflare-side hostname for the Tunnel to
+ * publish it on, even though the unit now deploys to Workers like the rest.
  *
  * Ports come from each workspace's own `dev` script, the same way `loadSurfaces`
  * does it, so they cannot drift from what actually listens.
@@ -122,7 +129,7 @@ export function loadTunnelSurfaces(manifest = loadManifest()) {
   return workspaces.map(({ ws, runtime }) => {
     const [brand, frame] = ws.split('/');
     const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
-    const port = Number(/--port\s+(\d+)/.exec(pkg.scripts?.dev ?? '')?.[1]);
+    const port = Number(/--port\s+(\d+)/u.exec(pkg.scripts?.dev ?? '')?.[1]);
     if (!Number.isInteger(port)) {
       throw new Error(`${ws}: could not read a --port from its dev script`);
     }
@@ -184,7 +191,7 @@ export function tunnelHostFor(brand, frame, env = process.env) {
 /** The Rails origin a frame will send, read from its rails-client copy. */
 export function readRailsOrigin(ws) {
   const source = readFileSync(join(repoRoot, ws, 'src/lib/rails-client.ts'), 'utf8');
-  return /PRIVATE_RAILS_ORIGIN\s*=\s*'([^']+)'/.exec(source)?.[1] ?? null;
+  return /PRIVATE_RAILS_ORIGIN\s*=\s*'([^']+)'/u.exec(source)?.[1] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -282,7 +289,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
   if (output.includes('not logged in') || output.includes('you are not authenticated')) {
     return { transport: BLOCKED, layer: 'Wrangler auth', detail: 'no Cloudflare session' };
   }
-  if (/vpc service .*not found|could not find vpc service|service_id/.test(output)) {
+  if (/vpc service .*not found|could not find vpc service|service_id/u.test(output)) {
     return {
       transport: FAIL,
       layer: 'Binding',
@@ -313,7 +320,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
         return { transport: FAIL, layer, detail: `${code}: ${detail}`, code };
       }
     }
-    if (/timeout|aborted|timederror/.test(haystack)) {
+    if (/timeout|aborted|timederror/u.test(haystack)) {
       return { transport: FAIL, layer: 'Workers VPC', detail: 'timed out with no documented code' };
     }
     return {
@@ -335,7 +342,7 @@ export function classifyProbeOutcome({ probe, wranglerOutput = '' } = {}) {
     // report "Rails answered 500" when Rails answered nothing at all — the tunnel
     // did — which is exactly the layer confusion this tool exists to prevent.
     // Checked before the status, because the status alone cannot distinguish it.
-    const proxyError = /ProxyError:\s*([a-z_]+)/i.exec(probe.body ?? '')?.[1];
+    const proxyError = /ProxyError:\s*([a-z_]+)/iu.exec(probe.body ?? '')?.[1];
     if (proxyError) {
       const known = TRANSPORT_CODES.find(([code]) => code === proxyError);
       return {
@@ -432,23 +439,32 @@ export function classifyIdentity({ surface, entry, transport }) {
 }
 
 // ---------------------------------------------------------------------------
-// /rails-health parsing
+// /health parsing
 // ---------------------------------------------------------------------------
 
-// One shape across all fifteen frames. The cores used to render an HTML status
-// page instead, which forced a second parser to live here; unifying on JSON is
-// what removed it. See docs/design/rails-health-page.md.
+/*
+ * One shape across all fifteen frames: `/health` answers
+ *
+ *   { status, timestamp, edge: {...}, rails: { liveness: { kind, status?, latency_ms } } }
+ *
+ * with HTTP 200 iff both halves are ok. The Rails half used to live at its own
+ * `/rails-health` route; the merge is ADR 009, and it is why this parser reads
+ * `rails.liveness.kind` rather than `rails.kind`.
+ *
+ * The four kinds are unchanged — the same vocabulary `rails-health.ts` has
+ * always reported — so every gate downstream of here still reads the same.
+ */
 
 const RAILS_HEALTH_KINDS = new Set(['ok', 'http-error', 'unreachable', 'not-configured']);
 
 /**
- * The twelve content frames expose /rails-health as a Route Handler returning
- * `{ rails: RailsHealthResult }` with status 200 iff the kind is `ok`. Returns
- * the kind, or null if the body is not that shape.
+ * The Rails liveness kind carried by a frame's `/health` document, or null if
+ * the body is not that shape — which is itself the signal for a stale deployed
+ * Worker still answering the pre-merge document.
  */
 export function parseRailsHealthJson(body) {
   try {
-    const kind = JSON.parse(body)?.rails?.kind;
+    const kind = JSON.parse(body)?.rails?.liveness?.kind;
     return RAILS_HEALTH_KINDS.has(kind) ? kind : null;
   } catch {
     return null;
@@ -456,10 +472,13 @@ export function parseRailsHealthJson(body) {
 }
 
 /**
- * The JSON route promises 200 for `ok` and 503 for everything else. Checking it
- * costs nothing and catches a route handler that reports a healthy body under a
- * failing status (or the reverse) — a correctness check the HTML page, which has
- * no status contract, cannot offer.
+ * `/health` promises 200 when the Rails half is `ok` and 503 otherwise. Checking
+ * it costs nothing and catches a route handler that reports a healthy body under
+ * a failing status, or the reverse.
+ *
+ * Note this is the Rails half alone: a frame whose Edge half is broken answers
+ * 503 with `rails.liveness.kind === 'ok'`, which this reports as a mismatch —
+ * correctly, because something is wrong and it is not Rails.
  */
 export function railsHealthStatusMismatch(kind, status) {
   const expected = kind === 'ok' ? 200 : 503;
@@ -497,7 +516,10 @@ export function extractInterfaceBlock(source, name) {
 // Small utilities
 // ---------------------------------------------------------------------------
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 /**
  * Poll until `check()` resolves truthy or the deadline passes. Never a fixed
@@ -615,12 +637,15 @@ async function stopAll() {
 }
 
 let cleaningUp = false;
+// Declared once and registered twice rather than defined inside the loop: one
+// handler closing over one `cleaningUp` is what makes the second signal a no-op.
+const cleanUpAndExit = () => {
+  if (cleaningUp) return;
+  cleaningUp = true;
+  void stopAll().finally(() => process.exit(130));
+};
 for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => {
-    if (cleaningUp) return;
-    cleaningUp = true;
-    void stopAll().finally(() => process.exit(130));
-  });
+  process.on(signal, cleanUpAndExit);
 }
 
 // ---------------------------------------------------------------------------
@@ -645,7 +670,7 @@ function run(command, args, env = {}) {
 
 async function checkToolchain(report, surfaces) {
   const rootPackage = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
-  const pnpmVersion = /^pnpm@([^+]+)/.exec(rootPackage.packageManager ?? '')?.[1] ?? null;
+  const pnpmVersion = rootPackage.devEngines?.packageManager?.version ?? null;
   let wranglerVersion = null;
   try {
     wranglerVersion = JSON.parse(
@@ -711,10 +736,10 @@ async function readCloudflareAuth() {
 
 async function modeConfig(report, surfaces, manifest) {
   const checker = await run('node', ['tools/check-workers.mjs']);
-  if (checker.code !== 0) {
-    report.note(FAIL, `check-workers failed:\n${tail(checker.stdout + checker.stderr, 20)}`);
-  } else {
+  if (checker.code === 0) {
     report.note(PASS, `check-workers: ${checker.stdout.trim()}`);
+  } else {
+    report.note(FAIL, `check-workers failed:\n${tail(checker.stdout + checker.stderr, 20)}`);
   }
 
   const railsHosts = new Map();
@@ -728,21 +753,19 @@ async function modeConfig(report, surfaces, manifest) {
       const declared = (config.env?.vpc?.vpc_services ?? []).filter(
         (v) => v.binding === manifest.vpcBinding,
       );
-      if (declared.length !== 1) {
-        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
-      } else {
+      if (declared.length === 1) {
         const idProblem = describeServiceIdProblem(declared[0].service_id);
         if (idProblem) problems.push(idProblem);
         if (declared[0].remote !== true) problems.push('vpc_services must set remote: true');
+      } else {
+        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
       }
     }
 
     // The generated types are what the application actually compiles against,
     // so a binding present in wrangler.jsonc but absent here still fails at use.
     const typesPath = join(repoRoot, surface.ws, 'cloudflare-env.d.ts');
-    if (!existsSync(typesPath)) {
-      problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
-    } else {
+    if (existsSync(typesPath)) {
       const types = readFileSync(typesPath, 'utf8');
       const previewBlock = extractInterfaceBlock(types, 'VpcEnv');
       if (previewBlock === null) {
@@ -750,19 +773,26 @@ async function modeConfig(report, surfaces, manifest) {
       } else if (!previewBlock.includes(manifest.vpcBinding)) {
         problems.push(`cloudflare-env.d.ts VpcEnv does not declare ${manifest.vpcBinding}`);
       }
-      for (const envName of ['DevelopmentEnv', 'TestEnv']) {
-        const block = extractInterfaceBlock(types, envName);
-        if (block?.includes(manifest.vpcBinding)) {
-          problems.push(`cloudflare-env.d.ts ${envName} must not declare ${manifest.vpcBinding}`);
-        }
+      const developmentBlock = extractInterfaceBlock(types, 'DevelopmentEnv');
+      if (developmentBlock === null) {
+        problems.push('cloudflare-env.d.ts declares no DevelopmentEnv — run cf-typegen');
+      } else if (!developmentBlock.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts DevelopmentEnv does not declare ${manifest.vpcBinding}`);
       }
+      // `test` is the one tier that must stay without a Rails transport.
+      const testBlock = extractInterfaceBlock(types, 'TestEnv');
+      if (testBlock?.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts TestEnv must not declare ${manifest.vpcBinding}`);
+      }
+    } else {
+      problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
     }
 
     const origin = readRailsOrigin(surface.ws);
-    if (!origin) {
-      problems.push('could not read PRIVATE_RAILS_ORIGIN from rails-client.ts');
-    } else {
+    if (origin) {
       railsHosts.set(surface.key, new URL(origin).host);
+    } else {
+      problems.push('could not read PRIVATE_RAILS_ORIGIN from rails-client.ts');
     }
 
     report.record(
@@ -792,15 +822,15 @@ async function modeConfig(report, surfaces, manifest) {
       host === expected ? host : `sends Host ${host}, expected ${expected}`,
     );
   }
-  if (hosts.length !== surfaces.length) {
-    report.note(
-      FAIL,
-      `Rails Host must be distinct per frame; ${surfaces.length} frames share ${hosts.length} hosts`,
-    );
-  } else {
+  if (hosts.length === surfaces.length) {
     report.note(
       PASS,
       `Rails Host: ${surfaces.length} frames, ${hosts.length} distinct entry points`,
+    );
+  } else {
+    report.note(
+      FAIL,
+      `Rails Host must be distinct per frame; ${surfaces.length} frames share ${hosts.length} hosts`,
     );
   }
 
@@ -845,26 +875,37 @@ async function modeConfig(report, surfaces, manifest) {
     `Development VPC Service: ${manifest.vpcDevelopmentServiceId}${devService ? ' (verified)' : ''}`,
   );
   report.note(
-    productionServices.size ? PASS : WARN,
+    productionServices.size ? PASS : FAIL,
     productionServices.size
       ? `Production VPC Service: ${[...productionServices].join(', ')}`
-      : 'Production VPC Service: none — env.production declares no binding, so production fails closed (ADR 006)',
+      : 'Production VPC Service: none — the top level (production) declares no binding, so deployed frames answer rails not-configured',
   );
 
+  // Sharing one Service across the two tiers is the bootstrap topology, not a
+  // misconfiguration: AWS production Rails does not exist, so the only way to
+  // exercise the deployed edge → VPC → tunnel → Rails path is against local
+  // Rails. It is reported as a WARN rather than a PASS because it is a state to
+  // leave, and the risk it carries is real — production Rails connectivity is
+  // only as available as a developer's machine. See ADR 006.
   const shared = [...productionServices].includes(manifest.vpcDevelopmentServiceId);
   if (shared) {
     report.note(
-      FAIL,
-      'Environment isolation: production reuses the development VPC Service — it is bound to the development tunnel',
+      manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId ? WARN : FAIL,
+      manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId
+        ? 'Environment isolation: BOOTSTRAP — production shares the development VPC Service, so deployed production Rails traffic terminates on a developer machine. Cut over by provisioning a production VPC Service and changing vpcProductionServiceId'
+        : 'Environment isolation: a frame was left on the development VPC Service after the AWS cutover',
     );
   } else {
     report.note(PASS, 'Environment isolation: production and development share no service_id');
   }
 
-  if (process.env.STRICT_ENV_ISOLATION === '1' && productionServices.size === 0) {
+  if (
+    process.env.STRICT_ENV_ISOLATION === '1' &&
+    manifest.vpcProductionServiceId === manifest.vpcDevelopmentServiceId
+  ) {
     report.note(
       FAIL,
-      'STRICT_ENV_ISOLATION: no production VPC Service exists yet (expected once the production tunnel is created)',
+      'STRICT_ENV_ISOLATION: production still uses the bootstrap (development) VPC Service — expected once the production tunnel exists',
     );
   }
 
@@ -932,7 +973,7 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
     await worker.stop();
   }
 
-  const bindingLine = /env\.UMAXICA_APPS_EDGE_CF_WORKERS_VPC[^\n]*/.exec(worker.output)?.[0];
+  const bindingLine = /env\.UMAXICA_APPS_EDGE_CF_WORKERS_VPC[^\n]*/u.exec(worker.output)?.[0];
   const entries = Array.isArray(probe?.results) ? probe.results : null;
 
   // No per-target results means the probe never got as far as fetching — the
@@ -1021,70 +1062,72 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
  * Readiness is polled on `/`, which every frame has and which touches nothing
  * outside the process.
  *
- * It used to poll `/rails-health`, and that was wrong: `/rails-health` calls
- * Rails over the VPC binding, so merely *asking whether the server had started*
- * sent a request across the tunnel. Every frame therefore hit Rails twice per
- * run — once to answer "are you up", once to be measured — and a fifteen-frame
- * pass produced 31 Rails requests where it should have produced 16. Caught by
+ * It used to poll `/rails-health`, and that was wrong: that route called Rails
+ * over the VPC binding, so merely *asking whether the server had started* sent a
+ * request across the tunnel. Every frame therefore hit Rails twice per run —
+ * once to answer "are you up", once to be measured — and a fifteen-frame pass
+ * produced 31 Rails requests where it should have produced 16. Caught by
  * comparing the Rails log against the expected count.
  *
- * `/health` is not usable here either: twelve of the fifteen frames do not have
- * it, so polling it would hang forever on those.
+ * `/health` is not usable here either, for the same reason and more so: since
+ * ADR 009 it is the route that probes Rails. Polling it as a readiness gate
+ * would reintroduce exactly the doubling described above.
  */
 function readinessUrl(baseUrl) {
   return `${baseUrl}/`;
 }
 
+/**
+ * One request per frame, to `/health`, which answers for both halves.
+ *
+ * This used to be two — `/health` for Edge and `/rails-health` for Rails. The
+ * merge (ADR 009) is what makes a single request enough; keep it that way, since
+ * anything else that calls `/health` doubles the traffic the tunnel and Rails
+ * see.
+ */
 async function checkHttpSurface(report, surface, baseUrl, gatePrefix) {
-  if (surface.hasHealthRoute) {
-    const health = await httpGet(`${baseUrl}/health`).catch((e) => ({
-      status: 0,
-      body: String(e),
-    }));
-    let healthy = health.status === 200;
-    if (healthy) {
-      try {
-        healthy = JSON.parse(health.body).status === 'ok';
-      } catch {
-        healthy = false;
-      }
-    }
-    report.record(
-      `${gatePrefix} /health`,
-      surface.key,
-      healthy ? PASS : FAIL,
-      healthy ? 'status ok' : `HTTP ${health.status}`,
-    );
-  } else {
-    // SKIP with the reason spelled out. Only the three cores own a `/health`
-    // Route Handler; the content frames never had one, and inventing a FAIL for
-    // a route the frame does not claim to have would be noise.
-    report.record(`${gatePrefix} /health`, surface.key, SKIP, 'frame has no /health route');
-  }
-
   const root = await httpGet(baseUrl).catch((e) => ({ status: 0, body: String(e) }));
   const rootOk = root.status >= 200 && root.status < 400;
   report.record(`${gatePrefix} /`, surface.key, rootOk ? PASS : FAIL, `HTTP ${root.status}`);
 
-  // The one Rails-touching request in this function, and the only one the whole
-  // run should make per frame. Keep it that way: anything else that calls
-  // /rails-health doubles the traffic the tunnel and Rails see.
-  const railsHealth = await httpGet(`${baseUrl}/rails-health`, 30_000).catch((e) => ({
+  if (!surface.hasHealthRoute) {
+    // A Rails-backed frame with no `/health` cannot report the connection at
+    // all, so this is a FAIL rather than a skip.
+    report.record(`${gatePrefix} /health`, surface.key, FAIL, 'frame has no /health route');
+    return { kind: null, status: 0, statusProblem: null };
+  }
+
+  const health = await httpGet(`${baseUrl}/health`, 30_000).catch((e) => ({
     status: 0,
     body: String(e),
   }));
 
-  const kind = parseRailsHealthJson(railsHealth.body);
+  const kind = parseRailsHealthJson(health.body);
+
+  // The Edge half, read from the same document. `status: 'ok'` is the top-level
+  // verdict and is only ever `ok` when both halves are.
+  let edgeOk = false;
+  try {
+    edgeOk = JSON.parse(health.body)?.edge?.status === 'ok';
+  } catch {
+    edgeOk = false;
+  }
+  report.record(
+    `${gatePrefix} /health`,
+    surface.key,
+    edgeOk ? PASS : FAIL,
+    edgeOk ? 'edge ok' : `HTTP ${health.status}`,
+  );
 
   let statusProblem = null;
   if (kind) {
-    statusProblem = railsHealthStatusMismatch(kind, railsHealth.status);
+    statusProblem = railsHealthStatusMismatch(kind, health.status);
     if (statusProblem) {
-      report.note(FAIL, `${surface.ws} ${gatePrefix} /rails-health: ${statusProblem}`);
+      report.note(FAIL, `${surface.ws} ${gatePrefix} /health: ${statusProblem}`);
     }
   }
 
-  return { kind, status: railsHealth.status, statusProblem };
+  return { kind, status: health.status, statusProblem };
 }
 
 // Fifteen `next dev` servers at once is what root `pnpm dev` already does, and
@@ -1099,7 +1142,9 @@ async function modeNext(report, surfaces) {
 
   report.note(
     SKIP,
-    '/rails-health under next dev is never VPC evidence — env.development carries no binding. See mode `vpc`.',
+    "/health's Rails half under next dev is never VPC evidence. `next dev` is a Node process: it " +
+      'holds no wrangler binding whatever `env.development` declares, and answers from the ' +
+      'EDGE_LOCAL_* Node transport or not at all. See mode `vpc`.',
   );
 }
 
@@ -1124,7 +1169,7 @@ async function runNextBatch(report, surfaces) {
         report.record('Next.js dev server', surface.key, FAIL, `${why} — ${handle.logPath}`);
         report.record('Local /health', surface.key, SKIP, 'server never became ready');
         report.record('Local /', surface.key, SKIP, 'server never became ready');
-        report.record('Local /rails-health', surface.key, SKIP, 'server never became ready');
+        report.record('Local /health rails', surface.key, SKIP, 'server never became ready');
         report.note(FAIL, `next dev (${surface.ws}) ${why}:\n${tail(handle.output)}`);
         continue;
       }
@@ -1135,35 +1180,35 @@ async function runNextBatch(report, surfaces) {
       const localRailsEnabled = process.env.EDGE_LOCAL_RAILS_ENABLED === '1';
       if (!localRailsEnabled && kind === 'not-configured') {
         report.record(
-          'Local /rails-health',
+          'Local /health rails',
           surface.key,
           PASS,
           'not-configured (expected without the optional Rails overlay)',
         );
       } else if (localRailsEnabled && kind === 'ok') {
         report.record(
-          'Local /rails-health',
+          'Local /health rails',
           surface.key,
           PASS,
           'ok via the private Podman Rails network (NOT Tunnel or VPC evidence)',
         );
       } else if (localRailsEnabled && kind) {
         report.record(
-          'Local /rails-health',
+          'Local /health rails',
           surface.key,
           FAIL,
           `${kind} on the explicitly enabled private Podman Rails path`,
         );
       } else if (kind) {
         report.record(
-          'Local /rails-health',
+          'Local /health rails',
           surface.key,
           FAIL,
           `${kind}: a transport appeared without the Rails overlay`,
         );
       } else {
         report.record(
-          'Local /rails-health',
+          'Local /health rails',
           surface.key,
           FAIL,
           `unrecognised JSON response, HTTP ${status}`,
@@ -1268,7 +1313,7 @@ async function runPreviewSurface(report, surface, { script, gate, withVpc, port,
           gate,
           surface.key,
           kind === 'ok' ? PASS : FAIL,
-          `rails-health: ${kind ?? 'unrecognised'}`,
+          `rails liveness: ${kind ?? 'unrecognised'}`,
         );
       } else {
         // No binding in env.development, so not-configured is the correct answer.
@@ -1276,7 +1321,7 @@ async function runPreviewSurface(report, surface, { script, gate, withVpc, port,
           gate,
           surface.key,
           kind === 'not-configured' ? PASS : WARN,
-          `workerd started; rails-health: ${kind ?? 'unrecognised'}`,
+          `workerd started; rails liveness: ${kind ?? 'unrecognised'}`,
         );
       }
     } finally {
@@ -1337,8 +1382,7 @@ export function buildLinkIndex(surfaces = loadSurfaces()) {
     ...surface,
     urls: [
       { path: '/', label: 'home' },
-      { path: '/rails-health', label: 'rails-health' },
-      ...(surface.hasHealthRoute ? [{ path: '/health', label: 'health' }] : []),
+      { path: '/health', label: 'health' },
     ].map((u) => ({ ...u, href: `http://localhost:${surface.port}${u.path}` })),
     // Same port on purpose: it is already forwarded by the devcontainer, so the
     // VPC-connected app appears at the URL the developer already has open.
@@ -1350,7 +1394,7 @@ export function buildLinkIndex(surfaces = loadSurfaces()) {
 
 function renderLinksHtml(index) {
   const esc = (s) =>
-    s.replace(/[&<>"]/g, (c) => `&${{ '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot' }[c]};`);
+    s.replace(/[&<>"]/gu, (c) => `&${{ '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot' }[c]};`);
   const row = (f) => `
     <tr>
       <th scope="row"><code>${esc(f.ws)}</code><span class="port">:${f.port}</span></th>
@@ -1390,7 +1434,7 @@ function renderLinksHtml(index) {
 
   <div class="note">
     <strong>These links are not VPC.</strong> Under <code>pn run dev</code> the frames run on Node with
-    <code>env.development</code>, which carries no VPC binding, so <code>/rails-health</code> will always say
+    <code>env.development</code>, which carries no VPC binding, so <code>/health</code> will always say
     <em>not-configured</em>. That is the expected, healthy answer here — it proves the developer loop, not the tunnel.
   </div>
 
@@ -1405,7 +1449,7 @@ function renderLinksHtml(index) {
     Run one frame at a time — each opens its own remote-binding proxy against Cloudflare, and
     ADR 006 is explicit that fifteen at once is what not to do. It binds
     <code>0.0.0.0</code> on that frame's usual port, so the URLs above keep working unchanged;
-    <code>/rails-health</code> should then read <em>Rails health is reachable</em>.
+    <code>/health</code> should then report <code>rails.liveness.kind</code> as <em>ok</em>.
   </div>
   <pre>${esc(index[0]?.vpcCommand ?? '')}</pre>
   <p class="sub">Use “copy command” in the table for any other frame. <code>CLOUDFLARE_API_TOKEN=</code> must be
@@ -1437,7 +1481,7 @@ function modeLinks(surfaces) {
     process.stdout.write(`  ${frame.ws.padEnd(10)} ${frame.urls.map((u) => u.href).join('  ')}\n`);
   }
   process.stdout.write(
-    '\nThese are `next dev`, which has no VPC binding — /rails-health will read not-configured.\n' +
+    '\nThese are `next dev`, which has no VPC binding — /health will read rails not-configured.\n' +
       'To view a frame actually connected over VPC, one at a time:\n\n' +
       `  ${index[0]?.vpcCommand}\n\n` +
       `Clickable index written to ${htmlPath}\n`,
@@ -1480,8 +1524,8 @@ async function resolvesInDns(host) {
 
 function classifyTransportError(error) {
   const text = String(error?.message ?? error);
-  if (/certificate|TLS|SSL|ERR_TLS/i.test(text)) return `TLS failed: ${text}`;
-  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(text)) return `DNS failed: ${text}`;
+  if (/certificate|TLS|SSL|ERR_TLS/iu.test(text)) return `TLS failed: ${text}`;
+  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/iu.test(text)) return `DNS failed: ${text}`;
   return `transport failed: ${text}`;
 }
 
@@ -1495,7 +1539,7 @@ function classifyTransportError(error) {
  * than by a status code, because a 302 on its own is also how `net/apex` and the
  * apex `/` behave.
  */
-const ACCESS_TEAM_DOMAIN = /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//i;
+const ACCESS_TEAM_DOMAIN = /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//iu;
 
 function accessRedirect(response) {
   const location = response.headers.get('location') ?? '';
@@ -1518,7 +1562,7 @@ function accessServiceTokenHeaders() {
 
 /** Anything that would reveal the origin's own address to a browser. */
 function findLocalLeak(text) {
-  return /localhost|127\.0\.0\.1|edge-core|0\.0\.0\.0/.exec(text ?? '')?.[0] ?? null;
+  return /localhost|127\.0\.0\.1|edge-core|0\.0\.0\.0/u.exec(text ?? '')?.[0] ?? null;
 }
 
 async function modeTunnel(report, surfaces) {
@@ -1541,8 +1585,9 @@ async function modeTunnel(report, surfaces) {
 
   report.note(
     SKIP,
-    'Tunnel reachability is not VPC evidence. These frames run on `next dev`/`wrangler dev`, ' +
-      'which carry no VPC binding, so /rails-health answers not-configured by design. See mode `vpc`.',
+    'Tunnel reachability is not VPC evidence: a Tunnel route does not hand a process a Workers ' +
+      'binding. Under `next dev` the Rails half comes from the local Node transport, or reports ' +
+      'not-configured. See mode `vpc`.',
   );
   report.note(
     SKIP,
@@ -1763,23 +1808,23 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
   const identity = health.status === 200 ? parseSurfaceIdentityJson(health.body) : null;
   const brandOk = identity !== null && identity.service === brand && identity.frame === frame;
 
-  const identityStatus = !frameOk ? FAIL : identity === null ? WARN : brandOk ? PASS : FAIL;
+  const identityStatus = frameOk ? (identity === null ? WARN : brandOk ? PASS : FAIL) : FAIL;
   report.record(
     'Tunnel identity',
     key,
     identityStatus,
-    !frameOk
-      ? `HTTP ${landing.status}, "${marker.value}" absent — wrong frame or not rendered`
-      : identity === null
+    frameOk
+      ? identity === null
         ? `HTML carries "${marker.value}"; brand UNPROVEN — /health.json ${health.status}`
         : brandOk
           ? `HTML carries "${marker.value}"; /health.json service=${identity.service} frame=${identity.frame}`
-          : `/health.json says service=${identity.service} frame=${identity.frame}, want ${brand}/${frame} — WRONG SURFACE`,
+          : `/health.json says service=${identity.service} frame=${identity.frame}, want ${brand}/${frame} — WRONG SURFACE`
+      : `HTTP ${landing.status}, "${marker.value}" absent — wrong frame or not rendered`,
   );
 
   // A dev-server asset URL taken from the page it was served with, so the check
   // cannot pass against a stale or guessed hash.
-  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/.exec(landing.body)?.[1] ?? null;
+  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/u.exec(landing.body)?.[1] ?? null;
   const asset = assetPath
     ? await httpGet(`${base}${assetPath}`, 15_000, authHeaders).catch((e) => ({
         status: 0,
@@ -1789,7 +1834,7 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
 
   // 503 not-configured is the correct answer without `--rails`: `next dev` has no
   // VPC binding, so a 200 here would mean the private Podman path is live.
-  const railsHealth = await httpGet(`${base}/rails-health`, 30_000, authHeaders).catch((e) => ({
+  const railsHealth = await httpGet(`${base}/health`, 30_000, authHeaders).catch((e) => ({
     status: 0,
     body: String(e),
   }));
@@ -1802,7 +1847,7 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
     key,
     assetOk && railsOk ? PASS : FAIL,
     `${assetPath ? `${assetPath.slice(0, 42)} ${asset.status}` : 'no _next asset in HTML'}, ` +
-      `/rails-health ${railsHealth.status} ${kind ?? '<unrecognised>'}`,
+      `/health ${railsHealth.status} ${kind ?? '<unrecognised>'}`,
   );
 
   const leak = findLocalLeak(landing.headers.get('location')) ?? findLocalLeak(landing.body);
@@ -1826,15 +1871,15 @@ const GATE_ORDER = [
   'Next.js dev server',
   'Local /health',
   'Local /',
-  'Local /rails-health',
+  'Local /health rails',
   'OpenNext build',
   'workerd/OpenNext preview',
   'Preview /health',
   'Preview /',
-  'Preview /rails-health',
+  'Preview /health rails',
   'Preview(vpc) /health',
   'Preview(vpc) /',
-  'Preview(vpc) /rails-health',
+  'Preview(vpc) /health rails',
   'Preview → Rails VPC',
   'Host port reachability',
   'Tunnel DNS',
@@ -1856,7 +1901,7 @@ const GATE_ABBREVIATIONS = new Map([
   ['Next.js dev server', 'dev'],
   ['Local /health', 'd:hlt'],
   ['Local /', 'd:/'],
-  ['Local /rails-health', 'd:rh'],
+  ['Local /health rails', 'd:rh'],
   ['OpenNext build', 'build'],
   ['workerd/OpenNext preview', 'wd'],
   ['Preview /health', 'p:hlt'],

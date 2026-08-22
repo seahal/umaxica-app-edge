@@ -1,6 +1,8 @@
 # prod
+# `dist/` holds the whole Vite build: `dist/client` (hashed assets plus a byte
+# copy of public/) and `dist/<worker-name>` (the Worker bundle and the output
+# wrangler.json that `wrangler deploy` reads). All generated, none tracked.
 dist/
-public/style.css
 
 # dev
 .yarn/

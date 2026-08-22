@@ -1,0 +1,680 @@
+# The UMAXICA Edge UI shell contract
+
+**Status: normative.** This document is the shared definition of the application
+shell for every Edge deployment unit that serves HTML. Read it against the unit
+you are editing before you change a shell file.
+
+It is prose on purpose. The Edge tier shares no UI code — every unit owns its own
+copy of its shell, stylesheet, theme and i18n config — so there is no
+module whose signature would break when two units disagree. What holds them
+together is this document plus each unit's own `test/ui-shell-contract.test.tsx`,
+and neither replaces the other: the tests prove a unit does what it says, this
+document says what all of them are supposed to do and why.
+
+---
+
+## 1. Scope
+
+Normative for the 19 deployment units that serve HTML — every directory with a
+`wrangler.jsonc` except `tools/vpc-probe`, which is a `probe.mjs` Worker with no
+HTML surface.
+
+| Archetype     | Units                                 | Runtime                        |
+| ------------- | ------------------------------------- | ------------------------------ |
+| **core**      | `{app,com,org}/core`                  | Next.js App Router on OpenNext |
+| **satellite** | `{app,com,org}/{docs,help,info,news}` | Next.js App Router on OpenNext |
+| **apex**      | `{app,com,dev,net,org}/apex`          | Hono JSX                       |
+
+Within an archetype the shell sources are byte-identical across `app`/`com`/`org`
+(and `net`/`dev` for apex); only the TLD literal differs. Treat an archetype as
+one thing: a change that applies to it applies to every unit in it.
+
+`dev/apex` used to sit outside this contract: it had no `wrangler.jsonc` and no
+shell, because it was a Vercel edge function that built HTML from template
+literals. It moved onto Cloudflare Workers and the apex archetype, so it is now
+inside the contract like the other four. `dev/acme`, the Next.js application
+that shared the `.dev` domain, was deleted.
+
+## 2. Why the shell is duplicated
+
+A unit that imports from a sibling cannot be extracted into its own repository.
+`test/deployment-unit-boundaries.test.ts` enforces that, and every unit's
+stylesheet states the working rule in its own header: _"Copy this file when the
+rules change; do not import it from a sibling or a shared package."_
+
+So duplication here is not debt. A shared UI package would couple nineteen
+independently deployed Workers to one release, which is a larger problem than
+three copies of a footer. **The thing to avoid is not duplication — it is
+duplication without a written reason.** That is what §8 is for.
+
+This is also why Tailwind arrives as twenty-one `@theme` blocks rather than one
+shared preset (§3a). Tailwind v4 keeps its theme in CSS, so there is nothing to
+`extends` and nothing to hoist — the duplication has the same reason as the rest.
+
+---
+
+## 3. The AppShell
+
+```text
+<header>
+  <div>                                           the width carrier (§9)
+    <a href="/">UMAXICA</a>                       brand, never an <h1>
+    <div>…</div>                                  actions: Menu / Search / Account
+  </div>
+</header>
+
+<nav id="main-navigation" aria-label="…">…</nav>  only where the unit has one (§5)
+
+<main>…</main>                                    exactly one, carries the <h1>
+<aside>…</aside>                                  optional, complementary only (§6)
+
+<footer>
+  <nav aria-label="…">…</nav>                     utility navigation (§7)
+  <p>…</p>                                        site identity (§7)
+</footer>
+```
+
+Class attributes are omitted because they carry no structure any more: each of
+those elements takes a list of Tailwind utilities, and which utilities is a
+styling question the unit answers, not a contract this document sets.
+
+The fence is `text` rather than `html` on purpose: `oxfmt` reformats embedded
+HTML and would move the right-hand annotations onto lines of their own, where
+they no longer say which element they annotate.
+
+Required:
+
+- Exactly one `<header>`, one `<main>` and one `<footer>` per document, in that
+  source order. Layouts wrap `{children}` rather than supplying their own
+  `<main>`, because every page already renders one and a second would break the
+  landmarks.
+- `<nav>` is a **sibling** of `<header>`, never nested inside it. Header and
+  navigation are separate responsibilities: the header carries brand and global
+  actions, the navigation carries movement inside the application. Keeping them
+  apart is what lets a unit later become a desktop sidebar, a tablet rail or a
+  mobile bottom bar without the header participating in that decision.
+- The brand is an `<a href="/">`, never an `<h1>`. The document's single `<h1>`
+  belongs to the page, inside `<main>`.
+- ARIA never substitutes for a semantic element. Use `<nav>`, not
+  `role="navigation"` on a `<div>`.
+
+The `class` attributes above are illustrative, not normative — and as of the
+Tailwind migration they no longer exist. Every visual rule is a utility now, so
+a class list describes padding and colour rather than structure, and the shell
+is defined by what it emits: the landmark set, the hierarchy, the accessible
+names, and which destinations are reachable. The names that remain load-bearing
+are the ones a test or another document can point at — `id="main-navigation"`,
+and the `aria-label` on each `<nav>`.
+
+Every `test/ui-shell-contract.test.tsx` was rewritten to match: it queries by
+role, landmark, accessible name and document order, and asserts no CSS class at
+all. That is a stricter test, not a looser one. The old assertions would fail
+on a padding change while still passing if a `<nav>` lost its accessible name.
+
+## 3a. Agreed libraries
+
+Three libraries are fixed by decision, so that the archetypes cannot each answer
+the same question differently. None is a licence to add more: a fourth library
+is a decision, not a detail.
+
+| Concern                                                                 | Library                                                | Where it is installed                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- |
+| Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty-one units                         |
+| Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen Next units                       |
+| URL / search-param state                                                | **`nuqs`**, catalog `^2.9.5`                           | **Catalog only — not installed in any unit** |
+
+**`react-aria-components` and `nuqs` do not go into apex.** The four apex units
+run Hono JSX and carry no React at all (`hono` and `@hono/structured-logger` are
+their only dependencies), while both libraries peer-depend on `react` and
+`react-dom`. Adding React to a Hono Worker would be a runtime change, not a
+library addition, so apex keeps implementing the same interaction contract by
+hand. That is an **allowed** archetype difference (§8), and it is the reason
+§4's disclosure requirements are written as behaviour — `aria-expanded`,
+`aria-controls`, button semantics — rather than as a component name: apex has to
+satisfy them without the library.
+
+### Tailwind goes everywhere, but never through a shared config
+
+Tailwind v4 has no JavaScript config file: the theme is declared in CSS with
+`@theme`, inside each unit's own stylesheet. That fits the extraction property
+exactly — there is no root preset to inherit and nothing to `extends`. Each unit
+owns:
+
+- its own `postcss.config.mjs` (the sixteen Next units), naming
+  `@tailwindcss/postcss` and nothing else; and
+- its own stylesheet carrying its own `@theme` block.
+
+The five apex Workers build through Vite, so they run `@tailwindcss/vite` like
+the frames run `@tailwindcss/postcss`. This was not always true: `wrangler
+deploy` bundles the entrypoint and copies `public/` byte for byte, so before
+Vite there was no bundler in that path at all and the units compiled CSS with
+`@tailwindcss/cli` into a `public/style.css` that could not carry a content
+hash. Vite emits the stylesheet into the client build with a hash in its name,
+which is what lets `public/_headers` mark it `immutable` — an unhashed asset is
+revalidated on every document, because Cloudflare serves static assets as
+`public, max-age=0, must-revalidate` unless the filename is fingerprinted.
+
+`src/assets.ts` is the single place each unit names the resulting URL. The whole
+`dist/` tree is gitignored, like the other generated artefacts in AGENTS.md.
+
+**Do not introduce a shared Tailwind preset, a shared theme package or a root
+`postcss.config`.** The duplication is the same deliberate duplication as §2, and
+`test/deployment-unit-boundaries.test.ts` enforces it.
+
+### React Aria is `<Button>` here, not `<Disclosure>`
+
+The Menu disclosure in `{app,com,org}/core/src/components/app-chrome.tsx` is the
+first consumer, as this section anticipated, and their three `knip.jsonc`
+suppressions are gone. It imports **`Button`** and keeps `aria-expanded` and
+`aria-controls` explicit.
+
+`<Disclosure>` / `<DisclosurePanel>` were evaluated and rejected, for a reason
+that is worth recording because it will come up again. React Aria's disclosure
+owns its panel's visibility: `useDisclosure` gives the collapsed panel
+`hidden` on the server render and `aria-hidden` throughout, then swaps in
+`hidden="until-found"` from an effect. §5 requires the navigation to be visible
+above the breakpoint **with no JavaScript at all**, which is free today because
+visibility is a media query. Handing the panel to the library would mean deriving
+`isExpanded` from a client-side media query, so every desktop reader would
+receive HTML in which the navigation is hidden and absent from the accessibility
+tree until hydration finishes — and `aria-hidden` cannot be undone from CSS.
+
+`Button` is still worth having: it renders a real `<button type="button">`,
+normalises press across mouse, touch, pen and keyboard on the one control a
+phone user taps, and publishes `data-hovered` / `data-pressed` /
+`data-focus-visible`, which `tailwindcss-react-aria-components` turns into the
+`hovered:` and `pressed:` variants. That plugin is installed only in the three
+core units — the units that actually render a React Aria component.
+
+The error-boundary reset buttons stay native `<button>`s everywhere. They
+hand-maintain no keyboard, focus or ARIA behaviour for the library to take over,
+and §1 of the decision hierarchy puts semantic HTML above a component library.
+
+### `react-aria-components` is the only entry point
+
+`react-aria-components` is built on `react-aria` and `react-stately`, which it
+pins exactly (`3.51.0` and `3.49.0`) and imports at roughly 790 sites across 104
+subpaths, down to internals like `react-aria/private/collections/BaseCollection`.
+Those packages therefore exist in `pnpm-lock.yaml`, and that is fine — they are
+Adobe's implementation of the library we chose, not a second library we picked.
+
+**Our code never imports them.** Everything comes from `react-aria-components`
+and nothing else in that family. Two things enforce it:
+
+- No unit declares `react-aria`, `react-stately` or any `@react-aria/*`,
+  `@react-stately/*`, `@react-types/*` or `@internationalized/*` package, so
+  pnpm's strict layout already makes a direct import unresolvable from a unit.
+- Each of the fifteen units bans them by name in `.oxlintrc.json`, as a second
+  `no-restricted-imports` pattern group alongside the `shared/` one. Verified to
+  fire: importing `react-aria` fails `lint`, importing
+  `react-aria-components` does not.
+
+The one foreseeable exception is `@internationalized/date`, whose `CalendarDate`
+is the value type `react-aria-components`' date components require. Nothing uses
+those components today. If that changes, unban that single package here and in
+the fifteen configs deliberately — do not work around the rule at a call site.
+
+`react-aria-components` is installed across all fifteen Next units up front,
+ahead of any consumer, so that the first unit to build an interactive control
+does not get to choose a different library. The three core units now import it;
+the twelve satellites still do not, and each of those twelve keeps an
+`ignoreDependencies` entry in its `knip.jsonc` naming it. Those entries are
+placeholders for work not yet done: **delete the entry from a unit the moment
+that unit gains its first consumer.** Verified that they are load-bearing rather
+than decorative — knip reports the dependency as unused the moment the entry is
+removed.
+
+`tailwindcss` sits in the same list for a different reason: it is genuinely
+used, but only from CSS (`@import 'tailwindcss'`), and knip resolves
+`@tailwindcss/postcss` from `postcss.config.mjs` without parsing CSS at-rules.
+The comment above each entry says which of the two cases it is.
+
+`nuqs` stays a catalog entry with no unit depending on it, because no surface in
+the repository uses a search parameter and `nuqs` v2 additionally requires a
+`<NuqsAdapter>` in the root layout. When the first such surface exists, add
+`"nuqs": "catalog:"` to that unit alone and wire the adapter there.
+
+## 4. Header
+
+Brand on the left, linking to this FQDN's homepage. Actions on the right.
+
+The actions slot is deliberately empty in the satellite and apex archetypes. A
+control that toggles nothing is worse than no control, and those units have no
+main navigation to toggle. The slot exists so Search, Preferences, Account and a
+Menu disclosure have a defined home when those surfaces are built.
+
+Where a menu exists it is a **disclosure**, so it is a `<button type="button">`,
+not a link: it toggles content in place and navigates nowhere. It carries
+`aria-expanded` reflecting its state and `aria-controls` pointing at the id of
+the element it toggles.
+
+Reference: `app/core/src/components/app-chrome.tsx` (the only client component the
+shell needs — a disclosure has state; everything else stays a Server Component,
+and labels arrive as plain strings so the dictionary is never shipped to the
+browser).
+
+## 5. Main navigation
+
+Every entry must be a route the unit actually serves. The cautionary example is
+real: `/rails-health` sat in `*/core`'s navigation and had been dead since ADR 009
+removed the route.
+
+Absent where the unit serves a single surface — inventing destinations to fill a
+navigation produces dead links, which is worse than no navigation.
+
+Visibility state may only apply **below** the breakpoint. Above it the navigation
+is always shown, so no menu state — and no absent JavaScript — can strand a
+desktop user. This is encoded in the navigation's own utilities in
+`app/core/src/components/app-chrome.tsx`: `hidden data-[open=true]:grid
+wide:grid`. Below the breakpoint the `data-open` attribute decides; at `wide:`
+the media query shows it unconditionally, with no state consulted.
+
+This requirement is the reason the trigger is a React Aria `<Button>` rather
+than a `<Disclosure>`; see §3a.
+
+Current entries (`*/core` only, from `src/app/(page)/layout.tsx`): Home, Explore,
+Messages, Notifications, Configuration, About. All six are served routes.
+
+## 6. Main and aside
+
+`<main>` is the single page-content landmark and carries the page's `<h1>`.
+
+`<aside>` is **complementary** content — related links, contextual panels,
+supplementary notes. It is not navigation; navigation is `<nav>`. Note that
+`*/core`'s left sidebar is correctly a `<nav>` today, not an aside.
+
+No unit renders an `<aside>` yet. The rules are stated here first so that the
+three archetypes do not each invent their own meaning for it:
+
+- Optional. A unit without complementary content does not get an empty one.
+- A sibling of `<main>`, not nested inside it. An `<aside>` nested inside
+  `<article>`, `<section>`, `<nav>` or another `<aside>` does **not** expose the
+  `complementary` landmark role, so nesting silently removes the thing it was
+  added for.
+- In DOM order it follows `<main>`, so source order matches reading priority even
+  where CSS places it first.
+- More than one per document requires distinct accessible names
+  (`aria-labelledby` pointing at its own heading, or `aria-label`).
+- It never carries the page's `<h1>`, and it is never the only route to a
+  destination — anything reachable solely from an aside is unreachable to a
+  reader who skips complementary content.
+
+## 7. Footer
+
+Two layers, in this order.
+
+**Upper — utility navigation.** A `<nav>` with an accessible name. It links only
+to routes that exist:
+
+| Item        | Where it points | Status                                                                                   |
+| ----------- | --------------- | ---------------------------------------------------------------------------------------- |
+| About       | `/about`        | present on all 19 units                                                                  |
+| Preferences | —               | **route removed** — every `test/ui-shell-contract.test.tsx` now asserts it is not linked |
+| Privacy     | —               | **no route, no reusable text** → not linked                                              |
+| Terms       | —               | **no route, no reusable text** → not linked                                              |
+
+A plausible dead link is worse than a missing one. Privacy and Terms stay
+unlinked until a route exists and its text has been written and reviewed; legal
+copy is not invented to fill a footer slot.
+
+**Lower — site identity.** `© {year} UMAXICA` on the left, this unit's canonical
+homepage URL on the right, displayed as the URL and linked to itself:
+
+```html
+<a href="https://jp.umaxica.app/">https://jp.umaxica.app/</a>
+```
+
+Every unit renders both halves, and every `test/ui-shell-contract.test.tsx`
+asserts the link's `href` and its text. The row is
+`flex flex-wrap justify-between`, which gives `copyright ⟷ URL` on a wide
+viewport and natural stacking on a phone, with no media query.
+
+Where the canonical origin comes from — and it is **not** `wrangler.jsonc`. Every
+unit pins `"routes": []` deliberately: the development Cloudflare Tunnel owns the
+hostname, and a custom domain and a Tunnel Public Hostname cannot both own one
+name (ADR 008). `vars` carries only `EDGE_ENV`, `NODE_ENV` and `BRAND_NAME`. The
+origin literals that do exist in-repo are:
+
+| Archetype       | Source                                                                          | Example                                                 |
+| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| core, satellite | `src/app/sitemap.ts`, `src/app/robots.ts`                                       | `https://jp.umaxica.app`, `https://docs-jp.umaxica.app` |
+| core also       | `src/lib/core-dispatch.ts` `PUBLIC_CORE_HOST`                                   | `jp.umaxica.app`                                        |
+| apex            | `src/page-content.tsx` `ABOUT_CANONICAL_URL`; `src/root-redirect.ts` `SITE_URL` | `https://umaxica.app`                                   |
+
+Never derive the origin from a folder name. There is no origin resolver — the
+literal is simply repeated two or three times per unit, which is itself a drift
+risk worth collapsing when the URL is implemented.
+
+---
+
+## 8. The three archetypes: allowed difference vs drift
+
+This table is the point of the document. A difference that is **allowed** follows
+from what the unit is. A difference marked **drift** has no reason anyone
+recorded, and the archetypes should converge on one value when someone next has
+cause to touch it.
+
+### Allowed
+
+| Difference               | core                        | satellite               | apex                                                    | Why it is allowed                                                                                                        |
+| ------------------------ | --------------------------- | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Main navigation          | yes, 6 routes               | none                    | none                                                    | Satellites and apex serve a single surface; inventing destinations produces dead links                                   |
+| Menu button              | yes                         | none                    | none                                                    | A disclosure with nothing to disclose is a dead control                                                                  |
+| Where the shell is wired | `src/app/(page)/layout.tsx` | `src/app/layout.tsx`    | `src/renderer.tsx`                                      | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free |
+| CSS delivery             | `globals.css` via PostCSS   | `style.css` via PostCSS | `src/style.css` → hashed `/assets/style-*.css` via Vite | apex builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)            |
+| Client components        | one (the disclosure)        | none                    | n/a                                                     | Only state justifies a client component                                                                                  |
+| Breakpoint               | 800px (`wide:`)             | none                    | none                                                    | Only core has a layout that must reflow; wrapping flex rows need no media query                                          |
+| React Aria               | **`Button`, imported**      | installed, no importer  | **not possible**                                        | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)           |
+| Tailwind RAC plugin      | installed                   | none                    | none                                                    | The plugin only earns its place where a React Aria component is actually rendered                                        |
+
+### Drift — resolved
+
+The three archetypes carried three token sets: three container widths, three body
+backgrounds, three body-text colours, two border greys, two unit systems and two
+Japanese labels for About. That table is gone because the values are.
+
+Adopting Tailwind forced the decision rather than deferring it — a utility names
+a scale step, so `1200px`, `1120px` and `80rem` cannot all survive as
+`max-w-*`. One token set now applies to all nineteen shell units, drawn from
+Tailwind's stock scale except where §9 pins a value:
+
+| Concern           | Resolved value                                             |
+| ----------------- | ---------------------------------------------------------- |
+| Container         | `max-w-7xl` (80rem)                                        |
+| Shell row padding | `px-4`, `wide:px-8` where the unit has a breakpoint        |
+| Header separator  | `border-b border-gray-200` — the apex box-shadow is gone   |
+| Footer border-top | `border-t border-gray-200`                                 |
+| Body background   | `bg-gray-50`                                               |
+| Surfaces          | `bg-white` (header, footer, core's navigation)             |
+| Body text         | `text-gray-900`; muted `text-gray-600`                     |
+| Brand             | `text-xl font-bold tracking-wide`, inheriting the body ink |
+| Link colour       | `text-brand` — `--color-brand`, the one pinned value (§9)  |
+| Units             | Tailwind's scale throughout; `min-h-11` is exactly 44px    |
+| `<main>` class    | none — `<main>` is the landmark, utilities do the layout   |
+| About label (ja)  | `概要` on core, `このサイトについて` on satellite and apex |
+
+The About label is deliberately **not** resolved here: it is a copy decision, not
+a token, and merging two Japanese phrasings needs someone who owns the wording.
+It stays recorded as open gap 6 in §16.
+
+**Rule for any future drift:** a surface adopts the token set above. Do not invent
+a second one. A new value belongs in `@theme` in every unit that needs it, with
+the same name, or it is not a token.
+
+## 9. Shared tokens
+
+These resolve to the same computed value in all three archetypes and must stay
+that way. They are now written the same way too — as Tailwind utilities off one
+scale — which is what removed the `Units` row from §8.
+
+| Token          | Utilities                                                                     | Value                     |
+| -------------- | ----------------------------------------------------------------------------- | ------------------------- |
+| Focus ring     | `:focus-visible` base rule using `var(--color-brand)`                         | `2px` solid, offset `2px` |
+| Minimum target | `min-h-11` on brand, actions, utility links                                   | 44px, exactly             |
+| Header height  | `min-h-14` on the header row                                                  | 56px, exactly             |
+| Width carrier  | `mx-auto w-full max-w-7xl px-4` (`wide:px-8` where the unit has a breakpoint) | 80rem                     |
+| Header row     | `flex flex-wrap items-center justify-between gap-4`                           | gap 16px                  |
+| Footer padding | `py-4`                                                                        | 16px                      |
+| Utility nav    | `flex flex-wrap gap-x-6`; links `text-sm text-brand min-h-11`                 | gap 24px, 0.875rem        |
+| Identity row   | `flex flex-wrap justify-between gap-2 text-sm text-gray-600`                  | gap 8px, 0.875rem         |
+| Link colour    | `text-brand`                                                                  | `#2563eb`                 |
+
+`--color-brand` is the only colour this document pins by literal value, and the
+only one that is not a Tailwind stock colour. It is declared in every unit's
+`@theme`. The focus ring is the one place a base element rule is still correct:
+prose links inside page copy are not components, and a per-component utility
+would miss them.
+
+The three interaction states React Aria publishes on the menu trigger —
+`hovered:`, `pressed:`, `focus-visible:` — come from
+`tailwindcss-react-aria-components` (§3a). Do not reimplement them as bespoke
+`[data-…]` selectors.
+
+## 10. Typography
+
+**Ownership moved with the Tailwind migration.** There is no longer a separate
+`typography.css` (apex: `typography-style.ts`) — those twenty files are gone,
+and each unit has exactly one stylesheet. The facts below are split between two
+places inside it, by whether Tailwind can express them:
+
+| Fact                                                                                            | Where it lives now                                                                                                                                                    |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Font stack                                                                                      | `--font-sans` in `@theme`. Preflight applies it to `html` on its own, because `--default-font-family` resolves to `--font-sans`; nothing carries a `font-sans` class. |
+| Body and heading leading                                                                        | `--leading-body` / `--leading-heading` in `@theme` → `leading-body` on `<body>`, `leading-heading` on headings                                                        |
+| `line-break`, `word-break: auto-phrase`, `text-spacing-trim`, `text-autospace`, `overflow-wrap` | An `@layer base` block. Tailwind has no utility for most of these, and they must reach every element in the document rather than the ones a unit happens to write.    |
+
+The split is the point: a fact that Tailwind can name is a token, so it is
+reusable and greppable; a fact it cannot name stays an element rule with the
+reason written above it. Nothing declares a typographic property twice.
+
+On the Next units `--font-sans` names `var(--font-inter, 'Noto Sans JP')` first,
+because `next/font` supplies Inter through a CSS variable. That variable is
+`--font-inter`, **not** `--font-sans`: pointing both at the same name would make
+the theme token reference itself. The `'Noto Sans JP'` fallback inside the
+`var()` is load-bearing — `global-error.tsx` and `global-not-found.tsx` render
+their own `<html>` without the `next/font` class, and a bare `var()` with no
+fallback would invalidate the whole declaration there.
+
+- **Font stack**: `--font-sans` (Inter, `latin` subset only) then `Noto Sans JP`,
+  Hiragino, Yu Gothic, Meiryo, then the generic keywords. Noto Sans JP is named
+  first and deliberately **not** downloaded — it is already the system face on
+  Android, ChromeOS and most Linux, and Hiragino and Yu Gothic sit close behind
+  on macOS and Windows. Order matters: `ui-sans-serif` and `system-ui` resolve to
+  a face that already has Japanese glyphs, so anything after them is unreachable.
+- `line-height: 1.75` — Japanese body text needs more leading than a Latin-tuned
+  1.5. Headings drop to `1.3`, because Japanese glyphs fill the em box and
+  Latin-tight leading collides them.
+- `line-break: strict` — 行頭禁則: small kana, 長音符 and punctuation never begin a
+  line.
+- `word-break: normal` for body text, never `break-all`. Identifiers (`code`,
+  `kbd`, `samp`, `pre`) are the exception and may break mid-token.
+- `overflow-wrap: anywhere` — without it a long URL, UUID or FQDN overflows its
+  box. This is what will keep the footer's canonical URL inside the identity row
+  on a narrow viewport.
+- `word-break: auto-phrase` + `text-wrap: balance` on headings — break at 文節
+  boundaries, and even out line lengths. Separate concerns: one picks where a
+  break may fall, the other how many lines there are.
+- `text-align: justify` is deliberately absent. Japanese can break between almost
+  any two characters so justification "works", but `text-justify` is unimplemented
+  in WebKit, and at 320px a single overflowing character opens gaps across the
+  whole line. Readability outranks a flush right edge.
+
+Applied unconditionally rather than under `:lang(ja)`: every rule is either
+CJK-only in effect or desirable in both languages, and the error and offline
+documents are separate root documents a `:lang()` selector would miss.
+
+## 11. Responsive behaviour
+
+Phone, tablet and desktop must all work. Requirements:
+
+- DOM order equals visual order. Do not reorder the header, navigation or footer
+  visually against their source order.
+- The footer identity row stacks rather than reorders: `copyright ⟷ URL` on a wide
+  viewport, copyright above URL on a narrow one, achieved by wrapping, not by a
+  media query.
+- **800px is the only breakpoint in the repository, and the theme now enforces
+  it.** Every unit's `@theme` opens with
+
+  ```css
+  --breakpoint-*: initial;
+  --breakpoint-wide: 50rem;
+  ```
+
+  The first line deletes Tailwind's five stock breakpoints, so `sm:`, `md:`,
+  `lg:`, `xl:` and `2xl:` do not exist and a second breakpoint cannot be written
+  without editing that block. The rule is mechanical rather than a convention
+  someone has to remember, and the compiled CSS is checkable: a Next frame emits
+  exactly one `@media (min-width: 50rem)`, and apex emits none at all.
+
+  Header and footer rows are wrapping flex rows, so they hold from phone to
+  desktop without a media query at all; reach for `wide:` only when a layout
+  genuinely has to reflow, as `*/core`'s sidebar does.
+
+## 12. Accessibility
+
+Required, and already true:
+
+- Landmarks: `<header>`, `<nav>`, `<main>`, `<footer>`, each once per document.
+- One `<h1>` per document, inside `<main>`.
+- Links navigate, buttons act. A disclosure is a button.
+- Visible focus, at the shared focus-ring value in §9.
+- 44px minimum interactive target.
+- Accessible names on every `<nav>` — there is more than one per document, so
+  `aria-label` is required to tell main navigation from utility navigation.
+- The disclosure is operable by keyboard and reflects state in `aria-expanded`.
+
+Not yet true anywhere. Measured across all 19 units:
+
+| Gap                                      | Target behaviour when implemented                                                                                                                                                                                                                                                                          |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No skip link** (0 units)               | First focusable element in the document, visually hidden until focused, `href="#main-content"`, with `<main id="main-content" tabindex="-1">` so the target actually receives focus. Same markup in all three archetypes.                                                                                  |
+| **No `aria-current`** (0 units)          | `aria-current="page"` on the main-navigation link matching the current route. Applies to `*/core` today; to any unit that gains a navigation later.                                                                                                                                                        |
+| **No reduced-motion handling** (0 units) | There is currently **no motion anywhere** — no `transition`, `animation`, `@keyframes` or `scroll-behavior` in any shell stylesheet. So nothing is broken today. The rule is a precondition: any motion introduced into the shell ships with `@media (prefers-reduced-motion: reduce)` in the same change. |
+
+Do not close these unit-by-unit. Each is an archetype-wide change, and a skip link
+that exists on four units out of nineteen is worse than none, because a reader
+learns to expect it.
+
+## 13. Internationalisation
+
+Three mechanisms coexist. This is recorded as fact, not endorsed:
+
+| Archetype | Mechanism                                                                                          | Negotiates?                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| core      | `src/i18n/dictionaries/{en,ja}.json` via `getDictionary()`                                         | **No** — every call site passes `defaultLocale` literally, so `en.json` exists but is unreachable |
+| satellite | `src/i18n/config.ts` holds `defaultLocale` only; labels are Japanese literals in the components    | No                                                                                                |
+| apex      | inline `LABELS: Record<'en'\|'ja', …>` in `src/shell.tsx`, plus `hono/language` `languageDetector` | **Yes** — `supportedLanguages: ['en','ja']`, `fallbackLanguage: 'en'`                             |
+
+Labels that must correspond in meaning across locales regardless of mechanism —
+About, Privacy, Terms, Preferences, Menu. In use today:
+
+| Concept                              | ja                                                     | en                   |
+| ------------------------------------ | ------------------------------------------------------ | -------------------- |
+| About                                | `概要` (core) / `このサイトについて` (satellite, apex) | `About`              |
+| Preferences                          | `環境設定`                                             | `Preferences`        |
+| Menu                                 | `メニュー`                                             | `Menu`               |
+| Main navigation (accessible name)    | `メインナビゲーション`                                 | `Main navigation`    |
+| Utility navigation (accessible name) | `ユーティリティナビゲーション`                         | `Utility navigation` |
+
+### Unresolved: apex declares a language it may not be writing in
+
+`src/create-apex-app.ts` installs `languageDetector({ supportedLanguages: ['en','ja'],
+fallbackLanguage: 'en' })`, and `src/shell.tsx` (`labelsFor()`) and
+`src/page-content.tsx` both switch on the negotiated value — so an apex response
+can be rendered entirely in English. But `src/renderer.tsx` emits
+`<html lang={defaultLocale}>`, always `ja`, and `test/html-lang-contract.test.tsx`
+pins exactly that, even though its own docstring says `<html lang>` _"must state
+the language the document is actually written in."_
+
+So on the code path, an English-negotiated apex page declares Japanese. This is
+stated rather than fixed because a change has consequences on both sides: `lang`
+drives `word-break: auto-phrase`, which is meant to run on Japanese text only, and
+the four apex HTML emitters (renderer, health page, status pages, offline page)
+currently derive `lang` from one constant on purpose. Confirm with a request-level
+check (`Accept-Language: en`) before changing either half.
+
+Do not unify the three mechanisms just to have one. Each stays inside its unit;
+what has to match is the meaning of the labels, not the machinery.
+
+## 14. Title and metadata
+
+```
+Root:  UMAXICA ({TLD})
+Page:  {LOCALIZED_PAGE_TITLE} — UMAXICA ({TLD})
+```
+
+- EM DASH `—`. Not a hyphen, not a pipe.
+- `UMAXICA` in exact uppercase; TLD uppercase and matching the deployment family.
+- Exactly one non-empty `<title>` in the final HTML.
+- Satellite roots carry the product name: `Docs — UMAXICA (APP)`.
+- **No surface or runtime name may appear in a user-facing title** — not `auth`,
+  `core`, `apex`, `side`, `edge`, `next`, `hono`, `workers`, `cloudflare` or
+  `opennext`. This is what lets Rails and Edge split routes inside one FQDN
+  invisibly to the reader.
+
+Two mechanisms, one emitted contract: Next units use Metadata `title.default` +
+`template`; apex uses `buildBrandTitle()` in `src/brand.ts` rendered through
+`<SeoHead>` in `src/seo.tsx`. `test/html-title-contract.test.ts` at the repository
+root is the single owner and checks the **final HTML**, not the source, across
+every unit, page, error document and 429 response.
+
+## 15. Surfaces that must not get the shell
+
+A machine-readable or failure document with navigation in it is worse than one
+without.
+
+| Surface                                                             | What it is                                                                                                                                                                                                   |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/health` (core, satellite)                                         | **JSON.** Edge state and Rails liveness in one document; `no-store`, `X-Robots-Tag: noindex`; **503 when Rails liveness fails** (ADR 009). Not a page. Do not add chrome, do not change the status contract. |
+| `/health`, `/health.html` (apex)                                    | **HTML**, but chrome-free: no `<header>`, no navigation, a `<dl>` of Worker status and a bare `<footer>© year BRAND</footer>` that is deliberately _not_ the shell footer.                                   |
+| `/health.json` (apex)                                               | JSON.                                                                                                                                                                                                        |
+| `/revision`                                                         | JSON.                                                                                                                                                                                                        |
+| `robots.txt`, `sitemap.xml`                                         | Generated routes.                                                                                                                                                                                            |
+| apex `/`                                                            | A region redirect, not a document.                                                                                                                                                                           |
+| 429 responses                                                       | Hand-written HTML; title contract applies, shell does not.                                                                                                                                                   |
+| `error.tsx`, `global-error.tsx`, `global-not-found.tsx`, `/offline` | Chrome-free by design. `global-error` and `global-not-found` replace the root layout entirely, which is correct for a failure document.                                                                      |
+
+Note that `/health` means different things in different archetypes — Edge+Rails
+with a 503 path on core and satellite, Worker-only with a 200 on apex. That is a
+real difference in what the endpoint answers, not a shell question, and it is
+recorded here only so nobody "unifies" the two by accident.
+
+## 16. Conformance and open gaps
+
+Conforming today, all 19 units: landmark set and order; brand as link, not
+heading; single `<h1>` in `<main>`; header actions slot; navigation as a sibling
+of the header; two-layer footer with a named utility nav and a rendered canonical
+URL; no dead links; the title contract; chrome-free status surfaces; the shared
+tokens in §9; the typography rules in §10; one token set across all three
+archetypes (§8); one breakpoint, enforced by the theme (§11).
+
+Closed since the last revision:
+
+- The footer identity row now renders the canonical URL on all 19 units (§7).
+- The three token sets are one (§8).
+- The status surfaces that shipped unstyled — apex's 404/500/offline and health
+  error documents, every `global-error.tsx`, `*/core`'s `unauthorized.tsx` —
+  are styled, because a linked or imported stylesheet costs nothing.
+
+Open:
+
+1. No `<aside>` exists anywhere (§6) — the slot is defined, nothing is drawn.
+2. No skip link, no `aria-current` (§12) — 19 units.
+3. No reduced-motion handling (§12) — currently vacuous; becomes required the
+   moment motion is added. Note that Tailwind ships a `motion-reduce:` variant,
+   so the precondition is now one utility rather than a media query to author.
+4. Two Japanese labels for About: `概要` vs `このサイトについて` (§8, §13). Left
+   open deliberately — it is a copy decision, not a token.
+5. Three i18n mechanisms; core carries an `en.json` it never reaches (§13).
+6. apex may declare `lang="ja"` on an English document (§13).
+7. Privacy and Terms have no route and no text (§7).
+8. The canonical origin literal is repeated 2–3× per unit with no resolver (§7).
+9. `react-aria-components` is installed in twelve satellite units with no
+   importer, so twelve `knip.jsonc` files carry an `ignoreDependencies`
+   suppression (§3a). Each is deleted when its unit gains a consumer. The three
+   core entries are already gone.
+10. The satellites' 429 document, built as a string in `src/middleware.ts`, is
+    the one HTML surface with no stylesheet. Middleware runs before the route
+    that knows the hashed CSS chunk's URL, so there is nothing to link; it stays
+    unstyled semantic HTML rather than gaining a hand-maintained inline copy.
+
+## 17. Changing this contract
+
+- A shell change lands in the unit, in this document, and in that unit's
+  `test/ui-shell-contract.test.tsx` — in the same commit. A contract that is
+  edited in only one of the three stops being a contract.
+- A change that applies to an archetype applies to **every** unit in it. Partial
+  rollouts of an accessibility feature are worse than not shipping it.
+- An intentional difference goes in the §8 _allowed_ table with its reason. If you
+  cannot write the reason, it is drift, and it belongs in the _drift_ table
+  instead — where the next reader can find it rather than rediscover it.
+- Do not resolve duplication by introducing a shared UI package, a shared
+  Tailwind preset, a shared theme file or a root `postcss.config`. The extraction
+  property is load-bearing and machine-checked.
+- Visual rules belong in the markup as utilities. A new CSS rule needs a written
+  reason for why a utility cannot express it — the two that qualify today are the
+  focus ring, which has to reach prose links, and the Japanese line-breaking
+  properties, which Tailwind has no utility for. `@apply` is not a reason: it
+  rebuilds the class layer this migration removed.
+- A repeated run of utilities is a component, not a CSS class. That is what
+  `PageMain`, `PageHero`, `SiteHeader` and `SiteFooter` are for.

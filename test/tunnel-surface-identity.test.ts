@@ -22,6 +22,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -43,7 +44,7 @@ const routePath = (workspace: string) => `${workspace}/src/app/health.json/route
 
 /** Read a `const NAME = 'value';` declaration out of a route copy. */
 function readStringConstant(source: string, name: string): string | undefined {
-  return new RegExp(`const ${name} = '([^']+)';`).exec(source)?.[1];
+  return new RegExp(`const ${name} = '([^']+)';`, 'u').exec(source)?.[1];
 }
 
 describe('published surface identity', () => {
@@ -81,8 +82,8 @@ describe('published surface identity', () => {
       // parameter list has no `Request`, and `next/headers` is the other way in.
       // Matching on the word `headers` instead would catch the `ResponseInit`
       // below, which is an ordinary outbound header and not a read of anything.
-      expect(source).toMatch(/export async function GET\(\)/);
-      expect(source).not.toMatch(/from 'next\/headers'/);
+      expect(source).toMatch(/export async function GET\(\)/u);
+      expect(source).not.toMatch(/from 'next\/headers'/u);
     },
   );
 

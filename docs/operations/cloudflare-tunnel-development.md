@@ -6,6 +6,23 @@ Make the local Edge development environment — the Hono apex workers and the Ne
 frames running under Podman — reachable from its development / staging FQDNs through Cloudflare
 Tunnel, so a browser anywhere can load the surface a developer is editing.
 
+## Note: `/rails-health` was merged into `/health` (2026-08-12)
+
+`/rails-health` no longer exists on any frame. Each frame's `/health` now answers for both halves —
+Edge's own state and Rails' liveness — in one document, and returns 503 when either half is down.
+See `adr/009-rails-health-entrypoint-and-dispatch-operability.md`.
+
+To read the Rails half:
+
+```bash
+curl -s 127.0.0.1:5406/health | jq '.rails.liveness'
+# { "kind": "not-configured", "latency_ms": 0 }   under `next dev`, which has no VPC binding
+```
+
+The contract tables and gate descriptions below are current. **The recorded observation tables
+further down are not rewritten** — they are measurements taken on a date, and at that date the route
+was `/rails-health`. Read a `/rails-health` column in a results table as `/health`'s `rails` field.
+
 ## Ownership: one connector, in the Rails repository
 
 Edge never runs `cloudflared` and never holds its token. The system has exactly one connector and
@@ -66,9 +83,11 @@ Out of scope:
 - **Rails.** Its ingress (`core-jp.*`, `side-jp.*`) is unchanged.
 - **Cloudflare Access on the twelve content frames.** Deferred until the four apexes are proven.
   Access on the apexes is in scope — see "Cloudflare Access".
-- **`dev/apex` and `dev/acme`.** The `.dev` zone is delegated to Vercel DNS
-  (`ns1/ns2.vercel-dns.com`), not Cloudflare, and neither workspace binds anything but container
-  loopback.
+- **`dev/apex`.** It deploys to Cloudflare Workers now, but the `.dev` zone is still delegated
+  to Vercel DNS (`ns1/ns2.vercel-dns.com`), so Cloudflare has no hostname to publish it on and the
+  workspace binds container loopback only. Moving the zone to Cloudflare DNS is the prerequisite
+  for both a custom domain and the `www` redirect rule — see
+  `docs/operations/net-www-canonicalisation.md`. (`dev/acme` was deleted.)
 
 ## Architecture
 
@@ -129,7 +148,7 @@ Cloudflare Workers runtime traffic is a different graph and does not pass throug
 
 ```text
 local workerd (pnpm preview:vpc) ── remote VPC binding ── development VPC Service ── Tunnel ── Rails
-deployed Worker                  ── production VPC binding (absent: fails closed)
+deployed Worker                  ── production VPC binding ── (bootstrap) the same development VPC Service ── Tunnel ── Rails
 ```
 
 A Tunnel route does not turn a local Node process into a Workers runtime, and it does not supply a
@@ -180,7 +199,7 @@ records it as its own outcome rather than a failure.
 | content frame `/`                    | 200, HTML containing `UMAXICA <Frame>`                 | identifies the FRAME only. The string is the same in all three brands' copies, so it cannot say which brand answered                                                                                                            |
 | `info` `/health.json`                | 200, `service` equals the brand, `frame` equals `info` | build-time literals, the content-frame equivalent of the apexes' `service`. This is the only response-level proof against a brand mix-up on a content frame. `docs`/`news`/`help` do not have it yet — see "Known limitations"  |
 | content frame `/_next/static/...`    | 200                                                    | asset URL taken from the page that referenced it, never guessed                                                                                                                                                                 |
-| content frame `/rails-health`        | **503**, `not-configured`                              | `next dev` has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim                                                                                                                |
+| content frame `/health`              | **503**, `rails.liveness.kind` `not-configured`        | `next dev` has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim. The `edge` half of the same document is still `ok` — that is how the two are told apart                       |
 
 ## Verification procedure
 
@@ -219,7 +238,7 @@ pnpm run check:tunnel:apex
 | `acs`   | Access, both halves. A 302 to the `*.cloudflareaccess.com` team domain **passes** the unauthenticated half and proves the connector was never contacted; no Access at all is a **WARN**. Without a service token the remaining gates are **BLOCKED** — unproven, deliberately not PASS. The login URL's query string carries a JWT and is never logged |
 | `orig`  | the connector reached a listening origin. 502/503/521/522/523/530 are reported **BLOCKED**, meaning "that dev server is not running" — an ordinary state, not a failure                                                                                                                                                                                |
 | `ident` | the intended application answered (apex `service`, or the frame marker in the HTML)                                                                                                                                                                                                                                                                    |
-| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames `_next` asset and `/rails-health`                                                                                                                                                                                                                                        |
+| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames `_next` asset and `/health`                                                                                                                                                                                                                                              |
 | `leak`  | no `localhost`, `127.0.0.1`, `edge-core`, or `0.0.0.0` in the redirect target or body                                                                                                                                                                                                                                                                  |
 
 It is deliberately excluded from `check:connectivity` (`all`), because it depends on hostnames
@@ -311,9 +330,9 @@ waits until stale HTML is actually observed. If it is, bypass cache on the sixte
 5 describes, and note that `public/_headers` (`/_next/static/* → immutable`) is interpreted by
 Workers Assets and does not apply on this path.
 
-**Do not add ingress for:** `{app,com,org}/core` (5405/5105/5305, out of scope), `dev/apex` and
-`dev/acme` (5501/5502, out of scope), the wrangler OAuth callback (8976), or the wrangler
-inspectors (9101/9201/9301/9401, not published at all).
+**Do not add ingress for:** `{app,com,org}/core` (5405/5105/5305, out of scope), `dev/apex`
+(5501, out of scope while `.dev` is off Cloudflare DNS), the wrangler OAuth callback (8976), or the
+wrangler inspectors (9101/9201/9301/9401/9501, not published at all).
 
 ## Verification evidence
 
@@ -537,7 +556,7 @@ Also established in the same run:
   catch-all 404 is a required part of the configuration rather than a hardening extra.
 - **Leak scan clean.** No `localhost`, `127.0.0.1`, `0.0.0.0`, `edge-core` or `10.89.*` in the body
   or in any `Location`, on any of the three. `/` sets no `Location` at all.
-- **Repository checks pass** with the change in place: `format:check`, `lint:check`, `typecheck`,
+- **Repository checks pass** with the change in place: `format:check`, `lint`, `lint:types`, `typecheck`,
   and 1247 tests across 165 files.
 
 Nothing outside the three `info` workspaces, the identity test, and the checker's `ident` gate was
@@ -1237,8 +1256,8 @@ Deliberately outside this work, so that "not verified" is never mistaken for "ve
 
 - **The Workers VPC transport.** `Next.js → Workers VPC → Rails` is a different graph and is
   untouched; a Tunnel route neither creates nor replaces a Workers binding.
-- **`dev/apex` and `dev/acme`.** `umaxica.dev` is delegated to Vercel DNS, outside the Cloudflare
-  boundary, and both bind container loopback only.
+- **`dev/apex`.** `umaxica.dev` is still delegated to Vercel DNS, outside the Cloudflare
+  boundary, so the unit binds container loopback only even though it now deploys to Workers.
 - **The Rails surfaces.** `auth`, `side-jp`, `palm-jp`, `www`, and the Rails connector itself are
   the Rails repository's; Edge measured them read-only and configured none of them.
 

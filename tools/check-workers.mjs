@@ -5,6 +5,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import {
   collectVpcBindings as vpcBindings,
   loadManifest,
@@ -29,6 +30,12 @@ function loadWrangler(ws) {
 // Keys Wrangler does NOT inherit into `env.*`. A key present at the top level
 // but absent from an environment silently drops that binding once `--env` is
 // passed, so every environment has to repeat them.
+//
+// `vpc_services` is deliberately NOT in this list even though wrangler treats it
+// the same way. "Repeat it everywhere" is a syntax rule; which environment may
+// hold a Rails transport is an architecture decision, and the two disagree —
+// `env.test` must carry no VPC binding at all. It gets its own per-environment
+// policy below instead.
 const NON_INHERITABLE = [
   'vars',
   'kv_namespaces',
@@ -36,7 +43,6 @@ const NON_INHERITABLE = [
   'images',
   'version_metadata',
   'ratelimits',
-  'vpc_services',
   'durable_objects',
   'r2_buckets',
   'd1_databases',
@@ -115,6 +121,105 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test']) {
   }
 }
 
+// Where a Rails-backed Worker may hold the Workers VPC binding, and on which
+// terms. This models the architecture rather than wrangler's syntax: wrangler
+// would happily accept the binding in `env.test`, and the reason it must not be
+// there is ours, not the tool's.
+//
+// `remote` is a LOCAL-development flag. It makes wrangler run this Worker's code
+// in local workerd and proxy only the binding out to the real Cloudflare
+// resource; on a deployed Worker it means nothing, because there is no local
+// simulation to override.
+// https://developers.cloudflare.com/workers/development-testing/#remote-bindings
+//
+// So `remote: true` in `env.vpc` is required (local workerd cannot simulate a
+// VPC Service) and its absence at the top level is required too — not because a
+// deployed Worker would break, but because a key that does nothing where it sits
+// reads as though it does something.
+//
+// serviceId is read from the manifest per tier: the two ids are equal during the
+// AWS bootstrap and stop being equal at cutover, and this table does not care
+// which of those is true today.
+const VPC_POLICY = [
+  {
+    // The top level IS production. During the bootstrap it points at the
+    // development VPC Service on purpose — see the manifest and ADR 006.
+    label: 'top-level (production)',
+    read: (config) => config.vpc_services,
+    required: true,
+    remote: false,
+    serviceId: (m) => m.vpcProductionServiceId,
+  },
+  {
+    // `pnpm preview:vpc` — local workerd against the real development Service.
+    label: 'env.vpc',
+    read: (config) => config.env?.vpc?.vpc_services,
+    required: true,
+    remote: true,
+    serviceId: (m) => m.vpcDevelopmentServiceId,
+  },
+  {
+    // The ordinary development loop, which now reaches Rails over the real
+    // binding. This costs `pnpm dev` and `pnpm preview` an interactive
+    // `wrangler login`: a VPC Service has no local simulator, so resolving this
+    // environment always opens a remote proxy session, and that session rejects
+    // API-token authentication. Measured; ADR 006 records it.
+    label: 'env.development',
+    read: (config) => config.env?.development?.vpc_services,
+    required: true,
+    remote: true,
+    serviceId: (m) => m.vpcDevelopmentServiceId,
+  },
+  {
+    // Never deployed and never given a Rails transport: a test tier that can
+    // reach a real Rails is not a test tier.
+    label: 'env.test',
+    read: (config) => config.env?.test?.vpc_services,
+    required: false,
+  },
+];
+
+function checkVpcPolicy(ws, config) {
+  for (const rule of VPC_POLICY) {
+    const declared = (rule.read(config) ?? []).filter((v) => v.binding === manifest.vpcBinding);
+
+    if (!rule.required) {
+      if (declared.length > 0) {
+        fail(ws, `${rule.label} must not declare vpc_services binding ${manifest.vpcBinding}`);
+      }
+      continue;
+    }
+
+    if (declared.length !== 1) {
+      fail(
+        ws,
+        `${rule.label} must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
+      );
+      continue;
+    }
+
+    const expectedId = rule.serviceId(manifest);
+    if (declared[0].service_id !== expectedId) {
+      fail(
+        ws,
+        `${rule.label} vpc_services service_id must be ${expectedId} (found ${declared[0].service_id})`,
+      );
+    }
+    if (rule.remote && declared[0].remote !== true) {
+      fail(
+        ws,
+        `${rule.label} vpc_services must set remote: true — local workerd cannot simulate a VPC Service`,
+      );
+    }
+    if (!rule.remote && declared[0].remote === true) {
+      fail(
+        ws,
+        `${rule.label} vpc_services must not set remote: true — it is a local-development flag with no meaning on a deployed Worker`,
+      );
+    }
+  }
+}
+
 function checkOpenNext(ws, config) {
   // Next.js only accepts development|test|production, and the top level is production.
   if (config.vars?.NODE_ENV !== 'production') {
@@ -164,6 +269,54 @@ const trackedFiles = (() => {
 // e2e spec, both of which read the working tree and so cannot see this gap.
 const REQUIRED_PUBLIC_ASSETS = ['_headers', 'service-worker.js'];
 
+// The one asset that is generated rather than committed: Tailwind's output.
+//
+// The rule above is "must be in git", but what it is really protecting is
+// "CI's clean clone produces the same bytes". A committed copy of compiled CSS
+// would satisfy the letter and lose the spirit — it can silently disagree with
+// the `src/style.css` it came from, and nothing would check that. So this file
+// is held to the stronger property instead, asserted below: its source is
+// tracked, and every script that can upload regenerates it first.
+const GENERATED_PUBLIC_ASSETS = new Map([['public/style.css', 'src/style.css']]);
+
+// Scripts that put bytes on Cloudflare, or that stand in for them locally.
+// `build` is included because CI's build matrix is what proves the generation
+// step works at all.
+const UPLOADING_SCRIPTS = ['build', 'dev', 'deploy', 'deploy:upload', 'upload:ci', 'deploy:ci'];
+
+function checkGeneratedAsset(ws, relative, tracked) {
+  const source = GENERATED_PUBLIC_ASSETS.get(relative);
+  if (!tracked.has(`${ws}/${source}`)) {
+    fail(ws, `${relative} is generated from ${source}, which is not tracked by git`);
+    return;
+  }
+
+  let scripts;
+  try {
+    scripts = JSON.parse(readFileSync(join(root, ws, 'package.json'), 'utf8')).scripts ?? {};
+  } catch {
+    fail(ws, 'package.json is unreadable, so the generated-asset rule cannot be checked');
+    return;
+  }
+
+  if (!scripts['build:css']) {
+    fail(ws, `${relative} is generated but this unit declares no build:css script`);
+    return;
+  }
+
+  for (const name of UPLOADING_SCRIPTS) {
+    const script = scripts[name];
+    if (!script) continue;
+    // Either it regenerates the asset itself, or it delegates to a script that
+    // does — `preview` runs `build`, which runs `build:css`.
+    if (script.includes('build:css') || script.includes('pnpm run build')) continue;
+    fail(
+      ws,
+      `script "${name}" can upload public/ without regenerating ${relative} — prefix it with \`pnpm run build:css &&\``,
+    );
+  }
+}
+
 function checkPublicAssets(ws) {
   const publicDir = join(root, ws, 'public');
   if (!existsSync(publicDir)) {
@@ -180,13 +333,19 @@ function checkPublicAssets(ws) {
   const tracked = trackedFiles();
   for (const entry of readdirSync(publicDir, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue;
-    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//, '')}`;
-    if (!tracked.has(path)) {
-      fail(
-        ws,
-        `${path} is not tracked by git — wrangler would upload it from this machine and CI would deploy without it`,
-      );
+    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//u, '')}`;
+    if (tracked.has(path)) continue;
+
+    const relative = path.slice(`${ws}/`.length);
+    if (GENERATED_PUBLIC_ASSETS.has(relative)) {
+      checkGeneratedAsset(ws, relative, tracked);
+      continue;
     }
+
+    fail(
+      ws,
+      `${path} is not tracked by git — wrangler would upload it from this machine and CI would deploy without it`,
+    );
   }
 }
 
@@ -198,70 +357,7 @@ for (const ws of manifest.railsBacked) {
   checkOpenNext(ws, config);
   checkPublicAssets(ws);
 
-  // The VPC binding lives in `env.vpc` and nowhere else.
-  //
-  // `remote: true` does not mean "unusable locally" — it runs this Worker's
-  // code in local workerd and proxies only the binding out to Cloudflare, which
-  // is the supported way to reach a VPC Service in development. What it does
-  // cost is a `wrangler login` session at start-up (an API token cannot open
-  // one). Confining the binding to `vpc` keeps that cost on the one command
-  // that opts into it (`pnpm preview:vpc`) and leaves `pnpm dev` /
-  // `pnpm preview` needing no Cloudflare account at all.
-  //
-  // Bindings are not inherited into `env.*`, so this placement is structural:
-  // no other environment can acquire the binding by accident.
-  // See adr/006-development-workers-vpc-transport.md.
-  const declared = (config.env?.vpc?.vpc_services ?? []).filter(
-    (v) => v.binding === manifest.vpcBinding,
-  );
-
-  if (declared.length !== 1) {
-    fail(
-      ws,
-      `env.vpc must declare vpc_services binding ${manifest.vpcBinding} exactly once (found ${declared.length})`,
-    );
-  }
-  if (declared[0] && declared[0].service_id !== manifest.vpcDevelopmentServiceId) {
-    fail(
-      ws,
-      `env.vpc vpc_services service_id must be ${manifest.vpcDevelopmentServiceId} (found ${declared[0].service_id})`,
-    );
-  }
-  if (declared[0] && declared[0].remote !== true) {
-    fail(
-      ws,
-      'env.vpc vpc_services must set remote: true — local workerd cannot simulate a VPC Service',
-    );
-  }
-
-  for (const envName of ['development', 'test']) {
-    if ((config.env?.[envName]?.vpc_services ?? []).length > 0) {
-      fail(
-        ws,
-        `env.${envName} must not declare vpc_services — it would force every local dev session to authenticate to Cloudflare`,
-      );
-    }
-  }
-
-  // The top level is production. A binding here would be a *production*
-  // binding, and the only VPC Service that exists is on the development tunnel,
-  // terminating on a developer's machine.
-  //
-  // Note this is NOT about leaking into `env.*`: non-inheritable keys declared
-  // at the top level do not reach environments at all — wrangler warns "not
-  // inherited by environments" and the environment resolves with no bindings.
-  // Measured, because the previous comment here asserted the opposite.
-  const topLevel = (config.vpc_services ?? []).filter((v) => v.binding === manifest.vpcBinding);
-  if (topLevel.length > 0) {
-    if (topLevel.some((v) => v.service_id === manifest.vpcDevelopmentServiceId)) {
-      fail(
-        ws,
-        `top-level (production) vpc_services must not reuse the development service_id ${manifest.vpcDevelopmentServiceId} — it is on the development tunnel`,
-      );
-    }
-    // A real production VPC Service is the intended end state, so a distinct
-    // id here is allowed and only has to be well-formed.
-  }
+  checkVpcPolicy(ws, config);
 }
 
 // Deploying production means running with no `--env`, and CLOUDFLARE_ENV picks
@@ -274,7 +370,7 @@ for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
   if (!existsSync(pkgPath)) continue;
   const scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {};
   for (const [name, body] of Object.entries(scripts)) {
-    if (/--env\s+production/.test(body)) {
+    if (/--env\s+production/u.test(body)) {
       fail(ws, `${name} must not pass --env production — the top level is production`);
     }
     // Per sub-command, because a script chains several with `&&`. A segment
@@ -282,8 +378,8 @@ for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
     // one that does not is at the mercy of the variable.
     for (const segment of body.split('&&')) {
       // `build:next` is plain `next build` — no wrangler, nothing to redirect.
-      if (!/opennextjs-cloudflare|wrangler/.test(segment)) continue;
-      if (/--env\s+\S+/.test(segment)) continue;
+      if (!/opennextjs-cloudflare|wrangler/u.test(segment)) continue;
+      if (/--env\s+\S+/u.test(segment)) continue;
       if (!segment.includes('CLOUDFLARE_ENV=')) {
         fail(
           ws,

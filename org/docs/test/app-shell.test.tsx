@@ -14,7 +14,10 @@ describe('org/docs application shell', () => {
           <Page />
         </Layout>,
       ),
-    ).toContain('UMAXICA Docs');
-    expect(metadata.title).toBe('UMAXICA Docs');
+    ).toContain('UMAXICA ドキュメント');
+    expect(metadata.title).toEqual({
+      default: 'Docs — UMAXICA (ORG)',
+      template: '%s — UMAXICA (ORG)',
+    });
   });
 });

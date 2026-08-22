@@ -13,6 +13,14 @@
   // not exposure: that additionally needs the connector to join it and a
   // Cloudflare Public Hostname pointing at it, both operator acts.
   "dockerComposeFile": ["../compose.yaml", "./compose.override.yml", "../compose.custom.yaml"],
+  // compose.yaml builds the image with CONTAINER_UID/GID taken from
+  // ${UID}/${GID}. Those are bash builtins rather than exported variables, so
+  // without this hook compose silently falls back to 1000 and a host whose UID
+  // is not 1000 gets a container whose home and workspace are owned by the
+  // wrong user under keep-id — repaired only by a manual chown after every
+  // recreate. The script writes the real ids into the gitignored repo-root
+  // .env that compose auto-loads.
+  "initializeCommand": ".devcontainer/write-host-ids.sh",
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",
@@ -41,7 +49,7 @@
   // scripts/dev-start --credentials adds a host-loopback-only callback port.
   "forwardPorts": [
     5101, 5103, 5105, 5106, 5107, 5108, 5201, 5301, 5303, 5305, 5306, 5307, 5308, 5401, 5403, 5405,
-    5406, 5407, 5408, 5501, 5502
+    5406, 5407, 5408, 5501
   ],
   "portsAttributes": {
     "5101": {
@@ -121,11 +129,7 @@
       "onAutoForward": "silent"
     },
     "5501": {
-      "label": "dev/apex (Vercel)",
-      "onAutoForward": "silent"
-    },
-    "5502": {
-      "label": "dev/acme (Vercel)",
+      "label": "dev/apex",
       "onAutoForward": "silent"
     }
   },
@@ -180,7 +184,9 @@
   },
 
   "features": {
-    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {}
+    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {},
+    "ghcr.io/jsburckhardt/devcontainer-features/herdr:1": { "VERSION": "v0.8.0" },
+    "ghcr.io/joedmck/devcontainer-features/wrangler:1": {}
   },
   "updateRemoteUserUID": false
 }

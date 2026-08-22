@@ -1,13 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+/*
+ * That these routes answer 200 is asserted in `api/`. What is checked here is
+ * the thing a status line cannot show: that the served HTML parses, renders,
+ * and exposes its heading to the accessibility tree under a real engine.
+ */
+
 test('renders the local Worker health page', async ({ page }) => {
-  const response = await page.goto('/health');
-  expect(response?.status()).toBe(200);
+  await page.goto('/health');
   await expect(page.getByRole('heading', { name: 'status' })).toBeVisible();
 });
 
 test('renders the local about page', async ({ page }) => {
-  const response = await page.goto('/about');
-  expect(response?.status()).toBe(200);
+  await page.goto('/about');
   await expect(page.getByRole('heading', { name: 'About this site.' })).toBeVisible();
 });

@@ -1,4 +1,5 @@
 import { vi, describe, it, expect } from 'vitest';
+
 import { checkRateLimit } from '../src/rate-limit';
 
 describe(checkRateLimit, () => {

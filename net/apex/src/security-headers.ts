@@ -1,7 +1,20 @@
 import { secureHeaders } from 'hono/secure-headers';
-import type { RateLimiter } from './rate-limit';
-import { APEX_INLINE_STYLE_CSP_SOURCE } from './inline-style';
 
+import type { RateLimiter } from './rate-limit';
+
+/*
+ * `style-src` is `'self'` alone.
+ *
+ * It used to carry a sha256 of an inline `<style>` alongside `'self'`, which
+ * bought nothing: `'self'` was already present, so a same-origin stylesheet was
+ * already permitted, and the digest had to be recomputed by hand — and pinned
+ * by its own test — every time a single character of the CSS changed. The CSS
+ * is now a compiled static asset served from this origin, so the hash is gone
+ * and the policy is the narrower of the two.
+ *
+ * `styleSrcAttr: 'none'` still forbids inline `style="…"` attributes, which is
+ * why every visual rule in this unit is a Tailwind class.
+ */
 export const apexSecurityHeaders = secureHeaders({
   contentSecurityPolicy: {
     defaultSrc: ["'self'"],
@@ -13,7 +26,7 @@ export const apexSecurityHeaders = secureHeaders({
     objectSrc: ["'none'"],
     scriptSrc: ["'self'"],
     scriptSrcAttr: ["'none'"],
-    styleSrc: ["'self'", APEX_INLINE_STYLE_CSP_SOURCE],
+    styleSrc: ["'self'"],
     styleSrcAttr: ["'none'"],
     upgradeInsecureRequests: [],
   },

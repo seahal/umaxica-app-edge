@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+
+import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 import {
   BLOCKED,
   FAIL,
@@ -18,7 +20,6 @@ import {
   readRailsOrigin,
   waitFor,
 } from '../tools/verify-edge-connectivity.mjs';
-import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 
 // The checker is the thing that decides whether the network is healthy, so its
 // own control logic has to be pinned. Everything here is pure — no processes are
@@ -75,10 +76,11 @@ describe('surfaces', () => {
 
   it('derives each frame shape from disk', () => {
     for (const surface of loadSurfaces()) {
-      // Every frame owns the standard lightweight /health Route Handler. All
-      // fifteen also expose /rails-health independently.
-      expect(surface.hasHealthRoute).toBe(true);
-      expect(surface.hasRailsHealth, `${surface.ws} must expose /rails-health`).toBe(true);
+      // All fifteen answer `/health`, and since ADR 009 that one route carries
+      // both halves — Edge's own state and Rails' liveness. The separate
+      // `/rails-health` it replaced must not come back.
+      expect(surface.hasHealthRoute, `${surface.ws} must expose /health`).toBe(true);
+      expect(surface).not.toHaveProperty('hasRailsHealth');
     }
   });
 
@@ -256,25 +258,35 @@ describe('service_id validation', () => {
 });
 
 describe('parseRailsHealthJson', () => {
-  // The twelve content frames answer with a Route Handler, not a page.
+  // All fifteen frames answer `/health` with the merged document; the Rails half
+  // sits at `rails.liveness`.
   it.each(['ok', 'http-error', 'unreachable', 'not-configured'])('reads kind %j', (kind) => {
-    expect(parseRailsHealthJson(JSON.stringify({ rails: { kind } }))).toBe(kind);
+    expect(
+      parseRailsHealthJson(JSON.stringify({ rails: { liveness: { kind, latency_ms: 1 } } })),
+    ).toBe(kind);
   });
 
   it('rejects a kind it does not know, rather than passing it through', () => {
-    expect(parseRailsHealthJson('{"rails":{"kind":"probably-fine"}}')).toBeNull();
+    expect(parseRailsHealthJson('{"rails":{"liveness":{"kind":"probably-fine"}}}')).toBeNull();
   });
 
   it('returns null for HTML or malformed bodies instead of throwing', () => {
     expect(parseRailsHealthJson('<!DOCTYPE html><h1>hi</h1>')).toBeNull();
     expect(parseRailsHealthJson('')).toBeNull();
     expect(parseRailsHealthJson('{"rails":null}')).toBeNull();
+    expect(parseRailsHealthJson('{"rails":{"liveness":null}}')).toBeNull();
+  });
+
+  it('returns null for the pre-merge document a stale deployed Worker would serve', () => {
+    // `/rails-health`'s old shape put the kind at `rails.kind`. Reading null here
+    // is what makes an un-redeployed Worker visible rather than silently blessed.
+    expect(parseRailsHealthJson('{"rails":{"kind":"ok","status":200}}')).toBeNull();
   });
 });
 
 describe('railsHealthStatusMismatch', () => {
-  // The JSON route contracts 200 for ok and 503 otherwise; a body and status that
-  // disagree would let a broken route read as healthy.
+  // `/health` contracts 200 when the Rails half is ok and 503 otherwise; a body
+  // and status that disagree would let a broken route read as healthy.
   it('accepts the documented pairings', () => {
     expect(railsHealthStatusMismatch('ok', 200)).toBeNull();
     expect(railsHealthStatusMismatch('not-configured', 503)).toBeNull();

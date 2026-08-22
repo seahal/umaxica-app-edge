@@ -13,6 +13,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -21,7 +22,11 @@ const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath)
 const BRANDS = ['app', 'com', 'org'] as const;
 const FRAMES = ['core', 'docs', 'news', 'help', 'info'] as const;
 
-/** The fifteen Cloudflare-hosted Next.js frames. `dev/acme` is on Vercel. */
+/*
+ * The fifteen Next.js frames. Every one of them runs on workerd: the repository
+ * has no Next.js unit hosted anywhere else since dev/acme was deleted, so this
+ * list and "every Next unit" are now the same set.
+ */
 const CLOUDFLARE_FRAMES = BRANDS.flatMap((brand) => FRAMES.map((frame) => `${brand}/${frame}`));
 
 describe('Next.js options that workerd cannot honour', () => {
@@ -44,12 +49,6 @@ describe('Next.js options that workerd cannot honour', () => {
     expect(
       read(`${workspace}/next.config.ts`),
       `${workspace} must not enable cacheComponents — prerendered routes hang in workerd`,
-    ).not.toMatch(/cacheComponents:\s*true/);
-  });
-
-  it('keeps the Vercel frame out of scope, since it does not run on workerd', () => {
-    // Not an endorsement, just a boundary: dev/acme is deployed to Vercel, where
-    // Cache Components work. If it ever moves to Workers, add it above.
-    expect(read('dev/acme/next.config.ts')).toContain('cacheComponents');
+    ).not.toMatch(/cacheComponents:\s*true/u);
   });
 });

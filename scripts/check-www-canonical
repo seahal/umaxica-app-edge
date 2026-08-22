@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Asserts the NET-series `www` hostnames canonicalise to their apex.
+#
+# This checks configuration that does NOT live in this repository. There is no
+# Terraform, Pulumi or wrangler surface for zone-level Redirect Rules here, so
+# the rules are created in the Cloudflare dashboard and this script is how the
+# result is verified. See docs/operations/net-www-canonicalisation.md.
+#
+# Three things are asserted per host, and all three matter:
+#
+#   status    301, not 302. A temporary redirect leaves both hostnames
+#             indexable and splits link equity between them, which is the SEO
+#             failure the rule exists to prevent.
+#   path      preserved. A rule that sends every www URL to the apex ROOT
+#             silently turns every deep link into a homepage visit.
+#   query     preserved. "Preserve query string" is OFF by default in
+#             Cloudflare's UI, so this is the setting most likely to be missed.
+#
+# It deliberately does not follow the redirect: what is under test is the
+# response, not the destination's content.
+
+hosts=(
+  'www.umaxica.net|umaxica.net'
+  'www.umaxica.dev|umaxica.dev'
+)
+
+path='/foo'
+query='x=1&y=%E3%81%82'
+
+failed=0
+for entry in "${hosts[@]}"; do
+  from=${entry%%|*}
+  to=${entry#*|}
+  want="https://${to}${path}?${query}"
+
+  response=$(curl --silent --show-error --max-time 10 --output /dev/null \
+    --write-out '%{http_code} %{redirect_url}' \
+    "https://${from}${path}?${query}") || response='000 '
+
+  code=${response%% *}
+  location=${response#* }
+
+  if [[ "${code}" == '301' && "${location}" == "${want}" ]]; then
+    echo "PASS ${from}${path} -> ${code} ${location}"
+  else
+    echo "FAIL ${from}${path} -> ${code} ${location:-<no location>}" >&2
+    echo "     want 301 ${want}" >&2
+    failed=1
+  fi
+done
+
+exit "${failed}"

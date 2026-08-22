@@ -1,5 +1,6 @@
-import type { NextConfig } from 'next';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+import type { NextConfig } from 'next';
+
 import { imageConfig } from './image-config';
 import { imageFontSecurityHeaders } from './security-headers';
 
@@ -15,8 +16,8 @@ const nextConfig: NextConfig = {
   // Nothing here uses `use cache`, `cacheLife` or `cacheTag`, so it bought
   // nothing. `pnpm run check:preview` catches a regression; see
   // docs/operations/connectivity-acceptance.md.
-  images: imageConfig as NextConfig['images'],
-  headers: imageFontSecurityHeaders as NextConfig['headers'],
+  images: imageConfig,
+  headers: imageFontSecurityHeaders,
   // Reached through the Rails-shared Cloudflare Tunnel under this frame's own
   // hostname, so that hostname has to be listed here. Next blocks cross-origin
   // requests to `/_next/*` and `/__nextjs*` by default: the initial HTML and

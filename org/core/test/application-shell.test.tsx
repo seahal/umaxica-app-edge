@@ -35,7 +35,9 @@ describe('org/core application shell', () => {
   });
 
   it('returns metadata and crawler documents for the org origin', () => {
-    expect(metadata).toMatchObject({ title: 'UMAXICA (org)' });
+    expect(metadata).toMatchObject({
+      title: { default: 'UMAXICA (ORG)', template: '%s — UMAXICA (ORG)' },
+    });
     expect(manifest()).toMatchObject({ start_url: '/', display: 'standalone' });
     expect(robots()).toMatchObject({ sitemap: 'https://jp.umaxica.org/sitemap.xml' });
     expect(sitemap()).toEqual([expect.objectContaining({ url: 'https://jp.umaxica.org' })]);

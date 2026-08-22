@@ -14,7 +14,10 @@ describe('app/help application shell', () => {
           <Page />
         </Layout>,
       ),
-    ).toContain('UMAXICA Help');
-    expect(metadata.title).toBe('UMAXICA Help');
+    ).toContain('UMAXICA ヘルプ');
+    expect(metadata.title).toEqual({
+      default: 'Help — UMAXICA (APP)',
+      template: '%s — UMAXICA (APP)',
+    });
   });
 });

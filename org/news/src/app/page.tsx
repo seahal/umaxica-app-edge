@@ -1,11 +1,12 @@
+import { PageHero } from '../components/page-hero';
 export default function Home() {
   return (
-    <main className="shell">
-      <section className="hero">
-        <p className="eyebrow">UMAXICA News</p>
-        <h1>Next.js on Cloudflare Workers</h1>
-        <p className="copy">This package is ready for Cloudflare Workers deployment.</p>
-      </section>
-    </main>
+    <PageHero
+      eyebrow="UMAXICA ニュース"
+      title="最新のお知らせをお届けします"
+      paragraphs={[
+        '新機能のリリース、メンテナンスの予定、障害発生時のご報告などを掲載しています。重要なお知らせは順次このページに追加されます。',
+      ]}
+    />
   );
 }

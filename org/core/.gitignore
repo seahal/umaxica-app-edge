@@ -3,6 +3,7 @@
 node_modules/
 out/
 next-env.d.ts
+cloudflare-env.d.ts
 
 # Playwright
 /test-results/
