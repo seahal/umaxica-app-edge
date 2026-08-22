@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import './globals.css';
+
+export const metadata: Metadata = {
+  title: { absolute: 'ページが見つかりません — UMAXICA (ORG)' },
+};
 
 export default function GlobalNotFound() {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body>
         <main className="status-page">
           <h1>ページが見つかりません</h1>

@@ -8,6 +8,9 @@ export default function GlobalError({
 }) {
   return (
     <html lang="ja">
+      <head>
+        <title>現在、このページを表示できません — UMAXICA (ORG)</title>
+      </head>
       <body>
         <main>
           <h1>現在、このページを表示できません</h1>

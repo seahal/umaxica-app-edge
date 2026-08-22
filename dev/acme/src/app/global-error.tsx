@@ -17,6 +17,9 @@ export default function GlobalError({
   const handleReset = useCallback(() => reset(), [reset]);
   return (
     <html lang="ja">
+      <head>
+        <title>現在、このページを表示できません — UMAXICA (DEV)</title>
+      </head>
       <body>
         <main className="status-page">
           <h1>500</h1>

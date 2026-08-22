@@ -1,3 +1,8 @@
+import type { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: { absolute: 'ページが見つかりません — UMAXICA (APP)' },
+};
+
 export default function GlobalNotFound() {
   return (
     <html lang="ja">

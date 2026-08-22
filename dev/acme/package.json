@@ -11,11 +11,11 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@opentelemetry/api-logs": "^0.214.0",
-    "@opentelemetry/instrumentation": "^0.214.0",
-    "@opentelemetry/sdk-logs": "^0.214.0",
-    "@sentry/nextjs": "^10.51.0",
-    "@vercel/otel": "^2.1.2",
+    "@opentelemetry/api-logs": "^0.221.0",
+    "@opentelemetry/instrumentation": "^0.221.0",
+    "@opentelemetry/sdk-logs": "^0.221.0",
+    "@sentry/nextjs": "^10.70.0",
+    "@vercel/otel": "^2.1.3",
     "client-only": "^0.0.1",
     "next": "catalog:",
     "nuqs": "catalog:",
@@ -30,8 +30,8 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^6.0.1",
-    "jsdom": "^29.0.2",
+    "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.0.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "catalog:"
   }

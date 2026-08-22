@@ -1,4 +1,4 @@
-import { getBrandName } from './brand';
+import { BRAND_TLD, buildBrandTitle, getBrandName } from './brand';
 import { APEX_INLINE_STYLE } from './inline-style';
 import type { AssetEnv } from './security-headers';
 
@@ -34,7 +34,7 @@ function buildHealthPageHtml(brandName: string, payload: HealthPayload): string 
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${brandName} | Health status</title>
+    <title>${buildBrandTitle('Health status', { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
     <style>${APEX_INLINE_STYLE}</style>
   </head>
@@ -69,7 +69,7 @@ function buildHealthErrorHtml(brandName: string, timestampIso: string): string {
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${brandName}</title>
+    <title>${buildBrandTitle(undefined, { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
   </head>
   <body>

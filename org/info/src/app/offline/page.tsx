@@ -1,3 +1,7 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'オフライン' };
+
 export default function OfflinePage() {
   return (
     <main>

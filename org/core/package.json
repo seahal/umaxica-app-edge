@@ -12,6 +12,7 @@
     "deploy:upload": "CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare upload",
     "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --yes",
     "upload:ci": "CLOUDFLARE_ENV= opennextjs-cloudflare upload",
+    "deploy:ci": "CLOUDFLARE_ENV= opennextjs-cloudflare deploy",
     "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
     "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
     "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
@@ -32,7 +33,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "jsdom": "^29.0.2",
+    "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vitest": "catalog:",
     "wrangler": "catalog:"

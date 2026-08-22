@@ -3,6 +3,7 @@ import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
+import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
 import { checkRateLimit } from './rate-limit';
@@ -27,7 +28,7 @@ type CreateApexAppOptions = {
 function statusPage(status: number, title: string) {
   const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
   return new Response(
-    `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${status} ${title}</title></head><body><main><h1>${title}</h1><p>HTTP ${status}</p><p>${reload}<a href="/">トップへ戻る</a></p></main></body></html>`,
+    `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>${title}</h1><p>HTTP ${status}</p><p>${reload}<a href="/">トップへ戻る</a></p></main></body></html>`,
     {
       status,
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
@@ -90,7 +91,7 @@ export function createApexApp(
   });
   app.get('/offline', (c) =>
     c.html(
-      '<main><h1>オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a href="/">トップへ戻る</a></p>',
+      `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a href="/">トップへ戻る</a></p></main></body></html>`,
     ),
   );
   app.route('/', pageRoutes);

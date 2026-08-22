@@ -10,7 +10,7 @@ describe('GET /health', () => {
 
     const body = await response.text();
 
-    expect(body).toContain('<title>UMAXICA | Health status</title>');
+    expect(body).toContain('<title>Health status — UMAXICA (APP)</title>');
     expect(body).toContain('<meta name="robots" content="noindex, nofollow" />');
     expect(body).toContain('<h1>status</h1>');
     expect(body).toContain('<dt>status</dt>');
@@ -28,7 +28,7 @@ describe('GET /health', () => {
   it('uses BRAND_NAME from env in the health page title', async () => {
     const response = await requestFromApp('/health', {}, { BRAND_NAME: 'UMAXCA' });
     const body = await response.text();
-    expect(body).toContain('<title>UMAXCA | Health status</title>');
+    expect(body).toContain('<title>Health status — UMAXCA (APP)</title>');
   });
 
   it('returns the same health HTML document from /health.html', async () => {

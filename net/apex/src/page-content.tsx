@@ -1,21 +1,19 @@
 import type { AssetEnv } from './security-headers';
-import { DEFAULT_BRAND_NAME } from './brand';
+import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 
 const ABOUT_DESCRIPTION =
-  'umaxica.net is the apex domain of the UMAXICA platform. Services and content are available on dedicated subdomains';
+  'umaxica.net is a UMAXICA platform domain. Services and content are available on dedicated subdomains';
 
 const ABOUT_CANONICAL_URL = 'https://umaxica.net/about';
 const ABOUT_ROBOTS = 'index,follow';
 
-function buildApexTitle(_env: AssetEnv, domain: string, pageName: string): string {
-  const brandName = DEFAULT_BRAND_NAME;
-  const baseTitle = `${brandName} (${domain}) - Apex`;
-  return `${pageName} | ${baseTitle}`;
+function buildApexTitle(_env: AssetEnv, pageName: string): string {
+  return buildBrandTitle(pageName, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD });
 }
 
-export function getAboutMeta(env: AssetEnv) {
+export function getAboutMeta(env: AssetEnv, language?: string) {
   return {
-    title: buildApexTitle(env, 'net', 'About'),
+    title: buildApexTitle(env, language === 'ja' ? 'このサイトについて' : 'About'),
     description: ABOUT_DESCRIPTION,
     canonical: ABOUT_CANONICAL_URL,
     robots: ABOUT_ROBOTS,

@@ -74,7 +74,9 @@ describe('app/core application shell', () => {
   });
 
   it('returns the public metadata documents', () => {
-    expect(metadata).toMatchObject({ title: 'UMAXICA (app)' });
+    expect(metadata).toMatchObject({
+      title: { default: 'UMAXICA (APP)', template: '%s — UMAXICA (APP)' },
+    });
     expect(manifest()).toMatchObject({ start_url: '/', display: 'standalone' });
     expect(robots()).toMatchObject({ sitemap: 'https://jp.umaxica.app/sitemap.xml' });
     expect(sitemap()).toEqual([

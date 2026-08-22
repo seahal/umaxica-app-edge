@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { defaultLocale } from '@/i18n/config';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
@@ -6,7 +7,10 @@ import { ServiceWorkerRegistration } from '../components/service-worker-registra
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'UMAXICA (app)',
+  title: {
+    default: 'UMAXICA (APP)',
+    template: '%s — UMAXICA (APP)',
+  },
   description: 'UMAXICA Service Application',
 };
 
@@ -16,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang={defaultLocale} className={inter.variable}>
       <body>
         <ServiceWorkerRegistration />
         {children}

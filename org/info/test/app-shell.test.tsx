@@ -15,6 +15,9 @@ describe('org/info application shell', () => {
         </Layout>,
       ),
     ).toContain('UMAXICA Info');
-    expect(metadata.title).toBe('UMAXICA Info');
+    expect(metadata.title).toEqual({
+      default: 'Info — UMAXICA (ORG)',
+      template: '%s — UMAXICA (ORG)',
+    });
   });
 });
