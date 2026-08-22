@@ -34,4 +34,23 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-void initOpenNextCloudflareForDev();
+// `remoteBindings: false` is load-bearing, not a default being restated.
+//
+// `initOpenNextCloudflareForDev(options?: GetPlatformProxyOptions)` forwards
+// straight to `getPlatformProxy()`, whose `remoteBindings` option defaults to
+// **true** (wrangler 4.120.1, `GetPlatformProxyOptions.remoteBindings`). The
+// container exports `CLOUDFLARE_ENV=development` (compose.yaml), and
+// `env.development` now carries a `remote: true` VPC Service binding — so with
+// the default, plain `next dev` would try to open a remote-binding session
+// against Cloudflare. That session cannot be opened with an API token at all
+// (`edge-preview` rejects the scheme), so it would demand an interactive
+// `wrangler login` before the Node dev server would start.
+//
+// Node dev does not need the binding: it reaches Rails directly over the
+// private Podman network, gated on EDGE_LOCAL_NODE_RUNTIME +
+// EDGE_LOCAL_RAILS_ENABLED (`src/lib/rails-client.ts`). Only the workerd
+// preview (`pnpm preview`, `--env development`) uses the remote binding.
+//
+// This is the lifecycle/runtime split made concrete: one lifecycle environment
+// (development), two runtimes, two transports. See adr/009.
+void initOpenNextCloudflareForDev({ remoteBindings: false });

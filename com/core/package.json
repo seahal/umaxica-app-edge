@@ -13,7 +13,6 @@
     "deploy:promote": "CLOUDFLARE_ENV= wrangler versions deploy --yes",
     "upload:ci": "CLOUDFLARE_ENV= opennextjs-cloudflare upload",
     "preview": "opennextjs-cloudflare build --env development && opennextjs-cloudflare preview --env development",
-    "preview:vpc": "opennextjs-cloudflare build --env vpc && opennextjs-cloudflare preview --env vpc",
     "cf-typegen": "CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
     "typecheck": "tsgo --noEmit"
   },

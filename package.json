@@ -14,7 +14,6 @@
     "check:vpc": "node tools/verify-edge-connectivity.mjs vpc",
     "check:local": "node tools/verify-edge-connectivity.mjs next",
     "check:preview": "node tools/verify-edge-connectivity.mjs preview",
-    "check:preview:vpc": "node tools/verify-edge-connectivity.mjs preview:vpc",
     "check:host": "node tools/verify-edge-connectivity.mjs host",
     "check:tunnel:edge": "node tools/verify-edge-connectivity.mjs tunnel",
     "check:tunnel:apex": "node tools/verify-edge-connectivity.mjs tunnel:apex",

@@ -137,19 +137,21 @@ returns `503` directly — it never calls `nextWorker.fetch` and never
 retries against any other resource. This mirrors `getRailsClient()`'s own
 "fail closed, visibly" principle:
 
-| Tier                                  | Binding present?                                      | Behavior                                |
-| ------------------------------------- | ----------------------------------------------------- | --------------------------------------- |
-| `pnpm dev` (Node, `next dev`)         | no — no Workers runtime at all                        | 503, fails closed                       |
-| `pnpm preview` (`--env development`)  | no                                                    | 503, fails closed                       |
-| `pnpm preview:vpc` (`--env vpc`)      | yes, `remote: true`                                   | dispatches to Rails over the dev tunnel |
-| `pnpm deploy` (top level, no `--env`) | **not yet** — no production VPC Service/tunnel exists | 503, fails closed                       |
+> **This table is superseded by [ADR 009](009-wrangler-lifecycle-environment-reconstruction.md),
+> 2026-08-22.** The "fail closed, visibly" principle it illustrates is unchanged; the tiers are not.
+> `env.vpc` is gone, `pnpm preview` carries the binding, and production carries it too.
 
-Restoring production Rails dispatch needs exactly what ADR 006 already
-documents for `getRailsClient()`: a production Cloudflare Tunnel next to
-production Rails, and a production Workers VPC Service on it, created via
-the Cloudflare dashboard/API — outside this repository — then
-the top-level `vpc_services` gains the same block `env.vpc` already
-has, with that service's `service_id`. No application code changes.
+| Tier                                  | Binding present?                       | Behavior                                                           |
+| ------------------------------------- | -------------------------------------- | ------------------------------------------------------------------ |
+| `pnpm dev` (Node, `next dev`)         | a local stub — `remoteBindings: false` | direct Podman Rails, or 503 without the overlay                    |
+| `pnpm preview` (`--env development`)  | yes, `remote: true`                    | dispatches to Rails over the dev tunnel                            |
+| `pnpm deploy` (top level, no `--env`) | yes, no `remote` key                   | dispatches to Rails — **bootstrap**: via the _development_ Service |
+
+Completing production Rails dispatch is now a `service_id` change rather than a restoration: create
+a production Cloudflare Tunnel next to production Rails and a production Workers VPC Service on it
+(outside this repository), then update `vpcServices.production` in `tools/workers-manifest.json`,
+the fifteen top-level `service_id`s, and flip `$productionIsBootstrap` to `false`. No application
+code changes.
 
 ## What this record explicitly did NOT change
 
@@ -162,9 +164,11 @@ has, with that service's `service_id`. No application code changes.
   ADR 005 §1/§3/§5 and ADR 006 still spell the pre-rename names; read them
   as historical. See "Naming drift" below.
 - The `UMAXICA_APPS_EDGE_CF_WORKERS_VPC` binding name, its `service_id`, and
-  its `env.vpc`-only placement (ADR 006 §1).
+  its `env.vpc`-only placement (ADR 006 §1). _(The placement changed in ADR 009;
+  the binding name did not.)_
 - top level (production)/`env.vpc`/`env.development`/`env.test` separation
   and the `pnpm dev` / `pnpm preview` / `pnpm preview:vpc` topology.
+  _(Restructured by ADR 009 into three lifecycle environments.)_
 - `rails-client.ts` / `rails-health.ts` — no edits; the new
   `core-dispatch.ts` is a sibling module, not a rewrite.
 - `*/apex` — untouched, stays Rails-blind (out of scope by design).

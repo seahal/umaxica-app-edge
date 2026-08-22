@@ -1,6 +1,14 @@
 # Plan 005: Rails ↔ Edge connectivity over a Cloudflare Workers VPC binding
 
-## Status: Completed
+## Status: SUPERSEDED (environment model) by [ADR 009](009-wrangler-lifecycle-environment-reconstruction.md)
+
+> **Superseded by ADR 009, 2026-08-22**, together with ADR 006. Decision 1's environment
+> table, decision 3 (already retracted by ADR 006), and decision 5's transport ordering
+> no longer describe this repository.
+>
+> **Still current:** decision 2 (apex workers hold no Rails dependency), decision 4
+> (per-frame `/rails-health`), decision 6 (inbound credentials stripped before the
+> transport's own are applied), and decision 7 (5 s timeout, no retry).
 
 ## Supersedes
 
@@ -189,6 +197,12 @@ both cases.
 response body, so an internal error message cannot leak to a client.
 
 ### 5. Endpoint resolution per environment
+
+> **Amended by ADR 009 §4.** The principle stands — the transport is chosen by which
+> capability exists, never by an environment name — but the ORDER reversed. Under
+> `next dev` the VPC binding is now present as a _stub that throws_, so testing it first
+> would select a transport that can never work. The local-Node runtime marker is checked
+> first. The Access branch described below was removed by the 2026-08 refresh.
 
 `getRailsClient()` resolves the same way in **every** environment, with no
 branch on the environment name:

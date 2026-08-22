@@ -6,10 +6,12 @@
 //
 // The point of this tool is that the paths it tests are NOT interchangeable:
 //
-//   next dev          Node. No VPC binding exists in `env.development`, so
+//   next dev          Node, `--env development` with remote bindings disabled.
+//                     Rails comes from the private Podman network, so
 //                     /rails-health here can never be VPC evidence.
-//   preview           local workerd, `--env development`. No binding either.
-//   preview:vpc       local workerd, `--env vpc`. The real remote binding.
+//   preview           local workerd, `--env development`. The real remote
+//                     binding — the same lifecycle environment as `next dev`,
+//                     a different runtime and a different transport.
 //   vpc (this tool)   the binding alone, with no application code in the way.
 //
 // `/rails-health` in next dev can prove only the explicitly enabled private
@@ -37,7 +39,6 @@ export const MODES = [
   'vpc',
   'next',
   'preview',
-  'preview:vpc',
   'host',
   'links',
   'tunnel',
@@ -49,7 +50,7 @@ export const MODES = [
 // container, which is where `all` is run. `tunnel` is excluded for a different
 // reason: it needs hostnames someone configured in Cloudflare, so it would
 // report sixteen failures on a machine that never set the tunnel up.
-const ALL_MODES = ['config', 'vpc', 'next', 'preview', 'preview:vpc'];
+const ALL_MODES = ['config', 'vpc', 'next', 'preview'];
 
 const LOG_DIR = join(repoRoot, 'tmp/connectivity-check');
 const PROBE_PORT = Number(process.env.VPC_PROBE_PORT ?? 8799);
@@ -669,15 +670,45 @@ async function modeConfig(report, surfaces, manifest) {
     if (error) {
       problems.push(error);
     } else {
-      const declared = (config.env?.vpc?.vpc_services ?? []).filter(
-        (v) => v.binding === manifest.vpcBinding,
-      );
-      if (declared.length !== 1) {
-        problems.push(`env.vpc must declare ${manifest.vpcBinding} exactly once`);
+      // Production (top level) and development both bind Rails, under the same
+      // binding NAME against different services. Only development is `remote`:
+      // remote bindings are disabled on deploy, so the key would be noise in
+      // production. env.test binds nothing, deliberately.
+      const forTier = (container) =>
+        (container?.vpc_services ?? []).filter((v) => v.binding === manifest.vpcBinding);
+
+      const production = forTier(config);
+      if (production.length !== 1) {
+        problems.push(
+          `the top level (production) must declare ${manifest.vpcBinding} exactly once`,
+        );
       } else {
-        const idProblem = describeServiceIdProblem(declared[0].service_id);
-        if (idProblem) problems.push(idProblem);
-        if (declared[0].remote !== true) problems.push('vpc_services must set remote: true');
+        const idProblem = describeServiceIdProblem(production[0].service_id);
+        if (idProblem) problems.push(`production ${idProblem}`);
+        else if (production[0].service_id !== manifest.vpcServices.production) {
+          problems.push(`production service_id must be ${manifest.vpcServices.production}`);
+        }
+        if ('remote' in production[0]) {
+          problems.push('production vpc_services must not set `remote`');
+        }
+      }
+
+      const development = forTier(config.env?.development);
+      if (development.length !== 1) {
+        problems.push(`env.development must declare ${manifest.vpcBinding} exactly once`);
+      } else {
+        const idProblem = describeServiceIdProblem(development[0].service_id);
+        if (idProblem) problems.push(`development ${idProblem}`);
+        else if (development[0].service_id !== manifest.vpcServices.development) {
+          problems.push(`development service_id must be ${manifest.vpcServices.development}`);
+        }
+        if (development[0].remote !== true) {
+          problems.push('env.development vpc_services must set remote: true');
+        }
+      }
+
+      if (forTier(config.env?.test).length > 0) {
+        problems.push('env.test must declare no vpc_services');
       }
     }
 
@@ -688,17 +719,20 @@ async function modeConfig(report, surfaces, manifest) {
       problems.push('cloudflare-env.d.ts is missing — run cf-typegen');
     } else {
       const types = readFileSync(typesPath, 'utf8');
-      const previewBlock = extractInterfaceBlock(types, 'VpcEnv');
-      if (previewBlock === null) {
-        problems.push('cloudflare-env.d.ts declares no VpcEnv — run cf-typegen');
-      } else if (!previewBlock.includes(manifest.vpcBinding)) {
-        problems.push(`cloudflare-env.d.ts VpcEnv does not declare ${manifest.vpcBinding}`);
+      const developmentBlock = extractInterfaceBlock(types, 'DevelopmentEnv');
+      if (developmentBlock === null) {
+        problems.push('cloudflare-env.d.ts declares no DevelopmentEnv — run cf-typegen');
+      } else if (!developmentBlock.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts DevelopmentEnv does not declare ${manifest.vpcBinding}`);
       }
-      for (const envName of ['DevelopmentEnv', 'TestEnv']) {
-        const block = extractInterfaceBlock(types, envName);
-        if (block?.includes(manifest.vpcBinding)) {
-          problems.push(`cloudflare-env.d.ts ${envName} must not declare ${manifest.vpcBinding}`);
-        }
+      const testBlock = extractInterfaceBlock(types, 'TestEnv');
+      if (testBlock?.includes(manifest.vpcBinding)) {
+        problems.push(`cloudflare-env.d.ts TestEnv must not declare ${manifest.vpcBinding}`);
+      }
+      if (extractInterfaceBlock(types, 'VpcEnv') !== null) {
+        problems.push(
+          'cloudflare-env.d.ts still declares VpcEnv — env.vpc is gone; run cf-typegen',
+        );
       }
     }
 
@@ -713,7 +747,9 @@ async function modeConfig(report, surfaces, manifest) {
       'VPC config',
       surface.key,
       problems.length ? FAIL : PASS,
-      problems.length ? problems.join('; ') : `env.vpc → ${manifest.vpcDevelopmentServiceId}`,
+      problems.length
+        ? problems.join('; ')
+        : `production → ${manifest.vpcServices.production}, development → ${manifest.vpcServices.development} (remote)`,
     );
   }
 
@@ -762,13 +798,13 @@ async function modeConfig(report, surfaces, manifest) {
     const list = await run('pnpm', ['exec', 'wrangler', 'vpc', 'service', 'list'], {
       CLOUDFLARE_ENV: '',
     });
-    if (list.code === 0 && list.stdout.includes(manifest.vpcDevelopmentServiceId)) {
-      devService = manifest.vpcDevelopmentServiceId;
+    if (list.code === 0 && list.stdout.includes(manifest.vpcServices.development)) {
+      devService = manifest.vpcServices.development;
       report.note(PASS, `VPC Service ${devService} exists on the account`);
     } else {
       report.note(
         FAIL,
-        `VPC Service ${manifest.vpcDevelopmentServiceId} was not found on the account`,
+        `VPC Service ${manifest.vpcServices.development} was not found on the account`,
       );
     }
   } else {
@@ -786,29 +822,51 @@ async function modeConfig(report, surfaces, manifest) {
 
   report.note(
     PASS,
-    `Development VPC Service: ${manifest.vpcDevelopmentServiceId}${devService ? ' (verified)' : ''}`,
+    `Development VPC Service: ${manifest.vpcServices.development}${devService ? ' (verified)' : ''}`,
   );
   report.note(
     productionServices.size ? PASS : WARN,
     productionServices.size
       ? `Production VPC Service: ${[...productionServices].join(', ')}`
-      : 'Production VPC Service: none — env.production declares no binding, so production fails closed (ADR 006)',
+      : 'Production VPC Service: none — the top level declares no binding, so production fails closed',
   );
 
-  const shared = [...productionServices].includes(manifest.vpcDevelopmentServiceId);
-  if (shared) {
+  // Environment isolation is SUSPENDED, not deleted, while bootstrapping.
+  //
+  // Production Rails on AWS does not exist yet and the account holds exactly one
+  // VPC Service, so production deliberately points at the development one. That
+  // is recorded as `$productionIsBootstrap` in tools/workers-manifest.json. The
+  // moment that flag is false this goes back to being a hard failure — which is
+  // what the AWS cutover flips. Reported as WARN rather than PASS because the
+  // state is real and should stay visible in every run.
+  const shared = [...productionServices].includes(manifest.vpcServices.development);
+  const bootstrap = manifest.$productionIsBootstrap === true;
+  if (shared && bootstrap) {
+    report.note(
+      WARN,
+      'Environment isolation: BOOTSTRAP — production points at the DEVELOPMENT VPC Service ' +
+        `${manifest.vpcServices.development}, which terminates on a developer's machine through the ` +
+        'development tunnel. Deliberate and temporary; see $productionIsBootstrap in ' +
+        'tools/workers-manifest.json for the exit procedure.',
+    );
+  } else if (shared) {
     report.note(
       FAIL,
       'Environment isolation: production reuses the development VPC Service — it is bound to the development tunnel',
+    );
+  } else if (bootstrap) {
+    report.note(
+      FAIL,
+      '$productionIsBootstrap is still true but production no longer shares the development service — set it to false',
     );
   } else {
     report.note(PASS, 'Environment isolation: production and development share no service_id');
   }
 
-  if (process.env.STRICT_ENV_ISOLATION === '1' && productionServices.size === 0) {
+  if (process.env.STRICT_ENV_ISOLATION === '1' && bootstrap) {
     report.note(
       FAIL,
-      'STRICT_ENV_ISOLATION: no production VPC Service exists yet (expected once the production tunnel is created)',
+      'STRICT_ENV_ISOLATION: production is still on the bootstrap (development) VPC Service',
     );
   }
 
@@ -879,7 +937,7 @@ async function modeVpc(report, surfaces, manifest, { verbose }) {
   for (const surface of surfaces) {
     const detail =
       verdict.transport === PASS
-        ? `${verdict.detail} (shared VPC Service ${manifest.vpcDevelopmentServiceId})`
+        ? `${verdict.detail} (shared VPC Service ${manifest.vpcServices.development})`
         : `${verdict.layer}: ${verdict.detail}`;
     report.record('Direct VPC → Rails', surface.key, verdict.transport, detail);
   }
@@ -988,7 +1046,8 @@ async function modeNext(report, surfaces) {
 
   report.note(
     SKIP,
-    '/rails-health under next dev is never VPC evidence — env.development carries no binding. See mode `vpc`.',
+    '/rails-health under next dev is never VPC evidence — the Node dev path runs with remoteBindings: false,\n' +
+      'so its VPC binding is a local stub that throws. See mode `vpc` and mode `preview`.',
   );
 }
 
@@ -1065,112 +1124,74 @@ async function runNextBatch(report, surfaces) {
 }
 
 // ---------------------------------------------------------------------------
-// Modes: preview and preview:vpc
+// Mode: preview
 // ---------------------------------------------------------------------------
 
-async function modePreview(report, surfaces, { withVpc }) {
-  const script = withVpc ? 'preview:vpc' : 'preview';
-  const gate = withVpc ? 'Preview → Rails VPC' : 'workerd/OpenNext preview';
+// `preview` is `--env development` on local workerd, and since the VPC Service
+// binding moved into `env.development` it carries the real remote binding. So
+// this mode is the production-parity path: workerd -> remote binding -> VPC
+// Service -> tunnel -> Rails, with `rails-health: ok` as the pass condition.
+//
+// It is STRICTLY SEQUENTIAL, and that is the operational cost of the move.
+// Fifteen concurrent preview servers would open fifteen remote-proxy sessions
+// against Cloudflare; ADR 006 was explicit that this is exactly what not to do,
+// and that constraint followed the binding from `env.vpc` into
+// `env.development` rather than disappearing with the environment. Running one
+// at a time also means one fixed port, so no per-surface port arithmetic.
+async function modePreview(report, surfaces) {
+  const gate = 'Preview → Rails VPC';
 
-  if (withVpc) {
-    const auth = await readCloudflareAuth();
-    if (!auth.loggedIn) {
-      for (const surface of surfaces) {
-        report.record(gate, surface.key, BLOCKED, 'no Cloudflare session');
-      }
-      return;
+  const auth = await readCloudflareAuth();
+  if (!auth.loggedIn) {
+    for (const surface of surfaces) {
+      // An API token cannot open a remote-binding session at all, so this is a
+      // missing prerequisite rather than a failure of the path under test.
+      report.record(gate, surface.key, BLOCKED, 'no Cloudflare session — run `wrangler login`');
     }
+    return;
   }
 
-  // `preview:vpc` is strictly sequential on the default port. ADR 006 is explicit
-  // that fifteen concurrent remote-proxy sessions against Cloudflare is exactly
-  // what not to do, so this is a deliberate cost, not an oversight.
-  //
-  // Plain `preview` opens no remote session, so it parallelises. Each frame gets
-  // its own port: `opennextjs-cloudflare` forwards unknown flags to wrangler, and
-  // `pnpm run <script> -- --port N` appends to the last command of the `&&` chain.
-  const batchSize = withVpc ? 1 : PREVIEW_CONCURRENCY;
-  for (let i = 0; i < surfaces.length; i += batchSize) {
-    const batch = surfaces.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map((surface, index) =>
-        runPreviewSurface(report, surface, {
-          script,
-          gate,
-          withVpc,
-          port: withVpc ? PREVIEW_PORT : PREVIEW_PORT + 1 + index,
-          // wrangler's inspector defaults to 9229 for every instance, so varying
-          // only --port still collides the moment two run at once: the second
-          // dies with `Address already in use (127.0.0.1:9229)`.
-          inspectorPort: INSPECTOR_PORT + 1 + index,
-        }),
-      ),
-    );
+  for (const surface of surfaces) {
+    await runPreviewSurface(report, surface, { gate });
   }
 }
 
-// Distinct ports for the parallel, binding-free `preview` batches.
-const PREVIEW_CONCURRENCY = Number(process.env.CHECK_PREVIEW_CONCURRENCY ?? 4);
-const INSPECTOR_PORT = 9229; // wrangler's default; shared across instances.
-
-async function runPreviewSurface(report, surface, { script, gate, withVpc, port, inspectorPort }) {
-  const args = ['--filter', surface.pkgName, 'run', script];
-  if (!withVpc) {
-    args.push('--', '--port', String(port), '--inspector-port', String(inspectorPort));
-  }
-
-  const handle = startProcess('pnpm', args, {
-    name: `${script.replace(':', '-')}-${surface.brand}-${surface.frame}`,
+async function runPreviewSurface(report, surface, { gate }) {
+  const handle = startProcess('pnpm', ['--filter', surface.pkgName, 'run', 'preview'], {
+    name: `preview-${surface.brand}-${surface.frame}`,
     // Blanked so the OAuth session is used: an API token cannot open a
-    // remote-binding session at all.
-    env: withVpc ? { CLOUDFLARE_API_TOKEN: '' } : {},
+    // remote-binding session, and wrangler re-reads the repo-root `.env`.
+    env: { CLOUDFLARE_API_TOKEN: '' },
   });
 
-  {
-    try {
-      const baseUrl = `http://127.0.0.1:${port}`;
-      const ready = await waitFor(
-        async () => (await httpGet(readinessUrl(baseUrl), 5000)).status > 0,
-        { timeoutMs: 900_000, intervalMs: 2000, onGiveUp: () => handle.exited },
-      );
+  try {
+    const baseUrl = `http://127.0.0.1:${PREVIEW_PORT}`;
+    const ready = await waitFor(
+      async () => (await httpGet(readinessUrl(baseUrl), 5000)).status > 0,
+      { timeoutMs: 900_000, intervalMs: 2000, onGiveUp: () => handle.exited },
+    );
 
-      if (!ready.ok) {
-        const why = handle.exited ? `exited with code ${handle.exitCode}` : 'timed out';
-        const built = handle.output.includes('Worker saved in');
-        report.record('OpenNext build', surface.key, built ? PASS : FAIL, built ? 'built' : why);
-        report.record(gate, surface.key, FAIL, `${why} — ${handle.logPath}`);
-        report.note(FAIL, `${script} (${surface.ws}) ${why}:\n${tail(handle.output)}`);
-        return;
-      }
-
-      report.record('OpenNext build', surface.key, PASS, 'built and started on workerd');
-
-      const { kind } = await checkHttpSurface(
-        report,
-        surface,
-        baseUrl,
-        withVpc ? 'Preview(vpc)' : 'Preview',
-      );
-
-      if (withVpc) {
-        report.record(
-          gate,
-          surface.key,
-          kind === 'ok' ? PASS : FAIL,
-          `rails-health: ${kind ?? 'unrecognised'}`,
-        );
-      } else {
-        // No binding in env.development, so not-configured is the correct answer.
-        report.record(
-          gate,
-          surface.key,
-          kind === 'not-configured' ? PASS : WARN,
-          `workerd started; rails-health: ${kind ?? 'unrecognised'}`,
-        );
-      }
-    } finally {
-      await handle.stop();
+    if (!ready.ok) {
+      const why = handle.exited ? `exited with code ${handle.exitCode}` : 'timed out';
+      const built = handle.output.includes('Worker saved in');
+      report.record('OpenNext build', surface.key, built ? PASS : FAIL, built ? 'built' : why);
+      report.record(gate, surface.key, FAIL, `${why} — ${handle.logPath}`);
+      report.note(FAIL, `preview (${surface.ws}) ${why}:\n${tail(handle.output)}`);
+      return;
     }
+
+    report.record('OpenNext build', surface.key, PASS, 'built and started on workerd');
+
+    const { kind } = await checkHttpSurface(report, surface, baseUrl, 'Preview');
+
+    report.record(
+      gate,
+      surface.key,
+      kind === 'ok' ? PASS : FAIL,
+      `rails-health: ${kind ?? 'unrecognised'}`,
+    );
+  } finally {
+    await handle.stop();
   }
 }
 
@@ -1210,7 +1231,7 @@ async function modeHost(report, surfaces) {
 
   report.note(
     SKIP,
-    `preview/preview:vpc bind loopback inside the container, so ${PREVIEW_PORT} is not reachable from the host ` +
+    `preview binds loopback inside the container, so ${PREVIEW_PORT} is not reachable from the host ` +
       'unless wrangler is given --ip 0.0.0.0. That is expected, not a failure.',
   );
 }
@@ -1231,8 +1252,8 @@ export function buildLinkIndex(surfaces = loadSurfaces()) {
     ].map((u) => ({ ...u, href: `http://localhost:${surface.port}${u.path}` })),
     // Same port on purpose: it is already forwarded by the devcontainer, so the
     // VPC-connected app appears at the URL the developer already has open.
-    vpcCommand:
-      `CLOUDFLARE_API_TOKEN= pnpm --filter ${surface.pkgName} run preview:vpc ` +
+    previewCommand:
+      `CLOUDFLARE_API_TOKEN= pnpm --filter ${surface.pkgName} run preview ` +
       `-- --ip 0.0.0.0 --port ${surface.port}`,
   }));
 }
@@ -1244,7 +1265,7 @@ function renderLinksHtml(index) {
     <tr>
       <th scope="row"><code>${esc(f.ws)}</code><span class="port">:${f.port}</span></th>
       <td>${f.urls.map((u) => `<a href="${esc(u.href)}" target="_blank" rel="noreferrer">${esc(u.label)}</a>`).join('')}</td>
-      <td><button class="copy" data-cmd="${esc(f.vpcCommand)}">copy command</button></td>
+      <td><button class="copy" data-cmd="${esc(f.previewCommand)}">copy command</button></td>
     </tr>`;
 
   return `<title>Edge local check links</title>
@@ -1296,14 +1317,14 @@ function renderLinksHtml(index) {
     <code>0.0.0.0</code> on that frame's usual port, so the URLs above keep working unchanged;
     <code>/rails-health</code> should then read <em>Rails health is reachable</em>.
   </div>
-  <pre>${esc(index[0]?.vpcCommand ?? '')}</pre>
+  <pre>${esc(index[0]?.previewCommand ?? '')}</pre>
   <p class="sub">Use “copy command” in the table for any other frame. <code>CLOUDFLARE_API_TOKEN=</code> must be
   blank — an API token cannot open a remote-binding session; only <code>wrangler login</code> can.</p>
 
   <h2>3 · What not to expect</h2>
-  <p class="sub"><code>pn run check:preview</code> and <code>check:preview:vpc</code> bind container loopback on
-  8787+, which the host cannot reach. That is why the command above overrides <code>--ip</code> and
-  <code>--port</code>. Regenerate this page with <code>pn run check:links</code>.</p>
+  <p class="sub"><code>pn run check:preview</code> binds container loopback on 8787, which the host cannot
+  reach. That is why the command above overrides <code>--ip</code> and <code>--port</code>. Regenerate this
+  page with <code>pn run check:links</code>.</p>
 </main>
 <script>
   for (const b of document.querySelectorAll('button.copy')) {
@@ -1326,9 +1347,10 @@ function modeLinks(surfaces) {
     process.stdout.write(`  ${frame.ws.padEnd(10)} ${frame.urls.map((u) => u.href).join('  ')}\n`);
   }
   process.stdout.write(
-    '\nThese are `next dev`, which has no VPC binding — /rails-health will read not-configured.\n' +
+    '\nThese are `next dev`, whose VPC binding is a local stub (remoteBindings: false) — /rails-health\n' +
+      'reads not-configured unless the private Podman Rails overlay is enabled.\n' +
       'To view a frame actually connected over VPC, one at a time:\n\n' +
-      `  ${index[0]?.vpcCommand}\n\n` +
+      `  ${index[0]?.previewCommand}\n\n` +
       `Clickable index written to ${htmlPath}\n`,
   );
 }
@@ -1430,8 +1452,9 @@ async function modeTunnel(report, surfaces) {
 
   report.note(
     SKIP,
-    'Tunnel reachability is not VPC evidence. These frames run on `next dev`/`wrangler dev`, ' +
-      'which carry no VPC binding, so /rails-health answers not-configured by design. See mode `vpc`.',
+    'Tunnel reachability is not VPC evidence. These frames run on `next dev`, whose VPC binding is a ' +
+      'local stub (remoteBindings: false), so /rails-health answers not-configured by design unless the ' +
+      'private Podman Rails overlay is enabled. See mode `vpc` and mode `preview`.',
   );
   report.note(
     SKIP,
@@ -1717,13 +1740,9 @@ const GATE_ORDER = [
   'Local /',
   'Local /rails-health',
   'OpenNext build',
-  'workerd/OpenNext preview',
   'Preview /health',
   'Preview /',
   'Preview /rails-health',
-  'Preview(vpc) /health',
-  'Preview(vpc) /',
-  'Preview(vpc) /rails-health',
   'Preview → Rails VPC',
   'Host port reachability',
   'Tunnel DNS',
@@ -1747,12 +1766,10 @@ const GATE_ABBREVIATIONS = new Map([
   ['Local /', 'd:/'],
   ['Local /rails-health', 'd:rh'],
   ['OpenNext build', 'build'],
-  ['workerd/OpenNext preview', 'wd'],
   ['Preview /health', 'p:hlt'],
   ['Preview /', 'p:/'],
-  ['Preview(vpc) /health', 'v:hlt'],
-  ['Preview(vpc) /', 'v:/'],
-  ['Preview → Rails VPC', 'v:rh'],
+  ['Preview /rails-health', 'p:rh'],
+  ['Preview → Rails VPC', 'vpc→'],
   ['Host port reachability', 'host'],
   ['Tunnel DNS', 'dns'],
   ['Tunnel Cloudflare', 'cf'],
@@ -1873,9 +1890,7 @@ export async function main(argv = process.argv.slice(2)) {
       } else if (mode === 'next') {
         await modeNext(report, surfaces);
       } else if (mode === 'preview') {
-        await modePreview(report, surfaces, { withVpc: false });
-      } else if (mode === 'preview:vpc') {
-        await modePreview(report, surfaces, { withVpc: true });
+        await modePreview(report, surfaces);
       } else if (mode === 'host') {
         await modeHost(report, surfaces);
       } else if (mode === 'tunnel' || mode === 'tunnel:apex') {

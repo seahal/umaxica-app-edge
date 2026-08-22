@@ -1,6 +1,17 @@
 # Plan 006: A development transport over the Workers VPC binding
 
-## Status: Implemented and verified end to end
+## Status: SUPERSEDED (environment model) by [ADR 009](009-wrangler-lifecycle-environment-reconstruction.md)
+
+> **Superseded by ADR 009, 2026-08-22.** `env.vpc` no longer exists. The VPC Service
+> binding now lives in `env.development` (with `remote: true`) and at the top level
+> (production, with no `remote` key), and `preview:vpc` has been folded into `preview`.
+> This record carried four amendments; rather than adding a fifth, ADR 009 restates the
+> whole model. Read ADR 009 first — the sections below are history.
+>
+> **Still current from this record:** decision 4 (no `/{frame}/{brand}` path prefix),
+> decision 6 (no connector here, as further amended by ADR 008), decision 7 (Access is
+> not part of the Rails path), and the 2026-08-10 amendment (fifteen frames, one VPC
+> Service, distinguished by `Host`).
 
 ## Amends
 
@@ -83,6 +94,12 @@ production had never been exercised.
 
 ### 1. The binding lives in one environment, and nowhere else
 
+> **Superseded by ADR 009 §1–§3.** The binding lives in two: `env.development`
+> (`remote: true`) and the top level (production). `env.vpc` is gone. The _cost_ this
+> section identified was real — a remote-binding session needs `wrangler login` — and
+> ADR 009 pays it on `pnpm preview` only, keeping `pnpm dev` credential-free by passing
+> `remoteBindings: false` on the Node path instead of by isolating an environment.
+
 > Renamed `preview` → `vpc` on 2026-08-09; see the amendment above. The
 > reasoning below is unchanged.
 
@@ -114,6 +131,13 @@ development command, and reduces the separation to remembering to pass it.
 
 ### 2. Production carries no binding, and fails closed
 
+> **Superseded by ADR 009 §5.** Production now carries the binding, pointed at the
+> DEVELOPMENT VPC Service as an explicit bootstrap state. The hazard this section
+> describes — production traffic reaching a developer's machine — is therefore real
+> again, deliberately, and is tracked by `$productionIsBootstrap` in
+> `tools/workers-manifest.json` rather than prevented. See ADR 009 §5 for the cost and
+> the exit procedure.
+
 > Production moved out of `env` to the top level on 2026-08-09; see the
 > amendment above. "env.production" below now means the top level.
 
@@ -136,6 +160,11 @@ Restoring it is two steps, both outside this repository first:
 fail if that restoration reuses the development `service_id`.
 
 ### 3. Three development tiers
+
+> **Superseded by ADR 009 §12.** The command matrix is now `pnpm dev` (Node, no
+> credential), `pnpm preview` (local workerd, `--env development`, remote binding,
+> `wrangler login`), `pnpm deploy` (top level). `preview:vpc` no longer exists. The
+> no-fan-out rule moved onto `preview` and still holds.
 
 | Command            | Runtime                            | VPC binding     | Cloudflare credential    |
 | ------------------ | ---------------------------------- | --------------- | ------------------------ |

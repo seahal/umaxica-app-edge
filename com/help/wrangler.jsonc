@@ -2,25 +2,45 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "umaxica-apps-edge-com-help",
   "main": ".open-next/worker.js",
-  "workers_dev": true,
+
+  /**
+   * THREE LIFECYCLE ENVIRONMENTS, AND NOTHING ELSE.
+   *
+   *   production   this file's top level      wrangler deploy      (no --env)
+   *   development  env.development            pnpm dev / preview   (--env development)
+   *   test         env.test                   vitest               (--env test)
+   *
+   * There is no staging, no `env.production`, and no `env.vpc`. A Wrangler
+   * environment deploys to a *separate* Worker named `<name>-<env>`
+   * (Cloudflare, "Environments"), so an `env.production` would have to
+   * re-declare `name` purely to cancel that out. Putting production at the top
+   * level makes `wrangler deploy` with no --env the production deploy.
+   *
+   * Runtime mode and transport mode are SEPARATE AXES from the lifecycle tier.
+   * One lifecycle environment (development) is served by two runtimes — Node
+   * (`next dev`) and local workerd (`pnpm preview`) — over two different Rails
+   * transports. VPC is a binding capability, not an environment. See adr/009.
+   */
+
   "compatibility_date": "2026-05-13",
+  /**
+   * `nodejs_compat` is only auto-enabled at compatibility_date >= 2026-08-04,
+   * and this Worker predates that, so the explicit flag is load-bearing.
+   * `global_fetch_strictly_public` stops a deployed Worker reaching a private
+   * or non-publicly-resolvable host through the global `fetch()` — which is
+   * what makes the VPC binding below the *only* route to Rails rather than
+   * merely the intended one. Neither is a leftover. Advancing the date is a
+   * separate migration with its own verification; see adr/009.
+   */
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "version_metadata": {
-    "binding": "REVISION"
-  },
-  "images": {
-    "binding": "IMAGES"
-  },
+
   "assets": {
     "binding": "ASSETS",
     "directory": ".open-next/assets"
   },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "umaxica-apps-edge-com-help"
-    }
-  ],
+  "workers_dev": true,
+  "upload_source_maps": false,
+
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
@@ -36,118 +56,126 @@
       "head_sampling_rate": 0.2
     }
   },
-  "upload_source_maps": false,
   "placement": {
     "mode": "smart"
   },
+
   /**
-   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
+   * ---- PRODUCTION ----
    *
-   * Wrangler environments deploy to a *separate* Worker named
-   * `<name>-<env>`, so an `env.production` has to re-declare `name` just to
-   * cancel that out — fighting the tool to stand still. Cloudflare's own model
-   * is that the top level is the real Worker and environments are the variants,
-   * so `wrangler deploy` with no `--env` deploys production and every
-   * `--env` is a non-production variant.
+   * Everything from here to `env` is the production Worker. These are all
+   * non-inheritable keys, so none of it reaches `env.*`; each environment
+   * below repeats what it actually needs.
    *
-   * The deploy scripts blank CLOUDFLARE_ENV for this reason: the container
-   * exports `CLOUDFLARE_ENV=development`, and with no `--env` flag that
-   * variable alone would silently redirect a production deploy to
-   * `<name>-development`. Measured, not assumed.
+   * The tier is exposed to application code as `EDGE_ENV`, never as
+   * `CLOUDFLARE_ENV`. `CLOUDFLARE_ENV` is Wrangler's own control variable: with
+   * no --env flag it selects the environment, and `opennextjs-cloudflare
+   * upload` reads Worker vars through `getPlatformProxy()` into its own
+   * `process.env`, so binding it here would come back as `--env=production`
+   * and look for an environment that deliberately does not exist.
    *
-   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
-   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
-   * through `getPlatformProxy()` and writes every string one into its own
-   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
-   * comes back as `--env=production` and the upload dies looking for an
-   * `env.production` that deliberately does not exist. Measured, not assumed;
-   * tools/check-workers.mjs enforces the separation.
-   *
-   * Non-inheritable keys (vars, services, images, version_metadata, ratelimits,
-   * vpc_services, …) do NOT reach `env.*` from here — also measured: wrangler
-   * warns "not inherited by environments" and the environment resolves with no
-   * bindings at all. So production values sitting here cannot leak into a
-   * development session.
+   * Re-measured 2026-08-22 on wrangler 4.120.1 with `deploy --dry-run`:
+   *   CLOUDFLARE_ENV=development, no --env  ->  EDGE_ENV "development"
+   *   CLOUDFLARE_ENV= (blanked),  no --env  ->  EDGE_ENV "production"
+   * compose.yaml exports CLOUDFLARE_ENV=development, so every deploy/build
+   * script must keep blanking it. tools/check-workers.mjs enforces both rules.
    */
   "vars": {
     "EDGE_ENV": "production",
     "NODE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
+  "version_metadata": {
+    "binding": "REVISION"
+  },
+  "images": {
+    "binding": "IMAGES"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "umaxica-apps-edge-com-help"
+    }
+  ],
 
   /**
-   * No `vpc_services` here — deliberately, and this is not an omission.
+   * BOOTSTRAP: production points at the DEVELOPMENT VPC Service.
    *
-   * The only VPC Service that exists (019f5fe0-287f-7040-9f2f-036cb5b21df7) is
-   * bound to the development tunnel and terminates on a developer's machine.
-   * Pointing production at it would send production traffic to a laptop. A
-   * production VPC Service on a production tunnel does not exist yet; until it
-   * does, production has no Rails transport and `getRailsClient()` returns
-   * null, so `/rails-health` reports `not-configured` and answers 503.
-   * Fail closed, visibly.
+   * 019f5fe0-287f-7040-9f2f-036cb5b21df7 is bound to the development tunnel
+   * (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminates on a developer's
+   * machine. There is exactly one VPC Service on the account — verified
+   * 2026-08-22 with `wrangler vpc service list` — because production Rails on
+   * AWS does not exist yet.
    *
-   * To restore it: create the production VPC Service, then add the block here
-   * with that service_id. tools/check-workers.mjs enforces that it never
-   * equals the development one.
+   * This is a deliberate, temporary migration state, adopted 2026-08-22, NOT a
+   * mistake to be silently corrected. It is recorded in
+   * tools/workers-manifest.json as `vpcServices.production` with
+   * `$productionIsBootstrap: true`; a guardrail requires the development and
+   * production ids to DIFFER as soon as that flag is false.
+   *
+   * No `remote` key: remote bindings are a local-development mechanism, and
+   * on deploy "all remote bindings are disabled, which behaves exactly as if
+   * they were configured with remote: false" (Cloudflare). Omitting it is how
+   * Cloudflare's own get-started example writes a deployed binding.
+   *
+   * AWS cutover is one value: create the production tunnel and VPC Service,
+   * then change this service_id and flip the manifest flag. No application,
+   * transport, or development change. See adr/009.
    */
+  "vpc_services": [
+    {
+      "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+      "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+    }
+  ],
+
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 2000,
+        "period": 60
+      }
+    }
+  ],
 
   "env": {
+    /**
+     * ---- DEVELOPMENT ----
+     *
+     * The one and only Wrangler development environment, serving two runtimes:
+     *
+     *   pnpm dev      Node / next dev     -> Rails direct over the private
+     *                                        Podman network (EDGE_LOCAL_*).
+     *                                        next.config.ts passes
+     *                                        `remoteBindings: false`, so no
+     *                                        Cloudflare credential is needed.
+     *   pnpm preview  local workerd       -> the binding below, resolved
+     *                                        remotely against the real
+     *                                        development VPC Service.
+     *
+     * `remote: true` does not upload anything: the Worker still executes in
+     * local workerd and only this binding is proxied out to Cloudflare. It
+     * does require an interactive `wrangler login` — an API token cannot open
+     * the session — so `pnpm preview` costs a credential and `pnpm dev` does
+     * not. That is a runtime-mode difference, not a lifecycle one.
+     *
+     * The application-level API is identical to production:
+     * `env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC.fetch(...)`. Only the connection
+     * mode differs. src/lib/rails-client.ts contains no environment branch.
+     */
     "development": {
       "vars": {
         "EDGE_ENV": "development",
         "NODE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "umaxica-apps-edge-com-help"
-        }
-      ],
       "version_metadata": {
         "binding": "REVISION"
       },
       "images": {
         "binding": "IMAGES"
-      },
-      "ratelimits": [
-        {
-          "name": "RATE_LIMITER",
-          "namespace_id": "2002",
-          "simple": {
-            "limit": 2000,
-            "period": 60
-          }
-        }
-      ]
-    },
-    /**
-     * `vpc` is the Cloudflare-integration development tier: local workerd
-     * (`opennextjs-cloudflare preview --env vpc`) with the VPC binding resolved
-     * remotely against the real development VPC Service. It is the only
-     * environment that carries `vpc_services`, and it is never deployed.
-     *
-     * It was called `preview` until it became clear that Cloudflare already
-     * uses "preview" for Preview URLs — the versioned URLs of a *deployed*
-     * Worker — which is close to the opposite of what this is.
-     *
-     * `remote: true` runs this Worker's code locally and proxies only the
-     * binding to Cloudflare, so a session needs `wrangler login` (an API token
-     * cannot open one). That cost is why the binding lives here and not in
-     * `env.development` — `pnpm dev` and `pnpm preview` stay credential-free.
-     * See adr/006-development-workers-vpc-transport.md.
-     */
-    "vpc": {
-      "images": {
-        "binding": "IMAGES"
-      },
-      "vars": {
-        "EDGE_ENV": "vpc",
-        "NODE_ENV": "development",
-        "BRAND_NAME": "UMAXICA"
-      },
-      "version_metadata": {
-        "binding": "REVISION"
       },
       "services": [
         {
@@ -165,7 +193,7 @@
       "ratelimits": [
         {
           "name": "RATE_LIMITER",
-          "namespace_id": "4002",
+          "namespace_id": "2002",
           "simple": {
             "limit": 2000,
             "period": 60
@@ -173,16 +201,23 @@
         }
       ]
     },
+
     /**
-     * `test` is never deployed — it exists so `wrangler dev --env test` and a
-     * future @cloudflare/vitest-pool-workers setup resolve test-tier config.
-     * Only non-inheritable keys are repeated here; inheritable ones (observability,
-     * placement, assets, compatibility_*) fall through from the top level.
+     * ---- TEST ----
+     *
+     * Never deployed; exists so `wrangler dev --env test` and a future
+     * @cloudflare/vitest-pool-workers setup resolve test-tier config.
+     *
+     * NO `vpc_services`, and that absence is an invariant rather than an
+     * oversight. `vpc_services` being non-inheritable means it must be stated
+     * explicitly *by an environment that needs it* — it does not mean every
+     * environment must carry every production binding. The test architecture
+     * has no Rails dependency, so it gets no Rails transport.
+     *
+     * Only non-inheritable keys are repeated here; observability, placement,
+     * assets and compatibility_* fall through from the top level.
      */
     "test": {
-      "images": {
-        "binding": "IMAGES"
-      },
       "vars": {
         "EDGE_ENV": "test",
         "NODE_ENV": "test",
@@ -190,6 +225,9 @@
       },
       "version_metadata": {
         "binding": "REVISION"
+      },
+      "images": {
+        "binding": "IMAGES"
       },
       "services": [
         {
@@ -208,15 +246,5 @@
         }
       ]
     }
-  },
-  "ratelimits": [
-    {
-      "name": "RATE_LIMITER",
-      "namespace_id": "1002",
-      "simple": {
-        "limit": 2000,
-        "period": 60
-      }
-    }
-  ]
+  }
 }

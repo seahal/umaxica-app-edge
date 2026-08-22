@@ -154,13 +154,28 @@ Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
 
 ### Cloudflare
 
-Base local development needs **no Cloudflare credentials** — no API token, no
-`wrangler login`, and no tunnel connector. `vpc_services` exists only in the
-explicit `env.vpc` development environment; production remains fail-closed.
+`pnpm run dev` needs **no Cloudflare credentials** — no API token, no
+`wrangler login`, and no tunnel connector.
 
 ```bash
 pnpm run dev   # every dev server, on the ports in the table above
 ```
+
+`env.development` does carry the Workers VPC binding, but the Node dev path passes
+`remoteBindings: false`, so `next dev` never opens a session against Cloudflare and
+reaches Rails over the private Podman network instead. The credential cost falls on
+`pnpm preview` alone, which runs the same lifecycle environment on local workerd with
+the binding resolved remotely:
+
+```bash
+CLOUDFLARE_API_TOKEN= pnpm --filter umaxica-apps-edge-app-docs run preview
+```
+
+Run that one workspace at a time — fifteen at once would open fifteen remote-proxy
+sessions. There are three lifecycle environments and no more: production is the top
+level, development is `env.development`, test is `env.test`. VPC is a binding
+capability, not an environment. See
+[`adr/009`](adr/009-wrangler-lifecycle-environment-reconstruction.md).
 
 This repository runs no tunnel connector. There is one connector for the whole
 system and it lives in the Rails repository — a second one on the same tunnel
@@ -235,7 +250,7 @@ Notes:
   `npm --prefix app/docs run deploy:upload` instead.
 - **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
   The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
-  as `--env=production`. The top level of every `wrangler.jsonc` here *is*
+  as `--env=production`. The top level of every `wrangler.jsonc` here _is_
   production and there is deliberately no `env.production`, so a deploy command of
   `pnpm --dir org/core exec wrangler versions upload` fails with
   `No environment found in configuration with name "production"`. A raw

@@ -197,26 +197,53 @@ export function createRailsClient(
 /**
  * Two mutually exclusive transports, selected by an actual runtime capability.
  *
- * 1. VPC binding       → Workers/workerd. Cloudflare grants the real binding.
- * 2. Explicit Node dev → direct private Podman network, with no Access token.
- * 3. Neither           → null, reported as `not-configured`. Fail closed.
+ * 1. Local Node dev  → direct private Podman network, with no Access token.
+ * 2. VPC binding     → Workers/workerd. Cloudflare grants the real binding.
+ * 3. Neither         → null, reported as `not-configured`. Fail closed.
  *
- * Requiring both local flags matters: the Rails overlay is container-wide, but
- * only the `next dev` scripts set EDGE_LOCAL_NODE_RUNTIME. A workerd preview
- * launched from that same container therefore cannot inherit a fabricated
- * fallback when its VPC binding is absent.
+ * **The local-Node check runs first, and the order is load-bearing.**
+ *
+ * `env.development` carries the VPC Service binding with `remote: true`, and
+ * `next dev` resolves that environment (the container exports
+ * `CLOUDFLARE_ENV=development`). `next.config.ts` passes
+ * `remoteBindings: false` so the Node dev server never opens a Cloudflare
+ * remote-binding session — but wrangler still *materialises the binding*, as a
+ * stub that throws on use:
+ *
+ *   Binding UMAXICA_APPS_EDGE_CF_WORKERS_VPC needs to be run remotely
+ *
+ * Measured 2026-08-22 via `getPlatformProxy({ remoteBindings: false })`:
+ * `bindingPresent: true`, and the first `fetch()` throws. So the binding is
+ * *truthy but non-functional* under `next dev`. Testing it first — as this
+ * function used to — made every local Rails call report `unreachable` and made
+ * the direct transport below dead code.
+ *
+ * `EDGE_LOCAL_NODE_RUNTIME` is set only by the `dev` scripts, so workerd
+ * preview and the deployed Worker never take this branch and reach the real
+ * binding exactly as before. Requiring `EDGE_LOCAL_RAILS_ENABLED` as well
+ * matters because the Rails overlay is container-wide: without it, Node dev
+ * fails closed to `not-configured` rather than borrowing a transport it was
+ * not granted.
+ *
+ * This is still a branch on runtime *capability*, never on an environment
+ * name. See adr/009.
  */
 export function getRailsClient(): RailsClient | null {
+  const localEnv = process.env as unknown as RailsLocalNodeEnv;
+  const isLocalNodeRuntime = localEnv.EDGE_LOCAL_NODE_RUNTIME === '1';
+
+  if (isLocalNodeRuntime) {
+    if (localEnv.EDGE_LOCAL_RAILS_ENABLED === '1') {
+      return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
+    }
+    return null;
+  }
+
   const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
 
   const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
   if (binding) {
     return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
-  }
-
-  const localEnv = process.env as unknown as RailsLocalNodeEnv;
-  if (localEnv.EDGE_LOCAL_NODE_RUNTIME === '1' && localEnv.EDGE_LOCAL_RAILS_ENABLED === '1') {
-    return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
   }
 
   return null;

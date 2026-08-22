@@ -1,17 +1,76 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "umaxica-apps-edge-apex-net",
-  "keep_vars": true,
-  "compatibility_date": "2026-02-27",
-  "compatibility_flags": ["nodejs_als"],
   "main": "./src/index.tsx",
+  "keep_vars": true,
+
+  /**
+   * THREE LIFECYCLE ENVIRONMENTS, AND NOTHING ELSE.
+   *
+   *   production   this file's top level      wrangler deploy      (no --env)
+   *   development  env.development            pnpm dev             (--env development)
+   *   test         env.test                   vitest               (--env test)
+   *
+   * There is no staging, no `env.production`, and no `env.vpc`. A Wrangler
+   * environment deploys to a *separate* Worker named `<name>-<env>`, so an
+   * `env.production` would have to re-declare `name` purely to cancel that
+   * out. `wrangler deploy` with no --env is the production deploy.
+   *
+   * THIS WORKER HAS NO RAILS TRANSPORT, DELIBERATELY. It owns the root domain
+   * and must stay available when Rails is down, so it carries no Rails client,
+   * no `vpc_services` binding in any environment, and no Rails field in its
+   * health response. Do not add a VPC binding here for consistency with the
+   * Next.js frames — the asymmetry is the point. See adr/005 decision 2 and
+   * adr/009; tools/check-workers.mjs enforces it.
+   */
+
+  "compatibility_date": "2026-02-27",
+  /**
+   * `nodejs_als` gives Hono `AsyncLocalStorage`. This Worker predates the
+   * 2026-08-04 date at which `nodejs_compat` became automatic and does not
+   * need the full Node compatibility layer anyway. Advancing the date is a
+   * separate migration with its own verification; see adr/009.
+   */
+  "compatibility_flags": ["nodejs_als"],
+
   "assets": { "directory": "./public" },
-  "version_metadata": {
-    "binding": "CF_VERSION_METADATA"
-  },
+  /**
+   * Keep the production Worker reachable without reclaiming the apex custom
+   * domain from the development Tunnel.
+   */
   "workers_dev": true,
   "preview_urls": true,
+  /**
+   * The apex hostname is owned by the development Cloudflare Tunnel, so this
+   * Worker claims no route at all — see adr/008-edge-development-tunnel-exposure.md.
+   *
+   * This used to declare `{ pattern: "<apex>", custom_domain: true }` so that
+   * `wrangler deploy` would reconcile the binding on every production deploy
+   * and stop a hand-edited dashboard entry from pointing the hostname
+   * elsewhere. That property is now the exact hazard: a custom domain and a
+   * Tunnel Public Hostname cannot both own one name, so a production deploy
+   * would reclaim the hostname from the Tunnel and silently break the
+   * development route.
+   *
+   * Empty is therefore load-bearing, not a leftover. Restoring the apex domain
+   * to this Worker means removing the Tunnel's Public Hostname entry first,
+   * then putting the `routes` entry back — in that order.
+   *
+   * `routes` IS inherited by named environments, so `env.development` and
+   * `env.test` re-pin `[]` below. That is redundant while this is also `[]`,
+   * and deliberately kept: the moment a real route returns here, inheritance
+   * would otherwise reassign the production hostname to `<name>-development`.
+   */
+  "routes": [],
   "upload_source_maps": false,
+
+  /**
+   * Inheritable, so `env.development` and `env.test` get this too and do not
+   * restate it. (They used to restate it byte-for-byte, which read as an
+   * intentional per-environment difference that did not exist.) Observability
+   * applies to deployed Workers; a local `wrangler dev` session emits no
+   * remote telemetry from these settings.
+   */
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
@@ -27,79 +86,67 @@
       "head_sampling_rate": 0.2
     }
   },
+  "placement": { "mode": "smart" },
+
   /**
-   * THE TOP LEVEL IS PRODUCTION. There is no `env.production`.
+   * ---- PRODUCTION ----
    *
-   * A wrangler environment deploys to a separate Worker named `<name>-<env>`,
-   * so an `env.production` has to re-declare `name` purely to cancel that
-   * out. Cloudflare's model is that the top level is the real Worker and
-   * environments are the variants, so `wrangler deploy` with no `--env` is
-   * the production deploy.
+   * All non-inheritable, so none of it reaches `env.*`; each environment below
+   * repeats what it needs.
    *
-   * The deploy scripts blank CLOUDFLARE_ENV: compose.yaml exports
-   * `CLOUDFLARE_ENV=development`, and with no `--env` that variable alone
-   * would redirect the deploy to `<name>-development`. Measured, not assumed.
+   * The tier is `EDGE_ENV`, never `CLOUDFLARE_ENV` — the latter is Wrangler's
+   * own control variable and selects the environment when no --env is passed.
+   * compose.yaml exports `CLOUDFLARE_ENV=development`, so every deploy script
+   * blanks it. Re-measured 2026-08-22 on wrangler 4.120.1 with `deploy
+   * --dry-run`: blanked resolves EDGE_ENV "production", unset-but-exported
+   * resolves "development".
    *
-   * The tier itself is exposed to the Worker as `EDGE_ENV`, never as
-   * `CLOUDFLARE_ENV`. `opennextjs-cloudflare upload` reads the Worker vars
-   * through `getPlatformProxy()` and writes every string one into its own
-   * `process.env` before spawning wrangler, so a var named CLOUDFLARE_ENV
-   * comes back as `--env=production` and the upload dies looking for an
-   * `env.production` that deliberately does not exist. Measured, not assumed;
-   * tools/check-workers.mjs enforces the separation.
+   * No `NODE_ENV` here: this is a Hono Worker, not Next.js, and nothing reads
+   * it. The Next.js frames set it because Next requires it.
    */
   "vars": {
     "EDGE_ENV": "production",
     "BRAND_NAME": "UMAXICA"
   },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "BREAKER_KV",
+      "id": "c6e6da19377c4d878faefac24e2a1b42"
+    }
+  ],
   /**
-   * The apex hostname is owned by the development Cloudflare Tunnel, so this
-   * Worker claims no route at all — see adr/008-edge-development-tunnel-exposure.md.
+   * Rate Limiting
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
    *
-   * This used to declare `{ pattern: "<apex>", custom_domain: true }` so that
-   * `wrangler deploy` would reconcile the binding on every production deploy and
-   * stop a hand-edited dashboard entry from pointing the hostname elsewhere. That
-   * property is now the exact hazard: a custom domain and a Tunnel Public
-   * Hostname cannot both own one name, so a production deploy would reclaim the
-   * hostname from the Tunnel and silently break the development route.
-   *
-   * Empty is therefore load-bearing, not a leftover. Restoring the apex domain to
-   * this Worker means removing the Tunnel's Public Hostname entry first, then
-   * putting the `routes` entry back — in that order.
-   *
-   * Named environments DO inherit this key, so `env.development` and
-   * `env.test` keep pinning `"routes": []` for their own reasons.
+   * Counters are per-`namespace_id`, so each tier gets its own and local or CI
+   * traffic cannot spend production's budget. `namespace_id` is plain config,
+   * not a provisioned resource.
    */
-  "routes": [],
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "1004",
+      "simple": {
+        "limit": 2000,
+        "period": 60
+      }
+    }
+  ],
 
   "env": {
     "development": {
-      "version_metadata": {
-        "binding": "CF_VERSION_METADATA"
-      },
       "vars": {
         "EDGE_ENV": "development",
         "BRAND_NAME": "UMAXICA"
       },
-      // Required, not decorative: `routes` IS inherited by named environments,
-      // so without this an `--env development` deploy reassigns the production
-      // custom domain to `<name>-development`. Measured via `--dry-run`.
-      "routes": [],
-      "observability": {
-        "enabled": false,
-        "head_sampling_rate": 1,
-        "logs": {
-          "enabled": true,
-          "invocation_logs": true,
-          "head_sampling_rate": 0.2,
-          "persist": true
-        },
-        "traces": {
-          "enabled": true,
-          "head_sampling_rate": 0.2,
-          "persist": true
-        }
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
       },
+      // See the top-level note — blocks route inheritance.
+      "routes": [],
       "kv_namespaces": [
         {
           "binding": "BREAKER_KV",
@@ -117,28 +164,31 @@
         }
       ]
     },
+
     /**
-     * `test` is never deployed — it exists so `wrangler dev --env test` and a
-     * future @cloudflare/vitest-pool-workers setup resolve test-tier config.
-     * Only non-inheritable keys are repeated here; inheritable ones (observability,
-     * placement, compatibility_*) fall through from the top level.
+     * ---- TEST ----
+     *
+     * Never deployed; exists so `wrangler dev --env test` and a future
+     * @cloudflare/vitest-pool-workers setup resolve test-tier config. Only
+     * non-inheritable keys are repeated; observability, placement and
+     * compatibility_* fall through from the top level.
      */
     "test": {
-      "version_metadata": {
-        "binding": "CF_VERSION_METADATA"
-      },
       "vars": {
         "EDGE_ENV": "test",
         "BRAND_NAME": "UMAXICA"
       },
-      // See the note in `env.development` — blocks route inheritance.
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
+      },
+      // See the top-level note — blocks route inheritance.
       "routes": [],
       "kv_namespaces": [
         {
           "binding": "BREAKER_KV",
           // TODO: point at a test-only namespace once one is provisioned.
           // Shares production's id today; harmless while test stays local
-          // (miniflare simulates KV in-memory and ignores the id).
+          // (miniflare simulates KV in-memory and ignores the id). Tracked in adr/009.
           "id": "c6e6da19377c4d878faefac24e2a1b42"
         }
       ],
@@ -153,26 +203,5 @@
         }
       ]
     }
-  },
-  "placement": { "mode": "smart" },
-  "kv_namespaces": [
-    {
-      "binding": "BREAKER_KV",
-      "id": "c6e6da19377c4d878faefac24e2a1b42"
-    }
-  ],
-  /**
-   * Rate Limiting
-   * https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
-   */
-  "ratelimits": [
-    {
-      "name": "RATE_LIMITER",
-      "namespace_id": "1004",
-      "simple": {
-        "limit": 2000,
-        "period": 60
-      }
-    }
-  ]
+  }
 }

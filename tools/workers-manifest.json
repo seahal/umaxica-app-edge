@@ -1,8 +1,22 @@
 {
-  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC binding in env.vpc ONLY (pnpm preview:vpc; development and test carry no transport, and the top level — which IS production — carries none until a production VPC Service exists). contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails. external: Vercel-hosted, no wrangler config.",
+  "$comment": "Classification of Cloudflare/Vercel workspaces. Checked by tools/check-workers.mjs. railsBacked: OpenNext apps that fetch from Rails — they own a src/lib/rails-client.ts copy and declare the VPC Service binding at the top level (production) and in env.development (remote), never in env.test. contentSurface: OpenNext apps that do not talk to Rails and must carry no VPC binding at all. standalone: Hono apex workers, no Rails — they own the root domain and must survive a Rails outage. external: Vercel-hosted, no wrangler config. Lifecycle model: adr/009.",
+
   "vpcBinding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-  "$vpcDevelopmentServiceIdComment": "The development VPC Service, bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f) and terminating on core.app.localhost:3000. It is NOT a production resource; production must never point at it. Verify with `wrangler vpc service get <id>`.",
-  "vpcDevelopmentServiceId": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+
+  "$vpcServicesComment": "One VPC Service id per LIFECYCLE environment. env.test intentionally has none — see $testHasNoVpc. Verify with `wrangler vpc service list`.",
+  "vpcServices": {
+    "$developmentComment": "Bound to the development tunnel (1d501e9a-62f7-4c0d-ba5e-a26e3f10088f), terminating on a developer's machine. Used by `pnpm preview` through a remote binding.",
+    "development": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+
+    "$productionComment": "BOOTSTRAP STATE — currently the SAME id as development. See $productionIsBootstrap.",
+    "production": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+  },
+
+  "$productionIsBootstrapComment": "TRUE means production deliberately points at the DEVELOPMENT VPC Service because production Rails on AWS does not exist yet — verified 2026-08-22, the account holds exactly one VPC Service. Adopted 2026-08-22. While true, a deployed production Worker's Rails traffic leaves the production network and terminates on a developer's machine through the development tunnel, and production /rails-health reports ok for the wrong reason. TO EXIT: (1) create the production tunnel beside production Rails and a production VPC Service on it; (2) set vpcServices.production to the new id; (3) replace service_id in the fifteen top-level vpc_services blocks; (4) set this flag to false. tools/check-workers.mjs and test/rails-connection-invariants.test.ts then REQUIRE the two ids to differ, so the guardrail is suspended rather than deleted. No application, transport, or development-environment change is needed.",
+  "$productionIsBootstrap": true,
+
+  "$testHasNoVpcComment": "env.test carries no vpc_services, and that absence is an invariant. `vpc_services` being non-inheritable means an environment that needs it must state it explicitly — NOT that every environment must carry every production binding. The test architecture has no Rails dependency.",
+
   "railsBacked": [
     "app/core",
     "app/docs",

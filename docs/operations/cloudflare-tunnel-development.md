@@ -128,12 +128,15 @@ network would make the connector's Rails origin ambiguous.
 Cloudflare Workers runtime traffic is a different graph and does not pass through the Tunnel:
 
 ```text
-local workerd (pnpm preview:vpc) ── remote VPC binding ── development VPC Service ── Tunnel ── Rails
-deployed Worker                  ── production VPC binding (absent: fails closed)
+local workerd (pnpm preview) ── remote VPC binding ── development VPC Service ── Tunnel ── Rails
+deployed Worker              ── production VPC binding ── VPC Service ── Tunnel ── Rails
 ```
 
 A Tunnel route does not turn a local Node process into a Workers runtime, and it does not supply a
-Workers binding. See `docs/development/cloudflare-development-network.md` and ADR 006.
+Workers binding. See `docs/development/cloudflare-development-network.md` and
+`adr/009-wrangler-lifecycle-environment-reconstruction.md`, which superseded ADR 006's environment
+model on 2026-08-22: `env.vpc` is gone, `pnpm preview` carries the binding, and production carries
+it too (pointed at the development Service as an explicit bootstrap state).
 
 ## Route table
 
@@ -908,16 +911,22 @@ application's CSRF middleware is reached.
 #### B. Edge Worker → VPC Service → Tunnel → Rails (egress) — one path, Access **n** by design
 
 The fifteen Rails-backed frames reach Rails over the **same** development tunnel
-(`1d501e9a-…`) through one VPC Service (`019f5fe0-…`), declared only under `env.vpc`, dispatched to
+(`1d501e9a-…`) through one VPC Service (`019f5fe0-…`), declared in `env.development` (remote) and at
+the top level (production) since 2026-08-22, dispatched to
 fifteen entry points by `Host` alone. It crosses the Tunnel, so it belongs in this inventory, but it
 is not a Public Hostname and it carries no Access. ADR 006:
 
 > Access belongs at **browser → Edge** ingress. Workers VPC is **Edge → private origin** egress.
 > Neither substitutes for the other.
 
-**Not measured in this pass.** Exercising it needs `pnpm preview:vpc` and an interactive
+**Not measured in this pass.** Exercising it needs `pnpm preview` and an interactive
 `wrangler login`, which was outside a read-only acceptance run. The **n** above is a design
 statement; it is not a reachability result, and nothing here should be read as one.
+
+> **Measured since, 2026-08-22** (adr/009): `pnpm run check:vpc` reached Rails 200 on all fifteen
+> entry points over the raw binding, and `pnpm --filter umaxica-apps-edge-app-docs run preview`
+> answered `{"rails":{"kind":"ok","status":200}}` through local workerd. The Access **n** is
+> unchanged — the egress path still carries no Access.
 
 Confirmed by reading instead: the ADR 005 Access fallback via `core-jp.umaxica.app` is **gone from
 the code**. `<brand>/<frame>/src/lib/rails-client.ts` has exactly two branches — the VPC binding and
@@ -1147,7 +1156,10 @@ authentication are recorded **BLOCKED**, never PASS._
   `side-jp` still 302-to-Access, `core-jp.umaxica.app` still without a record.
 - The Workers VPC path must be unaffected: `UMAXICA_APPS_EDGE_CF_WORKERS_VPC` still declared only
   under `env.vpc`, and `/rails-health` still 503 `not-configured` under `next dev`. A Tunnel route
-  is not a Workers binding.
+  is not a Workers binding. _(Recorded 2026-08-11. Since 2026-08-22 the binding is declared in
+  `env.development` and at the top level; `env.vpc` no longer exists. `next dev` still answers
+  `not-configured` without the Podman Rails overlay, for a different reason — its binding is a
+  local stub. See adr/009.)_
 - `.app` must not reach the `.com` application and `.com` must not reach `.org` — for the apexes
   and for the three `info` frames this is the `/health.json` `service` field. For the remaining nine
   frames it is not decidable from the response; decide it by ablation instead — stop one brand's
@@ -1183,9 +1195,10 @@ authentication are recorded **BLOCKED**, never PASS._
 - **Only the ingress half of the Tunnel is measured.** Edge crosses the Tunnel two ways: browser →
   Tunnel → Edge (sixteen Public Hostnames, verified refused unauthenticated on 2026-08-11) and Edge
   Worker → VPC Service → Tunnel → Rails (the fifteen Rails-backed frames). **The egress path has not
-  been exercised since Access was applied** — it needs `pnpm preview:vpc` and an interactive
-  `wrangler login`. It carries no Access by design (ADR 006), so nothing about it should change, but
-  that is a design statement rather than a measurement.
+  been exercised since Access was applied** — it needs `pnpm preview` and an interactive
+  `wrangler login`. It carries no Access by design (ADR 006 §7, still current), so nothing about it
+  should change, but that is a design statement rather than a measurement. _(Exercised 2026-08-22;
+  see the note under section B.)_
 - **Eight production surfaces are replaced by the development Tunnel** — the four apex hostnames,
   `docs-jp.umaxica.com`, `news-jp.umaxica.com`, `news-jp.umaxica.org`, `help-jp.umaxica.org`. This
   is an authorized cutover, not an accident. All eight now resolve and answer through the Tunnel;
@@ -1213,7 +1226,7 @@ authentication are recorded **BLOCKED**, never PASS._
 - **Production is out of scope.** This is the development tunnel only; there is no production
   tunnel or production VPC Service.
 - **A Tunnel route is not a Workers binding.** `/rails-health` answering 503 `not-configured` is
-  the correct development answer, not a Tunnel failure. Only `pnpm preview:vpc` exercises the VPC
+  the correct development answer, not a Tunnel failure. Only `pnpm preview` exercises the VPC
   path.
 - **`apex` `routes` must stay empty.** `{app,com,org,net}/apex/wrangler.jsonc` now declares
   `"routes": []` at the top level. Restoring an apex domain to its Worker means removing the
