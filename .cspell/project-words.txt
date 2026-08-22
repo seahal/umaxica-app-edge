@@ -89,6 +89,9 @@ nicolo
 ribaudo
 herdr
 dcup
+nolanjx
+sliekens
+srzstephen
 
 # --- Vocabulary this repository's prose uses consistently. Each is a coined
 # --- prefix form ("mis-", "un-") or an established abbreviation; none is a
