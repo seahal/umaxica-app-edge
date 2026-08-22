@@ -1,4 +1,3 @@
-import type { BaseLogger } from '@hono/structured-logger';
 import { Hono, type Context } from 'hono';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
@@ -14,7 +13,7 @@ import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
-import { apexStructuredLogger } from './structured-logger';
+import { apexStructuredLogger, type BaseLogger } from './structured-logger';
 
 export type ApexEnv = {
   Bindings: AssetEnv;
