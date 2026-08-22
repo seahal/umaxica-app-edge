@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "EDGE_LOCAL_NODE_RUNTIME=1 next dev --hostname 0.0.0.0 --port 5105",
     "test:e2e": "playwright test",
-    "build": "CLOUDFLARE_ENV= opennextjs-cloudflare build",
+    "build": "pnpm run cf-typegen && CLOUDFLARE_ENV= opennextjs-cloudflare build",
     "build:next": "next build",
     "start": "next start --port 5105",
     "deploy": "CLOUDFLARE_ENV= opennextjs-cloudflare build && CLOUDFLARE_ENV= opennextjs-cloudflare deploy",
