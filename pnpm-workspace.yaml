@@ -51,6 +51,13 @@ catalog:
   # entry below off ^4.123.0.
   '@cloudflare/vite-plugin': ^1.53.0
   '@cloudflare/workers-types': ^5.20260820.1
+  # Inter, self-hosted. `next/font/google` downloaded and self-hosted it at build
+  # time for the Next frames; a Vite unit has no equivalent, and the CSP is
+  # `font-src 'self' data:`, so a CDN is not an option either. This package ships
+  # the woff2 files and the `@font-face` rules, which Vite fingerprints into the
+  # client build like any other asset. Only the units that have left `next/font`
+  # install it.
+  '@fontsource-variable/inter': ^5.3.0
   # The Hono structured-logger middleware, wired in every apex Worker's
   # create-apex-app.ts. Four units, one version — catalogued for the same reason
   # as everything else here: nothing but this file can hold them together, and a
@@ -64,7 +71,6 @@ catalog:
   # the same version on a laptop and in CI. Catalogued for the same reason the
   # rest of the toolchain is: twenty-one units must not drift apart.
   '@orangeopensource/hurl': ^8.0.4
-  '@opennextjs/cloudflare': ^1.20.2
   # The browser-test runtime, in twenty-one units. It pins the wire protocol as
   # well as the API, so two units on different minors drive two different
   # browsers. This sat as an identical literal in every manifest with nothing
@@ -81,9 +87,11 @@ catalog:
   # stylesheet with `@theme`. One engine, three delivery mechanisms, one per
   # bundler the estate actually has:
   #
-  #   @tailwindcss/postcss  the sixteen Next frames, through PostCSS
-  #   @tailwindcss/vite     the five apex Hono Workers, through Vite
+  #   @tailwindcss/vite     every unit, through Vite
   #   @tailwindcss/cli      nothing, today — see below
+  #
+  # `@tailwindcss/postcss` is gone: it was how the Next.js frames delivered
+  # Tailwind, and there are no Next.js frames left.
   #
   # `@tailwindcss/cli` was how the apex Workers got a stylesheet before they had
   # a bundler: `wrangler deploy` bundles the entrypoint and copies `public/`
@@ -94,8 +102,17 @@ catalog:
   # All three are pinned here rather than per unit so the twenty-one units
   # cannot drift onto different Tailwind versions.
   '@tailwindcss/cli': ^4.3.3
-  '@tailwindcss/postcss': ^4.3.3
   '@tailwindcss/vite': ^4.3.3
+  # TanStack Router and TanStack Start, the framework behind the `info` frames.
+  # They move in lockstep — Start's peer range pins Router — so a per-unit drift
+  # is a resolution failure rather than a subtle one. Start is a `dependency`
+  # rather than a devDependency: unlike Vite, it IS in the request path, because
+  # `wrangler.jsonc` names `@tanstack/react-start/server-entry` as `main`.
+  #
+  # Start is at Release Candidate, not GA, as of 2026-08-22. That is recorded in
+  # plans/info-nextjs-to-tanstack-start.md rather than pinned around here.
+  '@tanstack/react-router': ^1.170.31
+  '@tanstack/react-start': ^1.168.48
   # The DOM-assertion and DOM-implementation halves of the Vitest setup. Every
   # unit's vitest.setup.ts imports `@testing-library/jest-dom`, and every
   # vitest.config.ts names happy-dom as its environment, so a per-unit drift
@@ -105,6 +122,10 @@ catalog:
   '@types/node': ^26.2.0
   '@types/react': ^19.2.18
   '@types/react-dom': ^19.2.4
+  # React Fast Refresh and the JSX transform for the Vite-built units. The five
+  # apex Workers do not install it — they render with hono/jsx and have no React
+  # at all (docs/design/ui-shell-contract.md §3a).
+  '@vitejs/plugin-react': ^6.1.0
   # Exact, not a range, and deliberately so: V8 coverage remapping has to match
   # the vitest it instruments, and this was already an exact literal in all
   # twenty-two manifests. Catalogued to keep it that way from one place.
@@ -114,10 +135,9 @@ catalog:
   # different major could disagree about what the config file even means.
   cspell: ^10.0.1
   dependency-cruiser: ^18.2.0
-  happy-dom: ^20.11.2
+  happy-dom: ^20.11.6
   hono: ^4.13.3
   knip: ^6.32.2
-  next: ^16.3.1
   nuqs: ^2.10.0
   # The static analysis toolchain. These were literal strings in twenty-two
   # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
@@ -125,16 +145,12 @@ catalog:
   # or type rule that fires in CI and not on a developer's machine is worse than
   # the rule being off. oxlint and oxlint-tsgolint in particular have to move
   # together — tsgolint is the type-aware backend oxlint shells out to.
-  oxfmt: ^0.63.0
-  oxlint: 1.78.0
+  oxfmt: ^0.64.0
+  oxlint: 1.79.0
   oxlint-tsgolint: ^7.0.2001
   react: ^19.2.8
   react-aria-components: ^1.20.0
   react-dom: ^19.2.8
-  # A zero-code marker package: importing it in a module that a client component
-  # reaches makes the BUILD fail rather than shipping server code to a browser.
-  # It is a build-time contract in fifteen units, so it has to be one version.
-  server-only: ^0.0.1
   # The frontend performance budget runner. See '@size-limit/file' above for why
   # the two move together and why no preset is used.
   size-limit: ^13.0.3
@@ -155,8 +171,8 @@ catalog:
   # installs. Every unit declares `typescript: catalog:` explicitly rather than
   # leaning on root hoisting, so an extracted unit still resolves a compiler.
   typescript: ^7.0.2
-  # The build tool for the five apex Hono Workers, and nothing else: the sixteen
-  # Next frames build through Next. It is a devDependency everywhere it appears
+  # The build tool for every deployment unit — the five apex Hono Workers and the
+  # fifteen TanStack Start frames. It is a devDependency everywhere it appears
   # and must stay one — nothing Vite ships may reach a Worker bundle, which is
   # the property `pnpm --dir <unit> run build` then inspecting `dist/` checks.
   #
@@ -211,6 +227,14 @@ minimumReleaseAgeIgnoreMissingTime: false
 # so the exception had nothing left to except.
 minimumReleaseAgeExclude:
   - miniflare@5.20260804.0-alpha
+
+audit:
+  ignore:
+    # @orangeopensource/hurl@8.0.4 uses extract-zip only in its install script
+    # to unpack Hurl's fixed GitHub release archive. GHSA-jmr9-qjv8-65gv names
+    # 2.0.2 as the patched floor, but npm publishes no version after 2.0.1 and
+    # Hurl has no newer release. Remove this exception as soon as either exists.
+    - GHSA-jmr9-qjv8-65gv
 
 overrides:
   nanoid: ^3.3.17

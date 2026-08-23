@@ -177,6 +177,16 @@ const VPC_POLICY = [
     read: (config) => config.env?.test?.vpc_services,
     required: false,
   },
+  {
+    // `local` exists only on the Vite-built frames, and its whole point is that
+    // it declares no VPC Service: wrangler treats one as a resource with no local
+    // simulator, so any environment naming it forces a remote proxy session that
+    // needs an interactive `wrangler login`. Declaring one here would put that
+    // back in the everyday loop and in CI, which has no credentials at all.
+    label: 'env.local',
+    read: (config) => config.env?.local?.vpc_services,
+    required: false,
+  },
 ];
 
 function checkVpcPolicy(ws, config) {
@@ -236,6 +246,51 @@ function checkOpenNext(ws, config) {
   }
   if (config.images?.binding !== 'IMAGES') {
     fail(ws, 'images binding IMAGES is missing');
+  }
+}
+
+// The Vite counterpart of checkOpenNext.
+//
+// A Vite-built Worker keeps the Rails and VPC contract and drops three bindings
+// that only OpenNext ever read: ASSETS (Cloudflare matches static assets before
+// the Worker runs, so nothing has to serve one), WORKER_SELF_REFERENCE (an
+// OpenNext requirement with no application reader) and IMAGES (only OpenNext's
+// own image handler used it). It must also NOT declare `assets.directory` — the
+// plugin writes that into the output wrangler.json at build time, and a value in
+// the input config describes a directory the deployed Worker never uses.
+// adr/012-apex-vite-build-and-static-assets.md is normative on both.
+function checkViteWorker(ws, config) {
+  if (config.vars?.NODE_ENV !== 'production') {
+    fail(ws, 'top-level vars must set NODE_ENV to production');
+  }
+  if (!config.compatibility_flags?.includes('nodejs_compat')) {
+    fail(ws, 'compatibility_flags must include nodejs_compat');
+  }
+  if (config.assets?.directory !== undefined) {
+    fail(
+      ws,
+      'assets.directory must not be set — `vite build` writes it into the output wrangler.json, and a value here describes a directory the deployed Worker never uses',
+    );
+  }
+  // Both "none" for the reason the apex workers pin them: Cloudflare matches
+  // assets BEFORE the Worker, so a stray index.html in the build output would
+  // answer `/` in place of the index route, silently and only in production.
+  // `not_found_handling: "none"` is what lets the Worker produce the 404
+  // document that carries the title and the security headers.
+  if (config.assets?.html_handling !== 'none' || config.assets?.not_found_handling !== 'none') {
+    fail(ws, 'assets.html_handling and assets.not_found_handling must both be "none"');
+  }
+  if (config.assets?.binding !== undefined) {
+    fail(ws, 'assets binding must not be declared — nothing reads it');
+  }
+  if (config.images !== undefined) {
+    fail(ws, 'images binding must not be declared — nothing reads it');
+  }
+  if ((config.services ?? []).some((s) => s.binding === 'WORKER_SELF_REFERENCE')) {
+    fail(ws, 'WORKER_SELF_REFERENCE is an OpenNext requirement and must not be declared');
+  }
+  if (config.main?.includes('.open-next')) {
+    fail(ws, 'main must not point into .open-next');
   }
 }
 
@@ -360,12 +415,28 @@ for (const ws of manifest.railsBacked) {
   checkVpcPolicy(ws, config);
 }
 
+for (const ws of manifest.railsBackedVite ?? []) {
+  const config = loadWrangler(ws);
+  if (!config) continue;
+  // `local` is the extra tier: vite dev runs the Worker in workerd, so the
+  // everyday loop needs an environment that declares no VPC Service.
+  checkEnvironments(ws, config, ['local', 'development', 'vpc', 'test']);
+  checkViteWorker(ws, config);
+  checkPublicAssets(ws);
+
+  checkVpcPolicy(ws, config);
+}
+
 // Deploying production means running with no `--env`, and CLOUDFLARE_ENV picks
 // the environment when the flag is absent. compose.yaml exports
 // CLOUDFLARE_ENV=development, so a deploy script that does not blank it would
 // silently ship to `<name>-development` and leave production untouched — a
 // failure that looks like success. Verified with `wrangler deploy --dry-run`.
-for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
+for (const ws of [
+  ...manifest.railsBacked,
+  ...(manifest.railsBackedVite ?? []),
+  ...manifest.contentSurface,
+]) {
   const pkgPath = join(root, ws, 'package.json');
   if (!existsSync(pkgPath)) continue;
   const scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {};
@@ -377,8 +448,10 @@ for (const ws of [...manifest.railsBacked, ...manifest.contentSurface]) {
     // that passes `--env` is explicit and safe whatever CLOUDFLARE_ENV says;
     // one that does not is at the mercy of the variable.
     for (const segment of body.split('&&')) {
-      // `build:next` is plain `next build` — no wrangler, nothing to redirect.
-      if (!/opennextjs-cloudflare|wrangler/u.test(segment)) continue;
+      // `vite` counts: @cloudflare/vite-plugin reads CLOUDFLARE_ENV to pick the
+      // environment exactly as wrangler does, so `vite build` with the variable
+      // exported would bake development vars into the production artefact.
+      if (!/opennextjs-cloudflare|wrangler|\bvite\b/u.test(segment)) continue;
       if (/--env\s+\S+/u.test(segment)) continue;
       if (!segment.includes('CLOUDFLARE_ENV=')) {
         fail(
@@ -466,5 +539,8 @@ if (failures.length > 0) {
 }
 
 const checked =
-  manifest.railsBacked.length + manifest.contentSurface.length + manifest.standalone.length;
+  manifest.railsBacked.length +
+  (manifest.railsBackedVite ?? []).length +
+  manifest.contentSurface.length +
+  manifest.standalone.length;
 process.stdout.write(`check-workers: OK (${checked} workers validated)\n`);

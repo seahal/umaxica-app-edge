@@ -1,26 +1,31 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "umaxica-apps-edge-org-docs",
-  "main": ".open-next/worker.js",
+  "main": "./src/server.ts",
   "workers_dev": true,
   "compatibility_date": "2026-05-13",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "version_metadata": {
     "binding": "REVISION"
   },
-  "images": {
-    "binding": "IMAGES"
-  },
-  "assets": {
-    "binding": "ASSETS",
-    "directory": ".open-next/assets"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "umaxica-apps-edge-org-docs"
-    }
-  ],
+  // No `directory` and no `binding`: this is the INPUT config, and `vite build`
+  // writes an output wrangler.json whose `assets.directory` points at the client
+  // build. Setting it here would describe a directory the deployed Worker never
+  // uses, and `wrangler deploy` must not be passed `--config` for the same
+  // reason. See adr/012-apex-vite-build-and-static-assets.md.
+  //
+  // Nothing reads an ASSETS binding: assets are matched by Cloudflare BEFORE the
+  // Worker runs, so the Worker never has to serve one itself.
+  //
+  // `html_handling: "none"` keeps `/` reachable. Cloudflare matches assets
+  // first, so a stray index.html in the build output could answer `/` in place
+  // of the index route — silently, and only in production.
+  // `not_found_handling: "none"` lets the Worker produce the 404 document, which
+  // is what carries the title and the security headers.
+  // `run_worker_first` is deliberately NOT set: it would invoke the Worker for
+  // every asset request, turning free static-asset serving into billed
+  // invocations.
+  "assets": { "html_handling": "none", "not_found_handling": "none" },
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
@@ -75,6 +80,48 @@
   ],
 
   "env": {
+    // `local` is the everyday development loop, and the ONLY environment that
+    // declares no `vpc_services`.
+    //
+    // Wrangler treats a VPC Service as a resource with no local simulator, so any
+    // environment that names one forces a remote proxy session, and that session
+    // needs an interactive `wrangler login` rather than an API token. Under
+    // `next dev` this did not matter, because the dev server was Node and held no
+    // bindings at all. `vite dev` runs the Worker in workerd, so it would — which
+    // is why this tier exists rather than reusing `development`.
+    //
+    // Rails is reached the same way it was under `next dev`: the direct transport
+    // in `src/lib/rails-client.ts`, gated on EDGE_LOCAL_NODE_RUNTIME +
+    // EDGE_LOCAL_RAILS_ENABLED, over the private Podman network. Measured
+    // 2026-08-22: workerd reaches `http://docs.org.localhost:<port>` with
+    // `global_fetch_strictly_public` set, so that flag needs no exception here.
+    //
+    // Never deployed. It carries its own rate-limit namespace rather than none:
+    // every environment must repeat each non-inheritable key the top level
+    // declares, or wrangler drops the binding silently, and
+    // `tools/check-workers.mjs` enforces that for every tier. A local loop that
+    // shares a namespace with another tier would burn that tier's budget, which
+    // is why the id is distinct.
+    "local": {
+      "vars": {
+        "EDGE_ENV": "local",
+        "NODE_ENV": "development",
+        "BRAND_NAME": "UMAXICA"
+      },
+      "version_metadata": {
+        "binding": "REVISION"
+      },
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "5003",
+          "simple": {
+            "limit": 2000,
+            "period": 60
+          }
+        }
+      ]
+    },
     "development": {
       "vars": {
         "EDGE_ENV": "development",
@@ -93,18 +140,15 @@
       // this environment opens a remote proxy session — and that session cannot be
       // authenticated with an API token, only with an interactive `wrangler login`.
       // Without one, measured 2026-08-16:
-      //   pnpm preview  — fails outright; the OpenNext CLI reads vars through
-      //                   getPlatformProxy() and the throw aborts the command.
+      //   pnpm preview  — fails outright; the command cannot resolve the binding.
       //   pnpm dev      — keeps serving, but loses EVERY Cloudflare binding, not just
-      //                   this one: the failed session leaves the Cloudflare context
-      //                   unpopulated, so REVISION/IMAGES/RATE_LIMITER go with it and
-      //                   `pnpm test:api` fails on /revision. `wrangler login` is now a
-      //                   prerequisite of the development loop.
+      //                   this one, so `pnpm test:api` fails on /revision.
       // See adr/006-development-workers-vpc-transport.md.
       //
-      // The Node fallback in `src/lib/rails-client.ts` is unaffected and still guarded by
-      // EDGE_LOCAL_NODE_RUNTIME + EDGE_LOCAL_RAILS_ENABLED: a wrangler binding is not
-      // something a plain Node process can hold, so the two transports stay distinct.
+      // That is why `pnpm dev` no longer selects this environment. It selects `local`
+      // below, which declares no VPC service at all, so the everyday loop needs no
+      // credentials and CI — which has none — can still run `pnpm test:api`.
+      // `pnpm dev:vpc` selects `vpc` when the real transport is what is being tested.
       "vpc_services": [
         {
           "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
@@ -112,17 +156,8 @@
           "remote": true
         }
       ],
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "umaxica-apps-edge-org-docs"
-        }
-      ],
       "version_metadata": {
         "binding": "REVISION"
-      },
-      "images": {
-        "binding": "IMAGES"
       },
       "ratelimits": [
         {
@@ -140,9 +175,6 @@
     // `env.development` so `pnpm dev` stays credential-free.
     // See adr/006-development-workers-vpc-transport.md.
     "vpc": {
-      "images": {
-        "binding": "IMAGES"
-      },
       "vars": {
         "EDGE_ENV": "vpc",
         "NODE_ENV": "development",
@@ -151,12 +183,6 @@
       "version_metadata": {
         "binding": "REVISION"
       },
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "umaxica-apps-edge-org-docs"
-        }
-      ],
       "vpc_services": [
         {
           "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
@@ -178,9 +204,6 @@
     // `test` is never deployed — it only resolves test-tier config for
     // `wrangler dev --env test`. Only non-inheritable keys are repeated here.
     "test": {
-      "images": {
-        "binding": "IMAGES"
-      },
       "vars": {
         "EDGE_ENV": "test",
         "NODE_ENV": "test",
@@ -189,12 +212,6 @@
       "version_metadata": {
         "binding": "REVISION"
       },
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "umaxica-apps-edge-org-docs"
-        }
-      ],
       "ratelimits": [
         {
           "name": "RATE_LIMITER",

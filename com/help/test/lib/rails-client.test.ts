@@ -1,22 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('server-only', () => ({}));
-
-vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi.fn<() => { env: Record<string, unknown> }>().mockReturnValue({
-    env: {},
-  }),
-}));
-
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-
 import { getRailsClient } from '../../src/lib/rails-client';
+// `cloudflare:workers` is a runtime module only workerd resolves, so
+// `vitest.config.ts` aliases it to this mutable stand-in. Installing a binding is
+// therefore an assignment rather than a mock return value — the shape the runtime
+// actually has.
+import { env } from '../__mocks__/cloudflare-workers';
 
 describe('com/help rails client', () => {
   afterEach(() => {
-    vi.mocked(getCloudflareContext)
-      .mockReset()
-      .mockReturnValue({ env: {} } as unknown as ReturnType<typeof getCloudflareContext>);
+    for (const key of Object.keys(env)) delete env[key];
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
   });
@@ -25,9 +18,7 @@ describe('com/help rails client', () => {
     const fetchMock = vi.fn<(input: string) => Promise<Response>>(() =>
       Promise.resolve(new Response('ok', { status: 200 })),
     );
-    vi.mocked(getCloudflareContext).mockReturnValue({
-      env: { UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch: fetchMock } },
-    } as unknown as ReturnType<typeof getCloudflareContext>);
+    env['UMAXICA_APPS_EDGE_CF_WORKERS_VPC'] = { fetch: fetchMock };
 
     const client = getRailsClient();
     expect(client).not.toBeNull();
@@ -39,7 +30,7 @@ describe('com/help rails client', () => {
     expect(new URL(requestUrl).pathname).toBe('/edge/v0/health');
   });
 
-  it('uses the private Podman transport only for explicit local Node development', async () => {
+  it('uses the private Podman transport only for explicit local development', async () => {
     const fetchSpy = vi.fn<typeof fetch>(() =>
       Promise.resolve(new Response('ok', { status: 200 })),
     );
@@ -63,6 +54,12 @@ describe('com/help rails client', () => {
 
   it('does not fabricate a local transport from the Rails overlay alone', () => {
     vi.stubEnv('EDGE_LOCAL_RAILS_ENABLED', '1');
+
+    expect(getRailsClient()).toBeNull();
+  });
+
+  it('fails closed when local development has no Rails overlay', () => {
+    vi.stubEnv('EDGE_LOCAL_NODE_RUNTIME', '1');
 
     expect(getRailsClient()).toBeNull();
   });

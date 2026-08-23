@@ -10,7 +10,7 @@
   "sortPackageJson": true,
   "sortImports": true,
   "sortTailwindcss": {
-    "stylesheet": "./src/app/globals.css",
+    "stylesheet": "./src/app/style.css",
     "functions": ["clsx", "cn", "cva", "tw"]
   },
   "overrides": [
@@ -35,6 +35,7 @@
   ],
   "ignorePatterns": [
     "**/next-env.d.ts",
+    "**/routeTree.gen.ts",
     "**/.wrangler/**",
     "**/dist/**",
     "**/node_modules/**",

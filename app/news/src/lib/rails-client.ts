@@ -1,5 +1,5 @@
-import 'server-only';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+import '@tanstack/react-start/server-only';
+import { getEdgeEnv } from './cloudflare-env';
 
 const RAILS_FETCH_TIMEOUT_MS = 5000;
 
@@ -207,26 +207,32 @@ export function createRailsClient(
  * 2. VPC binding     → Workers/workerd. Cloudflare grants the real binding.
  * 3. Neither         → null, reported as `not-configured`. Fail closed.
  *
- * **The local-Node check runs first, and the order is load-bearing.**
+ * **The local check runs first, and the order is load-bearing.**
  *
- * `next.config.ts` passes `remoteBindings: false` so that `next dev` and
- * `next build` never open a Cloudflare remote-proxy session — a Workers VPC
- * binding has no local simulation, so with the default they would, and CI has
- * no token. But wrangler still *materialises the binding*, as a stub that
- * throws on use:
+ * A Workers VPC binding has no local simulation. Wrangler still materialises it
+ * whenever a configuration declares it, as a stub that throws on use:
  *
  *   Binding UMAXICA_APPS_EDGE_CF_WORKERS_VPC needs to be run remotely
  *
- * So under `next dev` the binding is *truthy but non-functional*. Testing it
- * first — as this function used to — makes every local Rails call report
- * `unreachable` and makes the direct transport below dead code. Nothing else
- * fails to say so.
+ * so a configuration that declares the binding without `remote: true` leaves it
+ * *truthy but non-functional*. Testing it first — as this function used to —
+ * would make every local Rails call report `unreachable` and make the direct
+ * transport below dead code. Nothing else fails to say so.
  *
- * `EDGE_LOCAL_NODE_RUNTIME` is set only by the `dev` scripts, so workerd preview
- * and the deployed Worker never take this branch and reach the real binding
- * exactly as before. Requiring `EDGE_LOCAL_RAILS_ENABLED` as well matters
- * because the Rails overlay is container-wide: without it, Node dev fails closed
- * to `not-configured` rather than borrowing a transport it was not granted.
+ * The `local` wrangler environment declares no `vpc_services` at all, so
+ * `pnpm dev` needs no `wrangler login`; `pnpm dev:vpc` selects the `vpc`
+ * environment, where the binding is real and `remote: true`.
+ *
+ * The direct transport now runs inside workerd rather than Node, which is the
+ * one thing this migration changed here. Measured 2026-08-22: workerd reaches
+ * `http://news.app.localhost:<port>` with `global_fetch_strictly_public` in
+ * `compatibility_flags`, so the flag stays on in every environment.
+ *
+ * `EDGE_LOCAL_NODE_RUNTIME` is set only by the `dev` scripts, so the preview and
+ * the deployed Worker never take this branch and reach the real binding exactly
+ * as before. Requiring `EDGE_LOCAL_RAILS_ENABLED` as well matters because the
+ * Rails overlay is container-wide: without it, local dev fails closed to
+ * `not-configured` rather than borrowing a transport it was not granted.
  *
  * This is still a branch on runtime *capability*, never on an environment name.
  */
@@ -240,9 +246,7 @@ export function getRailsClient(): RailsClient | null {
     return null;
   }
 
-  const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
-
-  const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
+  const binding = getEdgeEnv().UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
   if (binding) {
     return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
   }

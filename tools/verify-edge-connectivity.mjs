@@ -70,8 +70,33 @@ const PREVIEW_PORT = 8787; // opennextjs-cloudflare preview passes no --port.
  * checked without touching this tool; that is the property that stops the
  * checker drifting from the repo.
  */
+/*
+ * Every workspace that owns a Rails transport, whichever bundler builds it.
+ *
+ * `railsBacked` and `railsBackedVite` differ in exactly one thing this checker
+ * cares about — where the `/health` route file sits on disk — and in nothing
+ * about the connection they are checking. Merging them here is what keeps the
+ * gate counting every Rails-backed frame rather than silently skipping the ones
+ * that have left OpenNext.
+ */
+export function railsBackedWorkspaces(manifest = loadManifest()) {
+  return [...manifest.railsBacked, ...(manifest.railsBackedVite ?? [])].sort((a, b) =>
+    a.localeCompare(b),
+  );
+}
+
+/*
+ * Where `/health` lives, per bundler. An OpenNext frame answers it from an App
+ * Router Route Handler; a TanStack Start frame answers it from a server route
+ * colocated with the page routes. Read from disk rather than asserted from the
+ * manifest, so a frame that loses the route is a FAIL here rather than a silent
+ * skip: a Rails-backed frame with no `/health` cannot report the connection at
+ * all.
+ */
+const HEALTH_ROUTE_PATHS = ['src/app/health/route.ts', 'src/routes/health.ts'];
+
 export function loadSurfaces(manifest = loadManifest()) {
-  return manifest.railsBacked.map((ws) => {
+  return railsBackedWorkspaces(manifest).map((ws) => {
     const [brand, frame] = ws.split('/');
     const pkg = JSON.parse(readFileSync(join(repoRoot, ws, 'package.json'), 'utf8'));
     const port = Number(/--port\s+(\d+)/u.exec(pkg.scripts?.dev ?? '')?.[1]);
@@ -90,7 +115,9 @@ export function loadSurfaces(manifest = loadManifest()) {
      * loses the route is a FAIL here rather than a silent skip: a Rails-backed
      * frame with no `/health` has no way to report the connection at all.
      */
-    const hasHealthRoute = existsSync(join(repoRoot, ws, 'src/app/health/route.ts'));
+    const hasHealthRoute = HEALTH_ROUTE_PATHS.some((candidate) =>
+      existsSync(join(repoRoot, ws, candidate)),
+    );
 
     return {
       key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
@@ -121,9 +148,9 @@ export function loadSurfaces(manifest = loadManifest()) {
 export function loadTunnelSurfaces(manifest = loadManifest()) {
   const workspaces = [
     ...manifest.standalone.map((ws) => ({ ws, runtime: 'hono' })),
-    ...manifest.railsBacked
+    ...railsBackedWorkspaces(manifest)
       .filter((ws) => !ws.endsWith('/core'))
-      .map((ws) => ({ ws, runtime: 'next' })),
+      .map((ws) => ({ ws, runtime: 'frame' })),
   ];
 
   return workspaces.map(({ ws, runtime }) => {
@@ -806,7 +833,7 @@ async function modeConfig(report, surfaces, manifest) {
   }
 
   const productionServices = new Set();
-  for (const ws of manifest.railsBacked) {
+  for (const ws of railsBackedWorkspaces(manifest)) {
     const { config } = readWranglerConfig(join(ws, 'wrangler.jsonc'));
     // The top level IS production — there is no `env.production`.
     for (const entry of config?.vpc_services ?? []) {
@@ -855,7 +882,7 @@ async function modeConfig(report, surfaces, manifest) {
 
   report.note(
     PASS,
-    `INFO: one VPC Service serves all ${manifest.railsBacked.length} frames, each addressing its own Rails entry point by Host`,
+    `INFO: one VPC Service serves all ${railsBackedWorkspaces(manifest).length} frames, each addressing its own Rails entry point by Host`,
   );
 }
 
@@ -1055,15 +1082,15 @@ async function runNextBatch(report, surfaces) {
 
       if (!ready.ok) {
         const why = handle.exited ? `exited with code ${handle.exitCode}` : 'timed out';
-        report.record('Next.js dev server', surface.key, FAIL, `${why} — ${handle.logPath}`);
+        report.record('Local dev server', surface.key, FAIL, `${why} — ${handle.logPath}`);
         report.record('Local /health', surface.key, SKIP, 'server never became ready');
         report.record('Local /', surface.key, SKIP, 'server never became ready');
         report.record('Local /health rails', surface.key, SKIP, 'server never became ready');
-        report.note(FAIL, `next dev (${surface.ws}) ${why}:\n${tail(handle.output)}`);
+        report.note(FAIL, `dev (${surface.ws}) ${why}:\n${tail(handle.output)}`);
         continue;
       }
 
-      report.record('Next.js dev server', surface.key, PASS, `listening on ${surface.port}`);
+      report.record('Local dev server', surface.key, PASS, `listening on ${surface.port}`);
       const { kind, status } = await checkHttpSurface(report, surface, baseUrl, 'Local');
 
       const localRailsEnabled = process.env.EDGE_LOCAL_RAILS_ENABLED === '1';
@@ -1181,14 +1208,17 @@ async function runPreviewSurface(report, surface, { script, gate, withVpc, port,
 
       if (!ready.ok) {
         const why = handle.exited ? `exited with code ${handle.exitCode}` : 'timed out';
-        const built = handle.output.includes('Worker saved in');
-        report.record('OpenNext build', surface.key, built ? PASS : FAIL, built ? 'built' : why);
+        // Two bundlers, two success lines. OpenNext prints `Worker saved in
+        // .open-next/worker.js`; `vite build` prints `built in` after the ssr
+        // environment. Matching either keeps the gate meaningful across both.
+        const built = /Worker saved in|built in /u.test(handle.output);
+        report.record('bundler build', surface.key, built ? PASS : FAIL, built ? 'built' : why);
         report.record(gate, surface.key, FAIL, `${why} — ${handle.logPath}`);
         report.note(FAIL, `${script} (${surface.ws}) ${why}:\n${tail(handle.output)}`);
         return;
       }
 
-      report.record('OpenNext build', surface.key, PASS, 'built and started on workerd');
+      report.record('bundler build', surface.key, PASS, 'built and started on workerd');
 
       const { kind } = await checkHttpSurface(
         report,
@@ -1713,7 +1743,11 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
 
   // A dev-server asset URL taken from the page it was served with, so the check
   // cannot pass against a stale or guessed hash.
-  const assetPath = /(?:src|href)="(\/_next\/static\/[^"]+)"/u.exec(landing.body)?.[1] ?? null;
+  // Both bundler shapes: `/_next/static/...` from an OpenNext frame,
+  // `/assets/...` from a Vite one. Taken from the page that referenced it rather
+  // than guessed, so it proves the served document and its assets agree.
+  const assetPath =
+    /(?:src|href)="(\/(?:_next\/static|assets)\/[^"]+)"/u.exec(landing.body)?.[1] ?? null;
   const asset = assetPath
     ? await httpGet(`${base}${assetPath}`, 15_000, authHeaders).catch((e) => ({
         status: 0,
@@ -1757,11 +1791,11 @@ const GATE_ORDER = [
   'VPC config',
   'Rails routing',
   'Direct VPC → Rails',
-  'Next.js dev server',
+  'Local dev server',
   'Local /health',
   'Local /',
   'Local /health rails',
-  'OpenNext build',
+  'bundler build',
   'workerd/OpenNext preview',
   'Preview /health',
   'Preview /',
@@ -1787,11 +1821,11 @@ const GATE_ABBREVIATIONS = new Map([
   ['VPC config', 'cfg'],
   ['Rails routing', 'rails'],
   ['Direct VPC → Rails', 'VPC→'],
-  ['Next.js dev server', 'dev'],
+  ['Local dev server', 'dev'],
   ['Local /health', 'd:hlt'],
   ['Local /', 'd:/'],
   ['Local /health rails', 'd:rh'],
-  ['OpenNext build', 'build'],
+  ['bundler build', 'build'],
   ['workerd/OpenNext preview', 'wd'],
   ['Preview /health', 'p:hlt'],
   ['Preview /', 'p:/'],

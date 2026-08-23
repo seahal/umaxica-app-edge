@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 
 /**
  * The UMAXICA application shell header, as this unit renders it.
@@ -21,10 +21,7 @@ export function SiteHeader() {
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex min-h-14 w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 wide:px-8">
-        <Link
-          className="inline-flex min-h-11 items-center text-xl font-bold tracking-wide"
-          href="/"
-        >
+        <Link className="inline-flex min-h-11 items-center text-xl font-bold tracking-wide" to="/">
           UMAXICA
         </Link>
         {/*

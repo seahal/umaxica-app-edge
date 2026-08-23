@@ -245,8 +245,16 @@ describe('secret hygiene', () => {
     for (const client of clients) {
       const source = read(client);
 
-      // Server-only, so nothing here can be bundled for the browser.
-      expect(source, `${client} must be server-only`).toContain("import 'server-only'");
+      /*
+       * Server-only, so nothing here can be bundled for the browser — and it has
+       * to be the marker the unit's own bundler enforces. The `server-only`
+       * package makes a Next build fail; `@tanstack/react-start/server-only` is
+       * the equivalent for a Vite frame, denied in the client environment by the
+       * Start plugin. Either satisfies the invariant; neither is optional.
+       */
+      expect(source, `${client} must be server-only`).toMatch(
+        /import '(?:server-only|@tanstack\/react-start\/server-only)'/u,
+      );
 
       for (const header of [
         'cookie',

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { setCloudflareContext } from '@opennextjs/cloudflare';
@@ -18,41 +18,10 @@ vi.mock('../app/core/node_modules/next/font/google', () => ({
 
 // Root layouts are imported statically: they call next/font at module scope, and
 // only a static import participates in the vi.mock registry above.
-import * as appCoreLayout from '../app/core/src/app/layout';
-import * as appDocsLayout from '../app/docs/src/app/layout';
-import * as appHelpLayout from '../app/help/src/app/layout';
-import * as appInfoLayout from '../app/info/src/app/layout';
-import * as appNewsLayout from '../app/news/src/app/layout';
-import * as comCoreLayout from '../com/core/src/app/layout';
-import * as comDocsLayout from '../com/docs/src/app/layout';
-import * as comHelpLayout from '../com/help/src/app/layout';
-import * as comInfoLayout from '../com/info/src/app/layout';
-import * as comNewsLayout from '../com/news/src/app/layout';
-import * as orgCoreLayout from '../org/core/src/app/layout';
-import * as orgDocsLayout from '../org/docs/src/app/layout';
-import * as orgHelpLayout from '../org/help/src/app/layout';
-import * as orgInfoLayout from '../org/info/src/app/layout';
-import * as orgNewsLayout from '../org/news/src/app/layout';
 
 type LayoutMetadata = { metadata: { title: { default: string; template: string } } };
 
-const ROOT_LAYOUTS: Record<string, LayoutMetadata> = {
-  'app/core': appCoreLayout as LayoutMetadata,
-  'app/docs': appDocsLayout as LayoutMetadata,
-  'app/help': appHelpLayout as LayoutMetadata,
-  'app/info': appInfoLayout as LayoutMetadata,
-  'app/news': appNewsLayout as LayoutMetadata,
-  'com/core': comCoreLayout as LayoutMetadata,
-  'com/docs': comDocsLayout as LayoutMetadata,
-  'com/help': comHelpLayout as LayoutMetadata,
-  'com/info': comInfoLayout as LayoutMetadata,
-  'com/news': comNewsLayout as LayoutMetadata,
-  'org/core': orgCoreLayout as LayoutMetadata,
-  'org/docs': orgDocsLayout as LayoutMetadata,
-  'org/help': orgHelpLayout as LayoutMetadata,
-  'org/info': orgInfoLayout as LayoutMetadata,
-  'org/news': orgNewsLayout as LayoutMetadata,
-};
+const ROOT_LAYOUTS: Record<string, LayoutMetadata> = {};
 vi.mock('@sentry/nextjs', () => ({ captureException: () => {} }));
 
 /**
@@ -159,6 +128,31 @@ function expectTitleContract(html: string, { tld, requirePageSpecific, label }: 
   }
 }
 
+/*
+ * The fifteen content frames, whichever bundler each one builds through.
+ *
+ * `app/info` left Next.js for TanStack Start on Vite
+ * (plans/info-nextjs-to-tanstack-start.md) and the two `info` siblings are
+ * expected to follow, so the totals below are derived from this set rather than
+ * written as literals. What must not weaken is coverage: every frame has to be
+ * checked by one guard or the other, which is what `covers every content frame`
+ * asserts.
+ */
+const EXPECTED_FRAMES = ['app', 'com', 'org'].flatMap((family) =>
+  ['core', 'docs', 'news', 'help', 'info'].map((role) => `${family}/${role}`),
+);
+
+/** Every TanStack Start unit, derived from tracked root routes. */
+function viteApps(): { workspace: string; family: string; role: string; tld: string }[] {
+  return trackedFiles()
+    .filter((file) => file.endsWith('/src/routes/__root.tsx'))
+    .map((file) => {
+      const [family = '', role = ''] = file.split('/');
+      return { workspace: `${family}/${role}`, family, role, tld: FAMILY_TLD[family] ?? '' };
+    })
+    .sort((a, b) => a.workspace.localeCompare(b.workspace));
+}
+
 /** Every Next.js deployment unit, derived from tracked root layouts. */
 function nextApps(): { workspace: string; family: string; role: string; tld: string }[] {
   return trackedFiles()
@@ -203,8 +197,22 @@ async function resolveTitle(module: Record<string, unknown>): Promise<ResolvedTi
 describe('root layout metadata', () => {
   const apps = nextApps();
 
-  it('covers every Next.js deployment unit', () => {
-    expect(apps.length).toBe(15);
+  it('covers every content frame, across both bundlers', () => {
+    expect([...apps, ...viteApps()].map((app) => app.workspace).sort()).toEqual(
+      [...EXPECTED_FRAMES].sort(),
+    );
+  });
+
+  /*
+   * Zero since the last frame left Next.js. The guard stays because the shape it
+   * describes — `metadata.title.default` plus a `%s — UMAXICA (TLD)` template on
+   * every root layout — is what a frame returning to Next.js would have to
+   * satisfy, and it is the only place that is written down. The TanStack guard at
+   * the end of this file is what is doing the work today, and the coverage
+   * assertion above is what stops BOTH from passing vacuously.
+   */
+  it('has a statically imported layout for every Next.js unit it claims', () => {
+    expect(Object.keys(ROOT_LAYOUTS).sort()).toEqual(apps.map((app) => app.workspace).sort());
   });
 
   it('has a statically imported layout for every unit', () => {
@@ -253,8 +261,17 @@ describe('page title regression guard', () => {
       existsSync(join(repoRoot, file)),
   );
 
-  it('finds the expected number of HTML pages', () => {
-    expect(pages.length).toBe(63);
+  it('finds a page in every Next.js unit', () => {
+    // The count used to be pinned at 63. It is derived now, because the number
+    // moves every time a frame leaves Next.js — but the property the literal was
+    // protecting is unchanged: the glob must not silently stop matching, and no
+    // Next unit may drop out of the guard.
+    const covered = new Set(pages.map((file) => file.split('/').slice(0, 2).join('/')));
+    expect([...covered].sort()).toEqual(
+      nextApps()
+        .map((app) => app.workspace)
+        .sort(),
+    );
   });
 
   const contentPages = pages.filter((file) => !isIndexPage(file));
@@ -296,32 +313,6 @@ describe('page title regression guard', () => {
 // Guard A2 — the template actually composes end to end
 // ---------------------------------------------------------------------------
 
-describe('composed page titles', () => {
-  const cases = [
-    ['app/core', '(page)/configuration', '設定 — UMAXICA (APP)', 'APP'],
-    ['com/core', '(page)/about', '概要 — UMAXICA (COM)', 'COM'],
-    ['org/core', '(page)/configuration/account', 'アカウント設定 — UMAXICA (ORG)', 'ORG'],
-    ['app/docs', 'offline', 'オフライン — UMAXICA (APP)', 'APP'],
-  ] as const;
-
-  it.each(cases)('%s/%s composes to the contract form', async (workspace, route, expected, tld) => {
-    const page = (await import(
-      /* @vite-ignore */ `../${workspace}/src/app/${route}/page.tsx`
-    )) as Record<string, unknown>;
-
-    const pageTitle = await resolveTitle(page);
-    const template = ROOT_LAYOUTS[workspace]?.metadata.title.template ?? '';
-    const composed = template.replace('%s', String(pageTitle));
-
-    expect(composed).toBe(expected);
-    expectTitleContract(`<title>${composed}</title>`, {
-      tld,
-      requirePageSpecific: true,
-      label: `${workspace}/${route}`,
-    });
-  });
-});
-
 // ---------------------------------------------------------------------------
 // Guard D1 — global-not-found: Next.js Metadata API
 // ---------------------------------------------------------------------------
@@ -330,7 +321,7 @@ describe('global-not-found documents', () => {
   const files = trackedFiles().filter((file) => file.endsWith('/src/app/global-not-found.tsx'));
 
   it('exists for every Next.js unit that routes one', () => {
-    expect(files.length).toBe(15);
+    expect(files.length).toBe(nextApps().length);
   });
 
   it.each(files)('%s defines its title through the Metadata API', async (file) => {
@@ -363,7 +354,7 @@ describe('global-error documents', () => {
   const files = trackedFiles().filter((file) => file.endsWith('/src/app/global-error.tsx'));
 
   it('exists for every Next.js unit', () => {
-    expect(files.length).toBe(15);
+    expect(files.length).toBe(nextApps().length);
   });
 
   it.each(files)('%s renders a non-empty <title> in its final HTML', async (file) => {
@@ -416,8 +407,12 @@ describe('rate limited 429 documents', () => {
     (file) => file.endsWith('/src/middleware.ts') && !file.includes('/core/'),
   );
 
-  it('covers every satellite middleware', () => {
-    expect(satellites.length).toBe(12);
+  it('covers every Next.js satellite middleware', () => {
+    // The satellites are the non-core frames. A frame that has left Next.js has
+    // no `src/middleware.ts` at all — its rate limiter moved into the server
+    // entry, the same move the Cores made (adr/010) — so it is counted out here
+    // and checked by the TanStack guard at the end of this file instead.
+    expect(satellites.length).toBe(nextApps().filter((app) => app.role !== 'core').length);
   });
 
   it.each(satellites)('%s serves a full 429 document', async (file) => {
@@ -464,3 +459,183 @@ describe('rate limited 429 documents', () => {
 // `FORBIDDEN_TOKEN` here, which each unit's own `api/title-contract.hurl`
 // restates verbatim. The regexes agreeing is now a copy, not a shared constant.
 // If they drift, the place to notice is here.
+
+// ---------------------------------------------------------------------------
+// Guard E — TanStack Start units: the same contract, asserted on source
+// ---------------------------------------------------------------------------
+
+/*
+ * The frames that have left Next.js are checked here rather than dropped.
+ *
+ * They cannot be checked the same way. The guards above import a module and read
+ * `metadata`, which works because Next resolves a title into an exported object.
+ * TanStack has no such object — `head()` returns a finished string that only
+ * `<HeadContent />` renders — and importing a route from this workspace would
+ * need the unit's own `@tanstack/react-router`, which the root package does not
+ * have. Each unit renders its own documents through a real router in its own
+ * suite (`<unit>/test/title-contract.test.tsx`), and its Hurl suite asserts on
+ * real responses.
+ *
+ * What is left for THIS file is the part no single unit can see: that all three
+ * families agree, that a frame cannot quietly stop declaring titles, and that
+ * the one trap this migration actually hit stays closed — a title on the root
+ * route plus a title in a failure document produces TWO `<title>` elements.
+ */
+describe('TanStack Start title contract', () => {
+  const apps = viteApps();
+  const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
+
+  /** Every `'…'` or `"…"` string literal passed to `brandTitle(...)`. */
+  const brandTitleArguments = (source: string): string[] =>
+    [...source.matchAll(/brandTitle\(\s*'([^']+)'\s*\)/gu)].map((match) => match[1] ?? '');
+
+  /** Every template literal that closes with the brand constant. */
+  const brandedTemplateTitles = (source: string): string[] =>
+    [...source.matchAll(/<title>\{`([^`]+)`\}<\/title>/gu)].map((match) =>
+      (match[1] ?? '').replace(/\$\{BRAND_TITLE\}/u, 'UMAXICA (APP)'),
+    );
+
+  it.each(apps)('$workspace names the brand once, in one place', ({ workspace, tld }) => {
+    const source = read(`${workspace}/src/lib/title.ts`);
+
+    expect(source, `${workspace}: BRAND_TITLE must match the deployment family`).toContain(
+      `export const BRAND_TITLE = 'UMAXICA (${tld})'`,
+    );
+    // The EM DASH, with one space on each side. Not a hyphen, not an EN DASH.
+    expect(source).toContain('return `${pageTitle} — ${BRAND_TITLE}`;');
+  });
+
+  it.each(apps)('$workspace declares no title on the root route', ({ workspace }) => {
+    /*
+     * The trap this migration hit, measured before it was closed: `<HeadContent />`
+     * renders the head tags of every matched route and React hoists a `<title>` a
+     * component renders on top of that, so a root title plus the not-found
+     * document's own title served TWO `<title>` elements — and the contract, in
+     * this file and in every unit's Hurl suite, is exactly one.
+     */
+    const root = read(`${workspace}/src/routes/__root.tsx`);
+    const head = /head:\s*\(\)\s*=>\s*\(\{[\s\S]*?\n  \}\),/u.exec(root)?.[0] ?? root;
+
+    expect(head, `${workspace}: __root must contribute no title`).not.toMatch(/\btitle:/u);
+  });
+
+  /*
+   * Two archetypes, two ways of naming a title, one contract.
+   *
+   * A satellite route calls `brandTitle('…')` inline. A Core route reads
+   * `pageTitles.<key>`, resolved once in `src/lib/page-titles.ts` from the
+   * default-locale dictionary — because a Core page title is a translated string,
+   * and `head()` can run before the loader that would fetch it. The index route
+   * of a Core carries the bare `BRAND_TITLE`, which is what its root layout's
+   * `title.default` used to supply.
+   *
+   * So this asserts two things per frame: every document route names one of
+   * those three sources, and every title the unit can actually produce conforms.
+   */
+  const TITLE_SOURCES = /brandTitle\(|pageTitles\.|BRAND_TITLE/u;
+
+  it.each(apps)('$workspace gives every route document a title', ({ workspace }) => {
+    const routesDir = join(repoRoot, workspace, 'src/routes');
+    const documents = readdirSync(routesDir).filter(
+      (name) =>
+        name.endsWith('.tsx') &&
+        name !== '__root.tsx' &&
+        // The pathless layout wraps documents; it answers no URL of its own.
+        name !== '_page.tsx' &&
+        // A redirect renders nothing, so it is explicitly outside the contract.
+        name !== '_page.home.tsx',
+    );
+
+    expect(documents.length, `${workspace}: found no route documents`).toBeGreaterThan(0);
+
+    for (const name of documents) {
+      const source = readFileSync(join(routesDir, name), 'utf8');
+      expect(source, `${workspace}/src/routes/${name}: declares no title`).toMatch(TITLE_SOURCES);
+    }
+  });
+
+  it.each(apps)('$workspace produces only conforming titles', ({ workspace, tld }) => {
+    const unitRoot = join(repoRoot, workspace);
+    const routesDir = join(unitRoot, 'src/routes');
+
+    const literals = readdirSync(routesDir)
+      .filter((name) => name.endsWith('.tsx'))
+      .flatMap((name) => brandTitleArguments(readFileSync(join(routesDir, name), 'utf8')));
+
+    // A Core resolves its page titles from the dictionary in one module.
+    const titlesModule = join(unitRoot, 'src/lib/page-titles.ts');
+    if (existsSync(titlesModule)) {
+      const source = readFileSync(titlesModule, 'utf8');
+      const dictionary = JSON.parse(
+        readFileSync(join(unitRoot, 'src/i18n/dictionaries/ja.json'), 'utf8'),
+      ) as Record<string, { title?: string }>;
+      for (const key of [...source.matchAll(/brandTitle\(ja\.([a-z_]+)\.title\)/gu)]) {
+        const title = dictionary[key[1] ?? '']?.title;
+        expect(
+          title,
+          `${workspace}: page-titles names ja.${key[1]}, which the dictionary lacks`,
+        ).toBeTypeOf('string');
+        literals.push(title as string);
+      }
+    }
+
+    expect(literals.length, `${workspace}: found no page titles at all`).toBeGreaterThan(0);
+    for (const title of literals) {
+      expectTitleContract(`<title>${title} — UMAXICA (${tld})</title>`, {
+        tld,
+        requirePageSpecific: true,
+        label: `${workspace} page title`,
+      });
+    }
+  });
+
+  it.each(apps)('$workspace titles both failure documents', ({ workspace, tld }) => {
+    const source = read(`${workspace}/src/components/status-documents.tsx`);
+    const titles = brandedTemplateTitles(source).map((title) =>
+      title.replace('UMAXICA (APP)', `UMAXICA (${tld})`),
+    );
+
+    // A not-found document and an error document, each with its own title.
+    expect(titles, `${workspace}: expected two titled failure documents`).toHaveLength(2);
+    for (const title of titles) {
+      expectTitleContract(`<title>${title}</title>`, {
+        tld,
+        requirePageSpecific: true,
+        label: `${workspace} failure document`,
+      });
+    }
+    expect(source).toContain('HTTP 404');
+    expect(source).toContain('HTTP 500');
+  });
+
+  it.each(apps)('$workspace serves a titled 429 document', ({ workspace, tld }) => {
+    /*
+     * The satellites' 429 lived in `src/middleware.ts` and was asserted by
+     * importing it. A TanStack frame answers it from `src/rate-limit.ts`, called
+     * by the server entry before the router runs — the same move the Cores made
+     * (adr/010) — so the document is read from source here and exercised for real
+     * by the unit's own `test/rate-limit.test.ts`.
+     */
+    /*
+     * The satellites answer 429 from `src/rate-limit.ts`, called by their server
+     * entry. The Cores answer it from `src/lib/rate-limit.ts`, called by
+     * `src/worker.ts` — the first-touch entry ADR 010 moved it to. Same document,
+     * same contract, two homes.
+     */
+    const rateLimitModule = ['src/rate-limit.ts', 'src/lib/rate-limit.ts']
+      .map((rel) => `${workspace}/${rel}`)
+      .find((rel) => existsSync(join(repoRoot, rel)));
+    expect(rateLimitModule, `${workspace}: found no rate-limit module`).toBeTypeOf('string');
+    const source = read(rateLimitModule as string);
+    const title = /<title>([^<]+)<\/title>/u.exec(source)?.[1] ?? '';
+
+    expectTitleContract(`<title>${title}</title>`, {
+      tld,
+      requirePageSpecific: true,
+      label: `${workspace} 429`,
+    });
+    expect(source).toContain('HTTP 429');
+    expect(source).toContain("'Cache-Control': 'no-store'");
+    expect(source).toContain('status: 429');
+  });
+});

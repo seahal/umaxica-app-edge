@@ -1,61 +1,57 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-vi.mock('server-only', () => ({}));
+import { defaultLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/dictionaries';
+
+import { renderApp, renderDocument } from './utils/routes';
 
 /*
- * `AppChrome` reads `usePathname()` to decide which navigation entry carries
- * `aria-current="page"`. The hook reads a router context that does not exist
- * under `renderToStaticMarkup`, so the mock supplies the value — and holds it
- * in a mutable box rather than a fixed return, which is what lets the
- * current-page tests below move the reader from route to route.
- */
-const navigation = vi.hoisted(() => ({ pathname: '/' }));
-
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn(),
-  notFound: vi.fn(),
-  usePathname: () => navigation.pathname,
-}));
-
-import PageLayout from '../src/app/(page)/layout';
-import { AppChrome } from '../src/components/app-chrome';
-import { PageMain } from '../src/components/page-main';
-import { defaultLocale } from '../src/i18n/config';
-import { getDictionary } from '../src/i18n/dictionaries';
-
-afterEach(() => {
-  vi.clearAllMocks();
-  navigation.pathname = '/';
-  document.body.innerHTML = '';
-});
-
-const shell = async () =>
-  renderToStaticMarkup(await PageLayout({ children: <PageMain>content</PageMain> }));
-
-/**
  * The UMAXICA application shell, asserted on the emitted document.
  *
  * What has to stay identical across every deployment unit is the contract —
  * semantics, hierarchy, accessible names, which destinations are reachable —
- * and not the components, which each unit owns separately so that it stays
+ * and not the components, which each unit owns separately so it stays
  * independently deployable.
  *
- * These assertions deliberately do not name a CSS class. Every visual rule is
- * a Tailwind utility now, so a class list is styling rather than structure, and
- * a test that pinned one would fail on a padding change while still passing if
- * the `<nav>` lost its accessible name. Roles, landmarks, accessible names and
- * document order are the contract; utilities are an implementation detail.
+ * These assertions deliberately do not name a CSS class. Every visual rule is a
+ * Tailwind utility, so a class list is styling rather than structure, and a test
+ * that pinned one would fail on a padding change while still passing if the
+ * `<nav>` lost its accessible name.
+ *
+ * The shell used to be rendered by calling the `(page)` layout as a function,
+ * with `usePathname` mocked so `<AppChrome>` could resolve. It is driven through
+ * a real memory-history router now: `<Link>` reads router context, and the
+ * current-page assertions at the bottom of this file are about the router's own
+ * active-link matching, so mocking it would have been mocking the thing under
+ * test.
  */
-const shellDom = async () => {
-  document.body.innerHTML = await shell();
+const documents = new Map<string, string>();
+
+beforeAll(async () => {
+  for (const path of ['/', '/explore', '/configuration', '/configuration/account']) {
+    documents.set(path, await renderDocument(path));
+  }
+});
+
+const shell = (path = '/'): string => {
+  const html = documents.get(path);
+  if (html === undefined) throw new Error(`no document rendered for ${path}`);
+  return html;
+};
+
+const shellDom = (path = '/') => {
+  document.body.innerHTML = shell(path);
   return within(document.body);
 };
 
+afterEach(() => {
+  document.body.innerHTML = '';
+});
+
 describe('application shell', () => {
   it('emits exactly one header, main and footer, in document order', async () => {
-    const html = await shell();
+    const html = shell();
 
     for (const tag of ['header', 'main', 'footer']) {
       expect(html.match(new RegExp(`<${tag}[\\s>]`, 'gu')) ?? [], `<${tag}>`).toHaveLength(1);
@@ -66,7 +62,7 @@ describe('application shell', () => {
   });
 
   it('exposes the four document landmarks', async () => {
-    const dom = await shellDom();
+    const dom = shellDom();
     const dict = await getDictionary(defaultLocale);
 
     expect(dom.getByRole('banner')).toBeInTheDocument();
@@ -79,8 +75,8 @@ describe('application shell', () => {
   });
 
   it('links the brand to this edition’s homepage without stealing the page heading', async () => {
-    const html = await shell();
-    const dom = await shellDom();
+    const html = shell();
+    const dom = shellDom();
     const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
 
     expect(within(dom.getByRole('banner')).getByRole('link', { name: 'UMAXICA' })).toHaveAttribute(
@@ -92,7 +88,7 @@ describe('application shell', () => {
   });
 
   it('separates the header from the main navigation', async () => {
-    const html = await shell();
+    const html = shell();
     const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
     const dict = await getDictionary(defaultLocale);
 
@@ -105,7 +101,7 @@ describe('application shell', () => {
   });
 
   it('uses button semantics for the menu disclosure, wired to the navigation', async () => {
-    const dom = await shellDom();
+    const dom = shellDom();
     const dict = await getDictionary(defaultLocale);
 
     const button = within(dom.getByRole('banner')).getByRole('button', { name: dict.nav.menu });
@@ -117,7 +113,7 @@ describe('application shell', () => {
   });
 
   it('renders the navigation in the server HTML rather than behind hydration', async () => {
-    const dom = await shellDom();
+    const dom = shellDom();
     const dict = await getDictionary(defaultLocale);
     const nav = dom.getByRole('navigation', { name: dict.nav.primary });
 
@@ -135,8 +131,8 @@ describe('application shell', () => {
   });
 
   it('gives the footer two layers: a named utility nav and the site identity', async () => {
-    const html = await shell();
-    const dom = await shellDom();
+    const html = shell();
+    const dom = shellDom();
     const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'));
     const dict = await getDictionary(defaultLocale);
 
@@ -158,7 +154,7 @@ describe('application shell', () => {
   });
 
   it('opens the document with a skip link that actually moves focus', async () => {
-    const dom = await shellDom();
+    const dom = shellDom();
     const dict = await getDictionary(defaultLocale);
 
     const skip = dom.getByRole('link', { name: dict.nav.skip });
@@ -186,8 +182,21 @@ describe('application shell', () => {
     expect(main).toHaveAttribute('tabindex', '-1');
   });
 
-  it('links only to destinations this unit serves', async () => {
-    const hrefs = [...(await shell()).matchAll(/href="(\/[^"]*)"/gu)].map((match) => match[1]);
+  it('links only to destinations this unit serves', () => {
+    /*
+     * Anchors only, and only in the body.
+     *
+     * Next's Metadata API injected `<link rel="manifest">` and `<link rel="icon">`
+     * at a stage this file never saw, so scanning the whole document for
+     * `href="/…"` used to be equivalent to scanning for navigation.
+     * `<HeadContent />` renders those same links into the document this test now
+     * receives, and a resource link is not a destination a reader can navigate
+     * to — so the scan says which elements it means.
+     */
+    shellDom();
+    const hrefs = [...document.body.querySelectorAll('a[href^="/"]')].map((anchor) =>
+      anchor.getAttribute('href'),
+    );
 
     // Neither a privacy nor a terms route exists in this repository, and there
     // is no reusable legal text to build one from, so neither may be linked.
@@ -201,10 +210,15 @@ describe('application shell', () => {
     expect(new Set(hrefs)).toEqual(
       new Set(['/', '/explore', '/messages', '/notifications', '/configuration', '/about']),
     );
+
+    // The head links are still expected — they are simply not navigation, and
+    // the manifest URL in particular is pinned by `api/standard-contract.hurl`.
+    expect(shell()).toContain('href="/manifest.webmanifest"');
+    expect(shell()).toContain('href="/favicon.ico"');
   });
 
   it('localises every shell string through the existing dictionary', async () => {
-    const html = await shell();
+    const html = shell();
     const dict = await getDictionary(defaultLocale);
 
     for (const label of [dict.about.title, dict.explore.title, dict.nav.menu]) {
@@ -213,19 +227,24 @@ describe('application shell', () => {
   });
 });
 
+/*
+ * The interactive half. These mount the real application rather than a component
+ * in isolation: `<AppChrome>` holds `<Link>`, which reads router context, so the
+ * old version supplied a fake `usePathname`. Driving the router means the
+ * current-page assertions below test the router's own active-link matching.
+ */
 describe('menu disclosure', () => {
-  const labels = { brand: 'UMAXICA', menu: 'メニュー', primaryNav: 'メインナビゲーション' };
-
-  const mount = () => {
-    render(<AppChrome links={[{ href: '/', label: 'ホーム' }]} labels={labels} />);
+  const controls = async () => {
+    const dict = await getDictionary(defaultLocale);
+    await renderApp('/');
     return {
-      button: screen.getByRole('button', { name: labels.menu }),
-      nav: screen.getByRole('navigation', { name: labels.primaryNav }),
+      button: screen.getByRole('button', { name: dict.nav.menu }),
+      nav: screen.getByRole('navigation', { name: dict.nav.primary }),
     };
   };
 
-  it('toggles aria-expanded and the navigation’s open state', () => {
-    const { button, nav } = mount();
+  it('toggles aria-expanded and the navigation’s open state', async () => {
+    const { button, nav } = await controls();
 
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(nav).toHaveAttribute('data-open', 'false');
@@ -241,15 +260,15 @@ describe('menu disclosure', () => {
 
   /*
    * The trigger is a `react-aria-components` `<Button>`, which handles press
-   * through `onPress` rather than `onClick`. These two cases are the reason
-   * that matters: a native `<button>` gets Enter and Space from the browser,
-   * and this asserts the library did not take that away.
+   * through `onPress` rather than `onClick`. These two cases are the reason that
+   * matters: a native `<button>` gets Enter and Space from the browser, and this
+   * asserts the library did not take that away.
    */
   it.each([
     ['Enter', 'Enter'],
     ['Space', ' '],
-  ])('activates on %s', (_name, key) => {
-    const { button, nav } = mount();
+  ])('activates on %s', async (_name, key) => {
+    const { button, nav } = await controls();
     button.focus();
 
     fireEvent.keyDown(button, { key });
@@ -259,20 +278,13 @@ describe('menu disclosure', () => {
     expect(nav).toHaveAttribute('data-open', 'true');
   });
 
-  it('keeps the trigger focusable and reachable by keyboard', () => {
-    const { button } = mount();
+  it('keeps the trigger focusable and reachable by keyboard', async () => {
+    const { button } = await controls();
 
     expect(button).not.toHaveAttribute('disabled');
     expect(button).not.toHaveAttribute('aria-disabled');
     button.focus();
     expect(button).toHaveFocus();
-  });
-
-  it('exposes the navigation by its accessible name', () => {
-    render(<AppChrome links={[{ href: '/about', label: '概要' }]} labels={labels} />);
-
-    expect(screen.getByRole('link', { name: '概要' })).toHaveAttribute('href', '/about');
-    expect(screen.getByRole('link', { name: labels.brand })).toHaveAttribute('href', '/');
   });
 });
 
@@ -281,58 +293,51 @@ describe('menu disclosure', () => {
  * (docs/design/ui-shell-contract.md §12).
  *
  * The match is exact, and these tests are where that decision is written down.
- * ARIA defines `page` as "the current page within a set of pages", so an
- * ancestor is not it — marking `/configuration` while the reader is on
- * `/configuration/account` would announce a page they are not on. This
- * archetype is the only one with a main navigation, so it is the only one with
- * anything to mark.
+ * ARIA defines `page` as "the current page within a set of pages", so an ancestor
+ * is not it — marking `/configuration` while the reader is on
+ * `/configuration/account` would announce a page they are not on. This archetype
+ * is the only one with a main navigation, so it is the only one with anything to
+ * mark.
  */
 describe('current-page marking', () => {
-  const labels = { brand: 'UMAXICA', menu: 'メニュー', primaryNav: 'メインナビゲーション' };
-
-  const links = [
-    { href: '/' as const, label: 'ホーム' },
-    { href: '/explore' as const, label: '探索' },
-    { href: '/configuration' as const, label: '設定' },
-  ];
-
-  const markedEntries = () =>
-    within(screen.getByRole('navigation', { name: labels.primaryNav }))
+  const markedEntries = async () => {
+    const dict = await getDictionary(defaultLocale);
+    return within(screen.getByRole('navigation', { name: dict.nav.primary }))
       .getAllByRole('link')
-      .filter((link) => link.getAttribute('aria-current') === 'page');
+      .filter((link) => link.getAttribute('aria-current') === 'page')
+      .map((link) => link.textContent);
+  };
 
-  it('marks exactly the entry the reader is on', () => {
-    navigation.pathname = '/explore';
-    render(<AppChrome links={links} labels={labels} />);
+  it('marks exactly the entry the reader is on', async () => {
+    const dict = await getDictionary(defaultLocale);
+    await renderApp('/explore');
 
-    expect(markedEntries().map((link) => link.textContent)).toEqual(['探索']);
+    await expect(markedEntries()).resolves.toEqual([dict.explore.title]);
   });
 
-  it('marks the home entry only on an exact match, never on every route', () => {
-    navigation.pathname = '/';
-    render(<AppChrome links={links} labels={labels} />);
+  it('marks the home entry only on an exact match, never on every route', async () => {
+    const dict = await getDictionary(defaultLocale);
+    await renderApp('/');
 
-    expect(markedEntries().map((link) => link.textContent)).toEqual(['ホーム']);
+    await expect(markedEntries()).resolves.toEqual([dict.home.title]);
   });
 
-  it('marks nothing on a served route that is not itself an entry', () => {
-    // `/configuration/account` is real, and `/home` and `/doctor` are too —
-    // none of them is one of the six destinations in this set.
-    navigation.pathname = '/configuration/account';
-    render(<AppChrome links={links} labels={labels} />);
+  it('marks nothing on a served route that is not itself an entry', async () => {
+    // `/configuration/account` is real, and so are `/home` and `/doctor` — none
+    // of them is one of the six destinations in this set.
+    await renderApp('/configuration/account');
 
-    expect(markedEntries()).toHaveLength(0);
+    await expect(markedEntries()).resolves.toEqual([]);
   });
 
-  it('leaves the unmarked entries with no attribute rather than a negative one', () => {
-    navigation.pathname = '/explore';
-    render(<AppChrome links={links} labels={labels} />);
+  it('leaves the unmarked entries with no attribute rather than a negative one', async () => {
+    const dict = await getDictionary(defaultLocale);
+    await renderApp('/explore');
 
-    const nav = within(screen.getByRole('navigation', { name: labels.primaryNav }));
-    const home = nav.getByRole('link', { name: 'ホーム' });
+    const nav = within(screen.getByRole('navigation', { name: dict.nav.primary }));
 
     // `aria-current="false"` is the default already; emitting it would add
     // markup that says nothing.
-    expect(home).not.toHaveAttribute('aria-current');
+    expect(nav.getByRole('link', { name: dict.home.title })).not.toHaveAttribute('aria-current');
   });
 });

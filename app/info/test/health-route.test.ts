@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GET } from '../src/app/health/route';
-import {
-  setCloudflareContext,
-  setCloudflareContextShouldThrow,
-} from './__mocks__/opennext-cloudflare';
+import { resetEnv, setEnv, setEnvShouldThrow } from './__mocks__/cloudflare-workers';
+import { handlers } from './utils/routes';
+
+const GET = handlers.health;
 
 /*
  * The unified health entry point: Edge's own state and Rails' liveness in one
@@ -12,26 +11,28 @@ import {
  *
  * This file replaced `test/rails-health-route.test.ts`, deleted along with the
  * `/rails-health` route it covered. It is byte-identical across all fifteen
- * frames, like the route it tests — the failure mode for fifteen owned copies is
- * drift, and `test/rails-connection-invariants.test.ts` pins both.
+ * frames, like the route it tests. `app/info` is the first frame to leave that
+ * family, so the assertions below are unchanged and only the way the environment
+ * is installed differs: `cloudflare:workers` exposes a plain `env` object where
+ * OpenNext exposed a `getCloudflareContext()` call that could throw.
  */
 
 const REVISION = { id: 'rev-id', tag: 'rev-tag', timestamp: 'built-at' };
 
 function railsAnswers(response: Response) {
   const fetch = vi.fn(() => Promise.resolve(response));
-  setCloudflareContext({ env: { REVISION, UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } } });
+  setEnv({ REVISION, UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
   return fetch;
 }
 
 function railsRejects(error: unknown) {
   const fetch = vi.fn(() => Promise.reject(error));
-  setCloudflareContext({ env: { REVISION, UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } } });
+  setEnv({ REVISION, UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
   return fetch;
 }
 
 function noTransport() {
-  setCloudflareContext({ env: { REVISION } });
+  setEnv({ REVISION });
 }
 
 beforeEach(() => {
@@ -42,8 +43,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
-  setCloudflareContextShouldThrow(false);
-  setCloudflareContext({ env: {} });
+  resetEnv();
 });
 
 describe('health route: both halves ok', () => {
@@ -76,7 +76,7 @@ describe('health route: both halves ok', () => {
 
   it('still answers 200 when the revision binding is absent', async () => {
     const fetch = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
-    setCloudflareContext({ env: { UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } } });
+    setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
 
     const response = await GET();
 
@@ -153,7 +153,7 @@ describe('health route: Rails half unhealthy', () => {
   it('reports not-configured rather than failing when the Cloudflare context is unavailable', async () => {
     // `getRailsClient()` reads the context and can throw. That is "no
     // transport", not an Edge fault, so it must not be allowed to escape.
-    setCloudflareContextShouldThrow(true);
+    setEnvShouldThrow(true);
 
     const response = await GET();
 

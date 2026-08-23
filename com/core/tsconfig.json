@@ -1,23 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2024",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node", "vitest/globals"],
     "allowJs": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "jsx": "react-jsx",
+    // The core is the one frame that uses a path alias; its pages and
+    // components have imported through `@/` since before the migration and the
+    // alias is resolved by `resolve.tsconfigPaths` in vite.config.ts.
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["./cloudflare-env.d.ts", "node", "vitest/globals"],
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
     // The quality policy every deployment unit shares, byte-identical in all
     // twenty-one tsconfigs. It is repeated rather than `extends`-ed: a unit has to
     // stay valid when it is lifted out into its own repository, which
@@ -25,7 +23,7 @@
     // config too. What is deliberately NOT standardised is directly above this
     // block — `target`, `module`, `lib`, `jsx`, `jsxImportSource`, `types`,
     // `plugins`, `paths` are framework mechanics and differ by design between the
-    // Next.js frames, the Hono Workers and the Vercel units.
+    // Next.js frames, the Hono Workers and the TanStack Start frames.
     //
     // `useUnknownInCatchVariables` is not listed: TypeScript 7 implies it from
     // `strict`, and repeating a default is a line that can silently stop meaning
@@ -61,11 +59,13 @@
     "skipLibCheck": true
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    "cloudflare-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*",
+    "e2e/**/*",
+    "*.ts",
+    "*.d.ts"
   ],
   "exclude": ["node_modules"]
 }

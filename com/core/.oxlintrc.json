@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "react", "jsx-a11y", "nextjs", "import", "promise", "vitest"],
+  // No `nextjs` plugin: this unit is TanStack Start on Vite, and the plugin's
+  // rules are about a framework that is no longer here. Left enabled it reported
+  // `no-html-link-for-pages` on the ordinary `<a href="/">` in the offline and
+  // failure documents — advice to import `next/link`, in a unit with no `next`
+  // dependency at all.
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "promise", "vitest"],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -118,6 +123,23 @@
   },
   "overrides": [
     {
+      // TanStack's control-flow signals are plain objects rather than `Error`
+      // subclasses — `notFound()` and `redirect()` each return one for the caller
+      // to throw, and the router identifies them structurally. Throwing an
+      // `Error` instead would not be recognised at all, so there is no code
+      // change that satisfies `only-throw-error` and keeps the behaviour: the
+      // rule and the framework's API genuinely disagree.
+      //
+      // Scoped to the two files that raise them rather than disabled unit-wide,
+      // and set here rather than with an inline directive because the rule is
+      // type-aware only — `pnpm run lint` would report the directive itself as
+      // unused. Removable if TanStack ships Error-derived signals.
+      "files": ["src/i18n/dictionaries.ts", "src/routes/_page.home.tsx"],
+      "rules": {
+        "typescript/only-throw-error": "off"
+      }
+    },
+    {
       "files": ["test/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "**/__mocks__/**"],
       "rules": {
         "typescript/no-unsafe-assignment": "off",
@@ -174,6 +196,7 @@
     "**/dist/**",
     "**/node_modules/**",
     "worker-configuration.d.ts",
+    "**/routeTree.gen.ts",
     "**/+types/**",
     "**/build/**"
   ]

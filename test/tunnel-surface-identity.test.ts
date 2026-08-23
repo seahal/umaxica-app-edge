@@ -10,7 +10,7 @@
  * value in the source, `PRIVATE_RAILS_ORIGIN`, never reaches a response. A
  * transposed ingress entry therefore answered exactly like a correct one.
  *
- * `<brand>/info/src/app/health.json/route.ts` closes that, and these assertions
+ * Each `info` frame's `/health.json` route closes that, and these assertions
  * keep the three copies from drifting: each frame owns its own copy (`CLAUDE.md`
  * forbids extracting a shared module), so the failure mode is one copy edited
  * and two left behind, or a copy carrying the wrong brand — which would make the
@@ -40,7 +40,20 @@ const IDENTIFIED_FRAMES = [
   { workspace: 'org/info', service: 'org', frame: 'info' },
 ] as const;
 
-const routePath = (workspace: string) => `${workspace}/src/app/health.json/route.ts`;
+/*
+ * Where `/health.json` lives, per bundler. An OpenNext frame answers it from an
+ * App Router Route Handler; a TanStack Start frame answers it from a server route
+ * whose filename escapes the literal dot (`health[.]json.ts` — an unescaped `.`
+ * would nest it under `/health` as `/health/json`).
+ *
+ * What is under test is unchanged: three `info` copies, each naming its own
+ * brand as a build-time literal so a hostname mix-up is provable rather than
+ * merely unproven.
+ */
+const routePath = (workspace: string) =>
+  existsSync(join(repoRoot, workspace, 'next.config.ts'))
+    ? `${workspace}/src/app/health.json/route.ts`
+    : `${workspace}/src/routes/health[.]json.ts`;
 
 /** Read a `const NAME = 'value';` declaration out of a route copy. */
 function readStringConstant(source: string, name: string): string | undefined {
@@ -78,12 +91,20 @@ describe('published surface identity', () => {
       // to itself and prove nothing about which application received the request —
       // a transposed ingress entry would still look correct.
       //
-      // Asserted as "the handler is given nothing to read": a `GET` with an empty
-      // parameter list has no `Request`, and `next/headers` is the other way in.
-      // Matching on the word `headers` instead would catch the `ResponseInit`
-      // below, which is an ordinary outbound header and not a read of anything.
-      expect(source).toMatch(/export async function GET\(\)/u);
+      // Asserted as "the handler is given nothing to read": a `GET` with an
+      // empty parameter list has no `Request` to read from. The pattern matches
+      // both shapes the two bundlers produce — Next's exported
+      // `export async function GET()` and TanStack's `GET: () =>` inside
+      // `server.handlers` — because the property is about the parameter list,
+      // not about which framework declares it.
+      //
+      // The named escape hatches are forbidden too: `next/headers` on a Next
+      // frame, `getRequest`/`getRequestHeader` on a TanStack one. Matching on the
+      // bare word `headers` instead would catch the `ResponseInit` below, which
+      // is an ordinary outbound header and not a read of anything.
+      expect(source).toMatch(/(?:export\s+async\s+function\s+GET|GET\s*:\s*(?:async\s+)?)\(\)/u);
       expect(source).not.toMatch(/from 'next\/headers'/u);
+      expect(source).not.toMatch(/\bgetRequestHeaders?\b|\bgetRequest\b/u);
     },
   );
 

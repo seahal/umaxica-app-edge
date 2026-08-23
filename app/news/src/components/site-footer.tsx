@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 
 const CANONICAL_HOME_URL = 'https://news-jp.umaxica.app/';
 
@@ -24,7 +24,7 @@ export function SiteFooter() {
         className="mx-auto flex w-full max-w-7xl flex-wrap gap-x-6 px-4 wide:px-8"
         aria-label="ユーティリティナビゲーション"
       >
-        <Link className="inline-flex min-h-11 items-center text-sm text-brand" href="/about">
+        <Link className="inline-flex min-h-11 items-center text-sm text-brand" to="/about">
           このサイトについて
         </Link>
       </nav>

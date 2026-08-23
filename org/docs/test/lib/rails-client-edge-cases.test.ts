@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('server-only', () => ({}));
-
 import { createRailsClient } from '../../src/lib/rails-client';
 
 describe('Rails client edge cases', () => {

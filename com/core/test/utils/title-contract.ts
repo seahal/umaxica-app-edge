@@ -67,26 +67,3 @@ export function expectTitleContract(
     );
   }
 }
-
-type ResolvedTitle = string | undefined;
-
-/** Resolve what a Next.js module actually contributes as a title. */
-export async function resolveTitle(pageModule: Record<string, unknown>): Promise<ResolvedTitle> {
-  const generate = pageModule['generateMetadata'] as
-    | undefined
-    | (() => Promise<{ title?: unknown }>);
-  const meta = generate
-    ? await generate()
-    : (pageModule['metadata'] as { title?: unknown } | undefined);
-  const title = meta?.title;
-
-  if (typeof title === 'string') {
-    return title;
-  }
-  if (title && typeof title === 'object') {
-    const record = title as { absolute?: unknown; default?: unknown };
-    if (typeof record.absolute === 'string') return record.absolute;
-    if (typeof record.default === 'string') return record.default;
-  }
-  return undefined;
-}

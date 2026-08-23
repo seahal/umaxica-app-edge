@@ -37,7 +37,7 @@
     "prepare": "lefthook install",
     "build": "pnpm -r run build",
     "check": "pnpm run check:static && pnpm run test",
-    "lint:types": "pnpm -r run lint:types && oxlint --type-aware --report-unused-disable-directives .",
+    "lint:types": "pnpm -r --if-present run cf-typegen && pnpm -r run lint:types && oxlint --type-aware --report-unused-disable-directives .",
     "lint:fix": "pnpm -r run lint:fix && oxlint --type-aware --fix .",
     "check:generated": "pnpm -r run check:generated",
     "check:static": "pnpm run format:check && pnpm run lint && pnpm run lint:types && pnpm run check:generated && pnpm run typecheck && pnpm run knip && pnpm run check:workers && pnpm run check:architecture && pnpm run check:deps && pnpm run check:spelling"

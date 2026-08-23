@@ -273,7 +273,10 @@ describe("Edge's own health does not depend on Rails being up", () => {
      * block that can throw, and both are always serialized.
      */
     for (const { brand } of CORES) {
-      const source = read(`${brand}/core/src/app/health/route.ts`);
+      // The route moved from an App Router Route Handler to a TanStack server
+      // route when the Cores left Next.js. What it has to say is unchanged, and
+      // is what this asserts.
+      const source = read(`${brand}/core/src/routes/health.ts`);
       expect(source).toContain('function resolveRailsClient()');
       expect(source).toContain("edge: { status: 'error' }");
       expect(source).toContain('rails,');

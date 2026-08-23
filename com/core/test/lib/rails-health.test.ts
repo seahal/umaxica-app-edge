@@ -12,7 +12,7 @@ function makeClient(result: RailsClientResult): RailsClient {
 /** Every string a caller could plausibly hope to read out of this report. */
 const LEAK_MARKERS = [
   'internal details',
-  'connection refused to core.app.localhost',
+  'connection refused to core.com.localhost',
   '019f5fe0-287f-7040-9f2f-036cb5b21df7',
   'session=abc123',
   'Bearer token-value',
@@ -75,14 +75,14 @@ describe('rails liveness probe', () => {
      */
     const client = makeClient({
       kind: 'unreachable',
-      errorMessage: 'connection refused to core.app.localhost',
+      errorMessage: 'connection refused to core.com.localhost',
     });
     const report = await checkRailsLiveness(client);
 
     expect(report.liveness.kind).toBe('unreachable');
     expect(report.liveness).not.toHaveProperty('errorMessage');
     expect(report.liveness.status).toBeUndefined();
-    expect(JSON.stringify(report)).not.toContain('core.app.localhost');
+    expect(JSON.stringify(report)).not.toContain('core.com.localhost');
   });
 
   it('maps an invalid-path client result to unreachable without its reason', async () => {

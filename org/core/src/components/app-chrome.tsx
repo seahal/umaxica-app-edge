@@ -1,8 +1,4 @@
-'use client';
-
-import type { Route } from 'next';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -15,10 +11,12 @@ import { Button } from 'react-aria-components';
  * unit can later become a desktop sidebar, a tablet rail or a mobile bottom
  * bar without the header participating in that decision.
  *
- * This is the one client component the shell needs: the menu is a disclosure,
- * and a disclosure has state. Everything else in the shell stays a Server
- * Component. Labels arrive as plain strings — the dictionary is never loaded
- * on the client.
+ * This is the one stateful component the shell needs: the menu is a disclosure,
+ * and a disclosure has state. It carried a `'use client'` directive under Next,
+ * which marked the Server/Client Component boundary; there is no such boundary
+ * here — every component is rendered on the server and hydrated — so the
+ * directive is gone rather than kept as decoration. Labels still arrive as plain
+ * strings, so the dictionary is never sent to the client.
  *
  * The trigger is `react-aria-components`' `<Button>`, which renders a real
  * `<button type="button">` and normalises press across mouse, touch, pen and
@@ -40,7 +38,13 @@ import { Button } from 'react-aria-components';
  */
 
 export type NavigationLink = {
-  href: Route;
+  /*
+   * `to`, not `href`: TanStack's `<Link>` takes the route it navigates to and
+   * types it against the generated route tree, which is what `typedRoutes` in
+   * `next.config.ts` used to buy — a path no route serves is now a type error at the
+   * call site rather than a 404 in a browser.
+   */
+  to: string;
   label: string;
 };
 
@@ -55,7 +59,6 @@ export function AppChrome({
   labels,
 }: Readonly<{ links: readonly NavigationLink[]; labels: ChromeLabels }>) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
 
   return (
     <>
@@ -67,7 +70,7 @@ export function AppChrome({
            */}
           <Link
             className="inline-flex min-h-11 items-center text-xl font-bold tracking-wide"
-            href="/"
+            to="/"
           >
             {labels.brand}
           </Link>
@@ -114,14 +117,18 @@ export function AppChrome({
          * `undefined` rather than `"false"` on the five entries that do not
          * match: the attribute is then absent, which is exactly what its
          * default already means, so emitting it would add markup that says
-         * nothing.
+         * nothing. `activeProps` gives exactly that — the attribute is applied
+         * only to the active link — so nothing has to read the pathname here any
+         * more, and `activeOptions={{ exact: true }}` is what keeps the match
+         * exact rather than prefix-based.
          */}
         {links.map((link) => (
           <Link
             className="rounded-lg px-3 py-2 hover:bg-gray-100"
-            aria-current={pathname === link.href ? 'page' : undefined}
-            href={link.href}
-            key={link.href}
+            activeProps={{ 'aria-current': 'page' }}
+            activeOptions={{ exact: true }}
+            to={link.to}
+            key={link.to}
           >
             {link.label}
           </Link>

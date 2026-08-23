@@ -33,10 +33,35 @@ const APEX_WORKSPACES = ['app/apex', 'com/apex', 'net/apex', 'org/apex'] as cons
 
 const VPC_BINDING = 'UMAXICA_APPS_EDGE_CF_WORKERS_VPC';
 
-/** The fifteen Next.js frames that reach Rails, as `<brand>/<frame>` paths. */
+/** The fifteen frames that reach Rails, as `<brand>/<frame>` paths. */
 const RAILS_FRAMES = BRANDS.flatMap((brand) =>
   FRAMES.map((frame) => ({ brand, frame, workspace: `${brand}/${frame}` })),
 );
+
+/*
+ * Which bundler a frame builds through, read from disk.
+ *
+ * All fifteen used to be Next.js on OpenNext, and the assertions below could
+ * name App Router paths directly. `app/info` moved to TanStack Start on Vite
+ * (plans/info-nextjs-to-tanstack-start.md) and the two `info` siblings are
+ * expected to follow. What is under test is unchanged either way — one Rails
+ * transport per frame, one `/health` that reports both halves, credentials
+ * stripped outbound — so the bundler only decides where a file sits, never what
+ * it has to say.
+ */
+function isNextFrame(workspace: string): boolean {
+  return existsSync(join(repoRoot, workspace, 'next.config.ts'));
+}
+
+/** Where this frame answers `/health`, per bundler. */
+function healthRouteOf(workspace: string): string {
+  return isNextFrame(workspace)
+    ? `${workspace}/src/app/health/route.ts`
+    : `${workspace}/src/routes/health.ts`;
+}
+
+const NEXT_FRAMES = RAILS_FRAMES.filter(({ workspace }) => isNextFrame(workspace));
+const VITE_FRAMES = RAILS_FRAMES.filter(({ workspace }) => !isNextFrame(workspace));
 
 /**
  * Source with comments removed.
@@ -90,7 +115,7 @@ describe('rails client layout', () => {
        * status page (removed earlier; `docs/design/rails-health-page.md` records
        * what it did) and the JSON Route Handler that replaced it.
        */
-      const health = `${workspace}/src/app/health/route.ts`;
+      const health = healthRouteOf(workspace);
       const route = `${workspace}/src/app/rails-health/route.ts`;
       const page = `${workspace}/src/app/(page)/rails-health/page.tsx`;
 
@@ -100,20 +125,38 @@ describe('rails client layout', () => {
     },
   );
 
+  /*
+   * Byte-identity across all fifteen, as it has always been.
+   *
+   * The failure mode it exists to catch is drift between owned copies: one
+   * edited, the rest left behind, with nothing at runtime noticing.
+   *
+   * It survived the migration intact, and that was worth some care — the Core
+   * frames use a `@/` path alias throughout and the satellites do not, so the
+   * ported route imported through the alias at first and split the fifteen into
+   * two groups. Writing the imports relatively in every frame is what keeps this
+   * one assertion meaningful instead of two weaker ones.
+   */
   it('keeps all fifteen /health routes byte-identical', () => {
-    // Fifteen owned copies, so the failure mode is drift: one edited and
-    // fourteen left behind. Nothing at runtime notices.
-    //
-    // The fifteen used to be two groups — the cores read `REVISION` and answered
-    // 503 on failure, the twelve content frames returned a static `{status:'ok'}`
-    // — which is exactly the asymmetry the merge removed.
-    const digests = new Set(
-      RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/app/health/route.ts`)),
+    expect(RAILS_FRAMES.length).toBe(15);
+    const digests = new Set(RAILS_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace))));
+    expect(digests.size, 'the health route handlers have diverged').toBe(1);
+  });
+
+  /*
+   * Both families must still be accounted for, even when one is empty: a frame
+   * that owns neither an App Router health route nor a TanStack one would
+   * silently drop out of every assertion in this file.
+   */
+  it('places every frame in exactly one bundler family', () => {
+    expect([...NEXT_FRAMES, ...VITE_FRAMES].map(({ workspace }) => workspace).sort()).toEqual(
+      RAILS_FRAMES.map(({ workspace }) => workspace).sort(),
     );
-    expect(digests.size, 'the fifteen health route handlers have diverged').toBe(1);
   });
 
   it('keeps all fifteen Rails health probes byte-identical', () => {
+    // This one really is all fifteen: `rails-health.ts` imports only a type from
+    // the client, so it is bundler-agnostic and the migration left it untouched.
     const digests = new Set(
       RAILS_FRAMES.map(({ workspace }) => read(`${workspace}/src/lib/rails-health.ts`)),
     );
@@ -151,7 +194,10 @@ describe('rails client layout', () => {
      * asserted on the two files that actually serialize a response.
      */
     for (const { workspace } of RAILS_FRAMES) {
-      for (const file of ['src/lib/rails-health.ts', 'src/app/health/route.ts']) {
+      for (const file of [
+        'src/lib/rails-health.ts',
+        healthRouteOf(workspace).slice(workspace.length + 1),
+      ]) {
         const source = code(`${workspace}/${file}`);
         expect(source, `${workspace}/${file} must not publish errorMessage`).not.toContain(
           'errorMessage',
@@ -222,7 +268,39 @@ describe('rails client layout', () => {
 
       expect(source).toContain("readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1'");
       expect(source).toContain("readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1'");
-      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 next dev /u);
+      /*
+       * The marker has to be set by the dev script itself, whatever the dev
+       * server is. It is what tells the client it may take the direct transport
+       * rather than look for a VPC binding.
+       *
+       * On a Vite frame that is necessary but not sufficient: `vite dev` runs the
+       * Worker in workerd, whose `process.env` is built from the Worker's own
+       * vars and not from the shell, so `vite.config.ts` also has to forward the
+       * flag into the Worker. Measured 2026-08-22 — without that bridge the
+       * variable is exported and the branch is still never taken.
+       */
+      expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 /u);
+      if (!isNextFrame(workspace)) {
+        const viteConfig = read(`${workspace}/vite.config.ts`);
+
+        expect(
+          viteConfig,
+          `${workspace}: vite dev runs in workerd, so the flags must be forwarded into the Worker`,
+        ).toContain('EDGE_LOCAL_RAILS_ENABLED');
+
+        /*
+         * And forwarded ONLY while serving. `compose.yaml` exports
+         * EDGE_LOCAL_RAILS_ENABLED container-wide, so a build that forwarded it
+         * would write it into the production artefact's `vars` — measured
+         * 2026-08-22, it appeared in `dist/server/wrangler.json` — and a deployed
+         * Worker carrying it would take the direct transport to a `.localhost`
+         * origin instead of the VPC binding, answering `unreachable` forever.
+         */
+        expect(
+          viteConfig,
+          `${workspace}: the local Rails flags must never be forwarded during a build`,
+        ).toMatch(/command === 'serve'/u);
+      }
     }
   });
 

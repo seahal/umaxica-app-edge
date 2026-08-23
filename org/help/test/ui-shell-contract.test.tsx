@@ -1,16 +1,10 @@
 import { within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { expectTitleContract, TLD } from './utils/title-contract';
-
-vi.mock('next/font/google', () => ({ Inter: () => ({ variable: 'font-sans' }) }));
-
-import About, { metadata as aboutMetadata } from '../src/app/about/page';
-import ErrorPage from '../src/app/error';
-import Layout from '../src/app/layout';
-import OfflinePage from '../src/app/offline/page';
-import Page from '../src/app/page';
+import { ErrorDocument } from '../src/components/status-documents';
+import { aboutRoute, components, headTitleOf, renderDocument } from './utils/routes';
+import { expectTitleContract } from './utils/title-contract';
 
 /**
  * The UMAXICA application shell, asserted on the emitted document.
@@ -26,15 +20,31 @@ import Page from '../src/app/page';
  * the `<nav>` lost its accessible name. Roles, landmarks, accessible names and
  * document order are the contract; utilities are an implementation detail.
  */
-const shell = (Page_: () => React.JSX.Element) =>
-  renderToStaticMarkup(
-    <Layout>
-      <Page_ />
-    </Layout>,
-  );
+/*
+ * The documents are rendered once, through a real router, and then asserted
+ * synchronously.
+ *
+ * Under Next the shell was a component this file could call directly. TanStack's
+ * `<HeadContent />` reads router state, so the document only exists once a
+ * router has loaded a path — which is asynchronous. Rendering up front in
+ * `beforeAll` keeps every assertion below unchanged.
+ */
+const documents = new Map<string, string>();
 
-const shellDom = (Page_: () => React.JSX.Element) => {
-  document.body.innerHTML = shell(Page_);
+beforeAll(async () => {
+  for (const path of ['/', '/about', '/offline']) {
+    documents.set(path, await renderDocument(path));
+  }
+});
+
+const shell = (path: string): string => {
+  const html = documents.get(path);
+  if (html === undefined) throw new Error(`no document rendered for ${path}`);
+  return html;
+};
+
+const shellDom = (path: string) => {
+  document.body.innerHTML = shell(path);
   return within(document.body);
 };
 
@@ -44,7 +54,7 @@ afterEach(() => {
 
 describe('application shell', () => {
   it('emits exactly one header, main and footer, in document order', () => {
-    const html = shell(Page);
+    const html = shell('/');
 
     for (const tag of ['header', 'main', 'footer']) {
       expect(html.match(new RegExp(`<${tag}[\\s>]`, 'gu')) ?? [], `<${tag}>`).toHaveLength(1);
@@ -55,7 +65,7 @@ describe('application shell', () => {
   });
 
   it('exposes the document landmarks', () => {
-    const dom = shellDom(Page);
+    const dom = shellDom('/');
 
     expect(dom.getByRole('banner')).toBeInTheDocument();
     expect(dom.getByRole('main')).toBeInTheDocument();
@@ -69,8 +79,8 @@ describe('application shell', () => {
   });
 
   it('links the brand to this edition’s homepage without stealing the page heading', () => {
-    const html = shell(Page);
-    const dom = shellDom(Page);
+    const html = shell('/');
+    const dom = shellDom('/');
     const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
 
     expect(within(dom.getByRole('banner')).getByRole('link', { name: 'UMAXICA' })).toHaveAttribute(
@@ -83,7 +93,7 @@ describe('application shell', () => {
   });
 
   it('ships no dead control in the header', () => {
-    const banner = within(shellDom(Page).getByRole('banner'));
+    const banner = within(shellDom('/').getByRole('banner'));
 
     /*
      * The actions slot itself is not asserted: it is an empty `<div>` and an
@@ -97,14 +107,14 @@ describe('application shell', () => {
   });
 
   it('renders no main navigation, because this unit has no second destination', () => {
-    const html = shell(Page);
+    const html = shell('/');
 
     expect(html.slice(0, html.indexOf('<footer'))).not.toContain('<nav');
   });
 
   it('gives the footer two layers: a named utility nav and the site identity', () => {
-    const html = shell(Page);
-    const dom = shellDom(Page);
+    const html = shell('/');
+    const dom = shellDom('/');
     const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'));
 
     const contentinfo = dom.getByRole('contentinfo');
@@ -126,7 +136,7 @@ describe('application shell', () => {
   });
 
   it('opens the document with a skip link that actually moves focus', () => {
-    const dom = shellDom(Page);
+    const dom = shellDom('/');
 
     const skip = dom.getByRole('link', { name: '本文へスキップ' });
     expect(skip).toHaveAttribute('href', '#main-content');
@@ -153,7 +163,20 @@ describe('application shell', () => {
   });
 
   it('links only to destinations that exist', () => {
-    const hrefs = [...shell(Page).matchAll(/href="(\/[^"]*)"/gu)].map((match) => match[1]);
+    /*
+     * Anchors only, and only in the body.
+     *
+     * Next's Metadata API injected `<link rel="manifest">` and `<link rel="icon">`
+     * at a stage this file never saw, so scanning the whole document for `href="/…"`
+     * used to be equivalent to scanning for navigation. `<HeadContent />` renders
+     * those same links into the document this test now receives, and a resource
+     * link is not a destination a reader can navigate to — so the scan says which
+     * elements it means.
+     */
+    const dom = shellDom('/');
+    const hrefs = [...document.body.querySelectorAll('a[href^="/"]')].map((anchor) =>
+      anchor.getAttribute('href'),
+    );
 
     // Neither a privacy nor a terms route exists in this repository, and there
     // is no reusable legal text to build one from, so neither may be linked.
@@ -163,6 +186,13 @@ describe('application shell', () => {
     expect(hrefs).not.toContain('/preferences');
 
     expect(new Set(hrefs)).toEqual(new Set(['/', '/about']));
+
+    // The head links are still expected to be there — they are just not
+    // navigation, and the manifest URL in particular is pinned by
+    // `api/standard-contract.hurl` and `e2e/standard-contract.spec.ts`.
+    void dom;
+    expect(shell('/')).toContain('href="/manifest.webmanifest"');
+    expect(shell('/')).toContain('href="/favicon.ico"');
   });
 });
 
@@ -184,9 +214,9 @@ describe('the other documents that carry this shell', () => {
     return within(document.body).getByRole('main');
   };
 
-  it('gives error.tsx a focusable skip-link target', () => {
+  it('gives the error document a focusable skip-link target', () => {
     const main = mainOf(
-      renderToStaticMarkup(<ErrorPage error={new Error('boom')} reset={() => undefined} />),
+      renderToStaticMarkup(<ErrorDocument error={new Error('boom')} reset={() => undefined} />),
     );
 
     expect(main).toHaveAttribute('id', 'main-content');
@@ -194,7 +224,7 @@ describe('the other documents that carry this shell', () => {
   });
 
   it('gives /offline a focusable skip-link target', () => {
-    const main = mainOf(renderToStaticMarkup(<OfflinePage />));
+    const main = mainOf(renderToStaticMarkup(<components.offline />));
 
     expect(main).toHaveAttribute('id', 'main-content');
     expect(main).toHaveAttribute('tabindex', '-1');
@@ -203,7 +233,7 @@ describe('the other documents that carry this shell', () => {
 
 describe('/about', () => {
   it('renders inside the shell with its own page heading', () => {
-    const html = shell(About);
+    const html = shell('/about');
 
     expect(html).toContain('<h1');
     expect(html).toContain('このサイトについて');
@@ -211,15 +241,12 @@ describe('/about', () => {
   });
 
   it('names the page in the title without naming the surface or the runtime', () => {
-    const pageTitle = aboutMetadata.title;
+    // Next kept the bare page name here and let `metadata.title.template` close
+    // it with the brand. TanStack has no template, so the route's `head()`
+    // carries the finished string and `brandTitle()` is what makes it identical
+    // to every other page's suffix.
+    expect(headTitleOf(aboutRoute)).toBe('このサイトについて — UMAXICA (ORG)');
 
-    // A plain string, so the root layout's template is what closes it.
-    expect(pageTitle, 'page title must be a bare string').toBeTypeOf('string');
-    expect(pageTitle).toBe('このサイトについて');
-
-    expectTitleContract(`<title>${pageTitle as string} — UMAXICA (${TLD})</title>`, {
-      requirePageSpecific: true,
-      label: '/about',
-    });
+    expectTitleContract(shell('/about'), { requirePageSpecific: true, label: '/about' });
   });
 });

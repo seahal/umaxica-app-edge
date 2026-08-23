@@ -1,40 +1,48 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { GET } from '../src/app/health.json/route';
+import { handlers } from './utils/routes';
 
-afterEach(() => {
-  vi.clearAllMocks();
-  vi.unstubAllEnvs();
-});
-
+/*
+ * `environment` used to come from `process.env.NODE_ENV`, which OpenNext
+ * injected. It now comes from `import.meta.env.MODE`, which Vite replaces with a
+ * literal at build time — the same fact, from the bundler that actually knows
+ * it. A test cannot replace it the way it could delete an environment
+ * variable, and it is a string on every code path, so the `| null` branch the
+ * route used to carry is gone rather than kept as dead defence.
+ */
 describe('info identity route', () => {
   it('reports the answering frame without reflecting the request host', async () => {
-    vi.stubEnv('NODE_ENV', 'test');
-    const response = await GET();
+    const response = await handlers.healthJson();
+
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
     await expect(response.json()).resolves.toMatchObject({
       status: 'OK',
       service: 'com',
       frame: 'info',
-      environment: 'test',
     });
   });
 
-  it('reports a null environment when NODE_ENV is absent', async () => {
-    const previous = process.env.NODE_ENV;
-    Reflect.deleteProperty(process.env, 'NODE_ENV');
-    try {
-      const response = await GET();
-      await expect(response.json()).resolves.toMatchObject({
-        service: 'com',
-        environment: null,
-      });
-    } finally {
-      // Written back through `Reflect.set` for the same reason it was removed
-      // through `Reflect.deleteProperty`: the Wrangler-generated
-      // `NodeJS.ProcessEnv` narrows `NODE_ENV` to the literal declared in
-      // wrangler.jsonc, so a plain assignment is a type error.
-      if (previous !== undefined) Reflect.set(process.env, 'NODE_ENV', previous);
-    }
+  it('reports a string environment, never a reflected value', async () => {
+    const body = (await (await handlers.healthJson()).json()) as {
+      environment: unknown;
+      time: string;
+    };
+
+    expect(typeof body.environment).toBe('string');
+    expect(body.environment).not.toBe('');
+    // A timestamp, so a live server is distinguishable from a stale deployment.
+    expect(() => new Date(body.time).toISOString()).not.toThrow();
+  });
+
+  it('names the brand and frame as build-time literals, not from a header', async () => {
+    // Both calls must answer identically regardless of what a caller sends: the
+    // route reads nothing from the request at all.
+    const first = (await (await handlers.healthJson()).json()) as Record<string, unknown>;
+    const second = (await (await handlers.healthJson()).json()) as Record<string, unknown>;
+
+    expect(first['service']).toBe('com');
+    expect(first['frame']).toBe('info');
+    expect(second['service']).toBe(first['service']);
+    expect(second['frame']).toBe(first['frame']);
   });
 });

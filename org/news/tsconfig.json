@@ -8,11 +8,6 @@
     "allowJs": true,
     "incremental": true,
     "jsx": "react-jsx",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     // The quality policy every deployment unit shares, byte-identical in all
@@ -22,7 +17,7 @@
     // config too. What is deliberately NOT standardised is directly above this
     // block — `target`, `module`, `lib`, `jsx`, `jsxImportSource`, `types`,
     // `plugins`, `paths` are framework mechanics and differ by design between the
-    // Next.js frames, the Hono Workers and the Vercel units.
+    // Next.js frames, the Hono Workers and the TanStack Start frames.
     //
     // `useUnknownInCatchVariables` is not listed: TypeScript 7 implies it from
     // `strict`, and repeating a default is a line that can silently stop meaning
@@ -58,14 +53,13 @@
     "skipLibCheck": true
   },
   "include": [
-    "next-env.d.ts",
     "cloudflare-env.d.ts",
-    ".next/types/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-    ".next/dev/types/**/*.ts",
     "test/**/*",
-    "*.ts"
+    "e2e/**/*",
+    "*.ts",
+    "*.d.ts"
   ],
   "exclude": ["node_modules"]
 }
