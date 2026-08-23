@@ -1,7 +1,7 @@
 {
   "compatibility_date": "2026-07-25",
   "compatibility_flags": ["global_fetch_strictly_public"],
-  "name": "umaxica-apps-edge-budy-all",
+  "name": "umaxica-apps-edge-all-busy",
   "main": "./src/index.js",
   "workers_dev": false,
   "preview_urls": false,
