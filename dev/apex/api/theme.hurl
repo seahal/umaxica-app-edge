@@ -86,3 +86,48 @@ GET {{base}}/no-such-page
 HTTP 404
 [Asserts]
 xpath "count(//html[@data-theme])" == 0
+
+
+# 8. Neither cookie appears in a URL, so nothing but the response itself can
+#    tell a cache that two requests for the same path are not the same
+#    document. `language` decides the copy and `theme` decides the scheme;
+#    `Accept-Language` is the fallback the detector uses on a first visit.
+#
+#    Read by substring rather than whole: this Worker appends to `Vary` rather
+#    than assigning it, and what else is in the header differs between
+#    `vite dev` (which adds `Origin`) and a deployment.
+GET {{base}}/about
+HTTP 200
+[Asserts]
+header "vary" contains "Cookie"
+header "vary" contains "Accept-Language"
+
+GET {{base}}/health
+HTTP 200
+[Asserts]
+header "vary" contains "Cookie"
+header "vary" contains "Accept-Language"
+
+GET {{base}}/offline
+HTTP 200
+[Asserts]
+header "vary" contains "Cookie"
+header "vary" contains "Accept-Language"
+
+# ...and only where it is true. These two are negotiated by nothing.
+GET {{base}}/health.json
+HTTP 200
+[Asserts]
+header "vary" not contains "Cookie"
+
+GET {{base}}/revision
+HTTP 200
+[Asserts]
+header "vary" not contains "Cookie"
+
+# A document a cache was told not to store has nothing left to vary.
+GET {{base}}/no-such-page
+HTTP 404
+[Asserts]
+header "cache-control" == "no-store"
+header "vary" not contains "Cookie"

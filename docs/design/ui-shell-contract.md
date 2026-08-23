@@ -474,6 +474,12 @@ in the markup means "the cookie says dark, or the OS does and the cookie has
 not said otherwise". `color-scheme` is declared alongside it so the UA's own
 surfaces — scrollbar, form controls — follow.
 
+Because the scheme is decided on the server, every negotiated HTML document
+carries `Vary: Cookie, Accept-Language`. Two cookies change what is returned —
+`theme` here and `language` in §13 — and neither appears in the URL, so nothing
+else tells a cache that two requests for one path are not one response. It is
+appended rather than assigned, so a directive another layer set survives.
+
 Two limits are deliberate rather than pending:
 
 - **The five apex Workers only.** A frame never sees the cookie: its

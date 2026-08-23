@@ -1,4 +1,4 @@
-import { Hono, type Context } from 'hono';
+import { Hono, type Context, type MiddlewareHandler } from 'hono';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
@@ -32,6 +32,52 @@ export type ApexEnv = {
 // widening accessor keeps the guards below honest instead of leaving
 // optional chains the type checker believes are dead.
 const bindings = (c: Context<ApexEnv>): AssetEnv | undefined => c.env;
+
+/*
+ * What a cache has to know before it may reuse one of these documents for a
+ * second request to the same URL.
+ *
+ * Two cookies change the document and neither appears in the URL: `language`
+ * decides the copy (`languageDetector`) and `theme` decides the colour scheme
+ * (`theme.ts`). `Accept-Language` is here because the detector falls back to it
+ * when the cookie is absent — which is the first visit, the one most likely to
+ * be stored.
+ *
+ * Nothing caches these today: Cloudflare does not store a Worker's own
+ * response unless the Worker asks it to, and none of these carry
+ * `Cache-Control: public`. The header is here because that is a property of
+ * how they are served rather than of what they are, and a 200 with no
+ * freshness information is a candidate for heuristic caching in any
+ * intermediary that does keep one.
+ */
+const NEGOTIATED_ON = 'Cookie, Accept-Language';
+
+/*
+ * HTML only. `/health.json` and `/revision` are negotiated by nothing, and
+ * `/assets/*` is answered by the assets binding before this Worker runs.
+ *
+ * `no-store` responses — the status, 404 and error documents — are left alone:
+ * a cache told not to store one has nothing left to vary.
+ */
+const varyOnNegotiation: MiddlewareHandler = async (c, next) => {
+  await next();
+  const headers = c.res.headers;
+  if (
+    !headers.get('content-type')?.startsWith('text/html') ||
+    headers.get('cache-control')?.includes('no-store')
+  ) {
+    return;
+  }
+
+  /*
+   * Appended, never assigned. Whatever fronts this Worker adds a `Vary` of its
+   * own — `vite dev` adds `Origin` to every response — and overwriting it would
+   * silently drop a directive this code knows nothing about. It is also why the
+   * assertions in `api/theme.hurl` read the header by substring rather than
+   * whole: the rest of the value differs between `vite dev` and a deployment.
+   */
+  headers.append('Vary', NEGOTIATED_ON);
+};
 
 type ConfigurePageRoutes = (pageRoutes: Hono<ApexEnv>) => void;
 
@@ -77,6 +123,7 @@ export function createApexApp(
   const pageRoutes = new Hono<ApexEnv>();
 
   app.use('*', apexSecurityHeaders);
+  app.use('*', varyOnNegotiation);
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
