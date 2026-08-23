@@ -49,7 +49,7 @@ describe('buildBrandTitle', () => {
 
   it('never leaks a surface or runtime name into the title', () => {
     const result = buildBrandTitle('About', { brandName: 'UMAXICA', tld: 'COM' });
-    expect(result).not.toMatch(/apex|core|edge|hono|next|workers|cloudflare/i);
+    expect(result).not.toMatch(/apex|core|edge|hono|next|workers|cloudflare/iu);
   });
 });
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { sanitizeHealthRequest } from '../../src/lib/health-request';
 
 describe('sanitizeHealthRequest', () => {

@@ -23,7 +23,7 @@ function buildAsciiHeaders(source: Headers): Headers {
 /**
  * Build the request used by the health endpoint without non-ASCII headers.
  * Health does not need client location metadata, and Fetch header values must
- * be ASCII-compatible at the boundary where the Worker invokes OpenNext.
+ * be ASCII-compatible at the boundary where the Worker invokes the application.
  */
 export function sanitizeHealthRequest(request: Request): Request {
   return new Request(request.url, {

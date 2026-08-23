@@ -1,9 +1,15 @@
 # Public Information Surfaces
 
 Project Umaxica separates application surfaces from public knowledge surfaces.
-The split is framework-level and authority-level: Next.js remains the Core app
-surface, Astro owns public information rendering, and Rails remains the source
-of truth for policy, mutation, and content JSON authority.
+The split is **authority-level, not framework-level**: Rails remains the source
+of truth for policy, mutation, and content JSON authority, and the Edge surfaces
+differ in what they are allowed to do rather than in what they are built with.
+
+> **Framework note.** This document used to describe a split in which the
+> content frames would move to Astro. That move was **rejected** in
+> `adr/004-public-information-surfaces-astro.md` (2026-08-12) and nothing was
+> ever built against it — `astro` appears in no `package.json`. All fifteen
+> frames run one stack, recorded in `adr/013-frames-tanstack-start.md`.
 
 ## Surface Matrix
 
@@ -15,39 +21,55 @@ of truth for policy, mutation, and content JSON authority.
 
 ## Framework Ownership
 
-`*/core` stays on Next.js. Core owns RP/BFF behavior, authenticated UI,
-logged-in state, React Aria surfaces, and account, organization, and avatar
-operations.
+All fifteen frames run **TanStack Start on Vite and Cloudflare Workers**. There
+is no framework boundary between a core and a satellite, and introducing one is a
+decision that needs its own ADR — `adr/004` rejected the last attempt, and
+`adr/013` records why one stack across all fifteen is worth keeping.
 
-`*/docs`, `*/news`, `*/info`, and `*/help` use Astro. These workspaces are for
-public content, MDX, content collections, SSG/SSR, and image optimization.
+What differs between the two archetypes is capability, and it is deliberate:
 
-Rails Core/Base owns durable authority: policy, mutation, content JSON, and
-the API contracts consumed by edge surfaces.
+`*/core` owns RP/BFF behavior, authenticated UI, logged-in state, React Aria
+surfaces, and account, organization, and avatar operations. It is the only
+archetype that holds session material.
+
+`*/docs`, `*/news`, `*/info`, and `*/help` are public content surfaces. They are
+limited to public content and read-only content APIs.
+
+Rails Core/Base owns durable authority: policy, mutation, content JSON, and the
+API contracts consumed by edge surfaces.
 
 ## Content API Boundary
 
-Astro public information surfaces consume only public, read-only Rails content
-APIs through the Cloudflare Workers private connectivity boundary.
-
-The public Astro contract is intentionally narrow:
+Public information surfaces consume only public, read-only Rails content APIs
+through the Cloudflare Workers private connectivity boundary. The contract is
+intentionally narrow:
 
 - Server-side GET requests only.
 - Public/read-only content JSON only.
 - No Acme refresh tokens.
 - No user-scoped secrets.
 - No browser session-cookie forwarding.
-- No generic Rails proxy endpoint in Astro.
+- No generic Rails proxy endpoint on a public surface.
 
-Authenticated RP/BFF behavior remains in Core Next.js. Authorization and
-mutation remain in Rails Core/Base.
+Authenticated RP/BFF behavior remains in `*/core`. Authorization and mutation
+remain in Rails.
 
-## Migration Notes
+Two mechanisms enforce this rather than convention alone: `*/core/src/worker.ts`
+strips credentials on the Rails hop (ADR 007), and
+`tools/workers-manifest.json` classifies each Worker so `pnpm run check:workers`
+fails a surface that declares a binding its class is not allowed to hold.
 
-The current repo may still contain Next/OpenNext public information workspaces.
-That is an implementation state, not the target architecture.
+## Implementation State
 
-When implementation starts, migrate public information workspaces without
-touching `*/core` framework ownership. Add `info` workspaces for `app`, `com`,
-and `org` before or during the Astro migration so all public information
-families have the same surface set.
+All fifteen frames — cores and satellites alike — are classified
+`railsBackedVite` in `tools/workers-manifest.json` and carry the VPC binding.
+On the twelve public surfaces the only thing that binding is used for today is
+`/health`: `src/lib/rails-client.ts` and `src/lib/rails-health.ts` report Rails
+liveness alongside Edge state (ADR 009). **No public surface fetches content from
+Rails yet**, so the narrow contract above is a boundary that has not been tested
+against a real consumer.
+
+When content fetching lands, it lands inside that existing client rather than
+beside it, and `docs/caching-and-isr.md` is the open question that has to be
+answered in the same change — there is no caching layer in front of these
+surfaces today.

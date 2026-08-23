@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
+
+import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 import {
   BLOCKED,
   FAIL,
   PASS,
   Report,
   SKIP,
+  WARN,
+  classifyIdentity,
   classifyProbeOutcome,
   extractInterfaceBlock,
   findMissingCells,
@@ -16,7 +20,6 @@ import {
   readRailsOrigin,
   waitFor,
 } from '../tools/verify-edge-connectivity.mjs';
-import { describeServiceIdProblem } from '../tools/lib/wrangler-config.mjs';
 
 // The checker is the thing that decides whether the network is healthy, so its
 // own control logic has to be pinned. Everything here is pure — no processes are
@@ -73,10 +76,11 @@ describe('surfaces', () => {
 
   it('derives each frame shape from disk', () => {
     for (const surface of loadSurfaces()) {
-      // Every frame owns the standard lightweight /health Route Handler. All
-      // fifteen also expose /rails-health independently.
-      expect(surface.hasHealthRoute).toBe(true);
-      expect(surface.hasRailsHealth, `${surface.ws} must expose /rails-health`).toBe(true);
+      // All fifteen answer `/health`, and since ADR 009 that one route carries
+      // both halves — Edge's own state and Rails' liveness. The separate
+      // `/rails-health` it replaced must not come back.
+      expect(surface.hasHealthRoute, `${surface.ws} must expose /health`).toBe(true);
+      expect(surface).not.toHaveProperty('hasRailsHealth');
     }
   });
 
@@ -254,25 +258,35 @@ describe('service_id validation', () => {
 });
 
 describe('parseRailsHealthJson', () => {
-  // The twelve content frames answer with a Route Handler, not a page.
+  // All fifteen frames answer `/health` with the merged document; the Rails half
+  // sits at `rails.liveness`.
   it.each(['ok', 'http-error', 'unreachable', 'not-configured'])('reads kind %j', (kind) => {
-    expect(parseRailsHealthJson(JSON.stringify({ rails: { kind } }))).toBe(kind);
+    expect(
+      parseRailsHealthJson(JSON.stringify({ rails: { liveness: { kind, latency_ms: 1 } } })),
+    ).toBe(kind);
   });
 
   it('rejects a kind it does not know, rather than passing it through', () => {
-    expect(parseRailsHealthJson('{"rails":{"kind":"probably-fine"}}')).toBeNull();
+    expect(parseRailsHealthJson('{"rails":{"liveness":{"kind":"probably-fine"}}}')).toBeNull();
   });
 
   it('returns null for HTML or malformed bodies instead of throwing', () => {
     expect(parseRailsHealthJson('<!DOCTYPE html><h1>hi</h1>')).toBeNull();
     expect(parseRailsHealthJson('')).toBeNull();
     expect(parseRailsHealthJson('{"rails":null}')).toBeNull();
+    expect(parseRailsHealthJson('{"rails":{"liveness":null}}')).toBeNull();
+  });
+
+  it('returns null for the pre-merge document a stale deployed Worker would serve', () => {
+    // `/rails-health`'s old shape put the kind at `rails.kind`. Reading null here
+    // is what makes an un-redeployed Worker visible rather than silently blessed.
+    expect(parseRailsHealthJson('{"rails":{"kind":"ok","status":200}}')).toBeNull();
   });
 });
 
 describe('railsHealthStatusMismatch', () => {
-  // The JSON route contracts 200 for ok and 503 otherwise; a body and status that
-  // disagree would let a broken route read as healthy.
+  // `/health` contracts 200 when the Rails half is ok and 503 otherwise; a body
+  // and status that disagree would let a broken route read as healthy.
   it('accepts the documented pairings', () => {
     expect(railsHealthStatusMismatch('ok', 200)).toBeNull();
     expect(railsHealthStatusMismatch('not-configured', 503)).toBeNull();
@@ -349,5 +363,72 @@ describe('isInsideContainer', () => {
     expect(isInsideContainer({ DEVCONTAINER: '1' }, () => false)).toBe(true);
     expect(isInsideContainer({}, (path) => path === '/.dockerenv')).toBe(true);
     expect(isInsideContainer({}, () => false)).toBe(false);
+  });
+});
+
+describe('classifyIdentity', () => {
+  const surface = { key: 'APP/CORE', brand: 'app', frame: 'core' };
+  const liveness = (namespace: unknown) =>
+    JSON.stringify({
+      status: 'ok',
+      check: 'liveness',
+      ...(namespace === undefined ? {} : { namespace }),
+    });
+
+  it('passes when the frame own namespace answered', () => {
+    const verdict = classifyIdentity({
+      surface,
+      entry: { status: 200, body: liveness('core/app') },
+      transport: PASS,
+    });
+    expect(verdict.status).toBe(PASS);
+    expect(verdict.detail).toContain('core/app');
+  });
+
+  it('fails when another namespace answered', () => {
+    /*
+     * The whole reason this gate exists. One VPC Service carries all fifteen
+     * frames, so a wrong Host reaches a different namespace and still answers
+     * 200 — every transport-level gate reads that as success.
+     */
+    const verdict = classifyIdentity({
+      surface,
+      entry: { status: 200, body: liveness('docs/app') },
+      transport: PASS,
+    });
+    expect(verdict.status).toBe(FAIL);
+    expect(verdict.detail).toContain('expected core/app');
+  });
+
+  it('warns rather than fails when Rails reports no namespace', () => {
+    // Unproven is not the same as wrong: Rails only began reporting the
+    // namespace on 2026-08-21, and an older backend must not read as a misroute.
+    for (const body of [liveness(undefined), liveness(''), liveness(7)]) {
+      expect(
+        classifyIdentity({ surface, entry: { status: 200, body }, transport: PASS }).status,
+      ).toBe(WARN);
+    }
+  });
+
+  it('fails when a 200 is not a liveness document at all', () => {
+    for (const body of ['<!DOCTYPE html>', '', 'null']) {
+      expect(
+        classifyIdentity({ surface, entry: { status: 200, body }, transport: PASS }).status,
+      ).toBe(FAIL);
+    }
+  });
+
+  it('blocks, never passes, when there is nothing to identify', () => {
+    expect(
+      classifyIdentity({
+        surface,
+        entry: { status: 200, body: liveness('core/app') },
+        transport: FAIL,
+      }).status,
+    ).toBe(BLOCKED);
+    expect(
+      classifyIdentity({ surface, entry: { status: 404, body: '' }, transport: PASS }).status,
+    ).toBe(BLOCKED);
+    expect(classifyIdentity({ surface, entry: undefined, transport: PASS }).status).toBe(BLOCKED);
   });
 });

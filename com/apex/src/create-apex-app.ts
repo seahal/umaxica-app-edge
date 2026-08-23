@@ -1,22 +1,82 @@
-import { Hono } from 'hono';
+import { Hono, type Context, type MiddlewareHandler } from 'hono';
 import { etag } from 'hono/etag';
 import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
+
+import { styleUrl } from './assets';
 import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
+import { defaultLocale, locales } from './i18n/config';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
-import { apexStructuredLogger } from './structured-logger';
+import { apexStructuredLogger, type BaseLogger } from './structured-logger';
+import { requestThemeAttribute, themeAttributeMarkup, type ThemeAttribute } from './theme';
 
 export type ApexEnv = {
   Bindings: AssetEnv;
   Variables: {
     meta?: Meta;
+    // Set by `apexStructuredLogger`. Declared here so `c.get('logger')` is
+    // typed at every call site instead of being asserted back into shape.
+    logger: BaseLogger;
   };
+};
+
+// Hono types `c.env` as always present. It is not: the app runs with no
+// bindings at all outside the Workers runtime, which is what every
+// `app.request(path)` in the test suite does. Reading it through this
+// widening accessor keeps the guards below honest instead of leaving
+// optional chains the type checker believes are dead.
+const bindings = (c: Context<ApexEnv>): AssetEnv | undefined => c.env;
+
+/*
+ * What a cache has to know before it may reuse one of these documents for a
+ * second request to the same URL.
+ *
+ * Two cookies change the document and neither appears in the URL: `language`
+ * decides the copy (`languageDetector`) and `theme` decides the colour scheme
+ * (`theme.ts`). `Accept-Language` is here because the detector falls back to it
+ * when the cookie is absent — which is the first visit, the one most likely to
+ * be stored.
+ *
+ * Nothing caches these today: Cloudflare does not store a Worker's own
+ * response unless the Worker asks it to, and none of these carry
+ * `Cache-Control: public`. The header is here because that is a property of
+ * how they are served rather than of what they are, and a 200 with no
+ * freshness information is a candidate for heuristic caching in any
+ * intermediary that does keep one.
+ */
+const NEGOTIATED_ON = 'Cookie, Accept-Language';
+
+/*
+ * HTML only. `/health.json` and `/revision` are negotiated by nothing, and
+ * `/assets/*` is answered by the assets binding before this Worker runs.
+ *
+ * `no-store` responses — the status, 404 and error documents — are left alone:
+ * a cache told not to store one has nothing left to vary.
+ */
+const varyOnNegotiation: MiddlewareHandler = async (c, next) => {
+  await next();
+  const headers = c.res.headers;
+  if (
+    !headers.get('content-type')?.startsWith('text/html') ||
+    headers.get('cache-control')?.includes('no-store')
+  ) {
+    return;
+  }
+
+  /*
+   * Appended, never assigned. Whatever fronts this Worker adds a `Vary` of its
+   * own — `vite dev` adds `Origin` to every response — and overwriting it would
+   * silently drop a directive this code knows nothing about. It is also why the
+   * assertions in `api/theme.hurl` read the header by substring rather than
+   * whole: the rest of the value differs between `vite dev` and a deployment.
+   */
+  headers.append('Vary', NEGOTIATED_ON);
 };
 
 type ConfigurePageRoutes = (pageRoutes: Hono<ApexEnv>) => void;
@@ -25,10 +85,29 @@ type CreateApexAppOptions = {
   service: string;
 };
 
-function statusPage(status: number, title: string) {
+/*
+ * The status, offline and 404 documents are chrome-free by design (see
+ * docs/design/ui-shell-contract.md §15) but no longer unstyled: they link the
+ * same compiled stylesheet as every other document this unit serves, which the
+ * assets binding answers without invoking the Worker.
+ *
+ * The three class strings are constants because Tailwind scans this file as
+ * plain text — a class name assembled at runtime would not be generated.
+ *
+ * They carry the same `dark:` variants as the shell, and each document takes
+ * `data-theme` from the request for the same reason `renderer.tsx` does: these
+ * are separate root documents, so a scheme forced on the page a reader came
+ * from does not reach them on its own (`theme.ts`).
+ */
+const STATUS_STYLESHEET = `<link rel="stylesheet" href="${styleUrl}">`;
+const STATUS_BODY =
+  'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100';
+const STATUS_HEADING = 'text-2xl font-semibold leading-heading';
+
+function statusPage(status: number, title: string, theme: ThemeAttribute) {
   const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
   return new Response(
-    `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>${title}</h1><p>HTTP ${status}</p><p>${reload}<a href="/">トップへ戻る</a></p></main></body></html>`,
+    `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(theme)}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     {
       status,
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
@@ -44,15 +123,18 @@ export function createApexApp(
   const pageRoutes = new Hono<ApexEnv>();
 
   app.use('*', apexSecurityHeaders);
+  app.use('*', varyOnNegotiation);
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
-    const blocked = await checkRateLimit(c.req.raw, c.env?.RATE_LIMITER);
+    const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
     if (blocked) return blocked;
-    await next();
+    return next();
   });
   app.use('*', apexCsrf);
-  app.use(languageDetector({ supportedLanguages: ['en', 'ja'], fallbackLanguage: 'en' }));
+  // Reads the locale set from this unit's own config rather than repeating
+  // it, so the detector and `<html lang>` cannot disagree.
+  app.use(languageDetector({ supportedLanguages: [...locales], fallbackLanguage: 'en' }));
 
   pageRoutes.use(renderer);
   configurePageRoutes(pageRoutes);
@@ -63,10 +145,17 @@ export function createApexApp(
       const headers = new Headers(response.headers);
       headers.set('Cache-Control', 'no-store');
       headers.set('Content-Type', 'text/html; charset=UTF-8');
-      return new Response(statusPage(response.status, 'リクエストを処理できませんでした').body, {
-        status: response.status,
-        headers,
-      });
+      return new Response(
+        statusPage(
+          response.status,
+          'リクエストを処理できませんでした',
+          requestThemeAttribute(c.req.raw),
+        ).body,
+        {
+          status: response.status,
+          headers,
+        },
+      );
     }
 
     // oxlint-disable-next-line no-console
@@ -76,14 +165,18 @@ export function createApexApp(
       path: new URL(c.req.url).pathname,
     });
 
-    return statusPage(500, '現在、このページを表示できません');
+    return statusPage(500, '現在、このページを表示できません', requestThemeAttribute(c.req.raw));
   });
 
-  app.get('/health', timeout(2000), (c) => renderHealthPage(c.env, options));
-  app.get('/health.html', timeout(2000), (c) => renderHealthPage(c.env, options));
+  app.get('/health', timeout(2000), (c) =>
+    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
+  );
+  app.get('/health.html', timeout(2000), (c) =>
+    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
+  );
   app.get('/health.json', timeout(2000), (c) => renderHealthJson(c.env, options));
   app.get('/revision', (c) => {
-    const { id = null, tag = null, timestamp = null } = c.env?.CF_VERSION_METADATA ?? {};
+    const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
     return c.json({ id, tag, timestamp }, 200, {
       'Cache-Control': 'no-store',
       'X-Robots-Tag': 'noindex, nofollow',
@@ -91,11 +184,11 @@ export function createApexApp(
   });
   app.get('/offline', (c) =>
     c.html(
-      `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title></head><body><main><h1>オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a href="/">トップへ戻る</a></p></main></body></html>`,
+      `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(requestThemeAttribute(c.req.raw))}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     ),
   );
   app.route('/', pageRoutes);
-  app.notFound(() => statusPage(404, 'ページが見つかりません'));
+  app.notFound((c) => statusPage(404, 'ページが見つかりません', requestThemeAttribute(c.req.raw)));
 
   return app;
 }

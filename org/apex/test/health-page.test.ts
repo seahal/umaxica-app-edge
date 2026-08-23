@@ -23,7 +23,7 @@ describe('renderHealthPage', () => {
 
     vi.stubGlobal('Response', ThrowOnceResponse);
 
-    const response = renderHealthPage({ BRAND_NAME: 'UMAXCA' }, { service: 'app' });
+    const response = renderHealthPage({ BRAND_NAME: 'UMAXICA' }, { service: 'app' }, undefined);
 
     expect(response.status).toBe(503);
     expect(response.headers.get('content-type')).toBe('text/html; charset=UTF-8');
@@ -43,7 +43,7 @@ describe('renderHealthPage', () => {
       version: 'test-version-id',
       environment: null,
       edge: 'cloudflare',
-      time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+      time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u),
     });
   });
 
@@ -54,7 +54,7 @@ describe('renderHealthPage', () => {
   });
 
   it('renders the environment in the health page', async () => {
-    const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'org' });
+    const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'org' }, undefined);
 
     expect(await response.text()).toContain('<dd>production</dd>');
   });

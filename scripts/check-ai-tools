@@ -3,10 +3,8 @@ set -euo pipefail
 
 claude --version
 codex --version
-opencode --version
 
 codex login status
-opencode auth list
 
 echo 'PASS: AI CLI versions and non-billable authentication resolution checks completed.'
 echo 'No model request was sent.'

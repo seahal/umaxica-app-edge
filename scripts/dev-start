@@ -2,14 +2,12 @@
 set -euo pipefail
 
 use_rails=false
-use_credentials=false
 use_tunnel=false
 for argument in "$@"; do
   case "${argument}" in
     --rails) use_rails=true ;;
-    --credentials) use_credentials=true ;;
     --tunnel) use_tunnel=true ;;
-    *) echo "Usage: $0 [--rails] [--credentials] [--tunnel]" >&2; exit 2 ;;
+    *) echo "Usage: $0 [--rails] [--tunnel]" >&2; exit 2 ;;
   esac
 done
 
@@ -68,22 +66,13 @@ if [[ ${use_tunnel} == true ]]; then
   compose+=(-f compose.custom.yaml)
 fi
 
-if [[ ${use_credentials} == true ]]; then
-  required=(
-    dev_github_token
-    dev_cloudflare_access_client_id
-    dev_cloudflare_access_client_secret
-    dev_claude_api_key
-    dev_codex_api_key
-  )
-  for secret_name in "${required[@]}"; do
-    if ! podman secret inspect "${secret_name}" >/dev/null 2>&1; then
-      echo "ERROR: missing rootless Podman Secret: ${secret_name}" >&2
-      echo "Register it with scripts/setup-secrets ${secret_name}." >&2
-      exit 1
-    fi
-  done
-  compose+=(-f compose.credentials.yaml)
-fi
+# There is no credential overlay any more. Long-lived API tokens and Podman
+# Secrets were retired in favour of short-lived, browser-issued credentials
+# obtained inside the container:
+#   gh auth login --web --git-protocol https && gh auth setup-git
+#   scripts/wrangler-login
+#   claude   # /login
+#   codex login
+# Nothing is persisted: recreating the container requires logging in again.
 
 "${compose[@]}" up -d core

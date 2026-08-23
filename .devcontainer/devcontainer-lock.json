@@ -1,9 +1,39 @@
 {
   "features": {
+    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com@sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4",
+      "integrity": "sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4"
+    },
+    "ghcr.io/joedmck/devcontainer-features/wrangler:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/joedmck/devcontainer-features/wrangler@sha256:fed4e30539e33daec9581180f80c60d3ef0aed516f4d733fae70071fdc7b880e",
+      "integrity": "sha256:fed4e30539e33daec9581180f80c60d3ef0aed516f4d733fae70071fdc7b880e"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/herdr:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/jsburckhardt/devcontainer-features/herdr@sha256:6cd1417ff2af435e4b320612f494288b219d3f5dd4ce5f967b510897f5c663f2",
+      "integrity": "sha256:6cd1417ff2af435e4b320612f494288b219d3f5dd4ce5f967b510897f5c663f2"
+    },
     "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {
       "version": "1.0.0",
       "resolved": "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt@sha256:bd1f7a64fc308f256a01c61946db094e0c92c4fd9d32f42b7ea8b661788d879d",
       "integrity": "sha256:bd1f7a64fc308f256a01c61946db094e0c92c4fd9d32f42b7ea8b661788d879d"
+    },
+    "ghcr.io/nolanjx/devcontainer-features/codex:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/nolanjx/devcontainer-features/codex@sha256:8928ccd1d5914f1c783de85ec4cef0ea6dd7e6f193e213b245f048697e0e7c25",
+      "integrity": "sha256:8928ccd1d5914f1c783de85ec4cef0ea6dd7e6f193e213b245f048697e0e7c25"
+    },
+    "ghcr.io/sliekens/devcontainer-features/grok-build:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/sliekens/devcontainer-features/grok-build@sha256:22c5e406f1c1c55126a40c8ac668b5cad61b96762c794ef5ae390461432ce0c3",
+      "integrity": "sha256:22c5e406f1c1c55126a40c8ac668b5cad61b96762c794ef5ae390461432ce0c3"
+    },
+    "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/srzstephen/devcontainer-features/claude-code@sha256:a207fb8b99069baa00c13e6b50f0f92abaf9943f99f096a7dd72d5fc0c65d6d6",
+      "integrity": "sha256:a207fb8b99069baa00c13e6b50f0f92abaf9943f99f096a7dd72d5fc0c65d6d6"
     }
   }
 }

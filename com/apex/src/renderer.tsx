@@ -1,39 +1,50 @@
 /** @jsxImportSource hono/jsx */
 import { jsxRenderer } from 'hono/jsx-renderer';
-import { brandFromEnv, getBrandName } from './brand';
-import { APEX_INLINE_STYLE } from './inline-style';
-import { SeoHead } from './seo';
 
-export const renderer = jsxRenderer(({ children }, c) => {
+import { styleUrl } from './assets';
+import { brandFromEnv, getBrandName } from './brand';
+import type { ApexEnv } from './create-apex-app';
+import { defaultLocale } from './i18n/config';
+import { SeoHead } from './seo';
+import { AppShell } from './shell';
+import { requestThemeAttribute } from './theme';
+
+/*
+ * The stylesheet is Tailwind's output, compiled from `src/style.css` by Vite
+ * and served as a static asset — which Cloudflare matches before the Worker
+ * runs, so it costs no invocation and is cached once for every document this
+ * unit serves. Its filename carries a content hash, so `public/_headers` can
+ * mark it `immutable`; see `assets.ts`.
+ *
+ * It replaced an inline `<style>` whose sha256 was hand-maintained in the CSP.
+ * The hash bought nothing: `style-src` already listed `'self'`, which is what
+ * permits this link, so the policy is now strictly `'self'` and one fewer
+ * constant has to be kept in step with the stylesheet by hand. The same
+ * reasoning is why a hashed filename changes nothing about the policy.
+ *
+ * `data-theme` is the one thing on this document that varies by request beyond
+ * its content: it is absent unless the `theme` cookie forces a scheme, and its
+ * absence is what leaves `prefers-color-scheme` in charge. See `theme.ts`.
+ */
+export const renderer = jsxRenderer<ApexEnv>(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
   const brandName = getBrandName(c.env);
+  const language = c.get('language');
   return (
-    <html lang="ja">
+    <html lang={defaultLocale} data-theme={requestThemeAttribute(c.req.raw)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <SeoHead c={c} brand={brandFromEnv(c)} />
-        <style>{APEX_INLINE_STYLE}</style>
+        <link rel="stylesheet" href={styleUrl} />
         <script src="/service-worker-register.js" defer></script>
       </head>
-      <body class="min-h-screen flex flex-col bg-gray-50">
-        <header class="bg-white shadow-sm">
-          <div class="max-w-7xl mx-auto px-4 py-6">
-            <h1 class="text-2xl font-bold text-gray-900">{brandName}</h1>
-          </div>
-        </header>
-
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">{children}</main>
-
-        <footer class="bg-white border-t border-gray-200 mt-auto">
-          <div class="max-w-7xl mx-auto px-4 py-4">
-            <p class="text-center text-sm text-gray-600">
-              &copy; {currentYear} {brandName}
-            </p>
-          </div>
-        </footer>
+      <body class="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+        <AppShell brandName={brandName} year={currentYear} language={language}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

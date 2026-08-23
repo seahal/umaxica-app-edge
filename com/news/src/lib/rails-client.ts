@@ -1,5 +1,5 @@
-import 'server-only';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+import '@tanstack/react-start/server-only';
+import { getEdgeEnv } from './cloudflare-env';
 
 const RAILS_FETCH_TIMEOUT_MS = 5000;
 
@@ -49,9 +49,15 @@ export interface RailsClient {
   fetch(path: string, init?: RailsClientInit): Promise<RailsClientResult>;
 }
 
-interface RailsLocalNodeEnv {
-  EDGE_LOCAL_NODE_RUNTIME?: string;
-  EDGE_LOCAL_RAILS_ENABLED?: string;
+// Read one variable at a time rather than asserting the whole of `process.env`
+// into a shape it does not have. The Wrangler-generated `NodeJS.ProcessEnv`
+// declares only the three bindings from wrangler.jsonc, so these two names are
+// not on it at all — which is what the old
+// `process.env as unknown as RailsLocalNodeEnv` was hiding, the one
+// double-assertion left in this repository's source.
+function readLocalFlag(name: string): string | undefined {
+  const value: unknown = Reflect.get(process.env, name);
+  return typeof value === 'string' ? value : undefined;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -115,7 +121,7 @@ async function readProxyError(response: Response): Promise<string | null> {
 
   try {
     const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
-    return /^ProxyError:\s*\w+/i.test(body) ? body : null;
+    return /^ProxyError:\s*\w+/iu.test(body) ? body : null;
   } catch {
     // A body that cannot be read is not evidence of anything; leave the
     // response to be reported as the http-error it appears to be.
@@ -197,26 +203,52 @@ export function createRailsClient(
 /**
  * Two mutually exclusive transports, selected by an actual runtime capability.
  *
- * 1. VPC binding       → Workers/workerd. Cloudflare grants the real binding.
- * 2. Explicit Node dev → direct private Podman network, with no Access token.
- * 3. Neither           → null, reported as `not-configured`. Fail closed.
+ * 1. Local Node dev  → direct private Podman network, with no Access token.
+ * 2. VPC binding     → Workers/workerd. Cloudflare grants the real binding.
+ * 3. Neither         → null, reported as `not-configured`. Fail closed.
  *
- * Requiring both local flags matters: the Rails overlay is container-wide, but
- * only the `next dev` scripts set EDGE_LOCAL_NODE_RUNTIME. A workerd preview
- * launched from that same container therefore cannot inherit a fabricated
- * fallback when its VPC binding is absent.
+ * **The local check runs first, and the order is load-bearing.**
+ *
+ * A Workers VPC binding has no local simulation. Wrangler still materialises it
+ * whenever a configuration declares it, as a stub that throws on use:
+ *
+ *   Binding UMAXICA_APPS_EDGE_CF_WORKERS_VPC needs to be run remotely
+ *
+ * so a configuration that declares the binding without `remote: true` leaves it
+ * *truthy but non-functional*. Testing it first — as this function used to —
+ * would make every local Rails call report `unreachable` and make the direct
+ * transport below dead code. Nothing else fails to say so.
+ *
+ * The `local` wrangler environment declares no `vpc_services` at all, so
+ * `pnpm dev` needs no `wrangler login`; `pnpm dev:vpc` selects the `vpc`
+ * environment, where the binding is real and `remote: true`.
+ *
+ * The direct transport now runs inside workerd rather than Node, which is the
+ * one thing this migration changed here. Measured 2026-08-22: workerd reaches
+ * `http://news.com.localhost:<port>` with `global_fetch_strictly_public` in
+ * `compatibility_flags`, so the flag stays on in every environment.
+ *
+ * `EDGE_LOCAL_NODE_RUNTIME` is set only by the `dev` scripts, so the preview and
+ * the deployed Worker never take this branch and reach the real binding exactly
+ * as before. Requiring `EDGE_LOCAL_RAILS_ENABLED` as well matters because the
+ * Rails overlay is container-wide: without it, local dev fails closed to
+ * `not-configured` rather than borrowing a transport it was not granted.
+ *
+ * This is still a branch on runtime *capability*, never on an environment name.
  */
 export function getRailsClient(): RailsClient | null {
-  const { env } = getCloudflareContext() as { env: Partial<CloudflareEnv> };
+  const isLocalNodeRuntime = readLocalFlag('EDGE_LOCAL_NODE_RUNTIME') === '1';
 
-  const binding = env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
-  if (binding) {
-    return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
+  if (isLocalNodeRuntime) {
+    if (readLocalFlag('EDGE_LOCAL_RAILS_ENABLED') === '1') {
+      return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
+    }
+    return null;
   }
 
-  const localEnv = process.env as unknown as RailsLocalNodeEnv;
-  if (localEnv.EDGE_LOCAL_NODE_RUNTIME === '1' && localEnv.EDGE_LOCAL_RAILS_ENABLED === '1') {
-    return createRailsClient({ fetch }, PRIVATE_RAILS_ORIGIN);
+  const binding = getEdgeEnv().UMAXICA_APPS_EDGE_CF_WORKERS_VPC;
+  if (binding) {
+    return createRailsClient(binding, PRIVATE_RAILS_ORIGIN);
   }
 
   return null;

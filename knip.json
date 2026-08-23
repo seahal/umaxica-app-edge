@@ -1,5 +1,0 @@
-{
-  "$schema": "./node_modules/knip/schema.json",
-  "ignoreBinaries": [],
-  "ignore": ["**/.cache/**", "**/.wrangler/**", "**/dist/**", "**/build/**"]
-}

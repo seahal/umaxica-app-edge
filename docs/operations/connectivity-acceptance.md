@@ -12,7 +12,17 @@ scripts/check-cloudflare
 scripts/check-tunnel
 scripts/check-vpc
 scripts/check-apex-domains
+scripts/check-www-canonical
 ```
+
+## `www` canonicalisation
+
+`scripts/check-www-canonical` asserts that `www.umaxica.net` and
+`www.umaxica.dev` answer `301` to their apex with the path and query string
+intact. That redirect is a Cloudflare Redirect Rule rather than application
+code, so this script is the only place it is verified —
+[`net-www-canonicalisation.md`](net-www-canonicalisation.md) records the rule
+itself and the order it has to be created in.
 
 ## Apex domain binding
 
@@ -25,6 +35,11 @@ served by its own Worker, by reading the `service` field of `/health.json`:
 | `umaxica.net` | `umaxica-apps-edge-apex-net` | `net`     |
 | `umaxica.org` | `umaxica-apps-edge-apex-org` | `org`     |
 | `umaxica.app` | `umaxica-apps-edge-apex-app` | `app`     |
+| `umaxica.dev` | `umaxica-apps-edge-apex-dev` | `dev`     |
+
+`umaxica.dev` is listed for completeness and does not pass yet: the `.dev` zone
+is delegated to Vercel DNS, so the Worker has no custom domain. See
+[`net-www-canonicalisation.md`](net-www-canonicalisation.md).
 
 A reachability check is not enough here. A hostname bound to the wrong Worker
 still answers `200` on every route — it just serves another domain's content

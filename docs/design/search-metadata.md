@@ -24,8 +24,8 @@ title suffix, their own host in a canonical URL, their own idea of what the
 organization is called.
 
 But the edge layer does not automatically own that interface. Ownership follows
-whoever produces the final HTML document — Rails, Next.js, Hono, or a static
-site.
+whoever produces the final HTML document — Rails, a TanStack Start frame, a Hono
+apex Worker, or a static site.
 
 ## Scope of the design area
 
@@ -49,7 +49,7 @@ When a Worker only does:
 ```text
 Request
 → routing / dispatch
-→ Next.js or Rails
+→ a frame or Rails
 → HTML response
 ```
 
@@ -79,19 +79,32 @@ Deciding for a given Hono/Workers surface means asking:
 - does it own a JSX / renderer layer?
 - is it purely an API?
 - is it a reverse proxy or routing layer?
-- does it only dispatch to Next.js or Rails?
+- does it only dispatch to a frame or to Rails?
 
 Pure routing and API workers get no search metadata.
 
-## Next.js frames
+## The fifteen frames
 
-Where Next.js owns the document, prefer the framework's own metadata mechanism
-over anything bespoke — the Metadata API, `generateMetadata`, root and nested
-layouts, canonical, alternates, Open Graph, robots, sitemap.
+Where a frame owns the document, prefer the framework's own metadata mechanism
+over anything bespoke — in TanStack Start that is a route's `head` option, which
+returns `meta` and `links` arrays that `<HeadContent />` renders into the
+document. Canonical, alternates, Open Graph, robots and sitemap all fit there.
 
-Do not build an in-house metadata framework first. The concrete API surface and
-its options must be checked against the Next.js documentation current at
-implementation time; this document deliberately does not pin them.
+**One caveat that already cost this repository a bug**, recorded because it is
+the first thing an implementer will hit: TanStack Router has **no title template
+primitive**. Next's Metadata API had `title.template` and `title.absolute`;
+TanStack has neither, and a nested route's title simply overrides its ancestor's.
+Each frame therefore composes the brand suffix itself in
+`src/lib/title.ts`, and setting `title` on a route without going through it
+produces either a wrong suffix or — if an ancestor also sets one — two `<title>`
+elements in one document. `test/html-title-contract.test.ts` at the repository
+root checks the emitted HTML for exactly this. See
+`docs/design/ui-shell-contract.md` §14 and `adr/013-frames-tanstack-start.md`.
+
+Do not build an in-house metadata framework beyond that one function. The
+concrete API surface and its options must be checked against the TanStack Start
+documentation current at implementation time; this document deliberately does not
+pin them, and the framework is at Release Candidate, so they move.
 
 ## Structured data
 
@@ -133,7 +146,7 @@ convention and is not a brand or identity vocabulary.
 ## Routing and canonical
 
 Edge routing can be complex, so canonical URL design is recorded here as an
-important open question. Multiple paths to the same content, Rails and Next.js
+important open question. Multiple paths to the same content, Rails and a frame
 sharing an FQDN, redirects, rewrites, internal service URLs, Cloudflare Access,
 and development FQDNs may all exist.
 
@@ -148,7 +161,7 @@ When multilingual support arrives, design the relationship between locale, URL,
 title, description, canonical, alternate language, and structured data text
 explicitly.
 
-Locale ownership may sit in different places for Next.js, Rails, and the edge,
+Locale ownership may sit in different places for a frame, Rails, and the edge,
 so the actual routing contract has to be checked then. `hreflang` design is a
 separate task and is not settled here.
 
@@ -201,7 +214,7 @@ this document; extending them is a future candidate only.
 - Decide, per `*/apex` worker, which routes render HTML and are therefore
   metadata-owning, and which are dispatch-only.
 - Decide where locale ownership sits once i18n is real.
-- Decide the canonical host rules for surfaces where Rails and Next.js share an
+- Decide the canonical host rules for surfaces where Rails and a frame share an
   FQDN.
 
 ## When this is implemented
@@ -211,7 +224,7 @@ Re-check primary sources at that time, in this order:
 1. Google / Bing search-engine documentation
 2. Schema.org
 3. W3C / web standards
-4. Next.js / Hono / Cloudflare documentation
+4. TanStack Start / Hono / Cloudflare documentation
 5. trustworthy secondary sources
 
 Search appearance and framework APIs change. Do not freeze current specifics

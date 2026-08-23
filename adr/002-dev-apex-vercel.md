@@ -1,6 +1,14 @@
 # Plan 002: Create `dev/apex` — Hono on Vercel
 
-## Status: Completed (partial — see Outcome)
+## Status: Superseded 2026-08-19 by [ADR 012](012-apex-vite-build-and-static-assets.md)
+
+**`dev/apex` no longer runs on Vercel.** It deploys to Cloudflare Workers on
+the shared apex archetype, and the Vercel surface this record describes —
+`vercel.json`, `api/index.ts` and `hono/vercel`'s `handle` — has been deleted.
+The record is kept unedited below because it is the history of how the unit
+came to exist, which is still true.
+
+_Originally: Completed (partial — see Outcome)._
 
 ## GitHub Issue
 
@@ -133,9 +141,39 @@ No test files added for `dev/apex`. Consider adding smoke tests if the workspace
 - `pnpm dlx vercel build --yes`: blocked locally because the Vercel token is not valid in this environment
 - `vp check` / `vp test`: not rerun here because the local `vp` wrapper currently fails to resolve `vite-plus/bin/vp`
 
+> Superseded: Vite+ (`vp`) has since been removed. The equivalent commands are
+> now `pnpm run check` and `pnpm run test`. Retained above as a historical record.
+
 ### Note on Deletion
 
 After implementation, it was decided that this workspace was no longer necessary, and it has been intentionally removed from the repository.
+
+### Note on Revival — 2026-08-12
+
+**`dev/apex` exists again, deliberately, and is not going away.** The deletion
+note above is history, not the current state; it was left standing long enough
+that a reader could take it for the present tense.
+
+The workspace is on disk with its own `package.json`, `vitest.config.ts`,
+`vitest.setup.ts`, `.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.json` and
+`knip.jsonc`, so it satisfies the standalone-unit contract
+`test/deployment-unit-boundaries.test.ts` enforces. It is classified `external` in
+`tools/workers-manifest.json` alongside `dev/acme` — Vercel-hosted, no wrangler
+config, no Rails client, no VPC binding — and it has tests now, which closes the
+"Known Gap" noted above.
+
+### Note on Supersession — 2026-08-19
+
+The Vercel hosting decided here was reversed by
+[ADR 012](012-apex-vite-build-and-static-assets.md). `dev/apex` is now a
+Cloudflare Worker built with Vite, classified `standalone` in
+`tools/workers-manifest.json` rather than `external`, and `dev/acme` — named
+above as its companion — was deleted along with the rest of the Vercel surface.
+
+The two exceptions this record's hosting choice created are closed with it:
+`dev/apex` is in the `test-api` CI matrix, because `vite dev` starts without the
+interactive device authentication `vercel dev` required, and it carries a
+`check:size` budget.
 
 ### Closes
 

@@ -1,8 +1,4 @@
-import {
-  buildRegionErrorPayload,
-  getDefaultRedirectUrl,
-  resolveRedirectUrl,
-} from '../src/root-redirect';
+import { getDefaultRedirectUrl, resolveRedirectUrl } from '../src/root-redirect';
 
 describe('root-redirect utilities', () => {
   describe(resolveRedirectUrl, () => {
@@ -39,28 +35,34 @@ describe('root-redirect utilities', () => {
     it('returns null for whitespace string', () => {
       expect(resolveRedirectUrl('   ')).toBeNull();
     });
+
+    /*
+     * Open-redirect protection. `resolveRedirectUrl` is an allowlist lookup, so
+     * none of these can produce a URL — but that is a property worth asserting
+     * against the function rather than against the route, because the route
+     * only ever shows the fallback and so cannot distinguish "rejected" from
+     * "accepted something harmless". `api/routes.hurl` proves the route is
+     * wired to this function; these cases prove the function is sound.
+     */
+    it.each([
+      ['a host suffix', 'jp.evil.com'],
+      ['percent-encoded dots', 'jp%2eevil%2ecom'],
+      ['a path separator', 'jp/evil'],
+      ['a backslash', String.raw`jp\evil`],
+      ['a userinfo separator', 'jp@evil.com'],
+      ['a protocol-relative host', '//evil.com'],
+      ['an absolute URL', 'https://evil.com'],
+      ['an embedded space', 'jp us'],
+      ['a numeric code', '123'],
+      ['a null byte', 'jp\0.evil.com'],
+    ])('returns null when the region carries %s', (_label, region) => {
+      expect(resolveRedirectUrl(region)).toBeNull();
+    });
   });
 
   describe(getDefaultRedirectUrl, () => {
     it('returns the default region URL (jp)', () => {
       expect(getDefaultRedirectUrl()).toBe('https://jp.umaxica.com/');
-    });
-  });
-
-  describe(buildRegionErrorPayload, () => {
-    it('returns the correct error payload structure', () => {
-      const payload = buildRegionErrorPayload();
-      expect(payload).toStrictEqual({
-        error: 'region_not_supported',
-        message: 'Unable to determine a safe redirect target',
-      });
-    });
-
-    it('returns a new object on each call', () => {
-      const payload1 = buildRegionErrorPayload();
-      const payload2 = buildRegionErrorPayload();
-      expect(payload1).not.toBe(payload2);
-      expect(payload1).toStrictEqual(payload2);
     });
   });
 });

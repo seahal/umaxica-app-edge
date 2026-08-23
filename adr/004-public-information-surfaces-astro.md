@@ -1,6 +1,35 @@
 # ADR 004: Public Information Surfaces Use Astro
 
-## Status: Accepted
+## Status: Rejected 2026-08-12 — the twelve content frames stay Next.js
+
+**This plan is discarded. Do not implement it.** `docs`, `news`, `info` and
+`help` remain Next.js on OpenNext across all three families, as they are today.
+
+Nothing was ever built against this record: `astro` appears in no `package.json`,
+no source file and no config anywhere in the repository. So there is nothing to
+undo — only this status to correct, because an `Accepted` record with deferred
+implementation reads as work still queued, and it is not.
+
+Two things had accumulated against it in the meantime, which is part of why it is
+being closed rather than left open:
+
+- **ADR 009 gave the twelve content frames a Rails-touching `/health`.** Their
+  health route is now a dynamic Route Handler that probes Rails liveness over the
+  Workers VPC binding, byte-identical with the three Cores'. Migrating those
+  twelve to Astro would mean carrying `rails-client.ts` and `rails-health.ts` into
+  an Astro app, which this record's own constraint below — Astro surfaces may
+  consume "only public, read-only content APIs" — does not obviously permit for a
+  private-network health probe. That tension was never resolved.
+- **The fifteen frames converged rather than diverged.** `rails-client.ts`,
+  `rails-health.ts` and now `health/route.ts` are one implementation copied
+  fifteen times, pinned byte-identical by
+  `test/rails-connection-invariants.test.ts`. Splitting three of the five roles
+  onto a second framework would break that pin in exchange for benefits nobody
+  had measured.
+
+The reasoning below is left as written. It records what was decided when it was
+written, and the framework comparison in it may still be useful if the question
+is reopened — as a new record, with a new number.
 
 ## Context
 
@@ -67,8 +96,14 @@ The edge migration should happen in a later implementation slice:
 3. Keep `core` workspaces on Next.js/OpenNext.
 4. Add a server-only public content client for read-only Rails content JSON
    once the Rails API contract is available.
-5. Verify with Vite+ commands: `vp install`, `vp check`, and `vp test`.
+5. Verify with pnpm scripts: `pnpm install`, `pnpm run check`, and `pnpm run test`.
 
 ## Outcome
 
-Accepted as the target architecture. Implementation is intentionally deferred.
+**Rejected, 2026-08-12, without ever being implemented.** The twelve content
+frames stay Next.js. See the status note at the top of this file for why, and for
+the two developments — ADR 009's Rails-touching `/health` and the byte-identity
+pin across all fifteen frames — that the migration would have had to answer for.
+
+This record was `Accepted` with implementation deferred for long enough that it
+read as queued work. It was not queued; it is closed.

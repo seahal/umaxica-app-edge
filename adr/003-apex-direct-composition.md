@@ -106,6 +106,9 @@ If per-workspace smoke tests exist, verify they still pass after migration.
 - `vp check`: ✅ 459 files formatted, 204 files lint/type clean
 - `vp test`: ✅ 363 tests passed (57 test files), no regressions
 
+> Superseded: Vite+ (`vp`) has since been removed. The equivalent commands are
+> now `pnpm run check` and `pnpm run test`. Retained above as a historical record.
+
 ### Closes
 
 https://github.com/seahal/umaxica-apps-edge/issues/249

@@ -1,3 +1,20 @@
+> **SUPERSEDED — do not implement.** (2026-08-15)
+>
+> This document describes a Corepack-based pnpm install and a `packageManager`
+> field in `package.json`. Both were subsequently REVERSED and are now actively
+> forbidden:
+>
+> - `Containerfile` deletes Corepack (`npm rm --global corepack`) and installs
+>   pnpm from the standalone script;
+>   `test/development-container-security.test.ts` fails if `corepack enable`
+>   reappears.
+> - `packageManager` must be absent; pnpm is declared through
+>   `devEngines.packageManager`, and
+>   `test/package-manager-invariants.test.ts` fails if the legacy field returns.
+>
+> Kept for the reasoning it records, not for its instructions. README.md
+> §"Node and pnpm versions" is the current statement.
+
 # Toolchain refresh: Node/pnpm parity, `pn`, and version-authority cleanup
 
 ## Context

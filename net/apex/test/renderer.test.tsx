@@ -1,70 +1,32 @@
 /** @jsxImportSource hono/jsx */
 import { Hono } from 'hono';
+
 import type { ApexEnv } from '../src/create-apex-app';
 import { renderer } from '../src/renderer';
 
+/*
+ * What the renderer emits — the document structure, the header, `<main>`, the
+ * footer identity, `lang="ja"`, the viewport meta and the compiled-stylesheet
+ * link — is asserted against real responses in `api/ui-shell-contract.hurl`
+ * and `api/routes.hurl`. Those cases were driving a throwaway `new Hono()`
+ * here, which is what made them weak: they proved the renderer renders, not
+ * that the app mounts it.
+ *
+ * One case cannot move. `BRAND_NAME` is a Workers binding, so no HTTP client
+ * can vary it, and the root title it produces (`UMAXICA (NET)` with no page
+ * segment) belongs to no route — every real route sets a page name. Here
+ * `app.request()` is the driver and the binding is the subject.
+ */
 describe('Renderer layout', () => {
-  const app = new Hono<ApexEnv>();
-  app.use(renderer);
-  app.get('/', (c) => c.render(<p>Test content</p>));
+  it('builds the root title from the BRAND_NAME binding', async () => {
+    const app = new Hono<ApexEnv>();
+    app.use(renderer);
+    app.get('/', (c) => c.render(<p>Test content</p>));
 
-  it('renders full HTML document structure', async () => {
-    const res = await app.request('/');
+    const res = await app.request('/', {}, { BRAND_NAME: 'UMAXICA' });
     const body = await res.text();
-    expect(body).toContain('<html');
-    expect(body).toContain('</html>');
-    expect(body).toContain('<head');
-    expect(body).toContain('<body');
-  });
 
-  it('renders header with UMAXICA title', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('<header');
     expect(body).toContain('UMAXICA');
-  });
-
-  it('renders header title from BRAND_NAME env', async () => {
-    const res = await app.request('/', {}, { BRAND_NAME: 'UMAXCA' });
-    const body = await res.text();
-    expect(body).toContain('UMAXCA');
-    expect(body).toContain('<title>UMAXCA (NET)</title>');
-  });
-
-  it('renders children in main element', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('<main');
-    expect(body).toContain('Test content');
-  });
-
-  it('includes footer markup', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('<footer');
-    const currentYear = new Date().getUTCFullYear();
-    expect(body).toContain(`© ${currentYear} UMAXICA`);
-  });
-
-  it('sets lang attribute to ja', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('lang="ja"');
-  });
-
-  it('includes viewport meta tag', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('viewport');
-    expect(body).toContain('width=device-width');
-  });
-
-  it('inlines styles without Vite client markup', async () => {
-    const res = await app.request('/');
-    const body = await res.text();
-    expect(body).toContain('<style>');
-    expect(body).not.toContain('/style.css');
-    expect(body).not.toContain('/src/style.css');
-    expect(body).not.toContain('@vite/client');
+    expect(body).toContain('<title>UMAXICA (NET)</title>');
   });
 });

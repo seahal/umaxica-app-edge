@@ -1,6 +1,8 @@
+import { styleUrl } from './assets';
 import { BRAND_TLD, buildBrandTitle, getBrandName } from './brand';
-import { APEX_INLINE_STYLE } from './inline-style';
+import { defaultLocale } from './i18n/config';
 import type { AssetEnv } from './security-headers';
+import { themeAttributeMarkup, type ThemeAttribute } from './theme';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
@@ -17,7 +19,10 @@ type HealthPageOptions = {
   service: string;
 };
 
-function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPayload {
+// `env` is optional because it genuinely is: the bindings object is absent
+// outside the Workers runtime, which is why the reads below are guarded. The
+// parameter used to claim otherwise, which made those guards look dead.
+function buildHealthPayload(env: AssetEnv | undefined, options: HealthPageOptions): HealthPayload {
   return {
     status: 'OK',
     service: options.service,
@@ -28,52 +33,61 @@ function buildHealthPayload(env: AssetEnv, options: HealthPageOptions): HealthPa
   };
 }
 
-function buildHealthPageHtml(brandName: string, payload: HealthPayload): string {
+function buildHealthPageHtml(
+  brandName: string,
+  payload: HealthPayload,
+  theme: ThemeAttribute,
+): string {
   return `<!doctype html>
-<html lang="ja">
+<html lang="${defaultLocale}"${themeAttributeMarkup(theme)}>
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${buildBrandTitle('Health status', { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
-    <style>${APEX_INLINE_STYLE}</style>
+    <link rel="stylesheet" href="${styleUrl}" />
   </head>
-  <body class="min-h-screen flex flex-col bg-gray-50">
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+  <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100">
+    <main class="mx-auto w-full max-w-7xl grow px-4 py-8">
       <div class="space-y-4">
-        <h1>status</h1>
-        <dl>
-          <dt>status</dt>
+        <h1 class="text-3xl font-semibold leading-heading">status</h1>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
+          <dt class="font-medium text-gray-600 dark:text-gray-400">status</dt>
           <dd>${payload.status}</dd>
-          <dt>service</dt>
+          <dt class="font-medium text-gray-600 dark:text-gray-400">service</dt>
           <dd>${payload.service}</dd>
-          <dt>version</dt>
+          <dt class="font-medium text-gray-600 dark:text-gray-400">version</dt>
           <dd>${String(payload.version)}</dd>
-          <dt>environment</dt>
+          <dt class="font-medium text-gray-600 dark:text-gray-400">environment</dt>
           <dd>${String(payload.environment)}</dd>
-          <dt>edge</dt>
+          <dt class="font-medium text-gray-600 dark:text-gray-400">edge</dt>
           <dd>${payload.edge}</dd>
-          <dt>time</dt>
+          <dt class="font-medium text-gray-600 dark:text-gray-400">time</dt>
           <dd>${payload.time}</dd>
         </dl>
       </div>
     </main>
-    <footer>© ${new Date(payload.time).getUTCFullYear()} ${brandName}</footer>
+    <footer class="mx-auto w-full max-w-7xl px-4 py-4 text-sm text-gray-600 dark:text-gray-400">© ${new Date(payload.time).getUTCFullYear()} ${brandName}</footer>
   </body>
 </html>`;
 }
 
-function buildHealthErrorHtml(brandName: string, timestampIso: string): string {
+function buildHealthErrorHtml(
+  brandName: string,
+  timestampIso: string,
+  theme: ThemeAttribute,
+): string {
   return `<!doctype html>
-<html lang="ja">
+<html lang="${defaultLocale}"${themeAttributeMarkup(theme)}>
   <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${buildBrandTitle(undefined, { brandName, tld: BRAND_TLD })}</title>
     <meta name="robots" content="${HEALTH_ROBOTS_HEADER}" />
+    <link rel="stylesheet" href="${styleUrl}" />
   </head>
-  <body>
-    <main>
+  <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100">
+    <main class="mx-auto w-full max-w-7xl grow px-4 py-8">
       <p>status: error</p>
       <p>timestamp: ${timestampIso}</p>
     </main>
@@ -81,12 +95,16 @@ function buildHealthErrorHtml(brandName: string, timestampIso: string): string {
 </html>`;
 }
 
-export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Response {
+export function renderHealthPage(
+  env: AssetEnv,
+  options: HealthPageOptions,
+  theme: ThemeAttribute,
+): Response {
   const payload = buildHealthPayload(env, options);
   const brandName = getBrandName(env);
 
   try {
-    return new Response(buildHealthPageHtml(brandName, payload), {
+    return new Response(buildHealthPageHtml(brandName, payload, theme), {
       status: 200,
       headers: {
         'content-type': 'text/html; charset=UTF-8',
@@ -94,7 +112,7 @@ export function renderHealthPage(env: AssetEnv, options: HealthPageOptions): Res
       },
     });
   } catch {
-    return new Response(buildHealthErrorHtml(brandName, payload.time), {
+    return new Response(buildHealthErrorHtml(brandName, payload.time, theme), {
       status: 503,
       headers: {
         'content-type': 'text/html; charset=UTF-8',

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('server-only', () => ({}));
 import { createRailsClient, type RailsFetcher } from '../../src/lib/rails-client';
 
 function makeBinding(response: Response | Error) {

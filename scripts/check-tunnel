@@ -6,17 +6,20 @@ if [[ -z ${EDGE_TUNNEL_RAILS_URL:-} ]]; then
   exit 2
 fi
 
-id_secret=/run/secrets/dev_cloudflare_access_client_id
-secret_secret=/run/secrets/dev_cloudflare_access_client_secret
-if [[ ! -f ${id_secret} || ! -f ${secret_secret} ]]; then
-  echo 'BLOCKED: Access service-token secrets are not mounted; start with --credentials.' >&2
+# Access service tokens were retired along with every other long-lived
+# credential. `cloudflared access login` opens the Access login page in a
+# browser and stores a short-lived JWT in this container only; `cloudflared
+# access curl` then attaches it. Re-run the login when the JWT expires.
+if ! command -v cloudflared >/dev/null 2>&1; then
+  echo 'BLOCKED: cloudflared is not installed in this container.' >&2
   exit 2
 fi
 
-# Feed sensitive headers over stdin so they never appear in the curl process argv.
-{
-  printf 'header = "CF-Access-Client-Id: %s"\n' "$(<"${id_secret}")"
-  printf 'header = "CF-Access-Client-Secret: %s"\n' "$(<"${secret_secret}")"
-} | curl --config - --fail --silent --show-error --max-time 20 --output /dev/null \
+if ! cloudflared access token --app "${EDGE_TUNNEL_RAILS_URL}" >/dev/null 2>&1; then
+  echo 'No valid Access token in this container. Opening the browser login flow...' >&2
+  cloudflared access login "${EDGE_TUNNEL_RAILS_URL}"
+fi
+
+cloudflared access curl --fail --silent --show-error --max-time 20 --output /dev/null \
   "${EDGE_TUNNEL_RAILS_URL}"
 echo 'PASS: HTTPS reached the Access-protected development Tunnel path.'

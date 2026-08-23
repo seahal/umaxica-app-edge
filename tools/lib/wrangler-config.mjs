@@ -39,7 +39,7 @@ export function parseJsonc(text) {
       out += text[i];
     }
   }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
+  return JSON.parse(out.replace(/,(\s*[}\]])/gu, '$1'));
 }
 
 export function loadManifest() {
@@ -80,7 +80,7 @@ const PLACEHOLDER_SERVICE_IDS = new Set([
   '00000000-0000-0000-0000-000000000000',
 ]);
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
 /**
  * Reject an id that is absent, not a UUID, or an obvious stand-in. Returns null
@@ -94,7 +94,7 @@ export function describeServiceIdProblem(serviceId) {
   if (PLACEHOLDER_SERVICE_IDS.has(trimmed.toLowerCase())) {
     return `service_id is a placeholder (${JSON.stringify(serviceId)})`;
   }
-  if (/^x+$|^0+$/i.test(trimmed.replace(/-/g, ''))) {
+  if (/^x+$|^0+$/iu.test(trimmed.replace(/-/gu, ''))) {
     return `service_id is a placeholder (${JSON.stringify(serviceId)})`;
   }
   if (!UUID.test(trimmed)) {

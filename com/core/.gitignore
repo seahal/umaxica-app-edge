@@ -1,15 +1,4 @@
-.next/
-.open-next/
-node_modules/
-out/
-next-env.d.ts
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
-
-# Sentry Config File
-.env.sentry-build-plugin
+.dev.vars
+cloudflare-env.d.ts
+dist
+node_modules

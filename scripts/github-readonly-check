@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-secret=/run/secrets/dev_github_token
-if [[ ! -f ${secret} ]]; then
-  echo 'BLOCKED: dev_github_token is not mounted; start with --credentials.' >&2
+# GitHub access comes from `gh auth login --web` performed inside this container.
+# No token is mounted from the host and none is written back to it.
+if ! gh auth status >/dev/null 2>&1; then
+  echo 'BLOCKED: not authenticated. Run inside the container:' >&2
+  echo '  gh auth login --web --git-protocol https && gh auth setup-git' >&2
   exit 2
 fi
 
-export GH_TOKEN
-GH_TOKEN=$(<"${secret}")
 gh auth status
 git -c credential.helper='!gh auth git-credential' \
   ls-remote https://github.com/seahal/umaxica-apps-edge.git HEAD >/dev/null

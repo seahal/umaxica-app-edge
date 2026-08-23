@@ -1,5 +1,4 @@
 .dev.vars
-.next
-.open-next
 cloudflare-env.d.ts
+dist
 node_modules

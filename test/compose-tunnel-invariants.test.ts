@@ -30,6 +30,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -74,7 +75,7 @@ function collectSourceFiles(): string[] {
 }
 
 function trackedFiles(): string[] {
-  const injected = process.env.EDGE_TRACKED_FILES;
+  const injected = process.env['EDGE_TRACKED_FILES'];
   if (injected !== undefined) {
     return injected.split('\n').filter(Boolean);
   }
@@ -111,8 +112,8 @@ describe('no tunnel connector in this repository', () => {
     // which is the failure this whole file is about.
     // Scoped to the `services:` block: `networks:` uses the same indentation, so
     // an unscoped match would count `tunnel` as a service.
-    const servicesBlock = /^services:\n((?: .*\n|\n)*)/m.exec(composeCustom)?.[1] ?? '';
-    const serviceNames = [...servicesBlock.matchAll(/^ {2}([a-z0-9][\w-]*):/gm)].map(
+    const servicesBlock = /^services:\n((?: .*\n|\n)*)/mu.exec(composeCustom)?.[1] ?? '';
+    const serviceNames = [...servicesBlock.matchAll(/^ {2}([a-z0-9][\w-]*):/gmu)].map(
       (match) => match[1],
     );
     expect(serviceNames).toEqual(['core']);
@@ -138,7 +139,7 @@ describe('no tunnel connector in this repository', () => {
     // Scoped to the `networks:` block rather than the whole file: the header
     // comment quotes the `external: true` stanza the Rails side needs, and that
     // example is worth keeping where the name it has to match is defined.
-    const networksBlock = /^networks:\n((?: .*\n|\n)*)/m.exec(composeCustom)?.[1] ?? '';
+    const networksBlock = /^networks:\n((?: .*\n|\n)*)/mu.exec(composeCustom)?.[1] ?? '';
     expect(networksBlock).not.toContain('external: true');
     expect(networksBlock).toContain('name: umaxica-edge-tunnel');
     expect(composeCustom).not.toContain('EDGE_TUNNEL_NETWORK');
@@ -178,7 +179,7 @@ describe('secret hygiene', () => {
     expect(tracked.filter((path) => path.startsWith('.env') && path !== '.env.example')).toEqual(
       [],
     );
-    expect(read('.gitignore')).toMatch(/^\.env$/m);
+    expect(read('.gitignore')).toMatch(/^\.env$/mu);
   });
 
   it('ships value-free .env examples everywhere', () => {
@@ -196,7 +197,7 @@ describe('secret hygiene', () => {
 
     for (const path of trackedFiles().filter((file) => file.endsWith('.env.example'))) {
       for (const line of read(path).split('\n')) {
-        const match = /^([A-Z0-9_]+)=(.+)$/.exec(line.trim());
+        const match = /^([A-Z0-9_]+)=(.+)$/u.exec(line.trim());
         if (match && !allowedWithValue.has(match[1] as string)) {
           offenders.push(`${path}: ${match[1]}`);
         }
@@ -211,7 +212,7 @@ describe('secret hygiene', () => {
     // time. A name matching /token|secret|credential/ under those prefixes is
     // a leak regardless of the value.
     const forbidden =
-      /\b(?:NEXT_PUBLIC|VITE)_[A-Z0-9_]*(?:TOKEN|SECRET|CREDENTIAL|PRIVATE_KEY)[A-Z0-9_]*\b/;
+      /\b(?:NEXT_PUBLIC|VITE)_[A-Z0-9_]*(?:TOKEN|SECRET|CREDENTIAL|PRIVATE_KEY)[A-Z0-9_]*\b/u;
     const offenders: string[] = [];
 
     for (const file of collectSourceFiles()) {
@@ -244,8 +245,16 @@ describe('secret hygiene', () => {
     for (const client of clients) {
       const source = read(client);
 
-      // Server-only, so nothing here can be bundled for the browser.
-      expect(source, `${client} must be server-only`).toContain("import 'server-only'");
+      /*
+       * Server-only, so nothing here can be bundled for the browser — and it has
+       * to be the marker the unit's own bundler enforces. The `server-only`
+       * package makes a Next build fail; `@tanstack/react-start/server-only` is
+       * the equivalent for a Vite frame, denied in the client environment by the
+       * Start plugin. Either satisfies the invariant; neither is optional.
+       */
+      expect(source, `${client} must be server-only`).toMatch(
+        /import '(?:server-only|@tanstack\/react-start\/server-only)'/u,
+      );
 
       for (const header of [
         'cookie',
@@ -281,7 +290,7 @@ describe('environment separation', () => {
         continue;
       if (path === 'plans' || path.startsWith('plans/')) continue;
       if (
-        /(?:ENV|environment|NODE_ENV)\b[^\n]{0,40}===?\s*['"]staging['"]/.test(
+        /(?:ENV|environment|NODE_ENV)\b[^\n]{0,40}===?\s*['"]staging['"]/u.test(
           readFileSync(file, 'utf8'),
         )
       ) {
@@ -290,7 +299,7 @@ describe('environment separation', () => {
     }
 
     expect(offenders).toEqual([]);
-    expect(composeBase).toMatch(/CLOUDFLARE_ENV:\s*development/);
-    expect(composeBase).not.toMatch(/CLOUDFLARE_ENV:\s*staging/);
+    expect(composeBase).toMatch(/CLOUDFLARE_ENV:\s*development/u);
+    expect(composeBase).not.toMatch(/CLOUDFLARE_ENV:\s*staging/u);
   });
 });

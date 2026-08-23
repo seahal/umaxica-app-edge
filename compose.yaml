@@ -9,7 +9,7 @@ services:
         CONTAINER_UID: ${UID:-1000}
         CONTAINER_GID: ${GID:-1000}
         CONTAINER_USER: edge
-        CONTAINER_GROUP: group
+        CONTAINER_GROUP: edge
     working_dir: /home/edge/workspace
     volumes:
       - type: bind
@@ -118,7 +118,11 @@ services:
       - '127.0.0.1:5407:5407' # app/news
       - '127.0.0.1:5408:5408' # app/help
       - '127.0.0.1:5501:5501' # dev/apex
-      - '127.0.0.1:5502:5502' # dev/acme
+      # Browser OAuth callback for `wrangler login`. Cloudflare credentials are
+      # now obtained interactively inside the container instead of being
+      # injected as a long-lived API token, so this port is part of the base
+      # environment rather than an opt-in credential overlay.
+      - '127.0.0.1:8976:8976' # wrangler login callback
     command: sleep infinity
     tty: true
     stdin_open: true
@@ -130,7 +134,6 @@ services:
       - ALL
     environment:
       CLOUDFLARE_ENV: development
-      VITE_GIT_HOOKS: '0'
     restart: unless-stopped
 
 volumes:

@@ -2,7 +2,7 @@ import { structuredLogger } from '@hono/structured-logger';
 
 // @hono/structured-logger v1 stopped exporting BaseLogger, so the shape the
 // middleware expects of a logger lives here now.
-type BaseLogger = {
+export type BaseLogger = {
   info(data: unknown, msg?: string): void;
   warn(data: unknown, msg?: string): void;
   error(data: unknown, msg?: string): void;

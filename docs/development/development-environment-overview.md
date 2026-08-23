@@ -6,41 +6,45 @@ private keys, CLI credential stores, or Podman/Docker sockets.
 
 ## Dev Container startup
 
-Start the credential-free Dev Container through Dev Containers CLI. The script can be invoked
-from any current working directory:
+Start the credential-free Dev Container through Dev Containers CLI, from the repository root:
 
 ```bash
-/path/to/umaxica-apps-edge/podman/tools/dcup
+PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
+devcontainer up \
+  --docker-path /usr/bin/podman \
+  --docker-compose-path /usr/bin/podman-compose \
+  --workspace-folder .
 ```
 
-`dcup` fixes the integration points explicitly:
+There is no launcher script; the command line is the whole integration surface, and none of it
+can move into `devcontainer.json`. `--docker-path` selects the engine, and
+`PODMAN_COMPOSE_PROVIDER` selects the Compose implementation: with Podman as the engine the
+CLI invokes `podman compose`, which delegates to an external provider and prefers
+`docker-compose` when a Docker installation is present on the host. Omitting the variable
+fails against a Docker daemon socket that does not exist.
 
-```text
---docker-path /usr/bin/podman
---docker-compose-path /usr/bin/podman-compose
---workspace-folder <repository-root>
-```
-
-It exports `PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose`, rejects root/sudo, verifies
-rootless Podman and the merged base Dev Container Compose configuration, and performs the
-Edge workspace-bind credential-file preflight before calling `devcontainer up`.
+Rootless verification, the root/sudo refusal, and the workspace-bind credential-file
+preflight are no longer performed at startup. They remain requirements:
+[Dev Containers CLI startup on rootless Podman](devcontainer-cli-podman-startup.md) states
+them, and `scripts/dev-start` still enforces its own copies on the direct Compose path.
 
 ## Direct Compose modes
 
-The separate direct Compose entrypoint remains available for the optional Rails and credential
+The separate direct Compose entrypoint remains available for the optional Rails and Tunnel
 overlays:
 
 ```bash
 scripts/dev-start
 scripts/dev-start --rails
-scripts/dev-start --credentials
-scripts/dev-start --rails --credentials
+scripts/dev-start --tunnel
+scripts/dev-start --rails --tunnel
 ```
 
-The base mode is credential-free and Rails-independent. `--rails` joins an existing
-rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or guesses one.
-`--credentials` adds Podman Secrets, the Wrangler/OpenCode state volumes, and the
-loopback-only Wrangler OAuth callback.
+Every mode is credential-free: there is no credential overlay any more. `--rails` joins an
+existing rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or
+guesses one. `--tunnel` adds the Cloudflare Tunnel network from `compose.custom.yaml`.
+Credentials are obtained inside the running container through browser logins — see
+[Credential and secret management](credential-and-secret-management.md).
 
 Enter the interactive service with:
 
@@ -48,10 +52,14 @@ Enter the interactive service with:
 podman compose exec core bash -l
 ```
 
-Node.js is pinned to 24.19.0 and pnpm to 11.20.0. Use `pnpm` directly. Bun and the old
-`pn` alias are not part of the environment.
+Node.js is pinned to 24.19.0 and pnpm to 11.22.0, both declared in
+`package.json#devEngines` and matched by `Containerfile`. pnpm is installed from the
+standalone script, not Corepack, which the image removes outright. Use `pnpm` directly in
+scripts and documented commands; the `pn`/`pnpx`/`pnx` short commands that pnpm 11 installs
+alongside it are on `PATH` too. Bun is not part of the environment.
 
 The runtime/network architecture is documented in
 [cloudflare-development-network.md](cloudflare-development-network.md). Security and
 credential rules are in [container-security-policy.md](container-security-policy.md) and
-[credential-and-secret-management.md](credential-and-secret-management.md).
+[credential-and-secret-management.md](credential-and-secret-management.md); logging
+Wrangler in is [wrangler-authentication.md](wrangler-authentication.md).

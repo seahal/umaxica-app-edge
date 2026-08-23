@@ -13,12 +13,18 @@ export const DEFAULT_BRAND_SEPARATOR = ' — ';
  */
 export const BRAND_TLD = 'APP';
 
-type BrandEnv = {
-  BRAND_NAME?: string;
-};
-
-export function getBrandName(env?: BrandEnv): string {
-  return env?.BRAND_NAME || DEFAULT_BRAND_NAME;
+// Takes `unknown` because its one caller outside the typed app is the JSX
+// renderer, whose callback context Hono hands over untyped — the bindings
+// arrived here as `any` and spread from there. Reading the single field this
+// needs, and checking its type, replaces that with a value the compiler can
+// account for. `||` rather than `??` is deliberate: an empty `BRAND_NAME` is a
+// missing brand name, not a brand named "".
+export function getBrandName(env?: unknown): string {
+  if (typeof env !== 'object' || env === null || !('BRAND_NAME' in env)) {
+    return DEFAULT_BRAND_NAME;
+  }
+  const brandName: unknown = env.BRAND_NAME;
+  return typeof brandName === 'string' && brandName.length > 0 ? brandName : DEFAULT_BRAND_NAME;
 }
 
 export type BrandTitleOptions = {
@@ -49,16 +55,16 @@ function resolveSeparator(value: unknown): string | undefined {
 
 export function brandFromEnv(c: ContextWithEnv | null | undefined): BrandTitleOptions {
   const env = c?.env ?? {};
-  const defaultPageTitle = toNonEmptyTrimmed(env.BRAND_DEFAULT_TITLE);
+  const defaultPageTitle = toNonEmptyTrimmed(env['BRAND_DEFAULT_TITLE']);
 
   // Cloudflare Workers vars:
   // - BRAND_NAME
   // - BRAND_SEPARATOR
   // - BRAND_DEFAULT_TITLE (optional)
   return {
-    brandName: toNonEmptyTrimmed(env.BRAND_NAME) ?? DEFAULT_BRAND_NAME,
-    separator: resolveSeparator(env.BRAND_SEPARATOR) ?? DEFAULT_BRAND_SEPARATOR,
-    tld: toNonEmptyTrimmed(env.BRAND_TLD) ?? BRAND_TLD,
+    brandName: toNonEmptyTrimmed(env['BRAND_NAME']) ?? DEFAULT_BRAND_NAME,
+    separator: resolveSeparator(env['BRAND_SEPARATOR']) ?? DEFAULT_BRAND_SEPARATOR,
+    tld: toNonEmptyTrimmed(env['BRAND_TLD']) ?? BRAND_TLD,
     ...(defaultPageTitle ? { defaultPageTitle } : {}),
   };
 }

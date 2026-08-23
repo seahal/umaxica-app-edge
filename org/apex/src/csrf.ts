@@ -1,9 +1,10 @@
 import { csrf } from 'hono/csrf';
 
-const PRODUCTION_APEX_ORIGIN = /^https:\/\/umaxica\.(com|org|app|net)$/;
-const LOCAL_APEX_ORIGIN = /^http:\/\/(com|org|app|net)\.localhost(?::\d+)?$/;
+const PRODUCTION_APEX_ORIGIN = /^https:\/\/umaxica\.(com|org|app|net|dev)$/u;
+const LOCAL_APEX_ORIGIN = /^http:\/\/(com|org|app|net|dev)\.localhost(?::\d+)?$/u;
 const PREVIEW_APEX_ORIGIN = new RegExp(
-  '^https://[a-zA-Z0-9_-]+[.](com|org|app|net)-apex[.]workers[.]dev$',
+  '^https://[a-zA-Z0-9_-]+[.](com|org|app|net|dev)-apex[.]workers[.]dev$',
+  'u',
 );
 
 export const isAllowedApexOrigin = (origin?: string): boolean => {

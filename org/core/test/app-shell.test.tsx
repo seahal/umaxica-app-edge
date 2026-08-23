@@ -1,0 +1,107 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { ErrorDocument, NotFoundDocument } from '@/components/status-documents';
+import { defaultLocale, isLocale, locales } from '@/i18n/config';
+import { getDictionary } from '@/i18n/dictionaries';
+
+import { resetEnv, setEnv, setEnvShouldThrow } from './__mocks__/cloudflare-workers';
+import { handlers, renderDocument } from './utils/routes';
+
+// `latency_ms` is measured, so it is not pinned here — the contract is the kind
+// and the status. `test/health-route.test.ts` freezes the clock where the timing
+// itself matters.
+const RAILS_OK = { liveness: { kind: 'ok' as const, status: 200 } };
+
+afterEach(() => {
+  resetEnv();
+  document.body.innerHTML = '';
+  vi.restoreAllMocks();
+});
+
+describe('org/core application shell', () => {
+  it('renders user-visible status and layout content', async () => {
+    const reset = vi.fn();
+    render(<ErrorDocument error={new Error('boom')} reset={reset} />);
+    fireEvent.click(screen.getByRole('button', { name: '再読み込み' }));
+    expect(reset).toHaveBeenCalledOnce();
+
+    expect(renderToStaticMarkup(<NotFoundDocument />)).toContain('HTTP 404');
+
+    const pageHtml = await renderDocument('/');
+    // The navigation is asserted in full by test/ui-shell-contract.test.tsx.
+    expect(pageHtml).toContain('id="main-navigation"');
+    expect(pageHtml).toContain('<html');
+  });
+
+  it('returns the public metadata documents', async () => {
+    const manifest = await (await handlers.manifest()).json();
+    expect(manifest).toMatchObject({ start_url: '/', display: 'standalone' });
+
+    const robots = await (await handlers.robots()).text();
+    expect(robots).toContain('Sitemap: https://jp.umaxica.org/sitemap.xml');
+
+    const sitemap = await (await handlers.sitemap()).text();
+    expect(sitemap).toContain('<loc>https://jp.umaxica.org</loc>');
+    expect(sitemap).toContain('<changefreq>weekly</changefreq>');
+  });
+});
+
+describe('org/core locale selection', () => {
+  it('recognizes supported locales and loads both dictionaries', async () => {
+    expect(defaultLocale).toBe('ja');
+    expect(locales).toEqual(['en', 'ja']);
+    expect(isLocale('en')).toBe(true);
+    expect(isLocale('ja')).toBe(true);
+    expect(isLocale('fr')).toBe(false);
+    await expect(getDictionary('en')).resolves.toHaveProperty('home');
+    await expect(getDictionary()).resolves.toHaveProperty('home');
+  });
+
+  it('delegates unsupported locales to the router not-found boundary', async () => {
+    /*
+     * `notFound()` comes from `@tanstack/react-router` now rather than
+     * `next/navigation`, and the two differ in a way that matters: Next's threw
+     * internally, TanStack's RETURNS the signal for the caller to throw. A bare
+     * call would leave `getDictionary` falling through to a dictionary key that
+     * does not exist — a crash, not a 404 — so this asserts the rejection
+     * carries the router's not-found marker rather than merely that something
+     * was thrown.
+     */
+    await expect(getDictionary('fr')).rejects.toMatchObject({ isNotFound: true });
+  });
+});
+
+describe('org/core health route', () => {
+  it('reports revision identity, Rails liveness and no-store headers', async () => {
+    const fetch = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
+    setEnv({
+      REVISION: { id: 'revision-id', tag: 'revision-tag', timestamp: 'built-at' },
+      UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch },
+    });
+
+    const response = await handlers.health();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    await expect(response.json()).resolves.toMatchObject({
+      status: 'ok',
+      edge: {
+        status: 'ok',
+        version: { id: 'revision-id', tag: 'revision-tag', timestamp: 'built-at' },
+      },
+      rails: RAILS_OK,
+    });
+  });
+
+  it('returns a service-unavailable document when the environment fails', async () => {
+    setEnvShouldThrow(true);
+
+    const response = await handlers.health();
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      status: 'error',
+      edge: { status: 'error' },
+    });
+  });
+});

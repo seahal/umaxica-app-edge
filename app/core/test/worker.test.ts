@@ -8,15 +8,18 @@
 // Node's own (undici) `Request`/`Headers` do not apply that browser-only
 // restriction and match the real Cloudflare Workers (workerd) runtime this
 // code actually runs on — this override does not touch `vitest.config.ts`.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { checkRateLimit, nextFetch } = vi.hoisted(() => ({
+const { checkRateLimit, appFetch } = vi.hoisted(() => ({
   checkRateLimit: vi.fn(),
-  nextFetch: vi.fn(),
+  appFetch: vi.fn(),
 }));
 
-vi.mock('../src/lib/next-handler', () => ({
-  default: { fetch: nextFetch },
+// The application half, behind the one-function seam `worker.ts` names. Mocking
+// it here is what keeps the real property testable: the dispatch boundary does
+// not know which framework answers.
+vi.mock('../src/lib/app-handler', () => ({
+  default: { fetch: appFetch },
 }));
 
 vi.mock('../src/lib/health-request', () => ({
@@ -39,13 +42,21 @@ const ctx = {
 } as unknown as ExecutionContext;
 
 describe('app/core worker.ts dispatch', () => {
-  afterEach(() => {
-    checkRateLimit.mockReset();
-    nextFetch.mockReset();
+  beforeEach(() => {
+    // `dispatchToRails` logs on every path; keep the reporter clean.
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('strips the Cookie header entirely before calling handler.fetch for a NEXT-owned request', async () => {
-    nextFetch.mockResolvedValue(new Response('ok', { status: 200 }));
+  afterEach(() => {
+    checkRateLimit.mockReset();
+    appFetch.mockReset();
+    vi.restoreAllMocks();
+  });
+
+  it('strips the Cookie header entirely before calling handler.fetch for an application-owned request', async () => {
+    appFetch.mockResolvedValue(new Response('ok', { status: 200 }));
 
     const request = new Request('https://jp.umaxica.app/', {
       headers: { cookie: 'a=1; b=2' },
@@ -53,18 +64,18 @@ describe('app/core worker.ts dispatch', () => {
 
     const response = await worker.fetch(request, makeEnv(), ctx);
 
-    expect(nextFetch).toHaveBeenCalledTimes(1);
-    const forwardedRequest = nextFetch.mock.calls[0]?.[0] as Request;
+    expect(appFetch).toHaveBeenCalledTimes(1);
+    const forwardedRequest = appFetch.mock.calls[0]?.[0] as Request;
     expect(forwardedRequest.headers.get('cookie')).toBeNull();
     expect(response.status).toBe(200);
     expect(await response.text()).toBe('ok');
   });
 
-  it('strips every Set-Cookie header from the Next.js response before it reaches the caller', async () => {
-    const nextHeaders = new Headers();
-    nextHeaders.append('set-cookie', 'a=1; Path=/');
-    nextHeaders.append('set-cookie', 'b=2; Path=/');
-    nextFetch.mockResolvedValue(new Response('ok', { status: 200, headers: nextHeaders }));
+  it('strips every Set-Cookie header from the application response before it reaches the caller', async () => {
+    const appHeaders = new Headers();
+    appHeaders.append('set-cookie', 'a=1; Path=/');
+    appHeaders.append('set-cookie', 'b=2; Path=/');
+    appFetch.mockResolvedValue(new Response('ok', { status: 200, headers: appHeaders }));
 
     const request = new Request('https://jp.umaxica.app/');
     const response = await worker.fetch(request, makeEnv(), ctx);
@@ -85,7 +96,7 @@ describe('app/core worker.ts dispatch', () => {
 
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     expect(railsFetch).toHaveBeenCalledTimes(1);
     const railsRequest = railsFetch.mock.calls[0]?.[0] as Request;
     expect(railsRequest.headers.get('cookie')).toBe('session=abc');
@@ -96,7 +107,7 @@ describe('app/core worker.ts dispatch', () => {
     expect(response.status).toBe(200);
   });
 
-  it('does not dispatch a rate-limited RAILS-owned request to Rails or Next.js', async () => {
+  it('does not dispatch a rate-limited RAILS-owned request to Rails or the application', async () => {
     const railsFetch = vi.fn();
     checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
 
@@ -108,7 +119,64 @@ describe('app/core worker.ts dispatch', () => {
 
     expect(response.status).toBe(429);
     expect(railsFetch).not.toHaveBeenCalled();
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
+  });
+
+  it('does not send a rate-limited application-owned request to the application', async () => {
+    // Checked before the application half is invoked at all.
+    checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
+
+    const response = await worker.fetch(new Request('https://jp.umaxica.app/'), makeEnv(), ctx);
+
+    expect(response.status).toBe(429);
+    expect(appFetch).not.toHaveBeenCalled();
+  });
+
+  it('consults the limiter once per request, with the binding it was given', async () => {
+    appFetch.mockResolvedValue(new Response('ok', { status: 200 }));
+    const env = makeEnv();
+
+    await worker.fetch(new Request('https://jp.umaxica.app/'), env, ctx);
+
+    expect(checkRateLimit).toHaveBeenCalledTimes(1);
+    expect(checkRateLimit.mock.calls[0]?.[1]).toBe(env.RATE_LIMITER);
+  });
+
+  it.each(['/assets/index-abc123.js', '/assets/style-abc123.css', '/favicon.ico'])(
+    'exempts %s from the limiter',
+    async (path) => {
+      // `/assets/` is where Vite writes this frame's hashed output, and the
+      // favicon is the one unhashed file a document references. An
+      // image-optimisation route would be a real Worker route — a page with many
+      // images could spend its whole budget on its own thumbnails — so it would
+      // have to be exempted here too. This frame has none:
+      // and it has no image-optimisation route at all.
+      appFetch.mockResolvedValue(new Response('asset', { status: 200 }));
+
+      const response = await worker.fetch(
+        new Request(`https://jp.umaxica.app${path}`),
+        makeEnv(),
+        ctx,
+      );
+
+      expect(checkRateLimit).not.toHaveBeenCalled();
+      expect(appFetch).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(200);
+    },
+  );
+
+  it('does not consult the limiter for a blocked path', async () => {
+    // A blocked path reaches no application code either way, so a limiter call
+    // would be spent for nothing.
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.app/health/liveness.json'),
+      makeEnv(),
+      ctx,
+    );
+
+    expect(response.status).toBe(404);
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
   });
 
   it('sends /oidc/callback straight to Rails with the query string unchanged and passes through Set-Cookie/redirect unchanged', async () => {
@@ -123,7 +191,7 @@ describe('app/core worker.ts dispatch', () => {
     const request = new Request('https://jp.umaxica.app/oidc/callback?code=abc&state=def');
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     const railsRequest = railsFetch.mock.calls[0]?.[0] as Request;
     const railsUrl = new URL(railsRequest.url);
     expect(railsUrl.searchParams.get('code')).toBe('abc');
@@ -133,17 +201,17 @@ describe('app/core worker.ts dispatch', () => {
     expect(response.headers.get('set-cookie')).toBe('sess=xyz');
   });
 
-  it('returns a RAILS-owned 404 unchanged, without falling through to Next.js', async () => {
+  it('returns a RAILS-owned 404 unchanged, without falling through to the application', async () => {
     const railsFetch = vi.fn().mockResolvedValue(new Response('not found', { status: 404 }));
     const request = new Request('https://jp.umaxica.app/api/v0/does-not-exist');
 
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(404);
   });
 
-  it('returns a RAILS-owned 405 unchanged, without falling through to Next.js', async () => {
+  it('returns a RAILS-owned 405 unchanged, without falling through to the application', async () => {
     const railsFetch = vi
       .fn()
       .mockResolvedValue(new Response('method not allowed', { status: 405 }));
@@ -151,40 +219,40 @@ describe('app/core worker.ts dispatch', () => {
 
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(405);
   });
 
-  it('keeps a Next.js 404 a Next.js 404, without retrying against Rails', async () => {
+  it('keeps an application 404 an application 404, without retrying against Rails', async () => {
     const railsFetch = vi.fn();
-    nextFetch.mockResolvedValue(new Response('not found', { status: 404 }));
+    appFetch.mockResolvedValue(new Response('not found', { status: 404 }));
 
     const request = new Request('https://jp.umaxica.app/this-page-does-not-exist');
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
     expect(railsFetch).not.toHaveBeenCalled();
-    expect(nextFetch).toHaveBeenCalledTimes(1);
+    expect(appFetch).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(404);
   });
 
-  it('blocks /health/liveness.json from reaching either Rails or Next.js', async () => {
+  it('blocks /health/liveness.json from reaching either Rails or the application', async () => {
     const railsFetch = vi.fn();
     const request = new Request('https://jp.umaxica.app/health/liveness.json');
 
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
     expect(railsFetch).not.toHaveBeenCalled();
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(404);
   });
 
-  it('leaves the existing /health Route Handler reachable through Next.js (not blocked)', async () => {
-    nextFetch.mockResolvedValue(new Response('{"status":"ok"}', { status: 200 }));
+  it('leaves the existing /health route reachable through the application (not blocked)', async () => {
+    appFetch.mockResolvedValue(new Response('{"status":"ok"}', { status: 200 }));
     const request = new Request('https://jp.umaxica.app/health');
 
     const response = await worker.fetch(request, makeEnv(), ctx);
 
-    expect(nextFetch).toHaveBeenCalledTimes(1);
+    expect(appFetch).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(200);
   });
 
@@ -198,7 +266,7 @@ describe('app/core worker.ts dispatch', () => {
 
     const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     const railsRequest = railsFetch.mock.calls[0]?.[0] as Request;
     expect(railsRequest.method).toBe('POST');
     expect(railsRequest.body).not.toBeNull();
@@ -206,12 +274,69 @@ describe('app/core worker.ts dispatch', () => {
     expect(response.status).toBe(201);
   });
 
-  it('fails closed with 503 when the Rails VPC binding is absent, without falling back to Next.js', async () => {
+  it('fails closed with 503 when the Rails VPC binding is absent, without falling back to the application', async () => {
     const request = new Request('https://jp.umaxica.app/api/v0/session');
 
     const response = await worker.fetch(request, makeEnv(undefined), ctx);
 
-    expect(nextFetch).not.toHaveBeenCalled();
+    expect(appFetch).not.toHaveBeenCalled();
     expect(response.status).toBe(503);
+  });
+
+  it.each([
+    [
+      'the VPC binding fetch rejects',
+      () => vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 10.0.0.7:3000')),
+    ],
+    [
+      'the request times out',
+      () =>
+        vi.fn().mockRejectedValue(Object.assign(new Error('timed out'), { name: 'TimeoutError' })),
+    ],
+    [
+      'Workers VPC answers its ProxyError 500',
+      () =>
+        vi.fn().mockResolvedValue(
+          new Response('ProxyError: connection_refused', {
+            status: 500,
+            headers: { 'content-type': 'text/plain' },
+          }),
+        ),
+    ],
+  ])('answers 503 and never reaches the application when %s', async (_label, makeRailsFetch) => {
+    const railsFetch = makeRailsFetch();
+    const request = new Request('https://jp.umaxica.app/api/v0/session', {
+      method: 'POST',
+      headers: { cookie: 'session=abc' },
+      body: '{"a":1}',
+    });
+
+    const response = await worker.fetch(request, makeEnv({ fetch: railsFetch }), ctx);
+
+    expect(response.status).toBe(503);
+    // A Rails or transport failure is never an invitation to try the application, and
+    // never an invitation to try Rails a second time.
+    expect(appFetch).not.toHaveBeenCalled();
+    expect(railsFetch).toHaveBeenCalledTimes(1);
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    await expect(response.text()).resolves.not.toContain('ECONNREFUSED');
+  });
+
+  it('keeps a Rails 500 of its own making distinct from a transport failure', async () => {
+    const railsFetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('rails error page', { status: 500, headers: { 'content-type': 'text/html' } }),
+      );
+
+    const response = await worker.fetch(
+      new Request('https://jp.umaxica.app/web/v0/thing'),
+      makeEnv({ fetch: railsFetch }),
+      ctx,
+    );
+
+    expect(appFetch).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.text()).resolves.toBe('rails error page');
   });
 });

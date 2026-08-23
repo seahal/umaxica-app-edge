@@ -4,14 +4,55 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["node"],
-    // Best practices
+    "jsx": "react-jsx",
+    // `globals: true` is the Vitest convention in every unit and at the root,
+    // so `describe` / `it` / `expect` / `vi` are ambient. Under TypeScript 7
+    // `types` defaults to `[]`, so the ambient declarations have to be asked for
+    // by name — leaving `types` implicit no longer pulls in every installed
+    // @types package.
+    "types": ["vitest/globals", "node"],
+    // The quality policy every deployment unit shares, byte-identical in all
+    // twenty per-unit tsconfigs and here. It is repeated rather than `extends`-ed: a
+    // unit has to stay valid when it is lifted out into its own repository,
+    // which `test/deployment-unit-boundaries.test.ts` enforces for every other
+    // per-unit config too. What is deliberately NOT standardised is directly
+    // above this block — `target`, `module`, `lib`, `jsx`, `jsxImportSource`,
+    // `types`, `plugins`, `paths` are framework mechanics and differ by design
+    // between the TanStack Start frames and the Hono apex Workers.
+    //
+    // `useUnknownInCatchVariables` is not listed: TypeScript 7 implies it from
+    // `strict`, and repeating a default is a line that can silently stop
+    // meaning anything.
     "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
-    "jsx": "react-jsx"
-  }
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    // The repository-level suites import `tools/*.mjs` directly — the JSONC
+    // parser and the connectivity harness are exercised as modules, not shelled
+    // out to. Without `allowJs` every one of those imports is an implicit `any`.
+    "allowJs": true,
+    // The one flag deliberately left loose. See any unit's tsconfig for the
+    // measurement: `--skipLibCheck false` reports only upstream's
+    // duplicate-identifier collisions between the Cloudflare Workers runtime
+    // declarations and `lib.dom`, never this repository's own code.
+    "skipLibCheck": true
+  },
+  // Scoped to what the root actually owns. This file used to have no `include`
+  // at all and no script that ran it, so the repository-level invariant suite —
+  // the one that enforces deployment-unit boundaries — was the only TypeScript
+  // in the tree that nothing typechecked. `tools/` and `scripts/` stay out: they
+  // are plain `.mjs` with no type annotations, and pulling them in would report
+  // their untypedness rather than a defect.
+  "include": ["test/**/*", "vitest.config.ts", "vitest.setup.ts"],
+  "exclude": ["node_modules", "**/node_modules"]
 }

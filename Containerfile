@@ -2,14 +2,14 @@
 
 # Keep these runtime pins aligned with package.json and the documented Edge baseline.
 ARG NODE_VERSION=24.19.0-trixie
-ARG PNPM_VERSION=11.20.0
+ARG PNPM_VERSION=11.22.0
 ARG CLAUDE_CODE_VERSION=2.1.220
 ARG CODEX_VERSION=0.147.0
 ARG OPENCODE_VERSION=1.18.16
 ARG CONTAINER_UID=1000
 ARG CONTAINER_GID=1000
 ARG CONTAINER_USER=edge
-ARG CONTAINER_GROUP=group
+ARG CONTAINER_GROUP=edge
 
 FROM node:${NODE_VERSION} AS development
 
@@ -78,14 +78,24 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends tailscale \
   && rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable \
-  && corepack install --global "pnpm@${PNPM_VERSION}" \
+# Corepack is removed, not merely unused. Node ships it only up to (not
+# including) 25.0.0, and pnpm no longer lists it as an installation method, so
+# it is a dependency with an expiry date. Deleting it here means a later
+# `corepack enable` cannot reintroduce a second `pnpm` on PATH ahead of the
+# standalone install below, and it makes "builds without Corepack" a property
+# the image demonstrates rather than one the Containerfile merely refrains from
+# violating.
+RUN npm rm --global corepack \
   && npm install --global \
     "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
     "@openai/codex@${CODEX_VERSION}" \
     "opencode-ai@${OPENCODE_VERSION}" \
   && npm cache clean --force
 
+# The group is named after the user on purpose. Devcontainer features are
+# third-party scripts, and several of them (grok-build among them) chown their
+# state with a literal `${_REMOTE_USER}:${_REMOTE_USER}` — a group named
+# anything else makes those installs fail with "chown: invalid group".
 RUN set -eux; \
   base_user=node; \
   base_group=node; \
@@ -126,9 +136,47 @@ ENV HOME=/home/edge \
     XDG_DATA_HOME=/home/edge/.local/share \
     XDG_STATE_HOME=/home/edge/.local/state \
     PNPM_HOME=/home/edge/.local/share/pnpm \
-    PATH=/home/edge/.local/bin:/home/edge/.local/share/pnpm:${PATH}
+    PATH=/home/edge/.local/bin:/home/edge/.local/share/pnpm/bin:${PATH}
 
 WORKDIR /home/edge/workspace
-USER edge:group
+USER edge:edge
+
+# Standalone install per https://pnpm.io/installation. This is the single source
+# of pnpm in the image: it needs no root, so it runs after the USER switch and
+# lands under $HOME rather than /usr/local.
+#
+# The PATH above ends in `/bin` for a reason. pnpm 11 moved every global binary
+# into a `bin` subdirectory of PNPM_HOME — the install script runs `pnpm setup`,
+# which installs the CLI with `pnpm add -g` and writes `pn`/`pnpx`/`pnx` there
+# too, then deletes the v10-era shims that used to sit in PNPM_HOME itself.
+# Pointing PATH at PNPM_HOME directly, as the v10 layout required, leaves this
+# image with no pnpm at all.
+#
+# `pnpm setup` also has to identify the shell it is configuring, which it does
+# from $SHELL — so this must stay below the ENV block that sets it. It writes a
+# PATH line into ~/.bashrc as well; that is redundant here because PATH is baked
+# into the image, but harmless, and suppressing it is not worth diverging from
+# the documented install.
+#
+# PNPM_VERSION is pinned to the same version package.json declares under
+# devEngines.packageManager; test/development-container-security.test.ts fails
+# if the two ever drift apart.
+RUN wget -qO- https://get.pnpm.io/install.sh \
+  | env PNPM_VERSION="${PNPM_VERSION}" bash -
+
+# The global install that `pnpm setup` performs is a SYMLINK into
+# $PNPM_HOME/store (`store/v11/links/@pnpm/exe/...`) — but compose.yaml mounts
+# the named volume `pnpm-store` over that store at runtime, hiding the image's
+# copy behind an empty volume. The symlink then dangles and every `pn`/`pnpm`
+# invocation fails with "exec: .../@pnpm/exe/pnpm: not found". Dereference it
+# here so the global install is self-contained and survives the mount.
+RUN set -eu; \
+  for link in "${PNPM_HOME}"/global/v11/*/node_modules/@pnpm/exe; do \
+    [ -L "${link}" ] || continue; \
+    real="$(readlink -f "${link}")"; \
+    rm "${link}"; \
+    cp -a "${real}" "${link}"; \
+  done; \
+  pnpm --version
 
 CMD ["sleep", "infinity"]

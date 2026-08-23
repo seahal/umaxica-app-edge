@@ -83,6 +83,11 @@ production had never been exercised.
 
 ### 1. The binding lives in one environment, and nowhere else
 
+> **SUPERSEDED 2026-08-16.** The binding now lives at the top level (production)
+> and in `env.development` as well as `env.vpc`. See the Phase 2 amendment below,
+> including the measurement that shows the credential cost this decision tried to
+> confine cannot be confined.
+
 > Renamed `preview` → `vpc` on 2026-08-09; see the amendment above. The
 > reasoning below is unchanged.
 
@@ -113,6 +118,11 @@ A flag leaves the other environment's `service_id` textually reachable from the
 development command, and reduces the separation to remembering to pass it.
 
 ### 2. Production carries no binding, and fails closed
+
+> **SUPERSEDED 2026-08-16.** Production now declares a real VPC binding, pointed
+> at the development Service during the AWS bootstrap. See the Phase 1 amendment
+> below; the text here is kept as the record of what was decided and why it was
+> reversed.
 
 > Production moved out of `env` to the top level on 2026-08-09; see the
 > amendment above. "env.production" below now means the top level.
@@ -156,9 +166,9 @@ The credential cost falls only on the third, which is named for what it opts
 into. ADR 005's best property — that ordinary local development needs no
 Cloudflare account — is preserved exactly.
 
-There is deliberately **no root-level `preview:vpc` fan-out**, unlike `dev`.
-Fifteen concurrent preview servers would each open their own remote-proxy
-session against Cloudflare. Run it one workspace at a time:
+There is deliberately **no root-level `preview:vpc` fan-out**. Fifteen
+concurrent preview servers would each open their own remote-proxy session
+against Cloudflare. Run it one workspace at a time:
 
 ```bash
 pnpm --filter umaxica-apps-edge-app-docs run preview:vpc
@@ -492,6 +502,252 @@ allowed for this authentication scheme`; no scope changes it. `preview:vpc`
 Also worth recording: wrangler's OAuth callback listener binds `::1` only, so an
 IPv4 port forward never reaches it. Procedure for logging in from inside a
 container is in `docs/operations/cloudflare-tunnel-development.md`.
+
+### Amendment, 2026-08-16 (Phase 1) — production gets a real VPC binding, pointed at the development Service
+
+**Decision 2 above is superseded.** It said production carries no binding and
+fails closed. That was the right call while the alternative was an unexercised
+guess; it is the wrong one now, because it makes the deployed path permanently
+unobservable. Nothing about production — that the binding resolves at all, that
+a Worker on Cloudflare's edge can open a VPC connection, that the VPC Service
+answers from an edge invocation rather than from a remote-binding proxy — can be
+learned by keeping the binding absent until AWS exists.
+
+So the top level (which IS production) now declares:
+
+```jsonc
+"vpc_services": [
+  {
+    "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+    "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+  }
+]
+```
+
+That is the **development** Service ID, on the development tunnel, terminating
+on a developer's machine. Deliberately.
+
+#### 1. Why production is temporarily allowed to use the development Service
+
+There is no other Service. AWS production Rails does not exist and neither does
+a production tunnel, and creating either is outside this repository. The choice
+is between a production Worker that exercises the real transport against local
+Rails, and a production Worker that exercises nothing. The first fails visibly
+when the laptop is off; the second fails invisibly on the day AWS arrives.
+
+#### 2. This is a bootstrap topology, not the final one
+
+```text
+production Worker → Workers VPC → development VPC Service → development tunnel → local Rails
+```
+
+Every hop is real except the destination.
+
+#### 3. What this arrangement verifies
+
+The binding resolves in a deployed Worker; `env.<BINDING>.fetch()` works from
+Cloudflare's edge rather than through a remote-binding proxy; the VPC Service
+record routes; the tunnel carries edge-originated traffic; Rails dispatches on
+the `Host` header the same way it does under `preview:vpc`; and a stopped origin
+surfaces as `ProxyError: connection_refused` → `unreachable` → 503 rather than
+as something ambiguous.
+
+#### 4. What remains unverified until AWS Rails exists
+
+Production latency and placement (the tunnel terminates on a laptop, not in a
+region); production Rails' own behaviour under edge traffic; anything about the
+production tunnel, its connector count or its failure modes; and whether a
+production VPC Service behaves identically to this one. Availability is **not**
+verified in any meaningful sense — it is bounded by a developer's machine.
+
+#### 5. How the AWS cutover happens
+
+1. Provision production Rails, a production tunnel beside it, and a production
+   VPC Service on that tunnel. **Outside this repository.**
+2. Set `vpcProductionServiceId` in `tools/workers-manifest.json` to the new id.
+3. Set the fifteen top-level `service_id`s to the same value.
+4. Deploy.
+
+No application code changes, because none of it names an environment:
+`getRailsClient()` selects the VPC transport by the presence of the runtime
+binding. `tools/check-workers.mjs` fails the build if step 3 is done without
+step 2, or if any of the fifteen is left behind.
+
+#### 6. Why production does not set `remote: true`
+
+`remote` is a **local-development** flag. It tells wrangler to run the Worker's
+code in local workerd while proxying that one binding out to the real Cloudflare
+resource instead of simulating it. A deployed Worker has no local simulation to
+override, so the key means nothing there —
+[Remote bindings](https://developers.cloudflare.com/workers/development-testing/#remote-bindings).
+The
+[VPC Services](https://developers.cloudflare.com/workers-vpc/configuration/vpc-services/)
+page documents it only as "utilizes remote bindings to allow access to the VPC
+Service during local development" and says nothing about deployment requiring
+it. Setting it in production would be a key that reads as load-bearing and is
+not; `tools/check-workers.mjs` therefore rejects it.
+
+#### 7. Which guardrails changed, and why the old ones were no longer valid
+
+| Guardrail                                                                           | Was                                                           | Now                                                                  |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `check-workers.mjs` `NON_INHERITABLE`                                               | included `vpc_services`, so every env had to repeat it        | excludes it — a syntax rule cannot express "`env.test` gets none"    |
+| `check-workers.mjs` VPC rules                                                       | binding in `env.vpc` only; top level forbidden                | one `VPC_POLICY` table, per tier: required id, and `remote` per tier |
+| `rails-connection-invariants` "declares the binding once"                           | textual, asserted the string sat between `"vpc"` and `"test"` | structural, parses the config and asserts per tier                   |
+| `rails-connection-invariants` "never lets production reuse the development service" | the rule this change contradicts                              | replaced by a cutover-shape assertion over the two manifest fields   |
+| `verify-edge-connectivity.mjs` isolation note                                       | `FAIL` on a shared id; `WARN` on production having none       | `WARN` while the two manifest ids are equal, `FAIL` once they differ |
+
+The retired rule was not weakened to make a test pass — it encoded decision 2,
+and decision 2 is what this amendment supersedes. Its replacement still fails
+loudly for the case it was written to catch: a frame left on the development
+Service _after_ the cutover.
+
+### Amendment, 2026-08-16 (Phase 2) — `env.development` gets the binding, and decision 1 pays for it
+
+**Decision 1 above is superseded**, and so is the credential column of decision
+3's table. `env.development` now declares:
+
+```jsonc
+"vpc_services": [
+  {
+    "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+    "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+    "remote": true
+  }
+]
+```
+
+so the ordinary development loop reaches Rails over the real transport instead of
+over a Node-only path that shares nothing with production.
+
+#### What this costs, measured rather than assumed
+
+ADR 005 and decision 1 both treated `remote: true` as a _choice_ whose cost could
+be confined to one opt-in command. That framing is wrong, and the reason is in
+wrangler itself:
+
+```js
+// wrangler/wrangler-dist/cli.js — getBindingLocalSupport
+vpc_service: "DO-NOT-USE-this-resource-will-never-have-a-local-simulator",
+```
+
+A VPC Service has **no local simulator**, so wrangler wires it to a remote proxy
+connection whether or not `remote` is set — setting `"remote": false` at the top
+level was measured and changes nothing. Any local tooling that resolves a config
+containing `vpc_services` therefore opens a remote proxy session, and that
+session **rejects API-token authentication**:
+
+```
+RemoteSessionAuthenticationError: This Worker uses bindings that need to run remotely,
+even when developing locally, but the remote session could not be authenticated.
+It looks like you are authenticating via a custom API token (`CLOUDFLARE_API_TOKEN`)
+```
+
+`next dev` is included, because `*/next.config.ts` calls
+`initOpenNextCloudflareForDev()`, which calls `getPlatformProxy()`. Measured on
+`app/core`, with `CLOUDFLARE_ENV` set the way `compose.yaml` sets it:
+
+| `CLOUDFLARE_ENV` | resolves        | before Phase 2             | after Phase 2                           |
+| ---------------- | --------------- | -------------------------- | --------------------------------------- |
+| `development`    | env.development | no VPC binding, no session | remote session attempted — login needed |
+| _blank_          | top level       | no VPC binding, no session | remote session attempted — login needed |
+
+**The two commands degrade differently, and the difference matters:**
+
+- `pnpm preview` (and `deploy`, `upload`) **fail outright**. The OpenNext CLI
+  reads the Worker's vars through `getEnvFromPlatformProxy()`, and the throw
+  aborts the command.
+- `pnpm dev` **keeps serving, but loses every Cloudflare binding.**
+  `initOpenNextCloudflareForDev()` is fired and forgotten
+  (`void initOpenNextCloudflareForDev()`), so the process survives — it reaches
+  `✓ Ready` and logs one
+  `Unhandled Rejection: … Failed to start the remote proxy session`. What it does
+  not do is populate the Cloudflare context, so `REVISION`, `IMAGES`,
+  `RATE_LIMITER` and the rest are absent along with the VPC binding.
+
+  This is not theoretical. `pnpm --dir app/core run test:api` **fails**, and it
+  passes on the same tree with the `vpc_services` blocks removed:
+
+  ```
+  --> api/standard-contract.hurl:80    GET {{base}}/revision
+      jsonpath "$.timestamp"   actual: null   expected: matches /^\d{4}-\d{2}-\d{2}T/
+  ```
+
+  `/revision` reads `version_metadata`, which is one of the bindings the failed
+  context would have carried. Measured with `CLOUDFLARE_ENV` unset **and** set to
+  `development`, so neither tier escapes it.
+
+So the property decision 1 protected — "ordinary local development needs no
+Cloudflare account" — is **gone outright**. Without a `wrangler login` session,
+`pnpm preview` does not run, and `pnpm dev` runs in a degraded state that fails
+the repository's own HTTP-contract suite. `wrangler login` is now a prerequisite
+of the development loop, not an opt-in for one command. That is the deliberate
+price of having one transport instead of two; it is recorded here rather than
+discovered later, and it is the first thing to undo if the price turns out to be
+the wrong one.
+
+#### The Node transport is unchanged, and still separate
+
+A wrangler binding is not something a plain Node process can hold. `next dev`
+never receives `UMAXICA_APPS_EDGE_CF_WORKERS_VPC` no matter what
+`env.development` declares — it fails to _start_ without a session, which is a
+different thing from acquiring the binding. `getRailsClient()`'s branch 2, gated
+on `EDGE_LOCAL_NODE_RUNTIME=1` **and** `EDGE_LOCAL_RAILS_ENABLED=1`, is untouched
+and is still the only Rails transport a Node runtime has.
+`test/rails-connection-invariants.test.ts` asserts both halves so that
+"`env.development` has a binding now" is never mistaken for "the flags are
+redundant".
+
+#### Deploying now needs the same session
+
+The same mechanism reaches the deploy path, because
+`opennextjs-cloudflare deploy`, `upload` and `preview` all call
+`getEnvFromPlatformProxy()` → `getPlatformProxy()` to read the Worker's vars. With
+a top-level `vpc_services` they open a remote proxy session and fail under an API
+token. Run them the way `preview:vpc` is already run:
+
+```bash
+CLOUDFLARE_API_TOKEN= pnpm --filter umaxica-apps-edge-app-core run deploy
+```
+
+with an OAuth session present. Note that `wrangler` loads the repo-root `.env`
+itself, so the token must be **blanked, not unset** — and for `wrangler dev` an
+empty `--env-file` is also needed (`tools/vpc-probe/empty.env` exists for this).
+
+`wrangler deploy` on its own is unaffected: it opens no session, and a
+`--dry-run` confirms the binding attaches to the production Worker:
+
+```
+env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC (019f5fe0-…)      VPC Service
+```
+
+#### `env.vpc` is retained
+
+`preview:vpc` and `tools/vpc-probe` still point at it, and it is now the A/B
+control against a restored `env.development` — same Service, same `remote: true`,
+different tier. Removing it is a later cleanup, not part of this change.
+
+#### Not verified end to end
+
+The transport itself is **unproven** by this change. There is no `wrangler login`
+session in this environment (`wrangler whoami` reports an API token read from
+`CLOUDFLARE_API_TOKEN`), so `pnpm run check:vpc` cannot open a remote session at
+all:
+
+```
+PASS  Binding resolved: env.UMAXICA_APPS_EDGE_CF_WORKERS_VPC (019f5fe0-…)  VPC Service  remote
+FAIL  Failed to start the remote proxy session. … it's necessary to set a CLOUDFLARE_API_TOKEN
+```
+
+That first line is a config echo from wrangler's binding table, not evidence of a
+live session — worth knowing, because it reads like a passing hop.
+
+**This is also the root cause of the "broken" development VPC path.** The failure
+is at hop 1 of six — local workerd → remote proxy session — and is an
+authentication failure, not a VPC Service, tunnel, `cloudflared` or Rails
+failure. Nothing downstream was reached, so nothing downstream is implicated. Log
+in and rerun `pnpm run check:vpc` and `pnpm run check:preview:vpc` to exercise the
+rest.
 
 # Historical note
 

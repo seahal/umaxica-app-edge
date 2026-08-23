@@ -1,107 +1,86 @@
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
-import { redirect } from 'next/navigation';
-import RootPage from '../src/app/(page)/page';
-import AboutPage from '../src/app/(page)/about/page';
-import ExplorePage from '../src/app/(page)/explore/page';
-import DoctorPage from '../src/app/(page)/doctor/page';
-import NotificationsPage from '../src/app/(page)/notifications/page';
-import MessagesPage from '../src/app/(page)/messages/page';
-import ConfigurationPage from '../src/app/(page)/configuration/page';
-import AccountPage from '../src/app/(page)/configuration/account/page';
-import PreferencePage from '../src/app/(page)/configuration/preference/page';
-import HomePage from '../src/app/(page)/home/page';
-import PageLayout from '../src/app/(page)/layout';
+import { describe, expect, it } from 'vitest';
 
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn<() => never>(),
-}));
+import { defaultLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/dictionaries';
 
-vi.mock('@/i18n/config', () => ({
-  defaultLocale: 'en',
-}));
+import { renderDocument } from './utils/routes';
 
-vi.mock('@/i18n/dictionaries', () => ({
-  getDictionary: vi.fn<() => Promise<Record<string, unknown>>>().mockResolvedValue({
-    home: {
-      title: 'Home',
-      description: 'Welcome to our website',
-    },
-    about: { title: 'About' },
-    explore: { title: 'Explore' },
-    doctor: { title: 'Doctor' },
-    notifications: { title: 'Notifications', wip: 'WIP' },
-    messages: { title: 'Messages', wip: 'WIP' },
-    configuration: { title: 'Configuration' },
-    configuration_account: { title: 'Account' },
-    configuration_preference: { title: 'Preference' },
-  }),
-}));
+/*
+ * Every page this unit routes, rendered as the document a browser receives.
+ *
+ * The routes carry their own loaders, so driving a memory-history router renders
+ * the real thing — shell, chrome and page together — rather than a component in
+ * isolation behind a wall of mocks.
+ */
+const PAGES = [
+  ['/', '/'],
+  ['/about', '/about'],
+  ['/explore', '/explore'],
+  ['/messages', '/messages'],
+  ['/notifications', '/notifications'],
+  ['/configuration', '/configuration'],
+  ['/configuration/account', '/configuration/account'],
+  ['/doctor', '/doctor'],
+] as const;
 
-describe('com/core pages render without throwing', () => {
-  it('root page renders', async () => {
-    const element = await RootPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
+describe('page smoke', () => {
+  it.each(PAGES)('%s renders a document with one main landmark', async (_label, path) => {
+    const html = await renderDocument(path);
+
+    expect(html).toContain('<html');
+    expect(html.match(/<main\b/gu) ?? []).toHaveLength(1);
+    expect(html).toContain('id="main-content"');
+    // Every page under the `_page` layout carries the application chrome.
+    expect(html).toContain('<header');
+    expect(html).toContain('<nav');
+    expect(html).toContain('<footer');
   });
 
-  it('about page renders', async () => {
-    const element = await AboutPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
+  /*
+   * Each page's OWN heading, not merely some heading.
+   *
+   * The weaker "renders an `<h1>`" version of this passed while
+   * `/configuration/account` was silently rendering `/configuration` instead:
+   * TanStack's flat routing had made `_page.configuration.tsx` the parent of
+   * `_page.configuration.account.tsx`, and that parent renders no `<Outlet />`.
+   * The URL and the title were both still correct, so only coverage noticed.
+   * Comparing against the dictionary is what makes the child's absence visible.
+   */
+  it.each([
+    ['/', 'home'],
+    ['/about', 'about'],
+    ['/explore', 'explore'],
+    ['/messages', 'messages'],
+    ['/notifications', 'notifications'],
+    ['/configuration', 'configuration'],
+    ['/configuration/account', 'configuration_account'],
+    ['/doctor', 'doctor'],
+  ] as const)('%s renders its own heading', async (path, key) => {
+    const dict = await getDictionary(defaultLocale);
+    const html = await renderDocument(path);
+    const heading = /<h1[^>]*>([^<]+)<\/h1>/u.exec(html)?.[1] ?? '';
+
+    expect(heading.trim(), `${path}: rendered the wrong page's heading`).toBe(dict[key].title);
   });
 
-  it('explore page renders', async () => {
-    const element = await ExplorePage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
+  /*
+   * `/home` is a long-standing alias for the index. It resolves to the index
+   * document rather than serving one of its own.
+   */
+  it('redirects /home to the index', async () => {
+    const html = await renderDocument('/home');
+
+    expect(html).toContain('<html');
+    expect(html.match(/<main\b/gu) ?? []).toHaveLength(1);
   });
 
-  it('doctor page renders', async () => {
-    const element = await DoctorPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
+  // Outside the `_page` layout, so chrome-free — the shape a failure or
+  // interstitial document should have (docs/design/ui-shell-contract.md §15).
+  it('serves /offline without the application chrome', async () => {
+    const html = await renderDocument('/offline');
 
-  it('notifications page renders', async () => {
-    const element = await NotificationsPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('messages page renders', async () => {
-    const element = await MessagesPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('configuration page renders', async () => {
-    const element = await ConfigurationPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('account page renders', async () => {
-    const element = await AccountPage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('preference page renders', async () => {
-    const element = await PreferencePage();
-    const html = renderToStaticMarkup(element);
-    expect(html).not.toBe('');
-  });
-
-  it('home page redirects to root', () => {
-    HomePage();
-    expect(redirect).toHaveBeenCalledWith('/');
-  });
-
-  it('renders the localized navigation around page content', async () => {
-    const element = await PageLayout({ children: <p>workspace content</p> });
-    const html = renderToStaticMarkup(element);
-    expect(html).toContain('Rails health');
-    expect(html).toContain('workspace content');
+    expect(html).toContain('オフラインです');
+    expect(html).not.toContain('<header');
+    expect(html).not.toContain('<footer');
   });
 });

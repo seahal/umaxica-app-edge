@@ -1,12 +1,10 @@
+/** @jsxImportSource hono/jsx */
 import { timeout } from 'hono/timeout';
+
 import { createApexApp } from './create-apex-app';
-import { setMeta } from './seo';
-import {
-  buildRegionErrorPayload,
-  getDefaultRedirectUrl,
-  resolveRedirectUrl,
-} from './root-redirect';
 import { getAboutMeta, renderAboutContent } from './page-content';
+import { getDefaultRedirectUrl, resolveRedirectUrl } from './root-redirect';
+import { setMeta } from './seo';
 
 const app = createApexApp(
   (pageRoutes) => {
@@ -16,11 +14,12 @@ const app = createApexApp(
       if (redirectUrl) {
         return c.redirect(redirectUrl, 301);
       }
-      const defaultRedirectUrl = getDefaultRedirectUrl();
-      if (defaultRedirectUrl) {
-        return c.redirect(defaultRedirectUrl, 301);
-      }
-      return c.json(buildRegionErrorPayload(), 400);
+      // Always a URL: the default region is a constant key of `allowedUrls`.
+      // There is deliberately no rejection branch. An unrecognised `ri` is not
+      // an error to report back — it is a value that fails the allowlist, and
+      // the safe answer is the default region rather than a 400 that tells a
+      // prober its guess was parsed.
+      return c.redirect(getDefaultRedirectUrl(), 301);
     });
 
     pageRoutes.get('/about', timeout(2000), (c) => {

@@ -1,0 +1,72 @@
+# Spell checking for source, configuration and documentation.
+#
+# This is the one configuration file in this repository that is deliberately
+# repository-wide rather than per deployment unit. A dictionary is a shared
+# vocabulary by definition: twenty units spelling "umaxica" twenty
+# different ways is the failure this prevents, and a per-unit copy could not
+# see the ADRs, the docs/ tree or the root tooling at all.
+#
+# The rule for a new word: if it is a real misspelling, fix the source. If it is
+# a name — a brand, a product, a library, a protocol, an identifier this
+# codebase coined — add it to .cspell/project-words.txt under the right heading.
+# `cspell:disable` comments are not a substitute for either.
+version: '0.2'
+
+# en-GB is here because the prose in this repository already uses it
+# consistently — "behaviour", "artefacts", "initialisation", "normalises",
+# "licence", "containerised". Those are correct spellings, not project jargon,
+# so they belong in a dictionary CSpell already ships rather than in
+# .cspell/project-words.txt. Listing them as project words would have been the
+# exact anti-pattern of teaching the checker to accept whatever it found.
+language: en,en-GB
+
+# Everything git ignores is already out of scope, which covers node_modules,
+# .wrangler, coverage, dist and the generated cloudflare-env.d.ts /
+# worker-configuration.d.ts / public/style.css.
+useGitignore: true
+
+ignorePaths:
+  # The repository's own object database. `check:spelling` passes `--dot` so the
+  # dot-directories that DO hold reviewed prose are covered — .github/,
+  # .devcontainer/, .vscode/, .cspell/ — and .git/ is the one that must not be:
+  # git does not gitignore itself, so without this line CSpell decompresses
+  # every loose object and reports the base64 inside it. It is not a suppression
+  # of anything anyone wrote.
+  - .git/**
+  # Tracked, but not prose anyone wrote: a lockfile is a machine-generated index
+  # of registry tarball hashes.
+  - pnpm-lock.yaml
+  - '**/*.tsbuildinfo'
+  # Tracked binary and vendored assets.
+  - '**/*.{png,jpg,jpeg,gif,webp,avif,ico,woff,woff2,svg}'
+  # Scratch and report files that are not part of the product.
+  - '**/test-results/**'
+  - '**/playwright-report/**'
+  - tmp/**
+  - '**/*.log'
+
+dictionaryDefinitions:
+  - name: project-words
+    path: ./.cspell/project-words.txt
+    addWords: false
+    description: >-
+      Names this repository cannot spell any other way: the product and its
+      surfaces, the platforms it deploys to, and the tools in its toolchain.
+
+dictionaries:
+  - project-words
+  - typescript
+  - node
+  - npm
+  - html
+  - css
+  - bash
+  - softwareTerms
+  - filetypes
+  - companies
+  - fullstack
+
+# Identifiers routinely concatenate words without separators, and CSpell's
+# compound handling is what keeps `apexApp` or `railsDispatchLog` from being
+# reported as unknown words rather than as two known ones.
+allowCompoundWords: true
