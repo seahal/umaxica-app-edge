@@ -249,8 +249,11 @@ Base local development needs **no Cloudflare credentials** — no API token, no
 `wrangler login`, and no tunnel connector. `vpc_services` exists only in the
 explicit `env.vpc` development environment; production remains fail-closed.
 
+Start only the deployment unit you are working on; the repository root does
+not fan development servers out across workspaces.
+
 ```bash
-pnpm run dev   # every dev server, on the ports in the table above
+pnpm --dir app/core run dev
 ```
 
 This repository runs no tunnel connector. There is one connector for the whole
@@ -317,9 +320,9 @@ pnpm --dir app/core run test:e2e           # Playwright, with its own webServer
 ```
 
 `test:api` needs no running server: each unit's `api/run.mjs` starts one, waits
-for it, and stops it — and reuses one that is already listening, so
-`pnpm run dev` in another terminal keeps working. Setting `EDGE_API_BASE` targets
-an existing deployment and spawns nothing.
+for it, and stops it — and reuses one that is already listening, so a unit's
+`pnpm run dev` in another terminal keeps working. Setting `EDGE_API_BASE`
+targets an existing deployment and spawns nothing.
 
 **Vitest** runs with the `happy-dom` environment and globals enabled, from each
 unit's own `vitest.config.ts` and `vitest.setup.ts`

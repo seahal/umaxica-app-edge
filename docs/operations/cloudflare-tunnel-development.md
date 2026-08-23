@@ -219,8 +219,8 @@ Needs no credential. Nothing below stores or prints a token.
 #    In the devcontainer this is automatic — devcontainer.json reads the overlay.
 scripts/dev-start --tunnel     # only for the non-devcontainer path
 
-# 2. Start the dev servers (all of them, or `pnpm --filter <pkg> run dev` for one).
-pnpm run dev
+# 2. Start each dev server needed for this check. The root has no dev fan-out.
+pnpm --dir app/core run dev
 
 # 3. Local origins, before involving Cloudflare at all.
 pnpm run check:local          # HTTP reachability per port

@@ -166,9 +166,9 @@ The credential cost falls only on the third, which is named for what it opts
 into. ADR 005's best property — that ordinary local development needs no
 Cloudflare account — is preserved exactly.
 
-There is deliberately **no root-level `preview:vpc` fan-out**, unlike `dev`.
-Fifteen concurrent preview servers would each open their own remote-proxy
-session against Cloudflare. Run it one workspace at a time:
+There is deliberately **no root-level `preview:vpc` fan-out**. Fifteen
+concurrent preview servers would each open their own remote-proxy session
+against Cloudflare. Run it one workspace at a time:
 
 ```bash
 pnpm --filter umaxica-apps-edge-app-docs run preview:vpc

@@ -1,0 +1,28 @@
+{
+  "compatibility_date": "2026-07-25",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "name": "umaxica-apps-edge-budy-all",
+  "main": "./src/index.js",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    // Worker first on HTML so the status can be 503. Favicon stays a
+    // static 200 — it is not a document and should not look like an outage.
+    "run_worker_first": ["/*", "!/favicon.svg"],
+  },
+  "placement": {
+    "mode": "smart",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true,
+    },
+  },
+}

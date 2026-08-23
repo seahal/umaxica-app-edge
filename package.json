@@ -25,7 +25,6 @@
     "fix:deps": "syncpack fix",
     "check:spelling": "cspell lint --no-progress --gitignore --dot .",
     "check:size": "pnpm -r run check:size",
-    "dev": "pnpm -r --parallel --filter='!./dev/*' run dev",
     "deploy:app-docs:upload": "pnpm --filter umaxica-apps-edge-app-docs run deploy:upload",
     "deploy:com-docs:upload": "pnpm --filter umaxica-apps-edge-com-docs run deploy:upload",
     "deploy:org-docs:upload": "pnpm --filter umaxica-apps-edge-org-docs run deploy:upload",
