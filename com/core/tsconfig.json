@@ -23,7 +23,7 @@
     // config too. What is deliberately NOT standardised is directly above this
     // block — `target`, `module`, `lib`, `jsx`, `jsxImportSource`, `types`,
     // `plugins`, `paths` are framework mechanics and differ by design between the
-    // Next.js frames, the Hono Workers and the TanStack Start frames.
+    // TanStack Start frames and the Hono apex Workers.
     //
     // `useUnknownInCatchVariables` is not listed: TypeScript 7 implies it from
     // `strict`, and repeating a default is a line that can silently stop meaning

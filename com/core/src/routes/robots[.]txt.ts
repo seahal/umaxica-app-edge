@@ -3,10 +3,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { CANONICAL_ORIGIN } from '@/lib/canonical';
 
 /*
- * Next generated this from `src/app/robots.ts` through its Metadata Route
- * convention. TanStack has no such convention, so the file is written out — and
- * the `Content-Type` that Next inferred is now stated, because nothing else
- * will.
+ * An ordinary server route. TanStack has no metadata-file convention, so the
+ * body is written out here and the `Content-Type` is stated explicitly, because
+ * nothing else will infer it.
  *
  * The `Disallow` is this frame's own: the Core serves Rails-owned paths on the
  * same FQDN, and `/private/` is kept out of the index. The satellite frames have

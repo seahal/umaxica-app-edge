@@ -59,7 +59,8 @@ JavaScript that oxlint's rule also covers. Remove neither until §4 changes.
 `pre-push` runs cheapest-first so a one-word mistake is reported in under a
 second rather than after the test suite; the measured costs are listed in
 `lefthook.yml`. Size Limit is absent from both hooks because it would require
-building sixteen Next.js units before every push — a cost CI already pays.
+building all twenty units before every push — a cost CI already pays. `vite
+build` is fast, but twenty of them is still twenty.
 
 Every CI step is `pnpm run <script>` or `pnpm -C <dir> run <script>`. No tool
 flags live in `.github/workflows/integration.yaml`, so a red check is reproduced
@@ -130,33 +131,41 @@ owners above do not.
 
 ## 5. Performance budget
 
-Measured with Size Limit (gzip) on 2026-08-18, against each unit's own build
-output. Budget is baseline + 10%, rounded up: enough headroom that a dependency
-bump does not fail the gate, tight enough that a stray client component does.
+Measured with Size Limit (gzip) against each unit's own build output. Budget is
+baseline + 10%, rounded up: enough headroom that a dependency bump does not fail
+the gate, tight enough that a stray client component does.
+
+The frame figures were measured on 2026-08-23 and the apex figures on
+2026-08-18. `adr/013-frames-tanstack-start.md` records where the frame numbers
+came from and what they replaced.
 
 | Unit                                       | Baseline  | Budget |
 | ------------------------------------------ | --------- | ------ |
-| `{app,com,org}/{docs,help,info,news}` (12) | 184.42 kB | 205 kB |
-| `com/core`                                 | 197.67 kB | 218 kB |
-| `org/core`                                 | 197.6 kB  | 218 kB |
-| `app/core`                                 | see below | 218 kB |
+| `{app,com,org}/{docs,help,info,news}` (12) | 101.84 kB | 112 kB |
+| `{app,com,org}/core` (3)                   | 117.3 kB  | 129 kB |
 | `{app,com,dev,net,org}/apex` (5)           | 502 B     | 560 B  |
+
+The twelve satellites measured within 0.1 kB of each other and the three cores
+were identical, so each group carries one budget rather than three or twelve.
+The frames measure `dist/client/assets/**/*.js`, which is where Vite writes the
+hashed client chunks.
 
 `dev/acme` used to hold the largest budget in this table, 300.96 kB against
 335 kB, almost all of it the Sentry SDK. It was deleted along with the rest of
 the Vercel surface; `umaxica.dev` is now served by `dev/apex`, which is a Hono
 Worker on the apex archetype and measures 502 B like its four siblings.
 
-`app/core` could not be measured locally: its development environment binds a
+`app/core` used to be unmeasurable locally: its development environment binds a
 Workers VPC Service, which wrangler refuses to simulate and can only proxy after
-an interactive `wrangler login`, so `next build` aborts in a container without
-credentials. Its budget is taken from `com/core` and `org/core`, which share its
-component tree and measured within 0.04% of each other. CI's build job produces
-the first measurement of `app/core`'s own bundle.
+an interactive `wrangler login`, so the build aborted in a container without
+credentials. Each frame's `vite.config.ts` passes `remoteBindings: false` unless
+`CLOUDFLARE_ENV=vpc`, so `app/core` builds and measures locally like its two
+siblings.
 
-`dev/apex` has no entry and no `.size-limit.json`: `src/app.ts` renders HTML from
-template literals and `public/` holds only `style.css`, so it serves no browser
-JavaScript to measure.
+`dev/apex` used to have no entry and no `.size-limit.json`, because it rendered
+HTML from template literals on Vercel and served no browser JavaScript. It is an
+apex Worker on Cloudflare now and carries the same 502 B / 560 B entry as the
+other four.
 
 The apex figure is not a bundler output. It is two hand-written static files —
 `service-worker.js` and `service-worker-register.js` — and the budget exists so
@@ -169,7 +178,7 @@ purpose.
 Chrome. Neither `Containerfile` nor the workflow installs a browser binary —
 the same reason `test:e2e` is not a CI gate. Only `size-limit` and
 `@size-limit/file` are installed. The webpack and esbuild plugins are not needed
-either: Next.js and wrangler have already bundled everything being measured.
+either: Vite has already bundled everything being measured.
 
 ## 6. Configuration files
 
@@ -210,7 +219,7 @@ which of the five it _is_ and what would let it be removed.
 
 Two live examples of the bar:
 
-- `react-aria-components` in the twelve leaf Next units' `ignoreDependencies` is
+- `react-aria-components` in the twelve satellite frames' `ignoreDependencies` is
   case 5-in-waiting, not an exemption: it is installed ahead of use so the
   archetypes cannot diverge on the component library, and the comment says to
   remove the entry from the first unit that gains a consumer.

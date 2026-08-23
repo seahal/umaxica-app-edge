@@ -10,7 +10,7 @@
  * caller.
  *
  * Consumed only by `src/worker.ts`, which is the first code the Workers
- * runtime invokes for every request — before any Next.js/OpenNext code runs.
+ * runtime invokes for every request — before any application code runs.
  */
 import {
   classifyRailsRouteClass,
@@ -83,13 +83,14 @@ const RAILS_OWNED_EXACT = new Set([
 ]);
 
 /*
- * Blocked at the edge: reachable by neither Rails nor Next.js.
+ * Blocked at the edge: reachable by neither Rails nor the application.
  *
  * Deliberately scoped to `/health/` WITH a further path segment, and matched by
  * a raw `startsWith` rather than by `matchesPrefix()` below. That asymmetry is
- * load-bearing: it is what lets the exact path `/health` fall through to NEXT
- * and serve the unified Edge+Rails health document, while `/health/anything`
- * still 404s before either Rails or Next.js is invoked.
+ * load-bearing: it is what lets the exact path `/health` fall through to the
+ * APPLICATION and serve the unified Edge+Rails health document, while
+ * `/health/anything` still 404s before either Rails or the application is
+ * invoked.
  */
 const BLOCKED_PREFIX = '/health/';
 
@@ -145,7 +146,7 @@ export function blockedCoreResponse(): Response {
  */
 function railsUnavailableResponse(reason: 'not-configured' | 'upstream'): Response {
   // Fail closed, visibly — same principle as `getRailsClient()` returning
-  // `null`. Never falls through to Next.js, never silently succeeds against
+  // `null`. Never falls through to the application, never silently succeeds against
   // a dev resource in production.
   const body =
     reason === 'not-configured' ? 'Rails transport not configured' : 'Rails upstream unavailable';
@@ -252,7 +253,7 @@ function buildRailsRequest(request: Request, incomingUrl: URL): Request {
 /**
  * Dispatches a Rails-owned browser request over the Workers VPC binding.
  *
- * Never calls into Next.js/OpenNext — not on success and not on any failure.
+ * Never calls into the application — not on success and not on any failure.
  * When Rails answers, its response is returned unchanged (status, `Location`,
  * `Set-Cookie`, body, content-type, cache headers), including a 404, a 405 or a
  * 500 of its own making.

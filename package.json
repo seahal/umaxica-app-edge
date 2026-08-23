@@ -8,6 +8,8 @@
     "format:check": "pnpm -r run format:check && oxfmt --check .",
     "lint": "pnpm -r run lint && oxlint --report-unused-disable-directives .",
     "check:workers": "node tools/check-workers.mjs",
+    "login": "scripts/wrangler-login",
+    "login:device": "scripts/wrangler-login --device",
     "check:connectivity": "node tools/verify-edge-connectivity.mjs all",
     "check:config": "node tools/verify-edge-connectivity.mjs config",
     "check:vpc": "node tools/verify-edge-connectivity.mjs vpc",

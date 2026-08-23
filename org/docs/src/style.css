@@ -14,11 +14,9 @@
 
 @import 'tailwindcss';
 /*
- * Inter, self-hosted. `next/font/google` used to download it at build time and
- * inject `--font-inter` as a class on `<html>`; a Vite unit has no equivalent,
- * and the CSP is `font-src 'self' data:`, so a CDN is not an option either.
- * The package ships the woff2 files and the `@font-face` rules, and Vite
- * fingerprints them into the client build like any other asset.
+ * Inter, self-hosted. The CSP is `font-src 'self' data:`, so a CDN is not an
+ * option: this package ships the woff2 files and the `@font-face` rules, and
+ * Vite fingerprints them into the client build like any other asset.
  */
 @import '@fontsource-variable/inter';
 
@@ -46,11 +44,11 @@
    * is unreachable. Every named face therefore comes first, and the generic
    * keywords are the last resort they are meant to be.
    *
-   * `--font-inter` is now a plain token set right below rather than a class
-   * `next/font` put on `<html>`, so every document on this unit gets the same
-   * stack — including the 404 and the error page, which render inside the same
-   * root shell. The fallback inside `var()` is kept anyway: it costs nothing and
-   * keeps the declaration valid if the token is ever removed.
+   * `--font-inter` is a plain token set right below rather than a class on one
+   * element, so every document on this unit gets the same stack — including the
+   * 404 and the error page, which render inside the same root shell. The
+   * fallback inside `var()` costs nothing and keeps the declaration valid if the
+   * token is ever removed.
    */
   --font-inter: 'Inter Variable';
   --font-sans:

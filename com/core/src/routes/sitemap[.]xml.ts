@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { CANONICAL_ORIGIN } from '@/lib/canonical';
 
 /*
- * One entry, matching what `src/app/sitemap.ts` produced. The `<loc>` carries no
+ * One entry. The `<loc>` carries no
  * trailing slash, which is how this frame has always advertised itself and is
  * the one place it differs from the satellites.
  */

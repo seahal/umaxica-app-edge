@@ -4,9 +4,11 @@
 
 （ ＾ν＾） Hello, World!
 
-A multi-domain monorepo of Next.js applications deployed to Cloudflare Workers
-and Vercel, spanning three domain families: `umaxica.com` (corporate),
-`umaxica.app` (service), and `umaxica.org` (staff).
+A multi-domain monorepo of Cloudflare Workers applications — fifteen TanStack
+Start frames and five Hono apex Workers — spanning three domain families:
+`umaxica.com` (corporate), `umaxica.app` (service), and `umaxica.org` (staff),
+plus the `umaxica.net` and `umaxica.dev` apexes. Every unit builds with Vite and
+runs on workerd; nothing here deploys to Vercel any more.
 
 ## Prerequisites
 
@@ -40,8 +42,8 @@ and Vercel, spanning three domain families: `umaxica.com` (corporate),
 | `dev/apex` | Apex/static worker  | `umaxica.dev`      | 5501     |
 
 `{com,org,app}/apex` are lightweight Hono workers (root redirect, `/health`,
-`/about`); `{com,org,app}/core` are the Next.js applications behind them at
-regional subdomains. Cloudflare's custom domain for each apex root
+`/about`); `{com,org,app}/core` are the TanStack Start applications behind
+them at regional subdomains. Cloudflare's custom domain for each apex root
 (`umaxica.com` / `.org` / `.app`) must point at the `*-apex` Worker, not
 `*-core` — reassigning production domain routing is a Cloudflare
 dashboard/DNS change outside this repo and must be coordinated before
@@ -77,7 +79,8 @@ podman compose up -d && podman compose exec core bash
 ## Scripts
 
 The toolchain is plain pnpm scripts backed by standalone Oxfmt, Oxlint, tsc,
-Vitest, Hurl and Playwright — nothing wraps `next dev` / `next build`.
+Vitest, Hurl and Playwright. The only build tool is Vite, and nothing wraps it:
+a script calls `vite build` directly, never a framework CLI on top of it.
 
 Every deployment unit exposes the same script contract, and the root scripts are
 thin `pnpm -r` fan-outs over them plus the repository-level files:
@@ -93,7 +96,7 @@ pnpm run test            # each unit's Vitest run, then the root invariant suite
 pnpm run test:cov        # same, with per-unit coverage thresholds
 pnpm run test:api        # each unit's Hurl suite, one unit at a time
 pnpm run test:e2e        # each unit's Playwright run, one unit at a time
-pnpm run build           # each unit's native build (Wrangler / OpenNext / Next)
+pnpm run build           # each unit's `vite build` — all twenty, one bundler
 pnpm run check           # check:static + test
 pnpm run check:static    # format:check + lint + lint:types + check:generated
                          #   + typecheck + knip + check:workers
@@ -125,7 +128,9 @@ enforces this.
 | Tool                                                            | Role                                 | Version |
 | --------------------------------------------------------------- | ------------------------------------ | ------- |
 | [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.22.0 |
-| [Next.js](https://nextjs.org/)                                  | Framework, dev server, build         | 16.x    |
+| [Vite](https://vite.dev/)                                       | Dev server & production build        | 8.2.x   |
+| [TanStack Start](https://tanstack.com/start)                    | Framework, the fifteen frames        | 1.168.x |
+| [Hono](https://hono.dev/)                                       | Framework, the five apex Workers     | 4.13.x  |
 | [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.63.x  |
 | [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.78.x  |
 | [TypeScript](https://www.typescriptlang.org/)                   | Type checker (`pnpm run typecheck`)  | 7.0.x   |
@@ -324,14 +329,13 @@ Two caveats worth knowing before a first run:
 
 - **Playwright browsers are not installed** by the image or by CI. Run
   `pnpm exec playwright install chromium` once before `test:e2e`.
-- **`dev/apex` has no `test:api`**, and this is the single exception to the
-  split above. Its only server is `vercel dev`, which blocks on interactive
-  device authentication without a linked project, so no Hurl suite can run in CI
-  or a clean checkout. Its HTTP assertions stay in Vitest; the header of
-  `dev/apex/test/app.test.ts` records why and what would retire them.
+- **There is no longer an exception to the split.** `dev/apex` used to have no
+  `test:api`, because its only server was `vercel dev`, which blocks on
+  interactive device authentication. It runs on Workers with `vite dev` now, so
+  it carries the same Hurl suite as every other apex.
 
-CI runs `test:api` for the other twenty units. It does not run `test:e2e`, for
-the browser reason above.
+CI runs `test:api` for all twenty units. It does not run `test:e2e`, for the
+browser reason above.
 
 ## TypeScript
 
@@ -345,10 +349,13 @@ Module resolution is `Bundler`.
 
 ## Production Environment
 
-| Platform                                              | Workspaces                | Domains                                     |
-| ----------------------------------------------------- | ------------------------- | ------------------------------------------- |
-| [Cloudflare Workers](https://workers.cloudflare.com/) | `com/*`, `app/*`, `org/*` | `umaxica.com`, `umaxica.app`, `umaxica.org` |
-| [Vercel](https://vercel.com/)                         | `dev/*`                   | `umaxica.dev`                               |
+| Platform                                              | Workspaces                                                     | Domains                                                                   |
+| ----------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Cloudflare Workers](https://workers.cloudflare.com/) | all twenty — `app/*`, `com/*`, `org/*`, `net/apex`, `dev/apex` | `umaxica.app`, `umaxica.com`, `umaxica.org`, `umaxica.net`, `umaxica.dev` |
+
+There is no second platform. `dev/apex` moved from Vercel to Workers and
+`dev/acme` was deleted (`adr/012-apex-vite-build-and-static-assets.md`), so every
+deployable unit in this repository is a Cloudflare Worker built by Vite.
 
 ### Deployment
 
@@ -384,19 +391,23 @@ Notes:
   production and there is deliberately no `env.production`, so a deploy command of
   `pnpm --dir org/core exec wrangler versions upload` fails with
   `No environment found in configuration with name "production"`. A raw
-  `wrangler versions upload` is wrong for the OpenNext workspaces for a second
-  reason: it uploads `main` (`src/worker.ts`) instead of the built
-  `.open-next/worker.js`. Configure the Workers Builds commands as:
+  `wrangler versions upload` is wrong for a second reason too: `vite build`
+  writes the deployable config to `dist/server/wrangler.json` and points
+  `.wrangler/deploy/config.json` at it, so wrangler only uploads the built
+  Worker and its hashed assets if the build ran first. Passing
+  `--config wrangler.jsonc` bypasses that redirect and uploads the INPUT config,
+  whose `main` is the unbundled source. Configure the Workers Builds commands
+  as:
 
   ```text
   Build command:   pnpm --dir org/core run build
   Deploy command:  pnpm --dir org/core run upload:ci
   ```
 
-  `upload:ci` is `CLOUDFLARE_ENV= opennextjs-cloudflare upload` — it blanks the
-  injected variable and uploads the output the build step already produced. Every
-  deployable workspace defines `upload:ci`; for the Hono apex workspaces it is
-  `CLOUDFLARE_ENV= wrangler versions upload --config wrangler.jsonc`. Keep it in
+  `upload:ci` is `pnpm run build && CLOUDFLARE_ENV= wrangler versions upload` —
+  it builds, blanks the injected variable and uploads the output the build step
+  just produced. All twenty deployable workspaces define it, and since every one
+  of them builds with Vite the definition is now identical in each. Keep it in
   place when adding a workspace, and substitute the workspace path in both
   commands above.
 
@@ -416,13 +427,15 @@ cross-workspace link target.
 
 ## Surface Architecture
 
-Core workspaces stay on Next.js. They own RP/BFF behavior, authenticated UI,
-React Aria surfaces, logged-in state, and account, organization, and avatar
-operations.
+Core workspaces run TanStack Start on Cloudflare Workers. They own RP/BFF
+behavior, authenticated UI, React Aria surfaces, logged-in state, and account,
+organization, and avatar operations.
 
-Public information workspaces (`docs`, `news`, `info`, and `help`) also use
-Next.js and OpenNext on Cloudflare Workers. They are limited to public content,
-read-only content APIs, SSG/SSR, and image optimization.
+Public information workspaces (`docs`, `news`, `info`, and `help`) run the same
+stack. They are limited to public content and read-only content APIs. Every HTML
+route is server-rendered per request — there is no prerendering and no image
+optimization layer, because the security headers and the rate limiter in each
+frame's `src/server.ts` only apply to requests the Worker actually sees.
 
 Rails Core/Base remains the source of truth for policy, mutation, authority,
 and content JSON APIs. Public information surfaces may consume only public,

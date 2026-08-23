@@ -15,8 +15,6 @@ export const Route = createRootRoute({
     /*
      * There is deliberately NO title here.
      *
-     * Next's `metadata.title.template` let a root default and a page title
-     * coexist because Next resolved them into one string. TanStack's
      * `<HeadContent />` renders the head tags of every matched route, and React
      * hoists a `<title>` a component renders on top of that — so a root title
      * plus a not-found document's own title produces TWO `<title>` elements, and
@@ -44,8 +42,8 @@ export const Route = createRootRoute({
 });
 
 /*
- * The shell. `next/font` is gone, so `<html>` carries no font class — the stack
- * comes from `--font-sans` in `style.css` for every document on this unit.
+ * The shell. `<html>` carries no font class — the stack comes from `--font-sans`
+ * in `style.css` for every document on this unit.
  *
  * A flex column so `<main>`'s `flex-1` pushes the footer to the bottom of a
  * short page without anyone measuring a viewport.
@@ -70,14 +68,15 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
          * renders exactly one `<main>`, and a second would break the document
          * landmarks.
          *
-         * Unlike the Next.js original, the failure documents render INSIDE this
-         * shell rather than replacing it, so they now carry the header and
-         * footer. `global-error.tsx` and `global-not-found.tsx` replaced the
-         * layout and were chrome-free; TanStack renders `notFoundComponent` and
-         * `errorComponent` within the root document, and reproducing the old
-         * shape would mean branching the one component that must never itself
-         * throw. Recorded as a deliberate regression in
-         * plans/info-nextjs-to-tanstack-start.md §28.
+         * The failure documents render INSIDE this shell rather than replacing
+         * it, so they carry the header and the footer. That is a property of
+         * this archetype: `notFoundComponent` and `errorComponent` render within
+         * the root document, and giving them a chrome-free document instead
+         * would mean branching the one component that must never itself throw.
+         * The three Cores put their shell on a pathless layout route and so do
+         * get chrome-free failure documents — an allowed archetype difference,
+         * recorded in `docs/design/ui-shell-contract.md` §15 and
+         * `adr/013-frames-tanstack-start.md`.
          */}
         <SiteHeader />
         {children}

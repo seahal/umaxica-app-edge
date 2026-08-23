@@ -301,10 +301,11 @@ function checkViteWorker(ws, config) {
 // never committed passes every local check and then vanishes from CI's clean
 // clone. Presence alone is therefore not enough: these have to be IN GIT.
 //
-// This is why the apex workers are checked too. They serve `public/` directly
-// (`assets.directory: ./public`), so for them the directory IS the deployed
-// surface; the OpenNext units build into `.open-next/assets` and copy from
-// `public/`, which makes `public/` the source of truth in both cases.
+// This is why the apex workers are checked too. Every unit now builds with Vite,
+// which copies `public/` into `dist/client` and hands that directory to
+// `assets.directory` in the OUTPUT wrangler.json — so `public/` is the source of
+// truth for the deployed asset surface in every unit, and a file missing from git
+// is a file missing from the deploy.
 const trackedFiles = (() => {
   let cache = null;
   return () => {

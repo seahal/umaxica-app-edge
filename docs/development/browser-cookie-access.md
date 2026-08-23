@@ -5,8 +5,8 @@ has to read or write a cookie, what does it use?** The answer is the Cookie
 Store API — the global `cookieStore` — and nothing else. No cookie library, and
 not `document.cookie`.
 
-It says nothing about the server. Hono, Next.js on the server, and Rails keep the
-cookie handling they have.
+It says nothing about the server. Hono, the frames' server side, and Rails keep
+the cookie handling they have.
 
 ## 1. What exists today
 
@@ -14,25 +14,25 @@ Nothing in a browser touches a cookie in this repository. That is not an
 oversight, it is the current architecture, and it is worth stating precisely so
 the next reader does not go looking for the module this file is about:
 
-- **No cookie library is a dependency of any unit.** All twenty-one workspaces
-  declare `hono`, `next`, `react`, `react-aria-components`, `react-dom`,
-  `server-only`, `@opennextjs/cloudflare` and `@sentry/nextjs` — and no cookie
-  package. The `cookie`, `cookie-signature` and `tough-cookie` entries in
+- **No cookie library is a dependency of any unit.** All twenty workspaces
+  declare `hono` or `@tanstack/react-start`, `react`, `react-aria-components`
+  and `react-dom` — and no cookie package. The `cookie`, `cookie-signature` and `tough-cookie` entries in
   `pnpm-lock.yaml` arrive transitively through devDependencies — `express` and
   `jsdom` among them — and none reaches a browser bundle.
 - **`document.cookie` appears nowhere**, and neither does `localStorage` or
-  `sessionStorage`. The client components that exist — `error.tsx`,
-  `global-error.tsx`, `service-worker-registration.tsx`, `app-chrome.tsx` — read
-  no storage of any kind.
-- **The only cookie in the running system is `language`**, and it is written by
-  Hono, not by us. `*/apex/src/create-apex-app.ts` mounts
+  `sessionStorage`. The client components that exist — `status-documents.tsx`,
+  `service-worker-registration.tsx`, `app-chrome.tsx` — read no storage of any
+  kind.
+- **The only cookie anything in this repository writes is `language`**, and it
+  is written by Hono, not by us. (The apex workers also _read_ a `theme` cookie
+  in `src/theme.ts` to force a colour scheme, but nothing here sets it.) `*/apex/src/create-apex-app.ts` mounts
   `languageDetector({ supportedLanguages: [...locales], fallbackLanguage: 'en' })`,
   whose un-overridden defaults set the cookie `HttpOnly`, `Secure`,
   `SameSite=Strict`, `Max-Age=31536000`. `*/apex/api/i18n.hurl` pins the first,
   third and fourth of those, plus the querystring → cookie → header precedence.
-- **The Core workers delete cookies in both directions on the Next-owned path.**
-  `{app,com,org}/core/src/worker.ts` strips `cookie` from the request before
-  OpenNext sees it and `set-cookie` from the response before the browser does;
+- **The Core workers delete cookies in both directions on the frame-owned path.**
+  `{app,com,org}/core/src/worker.ts` strips `cookie` from the request before the
+  frame sees it and `set-cookie` from the response before the browser does;
   `*/src/lib/rails-client.ts` strips `cookie` from every server-to-server call.
   ADR 007 is normative on why.
 
@@ -67,19 +67,19 @@ scopes — so a cookie can be observed rather than polled.
 ## 3. What this rule does not change
 
 The server keeps what it has. `hono/cookie`, the `languageDetector` middleware in
-the four apex workers, any future Next.js server-side cookie access, and every
+the apex workers, any future server-side cookie access inside a frame, and every
 cookie Rails sets or reads are all outside this rule's scope. It governs code
 that runs in a browser tab or a service worker, and nothing else.
 
 ADR 007's cookie boundary also stands, and it has a consequence that is easy to
 walk into:
 
-> **A cookie that browser JavaScript can see cannot be issued by Next.js.**
+> **A cookie that browser JavaScript can see cannot be issued by a frame.**
 
-`{app,com,org}/core/src/worker.ts` deletes every `Set-Cookie` from the Next-owned
-response, and `Headers.delete()` in Workers removes all values, not the first. A
-Route Handler or Server Action that sets a cookie will appear to work locally and
-emit nothing through the Worker. The two surfaces that can issue a cookie to a
+`{app,com,org}/core/src/worker.ts` deletes every `Set-Cookie` from the
+frame-owned response, and `Headers.delete()` in Workers removes all values, not
+the first. A server route or server function that sets a cookie will appear to
+work locally and emit nothing through the Worker. The two surfaces that can issue a cookie to a
 browser are the apex workers (Hono) and Rails, reached through the Rails-owned
 path prefixes listed in ADR 007.
 
@@ -124,5 +124,5 @@ This file records how to do it, not a request to do it. No `cookie-store.ts`
 wrapper, no typed cookie-name registry and no client/server shared constant
 should be written before a feature needs one — a wrapper with no consumer is the
 speculative abstraction YAGNI exists to prevent, and it would have to be
-duplicated across up to twenty-one units to boot. Write the smallest thing the
+duplicated across up to twenty units to boot. Write the smallest thing the
 first real feature needs, at that point, in that unit.

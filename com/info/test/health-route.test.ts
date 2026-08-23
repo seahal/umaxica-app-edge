@@ -11,10 +11,8 @@ const GET = handlers.health;
  *
  * This file replaced `test/rails-health-route.test.ts`, deleted along with the
  * `/rails-health` route it covered. It is byte-identical across all fifteen
- * frames, like the route it tests. `com/info` is the first frame to leave that
- * family, so the assertions below are unchanged and only the way the environment
- * is installed differs: `cloudflare:workers` exposes a plain `env` object where
- * OpenNext exposed a `getCloudflareContext()` call that could throw.
+ * frames, like the route it tests. The environment is installed through
+ * `cloudflare:workers`, which exposes a plain `env` object.
  */
 
 const REVISION = { id: 'rev-id', tag: 'rev-tag', timestamp: 'built-at' };

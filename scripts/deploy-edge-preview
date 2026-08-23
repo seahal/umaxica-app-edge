@@ -51,10 +51,14 @@ run_wrangler() {
   shift
   (
     cd "$repository_root/$worker_directory"
+    # No `--config`: `vite build` writes the deployable config to
+    # dist/server/wrangler.json and points .wrangler/deploy/config.json at it.
+    # Naming wrangler.jsonc explicitly bypasses that redirect and uploads the
+    # INPUT config, whose `main` is unbundled source and which declares no
+    # `assets.directory`.
     CLOUDFLARE_ACCOUNT_ID="$expected_account_id" \
       CLOUDFLARE_ENV= \
-      OPEN_NEXT_DEPLOY=true \
-      pnpm exec wrangler "$@" --config wrangler.jsonc
+      pnpm exec wrangler "$@"
   )
 }
 
@@ -71,7 +75,7 @@ if [[ "$bootstrap_option" != '--bootstrap-missing' ]] ||
   exit 1
 fi
 
-echo "Worker is absent; bootstrapping only $worker_directory with its explicit Wrangler config."
+echo "Worker is absent; bootstrapping only $worker_directory."
 run_wrangler "$worker_directory" deploy
 run_wrangler "$worker_directory" versions upload
 

@@ -12,11 +12,10 @@ import { Button } from 'react-aria-components';
  * bar without the header participating in that decision.
  *
  * This is the one stateful component the shell needs: the menu is a disclosure,
- * and a disclosure has state. It carried a `'use client'` directive under Next,
- * which marked the Server/Client Component boundary; there is no such boundary
- * here — every component is rendered on the server and hydrated — so the
- * directive is gone rather than kept as decoration. Labels still arrive as plain
- * strings, so the dictionary is never sent to the client.
+ * and a disclosure has state. There is no Server/Client Component boundary in
+ * this stack — every component is rendered on the server and hydrated — so it
+ * carries no directive. Labels arrive as plain strings, so the dictionary is
+ * never sent to the client.
  *
  * The trigger is `react-aria-components`' `<Button>`, which renders a real
  * `<button type="button">` and normalises press across mouse, touch, pen and
@@ -40,9 +39,8 @@ import { Button } from 'react-aria-components';
 export type NavigationLink = {
   /*
    * `to`, not `href`: TanStack's `<Link>` takes the route it navigates to and
-   * types it against the generated route tree, which is what `typedRoutes` in
-   * `next.config.ts` used to buy — a path no route serves is now a type error at the
-   * call site rather than a 404 in a browser.
+   * types it against the generated route tree, so a path no route serves is a
+   * type error at the call site rather than a 404 in a browser.
    */
   to: string;
   label: string;

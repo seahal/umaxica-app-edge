@@ -42,32 +42,32 @@ capability:
 
 A file here asserts what an HTTP client can observe and nothing it cannot:
 status, headers, body structure, and the semantic values inside the body. It
-does not import from `src/`, and it does not call a route handler — importing
-`GET` from `src/app/health/route.ts` and awaiting it is a component-level tool,
-and using it here would erase the boundary this directory exists to draw.
+does not import from `src/`, and it does not call a route handler — importing the
+server route from `src/routes/health.ts` and awaiting it is a component-level
+tool, and using it here would erase the boundary this directory exists to draw.
 
-The reverse also holds: a Vitest file may still invoke a route handler or
-`middleware()` directly when the thing under test is **not** reachable over HTTP
-— an injected VPC binding that makes Rails time out, a rate limiter that refuses,
-a `connection()` boundary. There the call is the driver and the assertion is
+The reverse also holds: a Vitest file may still invoke a server route or the
+request boundary directly when the thing under test is **not** reachable over
+HTTP — an injected VPC binding that makes Rails time out, a rate limiter that
+refuses, a Workers binding. There the call is the driver and the assertion is
 elsewhere. When the assertion is on the response itself, it belongs here.
 
 ## Why a real client finds things an in-process call cannot
 
-Calling `GET()` builds a bare `Request` and returns a bare `Response`: no
-connection, no cookie jar, no `next.config.ts`, no middleware chain and no state
-between calls. Most of what this directory asserts is invisible from there.
+Calling a route function directly builds a bare `Request` and returns a bare
+`Response`: no connection, no cookie jar, no server entry, no rate limiter and no
+state between calls. Most of what this directory asserts is invisible from there.
 
 `security-headers.hurl` is the clearest case. The headers come from
-`imageFontSecurityHeaders` in `security-headers.ts`, and the test this file
-replaced imported that function and checked the array it returned — which is to
-say, it checked that a literal equals itself. Nothing in it went through
-`next.config.ts`, so it would have stayed green if the `headers()` wiring had
-been deleted outright.
+`securityHeaders()` in `security-headers.ts`, applied by `withSecurityHeaders()`
+at the request boundary, and the test this file replaced imported the first
+function and checked the array it returned — which is to say, it checked that a
+literal equals itself. Nothing in it went through the wiring, so it would have
+stayed green if that wiring had been deleted outright.
 
 One assertion did come back to Vitest, in
 `test/content-security-policy.test.ts`, and the reason is the mirror image:
-`script-src` carries `'unsafe-eval'` under `next dev` and must not carry it in a
+`script-src` carries `'unsafe-eval'` under `vite dev` and must not carry it in a
 build, and the server this runner starts is a dev server. The development policy
 is asserted here, on a real response; the production one is unobservable from
 here at any depth, so the branch that produces it is asserted there instead.

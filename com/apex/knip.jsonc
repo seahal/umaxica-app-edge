@@ -9,8 +9,8 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
 
   // The runtime entrypoint is read from wrangler.jsonc by Knip's wrangler
-  // plugin, and Next.js filesystem routes from next.config.ts by its next
-  // plugin. Only what neither plugin can see is listed here.
+  // plugin, and the build graph from vite.config.ts by its vite plugin. Only
+  // what neither plugin can see is listed here.
   "entry": ["test/**/*.test.{ts,tsx}", "e2e/**/*.spec.ts"],
 
   "project": ["**/*.{ts,tsx,css}"],
@@ -21,11 +21,6 @@
   // but it is a version-resolution concern rather than an unused-code one, so
   // it is excluded here and tracked as a boundary finding instead.
   "exclude": ["catalogReferences"],
-
-  // `tailwindcss` and `@tailwindcss/cli` are used only from the `build:css`
-  // script and from CSS (`@import 'tailwindcss'` in src/style.css). Knip reads
-  // scripts for binaries but does not parse CSS at-rules, so both are named
-  // here rather than reported unused.
 
   // Types and constants that a module exports as part of its own public surface
   // and also consumes internally (e.g. RailsClientInit, DEFAULT_BRAND_SEPARATOR)

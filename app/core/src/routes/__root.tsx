@@ -37,11 +37,10 @@ export const Route = createRootRoute({
 /*
  * The bare document, with no application chrome.
  *
- * This is the same split the Next.js version had: the root layout supplied
- * `<html>` and `<body>` only, and the header, navigation and footer lived on the
- * `(page)` route group's layout so that the status surfaces outside that group
- * stayed chrome-free. `src/routes/_page.tsx` is that group, and the not-found
- * and error documents sit outside it — so, unlike the satellite frames, this
+ * The split is deliberate: this root supplies `<html>` and `<body>` only, and
+ * the header, navigation and footer live on the pathless `src/routes/_page.tsx`
+ * layout route so that the status surfaces outside it stay chrome-free. The
+ * not-found and error documents sit outside it — so, unlike the satellite frames, this
  * frame's failure documents keep exactly the shape they had.
  */
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {

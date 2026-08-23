@@ -9,11 +9,10 @@ import { components, handlers, renderDocument } from './utils/routes';
 /*
  * The failure and recovery surfaces.
  *
- * Next had three documents here — `error.tsx` inside the layout, plus
- * `global-error.tsx` and `global-not-found.tsx` which replaced it. TanStack
- * renders `errorComponent` and `notFoundComponent` inside the root shell, so
- * there are two now and both carry the shell. That is a deliberate, recorded
- * change in what a reader sees; what has not changed is the copy, the status
+ * `errorComponent` and `notFoundComponent` both render inside the root shell on
+ * this archetype, so both carry the header and the footer — a deliberate
+ * difference from the Cores, recorded in `docs/design/ui-shell-contract.md` §15.
+ * What that does not change is the copy, the status
  * each document stands for, and the reset control's behaviour.
  */
 function clickButton(container: HTMLElement, label: string) {
@@ -47,8 +46,7 @@ describe('status surfaces', () => {
     const html = await renderDocument('/this-route-does-not-exist');
 
     expect(html).toContain('HTTP 404');
-    // The one visible change from the Next.js original: the 404 used to replace
-    // the layout and render chrome-free. It now carries the shell.
+    // On this archetype the 404 carries the shell — see the header of this file.
     expect(html).toContain('本文へスキップ');
     expect(html.match(/<(header|main|footer)\b/gu)).toEqual(['<header', '<main', '<footer']);
   });

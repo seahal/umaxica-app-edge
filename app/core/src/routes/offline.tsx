@@ -3,9 +3,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { brandTitle } from '@/lib/title';
 
 /*
- * Outside `_page`, so it carries no application chrome — the shape it had as
- * `src/app/offline/page.tsx`, which sat outside the `(page)` route group for the
- * same reason.
+ * Outside `_page`, so it carries no application chrome. That is deliberate: a
+ * recovery document with navigation in it is worse than one without
+ * (`docs/design/ui-shell-contract.md` §15).
  *
  * The service worker caches this document at install and serves it for a failed
  * navigation, so it must stay reachable as an ordinary route.

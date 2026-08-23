@@ -1,14 +1,15 @@
-# This unit is TanStack Start on Vite, not Next.js
+# This unit is TanStack Start on Vite
 
-`app/docs` was the first frame to leave Next.js + `@opennextjs/cloudflare`. It
-builds with Vite and `@cloudflare/vite-plugin` and runs on workerd, like the apex
-Workers do. The remaining frames still build through Next.js, so do not copy a
-pattern from a sibling frame without checking which of the two it is.
+`app/docs` builds with Vite and `@cloudflare/vite-plugin` and runs on workerd, like
+every one of the twenty deployment units in this repository. Every frame runs the
+same stack, so a pattern copied from a sibling frame is current.
 
-This file used to carry a `<!-- BEGIN:nextjs-agent-rules -->` block that
-`next dev` wrote and re-added on every run. Nothing regenerates it now, and
-leaving it would have pointed readers at `node_modules/next/dist/docs/` in a unit
-with no `next` dependency at all.
+What a sibling can differ in is **archetype**. This unit is a satellite: its
+shell is wired into `src/routes/__root.tsx`, so the 404, the 500 and `/offline`
+render inside it and carry the header, the footer and the skip link. The three
+Cores put their shell on a pathless `_page.tsx` layout route instead, so their
+failure documents render bare. Check which one you are reading before copying a
+route or a shell change; `docs/design/ui-shell-contract.md` §15 is normative.
 
 TanStack Start is at Release Candidate, and its API moves quickly. Read the
 current documentation rather than working from memory:
@@ -38,5 +39,5 @@ current documentation rather than working from memory:
 - **No `assets.directory` in `wrangler.jsonc`.** `vite build` writes it into the
   output config; see `adr/012-apex-vite-build-and-static-assets.md`.
 
-`plans/info-nextjs-to-tanstack-start.md` is the full record, including what got
-worse.
+`adr/013-frames-tanstack-start.md` is the decision record, including what got
+worse and the four constraints this stack is used under.

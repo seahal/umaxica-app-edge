@@ -1,9 +1,8 @@
 /*
  * Defense-in-depth headers for every response this Worker produces.
  *
- * They used to be declared as `headers()` in `next.config.ts` with
- * `source: '/:path*'`. Next applied them to its own routes; here they are
- * applied in `src/server.ts`, which sees exactly the same set — Cloudflare
+ * They are applied at this unit's request boundary, which sees every response
+ * the application produces and nothing else — Cloudflare
  * matches static assets BEFORE the Worker runs, so files under `public/` never
  * reach this code and take their headers from `public/_headers` instead. That
  * split is the same one the apex Workers already live with.

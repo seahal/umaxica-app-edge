@@ -27,12 +27,13 @@ Run these inside `core`, after `scripts/dev-start`:
 | Need                | Command                                                           | Flow                    |
 | ------------------- | ----------------------------------------------------------------- | ----------------------- |
 | GitHub + HTTPS Git  | `gh auth login --web --git-protocol https && gh auth setup-git`   | OAuth device flow       |
-| Cloudflare Wrangler | `scripts/wrangler-login`                                          | OAuth, callback on 8976 |
+| Cloudflare Wrangler | `pnpm run login` (`pnpm run login:device` under `podman exec`)    | OAuth, callback on 8976 |
 | Cloudflare Access   | `cloudflared access login <url>` (`scripts/check-tunnel` prompts) | Access browser login    |
 | Claude Code         | `claude`, then `/login`                                           | OAuth                   |
 | Codex               | `codex login`                                                     | OAuth                   |
 
-`scripts/wrangler-login` passes `--callback-host=0.0.0.0 --callback-port=8976`; the port is
+`pnpm run login` runs `scripts/wrangler-login`, which passes
+`--callback-host=0.0.0.0 --callback-port=8976`; the port is
 published on host loopback only by `compose.yaml`, which is what lets the host browser
 complete the redirect.
 

@@ -1,10 +1,9 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  // No `nextjs` plugin: this unit is TanStack Start on Vite, and the plugin's
-  // rules are about a framework that is no longer here. Left enabled it reported
-  // `no-html-link-for-pages` on the ordinary `<a href="/">` in the offline and
-  // failure documents — advice to import `next/link`, in a unit with no `next`
-  // dependency at all.
+  // The plugin list is exhaustive on purpose: a plugin is enabled because this
+  // unit's stack needs it, not because oxlint ships it. A framework plugin for a
+  // framework this unit does not run reports on ordinary code — an `<a>` in a
+  // failure document is not a bug — so it stays off.
   "plugins": ["typescript", "react", "jsx-a11y", "import", "promise", "vitest"],
   "categories": {
     "correctness": "error",
@@ -134,25 +133,6 @@
         "typescript/no-unnecessary-condition": "off",
         "typescript/no-unnecessary-type-assertion": "off",
         "typescript/non-nullable-type-assertion-style": "off"
-      }
-    },
-    {
-      "files": [
-        "**/app/error.tsx",
-        "**/app/global-error.tsx",
-        "**/app/global-not-found.tsx",
-        "**/app/offline/page.tsx"
-      ],
-      "rules": {
-        "nextjs/no-html-link-for-pages": "off"
-      }
-    },
-    {
-      "files": ["**/next-handler.ts"],
-      "rules": {
-        "typescript/prefer-ts-expect-error": "off",
-        "typescript/ban-ts-comment": "off",
-        "typescript/no-unnecessary-type-assertion": "off"
       }
     },
     {

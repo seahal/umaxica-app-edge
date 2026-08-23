@@ -25,7 +25,7 @@ const EXTERNAL_BASE = process.env['EDGE_API_BASE'];
 const BASE = EXTERNAL_BASE ?? `http://localhost:${PORT}`;
 
 // Matches the `webServer.timeout` every playwright.config.ts in this repository
-// uses. A cold `wrangler dev` / `next dev` is slow enough that a shorter budget
+// uses. A cold `vite dev` / `wrangler dev` is slow enough that a shorter budget
 // reports a timeout where the real answer is "not finished compiling yet".
 const READY_TIMEOUT_MS = 240_000;
 const POLL_INTERVAL_MS = 500;
@@ -44,8 +44,8 @@ async function isListening() {
 }
 
 function startServer() {
-  // `detached` puts the server in its own process group. `wrangler dev` and
-  // `next dev` both fork children that outlive a bare `child.kill()`, and an
+  // `detached` puts the server in its own process group. `vite dev` and
+  // `wrangler dev` both fork children that outlive a bare `child.kill()`, and an
   // orphaned worker holding the port makes the NEXT run reuse a stale server.
   const server = spawn('pnpm', ['run', 'dev'], {
     cwd: unitDir,

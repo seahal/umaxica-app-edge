@@ -23,13 +23,13 @@ const BRANDS = ['app', 'com', 'org'] as const;
 const FRAMES = ['core', 'docs', 'news', 'help', 'info'] as const;
 
 /*
- * The frames that still build through Next.js.
+ * The frames that still build through Next.js. Currently none.
  *
  * Membership is read from disk — a workspace is a Next frame if and only if it
- * owns a `next.config.ts` — rather than listed. `app/info` left for TanStack
- * Start on Vite (plans/info-nextjs-to-tanstack-start.md) and the two `info`
- * siblings are expected to follow, so a hardcoded list would have to be edited
- * once per migration and would fail loudly for the wrong reason in between.
+ * owns a `next.config.ts` — rather than listed, so this set empties and refills
+ * on its own. It is empty as of `adr/013-frames-tanstack-start.md`; the guard is
+ * kept rather than deleted because it is the only written record of what such a
+ * frame may not declare.
  *
  * The guard below is meaningless for a unit with no `next.config.ts`: there is
  * no Cache Components option to enable. What replaces it for those units is the

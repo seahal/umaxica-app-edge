@@ -8,12 +8,9 @@ import { renderDocument } from './utils/routes';
 /*
  * Every page this unit routes, rendered as the document a browser receives.
  *
- * The old version imported each `page.tsx` and rendered the component alone,
- * mocking `next/navigation`, `next/server`, `server-only` and
- * `@opennextjs/cloudflare` to get there. None of that is needed now: the routes
- * carry their own loaders, so driving a memory-history router renders the real
- * thing — shell, chrome and page together — and the assertions get stronger
- * rather than weaker.
+ * The routes carry their own loaders, so driving a memory-history router renders
+ * the real thing — shell, chrome and page together — rather than a component in
+ * isolation behind a wall of mocks.
  */
 const PAGES = [
   ['/', '/'],
@@ -67,8 +64,7 @@ describe('page smoke', () => {
   });
 
   /*
-   * `/home` is an alias for the index and has been since before the migration,
-   * when it was five lines calling Next's `redirect()`. It resolves to the index
+   * `/home` is a long-standing alias for the index. It resolves to the index
    * document rather than serving one of its own.
    */
   it('redirects /home to the index', async () => {

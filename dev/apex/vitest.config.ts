@@ -31,13 +31,9 @@ export default defineConfig({
         '**/*.svg',
         '**/locales/**',
         '**/coverage/**',
-        '**/.next/**',
-        '**/.open-next/**',
         '**/.wrangler/**',
         '**/e2e/**',
         '**/playwright.config.ts',
-        '**/next.config.ts',
-        '**/open-next.config.ts',
         '**/vitest.config.ts',
         '**/vitest.setup.ts',
         // Browser-rendered entry and UI modules belong to Playwright/Hurl, not

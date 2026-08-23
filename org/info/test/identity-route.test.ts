@@ -3,12 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { handlers } from './utils/routes';
 
 /*
- * `environment` used to come from `process.env.NODE_ENV`, which OpenNext
- * injected. It now comes from `import.meta.env.MODE`, which Vite replaces with a
- * literal at build time — the same fact, from the bundler that actually knows
- * it. A test cannot replace it the way it could delete an environment
- * variable, and it is a string on every code path, so the `| null` branch the
- * route used to carry is gone rather than kept as dead defence.
+ * `environment` comes from `import.meta.env.MODE`, which Vite replaces with a
+ * literal at build time. A test cannot substitute it the way it could delete an
+ * environment variable, and it is a string on every code path — so the route
+ * carries no `| null` branch and there is none to cover here.
  */
 describe('info identity route', () => {
   it('reports the answering frame without reflecting the request host', async () => {

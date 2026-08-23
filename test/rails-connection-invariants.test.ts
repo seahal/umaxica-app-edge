@@ -39,15 +39,13 @@ const RAILS_FRAMES = BRANDS.flatMap((brand) =>
 );
 
 /*
- * Which bundler a frame builds through, read from disk.
+ * Which bundler a frame builds through, read from disk rather than listed.
  *
- * All fifteen used to be Next.js on OpenNext, and the assertions below could
- * name App Router paths directly. `app/info` moved to TanStack Start on Vite
- * (plans/info-nextjs-to-tanstack-start.md) and the two `info` siblings are
- * expected to follow. What is under test is unchanged either way — one Rails
+ * Every frame builds with Vite today, so this returns false for all fifteen. The
+ * branch is kept because what is under test does not depend on it — one Rails
  * transport per frame, one `/health` that reports both halves, credentials
- * stripped outbound — so the bundler only decides where a file sits, never what
- * it has to say.
+ * stripped outbound — and the bundler only decides where a file sits, never what
+ * it has to say. See `adr/013-frames-tanstack-start.md`.
  */
 function isNextFrame(workspace: string): boolean {
   return existsSync(join(repoRoot, workspace, 'next.config.ts'));

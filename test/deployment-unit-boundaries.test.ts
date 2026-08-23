@@ -206,7 +206,6 @@ describe('deployment unit boundaries', () => {
     const provider: Record<string, string> = {
       tsc: 'typescript',
       playwright: '@playwright/test',
-      'opennextjs-cloudflare': '@opennextjs/cloudflare',
       vitest: 'vitest',
       // Hurl is a Rust binary; `@orangeopensource/hurl` is its npm distribution
       // and ships the bins `hurl` and `hurlfmt`. The command word and the

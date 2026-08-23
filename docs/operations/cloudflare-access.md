@@ -6,8 +6,8 @@ and
 [`docs/development/credential-and-secret-management.md`](../development/credential-and-secret-management.md).
 
 Access service tokens are used only by `scripts/check-tunnel` and, optionally, by
-`tools/verify-edge-connectivity.mjs`. They are not a Next.js fallback and are not loaded into the
-normal application runtime.
+`tools/verify-edge-connectivity.mjs`. They are not an application fallback and are not loaded into
+the normal application runtime.
 
 For the sixteen Edge development surfaces, the authority is the "Cloudflare Access" section of
 [`cloudflare-tunnel-development.md`](cloudflare-tunnel-development.md). Two things to know before

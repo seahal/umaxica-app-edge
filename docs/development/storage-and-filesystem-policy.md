@@ -7,7 +7,7 @@ The audit found no explicit tmpfs mounts. This refresh preserves that state. In 
 remain on normal storage.
 
 Run `scripts/benchmark-storage` to record elapsed time, maximum RSS, and repository disk
-growth for frozen install, representative Next build, and Vitest. Supplement the report with
+growth for frozen install, a representative build, and Vitest. Supplement the report with
 Next/workerd startup, Chromium smoke, container memory (`podman stats --no-stream`), and
 filesystem-heavy tasks.
 

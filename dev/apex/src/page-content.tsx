@@ -15,7 +15,7 @@ const ABOUT_ROBOTS = 'index,follow';
  * engines to drop the other.
  *
  * `/` in particular used to be a 301 to `https://www.umaxica.dev/`, a separate
- * Next.js application. That application is gone and `www` now canonicalises to
+ * application. That application is gone and `www` now canonicalises to
  * this host, so a redirect here would be a loop.
  */
 const HOME_DESCRIPTION =

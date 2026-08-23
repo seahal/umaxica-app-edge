@@ -56,7 +56,7 @@ export default defineConfig({
         // Wiring only: it resolves `@tanstack/react-start/server-entry`, which
         // exists in the Worker build and nowhere else, so no Node test can import
         // it. Its behaviour lives in `src/request-handler.ts` and is covered
-        // there — the same reason `next.config.ts` used to sit in this list.
+        // there.
         // `src/router.tsx` is deliberately NOT excluded: the tests drive a real
         // router through it.
         'src/server.ts',

@@ -4,6 +4,17 @@ set -euo pipefail
 # Browser OAuth against Cloudflare. The callback lands on 127.0.0.1:8976, which
 # compose.yaml publishes. No API token is mounted and none is stored on the
 # host: the resulting credential lives only in this container.
+#
+# `--device` switches to the Device Authorization Grant, which needs no inbound
+# path at all — the CLI polls Cloudflare for the token instead of waiting for a
+# browser redirect. That is the only flow that works under `podman exec`, over
+# SSH, or when the browser is not on the container host, because 8976 is only
+# published to the host's loopback.
+# See docs/development/wrangler-authentication.md.
+if [[ "${1:-}" == "--device" ]]; then
+  exec pnpm exec wrangler login --device --no-browser --no-use-keyring
+fi
+
 exec pnpm exec wrangler login \
   --callback-host=0.0.0.0 \
   --callback-port=8976 \

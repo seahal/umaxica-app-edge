@@ -131,12 +131,11 @@ function expectTitleContract(html: string, { tld, requirePageSpecific, label }: 
 /*
  * The fifteen content frames, whichever bundler each one builds through.
  *
- * `app/info` left Next.js for TanStack Start on Vite
- * (plans/info-nextjs-to-tanstack-start.md) and the two `info` siblings are
- * expected to follow, so the totals below are derived from this set rather than
- * written as literals. What must not weaken is coverage: every frame has to be
- * checked by one guard or the other, which is what `covers every content frame`
- * asserts.
+ * All fifteen build with Vite today (`adr/013-frames-tanstack-start.md`), so one
+ * of the two guard families below runs against an empty set. The totals are
+ * derived from this list rather than written as literals for exactly that
+ * reason: what must not weaken is coverage — every frame has to be checked by
+ * one guard or the other, which is what `covers every content frame` asserts.
  */
 const EXPECTED_FRAMES = ['app', 'com', 'org'].flatMap((family) =>
   ['core', 'docs', 'news', 'help', 'info'].map((role) => `${family}/${role}`),
@@ -454,7 +453,7 @@ describe('rate limited 429 documents', () => {
 // One property genuinely changed hands rather than moving: these guards ran the
 // four brands from ONE `it.each`, so a rule could not be satisfied in `app` and
 // forgotten in `org`. That cross-brand sweep now lives in Guards A, B, A2, D1,
-// D2 and D3 above — which still cover all sixteen Next frames and all twelve
+// D2 and D3 above — which still cover all fifteen frames and all twelve
 // satellite middlewares from one table — plus `TITLE_CONTRACT` and
 // `FORBIDDEN_TOKEN` here, which each unit's own `api/title-contract.hurl`
 // restates verbatim. The regexes agreeing is now a copy, not a shared constant.

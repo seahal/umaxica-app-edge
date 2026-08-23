@@ -10,9 +10,8 @@ import { brandTitle } from './title';
  * `<title>`, even briefly, is not something this contract allows. So the title
  * does not come from the loader at all.
  *
- * Reading the default-locale dictionary statically is behaviour-identical to
- * what the Next.js version did: every `generateMetadata` called
- * `getDictionary(defaultLocale)`, and `defaultLocale` is a constant. This unit
+ * Reading the default-locale dictionary statically is safe here rather than a
+ * shortcut: `defaultLocale` is a constant, and this unit
  * serves one language and does not negotiate — `<html lang>` is pinned to the
  * same constant — so there was never a request in which the title could have
  * come out in the other language.

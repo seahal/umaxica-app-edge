@@ -34,7 +34,6 @@
     }
   ],
   "ignorePatterns": [
-    "**/next-env.d.ts",
     "**/.wrangler/**",
     "**/dist/**",
     "**/node_modules/**",

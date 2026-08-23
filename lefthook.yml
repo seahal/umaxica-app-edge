@@ -51,7 +51,7 @@ pre-commit:
 # overlap, because the two slowest commands are the two least likely to fail.
 #
 # `check:size` is deliberately absent. It measures build OUTPUT, so it would
-# require building sixteen Next.js units before every push. That cost belongs in
+# require building all twenty units before every push. That cost belongs in
 # CI, where the build matrix already exists and the measurement is free.
 # `priority` is not decoration. Lefthook orders commands ALPHABETICALLY unless
 # one is set, which put `lint-types` ahead of `spelling` here purely because "l"

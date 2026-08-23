@@ -3,12 +3,10 @@ import { env } from 'cloudflare:workers';
 /*
  * The one place this unit reads a Cloudflare binding.
  *
- * `getCloudflareContext()` from `@opennextjs/cloudflare` used to play this role.
- * Its replacement is the runtime's own `cloudflare:workers` module, which
- * Cloudflare documents as "the canonical way to read env from anywhere —
- * including module scope" on Workers. It is not an async-local lookup, so it
- * cannot throw for being called outside a request; the try/catch the OpenNext
- * call sites needed is therefore gone, and the callers below say so.
+ * The runtime's own `cloudflare:workers` module, which Cloudflare documents as
+ * "the canonical way to read env from anywhere — including module scope" on
+ * Workers. It is not an async-local lookup, so it cannot throw for being called
+ * outside a request, and the callers below say so.
  *
  * Keeping it behind one module is what lets the Vitest suite substitute a plain
  * object for the runtime (`vitest.config.ts` aliases `cloudflare:workers`, which

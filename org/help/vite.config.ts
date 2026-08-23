@@ -37,11 +37,10 @@ import { defineConfig } from 'vite';
  * The two flags that select the direct Rails transport in
  * `src/lib/rails-client.ts`, bridged from the shell into the Worker.
  *
- * They used to arrive for free: `next dev` was a Node process, so
- * `EDGE_LOCAL_NODE_RUNTIME=1` in the dev script and `EDGE_LOCAL_RAILS_ENABLED`
- * from the container-wide Rails overlay were both simply in `process.env`.
- * `vite dev` runs the Worker in workerd instead, whose `process.env` is built
- * from the Worker's own vars and NOT from the shell — measured 2026-08-22: with
+ * `vite dev` runs the Worker in workerd, whose `process.env` is built from the
+ * Worker's own vars and NOT from the shell — so `EDGE_LOCAL_NODE_RUNTIME=1` in
+ * the dev script and `EDGE_LOCAL_RAILS_ENABLED` from the container-wide Rails
+ * overlay do not reach it on their own. Measured 2026-08-22: with
  * both exported, `/health` still reported `not-configured`, meaning the local
  * branch was never taken.
  *
@@ -88,8 +87,7 @@ function forwardLocalRailsFlags(config: { vars?: Record<string, unknown> }): voi
  *   In a non-interactive environment, it's necessary to set a
  *   CLOUDFLARE_API_TOKEN environment variable for wrangler to work
  *
- * Measured 2026-08-22. It is the same trap the Next.js build hit, where the fix
- * was `initOpenNextCloudflareForDev({ remoteBindings: false })`.
+ * Measured 2026-08-22.
  *
  * `env.vpc` is the one tier whose entire purpose is the real remote binding, so
  * it is the one tier that opts back in — and `pnpm dev:vpc` is documented as

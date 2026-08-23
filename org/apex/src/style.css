@@ -60,7 +60,7 @@
    * `html` by itself — `--default-font-family` resolves to it — and no element
    * has to carry a `font-sans` class for the stack to take effect.
    *
-   * There is no webfont here at all: this unit ships no `next/font`, so the
+   * There is no webfont here at all — this unit downloads no font, so the
    * stack begins with the Japanese system faces directly. Noto Sans JP is
    * named first and is NOT downloaded — it is already the system face on
    * Android, ChromeOS and most Linux, and where it is not, macOS and Windows,

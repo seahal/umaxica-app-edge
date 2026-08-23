@@ -1,12 +1,11 @@
 # The security header contract.
 #
-# This replaces `test/security-headers.test.ts`, which imported
-# `imageFontSecurityHeaders` from `../security-headers`, awaited it, and
-# asserted that the returned array contained the values the same file had just
-# declared. That test could not fail for any reason a user would notice: it
-# shared no code path with a served response, so it stayed green through any
-# mistake in `next.config.ts` that dropped the `headers()` wiring, mis-scoped
-# the `source` pattern, or let a later rule override it.
+# This replaces `test/security-headers.test.ts`, which imported the header helper
+# from `../security-headers`, awaited it, and asserted that the returned array
+# contained the values the same file had just declared. That test could not fail
+# for any reason a user would notice: it shared no code path with a served
+# response, so it stayed green through any mistake in the wiring that applies
+# those headers to a response.
 #
 # Asserting on a real response closes that gap. Read the header values here as
 # the contract; `security-headers.ts` is one implementation of it.
@@ -23,14 +22,14 @@ header "content-security-policy" contains "frame-ancestors 'none'"
 header "content-security-policy" contains "img-src 'self' data:"
 header "content-security-policy" contains "object-src 'none'"
 header "content-security-policy" contains "upgrade-insecure-requests"
-# `script-src` and `style-src` carry 'unsafe-inline' because Next's hydration
-# emits both inline. That is a documented, deliberate loosening — but it must
-# stay confined to those two directives, so the negative assertions below are
-# the part with teeth.
+# `script-src` and `style-src` carry 'unsafe-inline' because hydration emits both
+# inline. That is a documented, deliberate loosening — but it must stay confined
+# to those two directives, so the negative assertions below are the part with
+# teeth.
 #
-# `script-src` carries 'unsafe-eval' too whenever the server answering is
-# `next dev`, which is what this runner starts: Turbopack wraps development
-# modules in eval() and React's development build calls it as well. The regex
+# `script-src` carries 'unsafe-eval' too whenever the server answering is a dev
+# server, which is what this runner starts: `security-headers.ts` adds it on the
+# non-production branch, and React's development build calls eval(). The regex
 # pins the whole source list, so it accepts that one expression there and
 # nothing else anywhere — a policy that lets eval() into another directive still
 # fails here. The other half, "a production build never emits it", is in

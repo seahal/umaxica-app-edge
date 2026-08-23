@@ -5,10 +5,10 @@
  * nothing in the response has to agree with that mapping. The apex workers are
  * safe by accident: `createApexApp(..., { service })` puts a per-brand literal in
  * `/health.json`, so `umaxica.com` answering `service=app` is visible. The
- * Next.js content frames had no equivalent — the markup, the response headers
- * and `/rails-health` are the same bytes on all of them, and the only per-brand
- * value in the source, `PRIVATE_RAILS_ORIGIN`, never reaches a response. A
- * transposed ingress entry therefore answered exactly like a correct one.
+ * content frames had no equivalent — the markup and the response headers are the
+ * same bytes on all of them, and the only per-brand value in the source,
+ * `PRIVATE_RAILS_ORIGIN`, never reaches a response. A transposed ingress entry
+ * therefore answered exactly like a correct one.
  *
  * Each `info` frame's `/health.json` route closes that, and these assertions
  * keep the three copies from drifting: each frame owns its own copy (`CLAUDE.md`
@@ -41,10 +41,10 @@ const IDENTIFIED_FRAMES = [
 ] as const;
 
 /*
- * Where `/health.json` lives, per bundler. An OpenNext frame answers it from an
- * App Router Route Handler; a TanStack Start frame answers it from a server route
- * whose filename escapes the literal dot (`health[.]json.ts` — an unescaped `.`
- * would nest it under `/health` as `/health/json`).
+ * Where `/health.json` lives. A frame answers it from a server route whose
+ * filename escapes the literal dot (`health[.]json.ts` — an unescaped `.` would
+ * nest it under `/health` as `/health/json`). The alternative branch is the
+ * empty one the bundler guards elsewhere describe.
  *
  * What is under test is unchanged: three `info` copies, each naming its own
  * brand as a build-time literal so a hostname mix-up is provable rather than

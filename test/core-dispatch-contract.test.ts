@@ -2,7 +2,7 @@
  * The shared-FQDN route ownership contract, asserted once for all three Cores.
  *
  * `classifyCorePath` decides which requests to `jp.umaxica.{app,com,org}` reach
- * Rails, which reach Next.js, and which reach neither. It is duplicated in three
+ * Rails, which reach the application, and which reach neither. It is duplicated in three
  * `src/lib/core-dispatch.ts` copies, deliberately — `CLAUDE.md` forbids
  * extracting a shared module — and until this file existed nothing checked that
  * the three agreed. Each Core's own `test/core-dispatch.test.ts` covers its own
@@ -122,8 +122,8 @@ describe('route ownership contract', () => {
 
   it('keeps the exact /health path out of the /health/ block on every Core', () => {
     // The asymmetry that makes a unified health entry point possible: BLOCKED is
-    // a raw `startsWith('/health/')`, so `/health` itself reaches Next.js while
-    // everything under it 404s before either Rails or Next.js is invoked.
+    // a raw `startsWith('/health/')`, so `/health` itself reaches the application
+    // while everything under it 404s before either Rails or the application runs.
     for (const { brand, module } of CORES) {
       expect(module.classifyCorePath('/health'), brand).toBe('next');
       expect(module.classifyCorePath('/health/'), brand).toBe('blocked');
@@ -273,9 +273,6 @@ describe("Edge's own health does not depend on Rails being up", () => {
      * block that can throw, and both are always serialized.
      */
     for (const { brand } of CORES) {
-      // The route moved from an App Router Route Handler to a TanStack server
-      // route when the Cores left Next.js. What it has to say is unchanged, and
-      // is what this asserts.
       const source = read(`${brand}/core/src/routes/health.ts`);
       expect(source).toContain('function resolveRailsClient()');
       expect(source).toContain("edge: { status: 'error' }");

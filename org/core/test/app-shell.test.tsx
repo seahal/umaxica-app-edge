@@ -35,15 +35,6 @@ describe('org/core application shell', () => {
     expect(pageHtml).toContain('<html');
   });
 
-  /*
-   * `loading.tsx` and `unauthorized.tsx` used to be asserted here and are gone.
-   * `loading.tsx` was Next's route-level suspense fallback; nothing in this frame
-   * has an async boundary that would show one, and TanStack expresses the same
-   * idea as a route `pendingComponent` when it is needed. `unauthorized.tsx` was
-   * the `experimental.authInterrupts` 401 surface — no code ever invoked it, no
-   * route reached it and no HTTP contract named it. Both removals are recorded in
-   * plans/info-nextjs-to-tanstack-start.md.
-   */
   it('returns the public metadata documents', async () => {
     const manifest = await (await handlers.manifest()).json();
     expect(manifest).toMatchObject({ start_url: '/', display: 'standalone' });

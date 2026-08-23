@@ -1,10 +1,15 @@
 # Cloudflare development network
 
-Local Node and the Cloudflare Workers runtime are not equivalent. A missing Workers binding
-is never fabricated and never falls back to Access or another environment.
+A missing Workers binding is never fabricated and never falls back to Access or another
+environment.
+
+Every deployment unit's dev server is `vite dev`, which runs the Worker in workerd through
+`@cloudflare/vite-plugin`. One consequence is load-bearing here and was found by measurement:
+**workerd's `process.env` is not the shell's**, so the `EDGE_LOCAL_*` overlay flags are forwarded
+explicitly by each unit's `vite.config.ts`, and only while serving.
 
 ```text
-1. next dev (Node) ── private rootless Podman network ── Rails development
+1. vite dev (workerd) ── private rootless Podman network ── Rails development
 
 2. check-tunnel ── HTTPS + Access service token ── Cloudflare Access
                                                     └─ Tunnel (Rails-owned) ── Rails
@@ -15,19 +20,19 @@ is never fabricated and never falls back to Access or another environment.
 4. production Worker ── production VPC binding (currently absent: fail closed)
 
 5. browser ── Cloudflare ── Tunnel (Rails-owned) ── shared Podman network
-                                                    └─ Edge dev server (Hono/Next.js)
+                                                    └─ Edge dev server (vite dev, workerd)
 ```
 
 Path 5 is inbound and browser-facing; paths 2–4 are outbound, server-to-server. They share the one
 connector and nothing else. A Tunnel route on path 5 does not give the local process a Workers
 runtime or a Workers binding — that is what paths 3 and 4 are for.
 
-| Path            | Caller/runtime                                      | Destination                                              | Authentication/product                                 | Failure behavior                                                                                               | Validation                                         | Status after repository implementation        |
-| --------------- | --------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------- |
-| Private Rails   | `next dev`, local Node                              | `<frame>.<brand>.localhost:3000` on `EDGE_RAILS_NETWORK` | Rootless Podman network; no Access credential          | Missing overlay returns `not-configured`; unreachable network reports failure                                  | `scripts/check-rails`, `pnpm run check:local`      | Runtime verification required                 |
-| Access/Tunnel   | `scripts/check-tunnel`                              | `EDGE_TUNNEL_RAILS_URL`                                  | Dedicated Access service token; Rails-owned Tunnel     | Missing token is `BLOCKED`; Access/Tunnel/backend failures stay distinct                                       | `scripts/check-tunnel`                             | Credential verification required              |
-| Development VPC | local workerd: `pnpm preview`, `preview:vpc`, probe | configured development VPC Service, then Rails           | Interactive `wrangler login`; an API token is rejected | Without a session `preview` aborts; `next dev` keeps serving and logs one unhandled rejection, with no binding | `scripts/check-vpc`, `pnpm run check:preview:vpc`  | Blocked: no OAuth session in this environment |
-| Production VPC  | deployed production Worker                          | **bootstrap: the development VPC Service**, then Rails   | Workers runtime binding, no `remote`                   | Binding present; a stopped local Rails/tunnel makes production report 503                                      | static binding invariants; `pnpm run check:config` | Bootstrap — AWS cutover pending               |
+| Path            | Caller/runtime                                      | Destination                                              | Authentication/product                                 | Failure behavior                                                                                                            | Validation                                         | Status after repository implementation        |
+| --------------- | --------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------- |
+| Private Rails   | `vite dev`, local workerd                           | `<frame>.<brand>.localhost:3000` on `EDGE_RAILS_NETWORK` | Rootless Podman network; no Access credential          | Missing overlay returns `not-configured`; unreachable network reports failure                                               | `scripts/check-rails`, `pnpm run check:local`      | Runtime verification required                 |
+| Access/Tunnel   | `scripts/check-tunnel`                              | `EDGE_TUNNEL_RAILS_URL`                                  | Dedicated Access service token; Rails-owned Tunnel     | Missing token is `BLOCKED`; Access/Tunnel/backend failures stay distinct                                                    | `scripts/check-tunnel`                             | Credential verification required              |
+| Development VPC | local workerd: `pnpm preview`, `preview:vpc`, probe | configured development VPC Service, then Rails           | Interactive `wrangler login`; an API token is rejected | Without a session `preview` aborts; `vite dev` passes `remoteBindings: false` outside the `vpc` tier, so it never opens one | `scripts/check-vpc`, `pnpm run check:preview:vpc`  | Blocked: no OAuth session in this environment |
+| Production VPC  | deployed production Worker                          | **bootstrap: the development VPC Service**, then Rails   | Workers runtime binding, no `remote`                   | Binding present; a stopped local Rails/tunnel makes production report 503                                                   | static binding invariants; `pnpm run check:config` | Bootstrap — AWS cutover pending               |
 
 The URL host passed to Workers VPC supplies Host/SNI semantics; the VPC Service determines
 routing. Tests pin each frame host and the shared development service ID.

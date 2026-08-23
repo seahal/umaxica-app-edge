@@ -329,8 +329,8 @@ jobs:
       - run: pnpm -C ${{ matrix.target }} run build
       # The performance budget, measured on the output the step above just
       # produced. It lives here rather than in a job of its own because the only
-      # way to size a bundle is to have built it, and building the sixteen
-      # Next.js units a second time would double this matrix to buy nothing.
+      # way to size a bundle is to have built it, and building all twenty units
+      # a second time would double this matrix to buy nothing.
       #
       # `--if-present` is kept as a guard rather than a carve-out: every unit
       # in this matrix now declares `check:size`, including dev/apex, which

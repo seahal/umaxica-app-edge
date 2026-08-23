@@ -46,5 +46,8 @@ The interactive `core` service has a TTY and open stdin; infrastructure overlays
 Validate `tty`, Ctrl-L, Ctrl-C, pnpm, Wrangler, and each AI CLI after building on the real
 rootless Podman host.
 
-Next.js `next dev` is Node. Hono `wrangler dev` and OpenNext preview use workerd-compatible
-runtimes. The project does not call either one generically “Node development.”
+Every deployment unit's `dev`, `preview` and production build now run the Worker in workerd —
+`vite dev` and `vite preview` through `@cloudflare/vite-plugin`, and `wrangler dev` where a unit
+still uses it. There is no Node development server left in this repository, and the tooling around
+it (pnpm, Wrangler, the AI CLIs) is Node; the project does not call either layer generically
+“Node development.”

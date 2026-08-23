@@ -9,8 +9,8 @@ import { setMeta } from './seo';
  * `umaxica.dev` answers its own root. This unit is a domain with a homepage,
  * not a redirector to one.
  *
- * It used to 301 `/` to `https://www.umaxica.dev/`, a separate Next.js
- * application deployed to Vercel. That application has been removed and `www`
+ * It used to 301 `/` to `https://www.umaxica.dev/`, a separate application
+ * deployed elsewhere. That application has been removed and `www`
  * canonicalises to this host through a Cloudflare redirect rule, so serving a
  * redirect here would send the browser straight back — see
  * `docs/operations/net-www-canonicalisation.md`.

@@ -2,7 +2,7 @@
 #
 # This is the one configuration file in this repository that is deliberately
 # repository-wide rather than per deployment unit. A dictionary is a shared
-# vocabulary by definition: twenty-one units spelling "umaxica" twenty-one
+# vocabulary by definition: twenty units spelling "umaxica" twenty
 # different ways is the failure this prevents, and a per-unit copy could not
 # see the ADRs, the docs/ tree or the root tooling at all.
 #
@@ -21,8 +21,8 @@ version: '0.2'
 language: en,en-GB
 
 # Everything git ignores is already out of scope, which covers node_modules,
-# .next, .open-next, .wrangler, coverage, dist and the generated
-# cloudflare-env.d.ts / worker-configuration.d.ts / public/style.css.
+# .wrangler, coverage, dist and the generated cloudflare-env.d.ts /
+# worker-configuration.d.ts / public/style.css.
 useGitignore: true
 
 ignorePaths:

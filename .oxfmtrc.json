@@ -30,7 +30,6 @@
     }
   ],
   "ignorePatterns": [
-    "**/next-env.d.ts",
     "**/routeTree.gen.ts",
     "**/.wrangler/**",
     "**/dist/**",

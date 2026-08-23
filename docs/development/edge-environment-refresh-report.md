@@ -1,8 +1,14 @@
 # Edge environment refresh report
 
+**This is a dated report, not a current description.** It records what one environment
+refresh found and changed. The container, credential and network findings below still hold.
+The framework and bundler names in it are as they were on the day; the current stack is in
+`adr/013-frames-tanstack-start.md`, and the four transport paths are unchanged except that
+path 1's caller is workerd rather than Node.
+
 ## Architecture discovered
 
-The repository contains local Next.js applications, Hono Workers, OpenNext previews, and
+The repository contained frame applications, Hono Workers, local previews, and
 Rails clients. They use four deliberately independent paths:
 
 1. local Node.js to Rails over an optional private rootless-Podman network;

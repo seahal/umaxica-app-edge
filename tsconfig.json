@@ -12,13 +12,13 @@
     // @types package.
     "types": ["vitest/globals", "node"],
     // The quality policy every deployment unit shares, byte-identical in all
-    // twenty-one tsconfigs and here. It is repeated rather than `extends`-ed: a
+    // twenty per-unit tsconfigs and here. It is repeated rather than `extends`-ed: a
     // unit has to stay valid when it is lifted out into its own repository,
     // which `test/deployment-unit-boundaries.test.ts` enforces for every other
     // per-unit config too. What is deliberately NOT standardised is directly
     // above this block — `target`, `module`, `lib`, `jsx`, `jsxImportSource`,
     // `types`, `plugins`, `paths` are framework mechanics and differ by design
-    // between the Next.js frames, the Hono Workers and the Vercel units.
+    // between the TanStack Start frames and the Hono apex Workers.
     //
     // `useUnknownInCatchVariables` is not listed: TypeScript 7 implies it from
     // `strict`, and repeating a default is a line that can silently stop

@@ -7,14 +7,12 @@
  * `src/lib/cloudflare-env.ts` reads it through one accessor, so nothing else has
  * to know this file exists.
  *
- * `setEnvShouldThrow` exists because the routes still guard their binding reads
- * with try/catch and those branches have to stay exercised. Under OpenNext the
- * trigger was real: `getCloudflareContext()` threw whenever it ran outside a
- * request context. `cloudflare:workers` cannot throw that way — which is a
- * genuine simplification, recorded in
- * plans/info-nextjs-to-tanstack-start.md — so the guard is now defensive rather
- * than load-bearing, and this is what still proves it fails to a 503 and to
- * nulls instead of to an unhandled exception.
+ * `setEnvShouldThrow` exists because the routes guard their binding reads with
+ * try/catch and those branches have to stay exercised. `cloudflare:workers`
+ * cannot throw on a read outside a request context, so the guard is defensive
+ * rather than load-bearing (`adr/013-frames-tanstack-start.md`) — and this is
+ * what still proves it fails to a 503 and to nulls instead of to an unhandled
+ * exception.
  */
 const backing: Record<string, unknown> = {};
 

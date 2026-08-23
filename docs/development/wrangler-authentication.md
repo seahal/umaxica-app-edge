@@ -7,7 +7,11 @@ endpoint answers `10405 Method not allowed for this authentication scheme`, so
 without an OAuth session. `tools/vpc-probe/empty.env` exists to keep a stray
 `CLOUDFLARE_API_TOKEN` out of the way for exactly this reason.
 
-## The default is `scripts/wrangler-login`
+## The default is `pnpm run login`
+
+```bash
+pnpm run login
+```
 
 `compose.yaml` publishes `127.0.0.1:8976:8976`, so the ordinary loopback flow works from a
 browser on the container host and that is what `scripts/wrangler-login` runs. Reach for the
@@ -15,6 +19,12 @@ device grant below when that published port is not reachable — under `podman e
 SSH, or from any browser that is not on the host.
 
 ## Otherwise, the Device Authorization Grant
+
+```bash
+pnpm run login:device
+```
+
+which is `scripts/wrangler-login --device`:
 
 ```bash
 pnpm exec wrangler login --device --no-browser --no-use-keyring
@@ -29,7 +39,7 @@ From outside the container, the same thing without entering it first:
 ```bash
 podman exec -it -w /home/edge/workspace \
   umaxica-apps-edge-dc-core-1 \
-  pnpm exec wrangler login --device --no-browser --no-use-keyring
+  pnpm run login:device
 ```
 
 `--no-browser` because the container has no browser to open. `--no-use-keyring` because

@@ -85,12 +85,11 @@
     //
     // Wrangler treats a VPC Service as a resource with no local simulator, so any
     // environment that names one forces a remote proxy session, and that session
-    // needs an interactive `wrangler login` rather than an API token. Under
-    // `next dev` this did not matter, because the dev server was Node and held no
-    // bindings at all. `vite dev` runs the Worker in workerd, so it would — which
-    // is why this tier exists rather than reusing `development`.
+    // needs an interactive `wrangler login` rather than an API token. `vite dev`
+    // runs the Worker in workerd, so it would open one — which is why this tier
+    // exists rather than reusing `development`.
     //
-    // Rails is reached the same way it was under `next dev`: the direct transport
+    // Rails is reached instead through the direct transport
     // in `src/lib/rails-client.ts`, gated on EDGE_LOCAL_NODE_RUNTIME +
     // EDGE_LOCAL_RAILS_ENABLED, over the private Podman network. Measured
     // 2026-08-22: workerd reaches `http://docs.app.localhost:<port>` with

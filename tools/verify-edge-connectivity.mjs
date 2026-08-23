@@ -6,13 +6,16 @@
 //
 // The point of this tool is that the paths it tests are NOT interchangeable:
 //
-//   next dev          Node. No VPC binding exists in `env.development`, so
-//                     the Rails half of /health here can never be VPC evidence.
+//   next (dev server) `vite dev`, in workerd. It binds no VPC Service: each
+//                     unit's vite.config.ts passes `remoteBindings: false`
+//                     outside the `vpc` tier, so the Rails half of /health here
+//                     can never be VPC evidence. `next` is the mode's CLI name
+//                     and nothing more.
 //   preview           local workerd, `--env development`. No binding either.
 //   preview:vpc       local workerd, `--env vpc`. The real remote binding.
 //   vpc (this tool)   the binding alone, with no application code in the way.
 //
-// `/health`'s Rails half in next dev can prove only the explicitly enabled
+// `/health`'s Rails half in the dev server can prove only the explicitly enabled
 // private Podman path. It is never accepted as VPC or Tunnel evidence. Those
 // paths have their own checks and no transport falls back to another.
 
@@ -54,7 +57,9 @@ const ALL_MODES = ['config', 'vpc', 'next', 'preview', 'preview:vpc'];
 
 const LOG_DIR = join(repoRoot, 'tmp/connectivity-check');
 const PROBE_PORT = Number(process.env.VPC_PROBE_PORT ?? 8799);
-const PREVIEW_PORT = 8787; // opennextjs-cloudflare preview passes no --port.
+// wrangler's default port, kept as the base because `preview:vpc` runs on it
+// unmodified; every parallel `preview` gets an explicit `--port` above it.
+const PREVIEW_PORT = 8787;
 
 // ---------------------------------------------------------------------------
 // Surfaces
@@ -73,11 +78,10 @@ const PREVIEW_PORT = 8787; // opennextjs-cloudflare preview passes no --port.
 /*
  * Every workspace that owns a Rails transport, whichever bundler builds it.
  *
- * `railsBacked` and `railsBackedVite` differ in exactly one thing this checker
- * cares about — where the `/health` route file sits on disk — and in nothing
- * about the connection they are checking. Merging them here is what keeps the
- * gate counting every Rails-backed frame rather than silently skipping the ones
- * that have left OpenNext.
+ * The two Rails-backed classes differ in exactly one thing this checker cares
+ * about — where the `/health` route file sits on disk — and in nothing about the
+ * connection they are checking. Merging them here is what keeps the gate
+ * counting every Rails-backed frame rather than silently skipping a class.
  */
 export function railsBackedWorkspaces(manifest = loadManifest()) {
   return [...manifest.railsBacked, ...(manifest.railsBackedVite ?? [])].sort((a, b) =>
@@ -86,12 +90,11 @@ export function railsBackedWorkspaces(manifest = loadManifest()) {
 }
 
 /*
- * Where `/health` lives, per bundler. An OpenNext frame answers it from an App
- * Router Route Handler; a TanStack Start frame answers it from a server route
- * colocated with the page routes. Read from disk rather than asserted from the
- * manifest, so a frame that loses the route is a FAIL here rather than a silent
- * skip: a Rails-backed frame with no `/health` cannot report the connection at
- * all.
+ * Where `/health` lives. A frame answers it from a server route colocated with
+ * the page routes; the other entry is the shape the bundler guards elsewhere
+ * describe. Read from disk rather than asserted from the manifest, so a frame
+ * that loses the route is a FAIL here rather than a silent skip: a Rails-backed
+ * frame with no `/health` cannot report the connection at all.
  */
 const HEALTH_ROUTE_PATHS = ['src/app/health/route.ts', 'src/routes/health.ts'];
 
@@ -105,11 +108,11 @@ export function loadSurfaces(manifest = loadManifest()) {
     }
 
     /*
-     * All fifteen answer `/health` from a Route Handler, and that one route now
-     * carries both halves — Edge's own state and Rails' liveness. It replaced
-     * `/rails-health`, which used to report the Rails half separately; two
-     * routes meant two requests per frame per run and neither could answer
-     * "is this surface serving?". See ADR 009.
+     * All fifteen answer `/health`, and that one route carries both halves —
+     * Edge's own state and Rails' liveness. It replaced `/rails-health`, which
+     * used to report the Rails half separately; two routes meant two requests
+     * per frame per run and neither could answer "is this surface serving?".
+     * See ADR 009.
      *
      * Read from disk rather than asserted from the manifest, so a frame that
      * loses the route is a FAIL here rather than a silent skip: a Rails-backed
@@ -133,10 +136,10 @@ export function loadSurfaces(manifest = loadManifest()) {
 
 /**
  * The sixteen surfaces published through the Rails-shared Cloudflare Tunnel:
- * the four Hono apex workers plus the twelve non-core Next.js content frames.
+ * the four Hono apex workers plus the twelve non-core content frames.
  *
  * The `core` frames are excluded deliberately, not incidentally. `jp.umaxica.{app,com,org}`
- * is a shared FQDN where Rails owns some paths and Next.js the rest, so it needs
+ * is a shared FQDN where Rails owns some paths and the frame the rest, so it needs
  * path-level ingress rather than a whole-host route, and it is a separate piece
  * of work. `dev/apex` is excluded too: `umaxica.dev` is not delegated to
  * Cloudflare DNS, so there is no Cloudflare-side hostname for the Tunnel to
@@ -1157,21 +1160,22 @@ async function checkHttpSurface(report, surface, baseUrl, gatePrefix) {
   return { kind, status: health.status, statusProblem };
 }
 
-// Fifteen `next dev` servers at once is what root `pnpm dev` already does, and
+// Fifteen dev servers at once is what root `pnpm dev` already does, and
 // every port differs so they do not collide. The cap exists so a smaller machine
 // degrades into batches instead of thrashing.
-const NEXT_CONCURRENCY = Number(process.env.CHECK_NEXT_CONCURRENCY ?? 8);
+const DEV_SERVER_CONCURRENCY = Number(process.env.CHECK_DEV_CONCURRENCY ?? 8);
 
 async function modeNext(report, surfaces) {
-  for (let i = 0; i < surfaces.length; i += NEXT_CONCURRENCY) {
-    await runNextBatch(report, surfaces.slice(i, i + NEXT_CONCURRENCY));
+  for (let i = 0; i < surfaces.length; i += DEV_SERVER_CONCURRENCY) {
+    await runNextBatch(report, surfaces.slice(i, i + DEV_SERVER_CONCURRENCY));
   }
 
   report.note(
     SKIP,
-    "/health's Rails half under next dev is never VPC evidence. `next dev` is a Node process: it " +
-      'holds no wrangler binding whatever `env.development` declares, and answers from the ' +
-      'EDGE_LOCAL_* Node transport or not at all. See mode `vpc`.',
+    "/health's Rails half under the dev server is never VPC evidence. `vite dev` runs in workerd, " +
+      'but with `remoteBindings: false` outside the `vpc` tier it holds no VPC Service whatever ' +
+      '`env.development` declares, and answers from the EDGE_LOCAL_* transport or not at all. ' +
+      'See mode `vpc`.',
   );
 }
 
@@ -1253,7 +1257,7 @@ async function runNextBatch(report, surfaces) {
 
 async function modePreview(report, surfaces, { withVpc }) {
   const script = withVpc ? 'preview:vpc' : 'preview';
-  const gate = withVpc ? 'Preview → Rails VPC' : 'workerd/OpenNext preview';
+  const gate = withVpc ? 'Preview → Rails VPC' : 'workerd preview';
 
   if (withVpc) {
     const auth = await readCloudflareAuth();
@@ -1270,8 +1274,8 @@ async function modePreview(report, surfaces, { withVpc }) {
   // what not to do, so this is a deliberate cost, not an oversight.
   //
   // Plain `preview` opens no remote session, so it parallelises. Each frame gets
-  // its own port: `opennextjs-cloudflare` forwards unknown flags to wrangler, and
-  // `pnpm run <script> -- --port N` appends to the last command of the `&&` chain.
+  // its own port: `pnpm run <script> -- --port N` appends to the last command of
+  // the `&&` chain, which is `vite preview`, and a later `--port` wins.
   const batchSize = withVpc ? 1 : PREVIEW_CONCURRENCY;
   for (let i = 0; i < surfaces.length; i += batchSize) {
     const batch = surfaces.slice(i, i + batchSize);
@@ -1319,9 +1323,10 @@ async function runPreviewSurface(report, surface, { script, gate, withVpc, port,
 
       if (!ready.ok) {
         const why = handle.exited ? `exited with code ${handle.exitCode}` : 'timed out';
-        // Two bundlers, two success lines. OpenNext prints `Worker saved in
-        // .open-next/worker.js`; `vite build` prints `built in` after the ssr
-        // environment. Matching either keeps the gate meaningful across both.
+        // `vite build` prints `built in` after the ssr environment. The second
+        // pattern belongs to the other bundler shape the manifest can describe;
+        // matching either keeps this gate meaningful without this tool deciding
+        // which shape a unit has.
         const built = /Worker saved in|built in /u.test(handle.output);
         report.record('bundler build', surface.key, built ? PASS : FAIL, built ? 'built' : why);
         report.record(gate, surface.key, FAIL, `${why} — ${handle.logPath}`);
@@ -1511,7 +1516,7 @@ function modeLinks(surfaces) {
     process.stdout.write(`  ${frame.ws.padEnd(10)} ${frame.urls.map((u) => u.href).join('  ')}\n`);
   }
   process.stdout.write(
-    '\nThese are `next dev`, which has no VPC binding — /health will read rails not-configured.\n' +
+    '\nThese are dev servers with no VPC binding — /health will read rails not-configured.\n' +
       'To view a frame actually connected over VPC, one at a time:\n\n' +
       `  ${index[0]?.vpcCommand}\n\n` +
       `Clickable index written to ${htmlPath}\n`,
@@ -1616,8 +1621,8 @@ async function modeTunnel(report, surfaces) {
   report.note(
     SKIP,
     'Tunnel reachability is not VPC evidence: a Tunnel route does not hand a process a Workers ' +
-      'binding. Under `next dev` the Rails half comes from the local Node transport, or reports ' +
-      'not-configured. See mode `vpc`.',
+      'binding. Under the dev server the Rails half comes from the local EDGE_LOCAL_* transport, ' +
+      'or reports not-configured. See mode `vpc`.',
   );
   report.note(
     SKIP,
@@ -1854,9 +1859,9 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
 
   // A dev-server asset URL taken from the page it was served with, so the check
   // cannot pass against a stale or guessed hash.
-  // Both bundler shapes: `/_next/static/...` from an OpenNext frame,
-  // `/assets/...` from a Vite one. Taken from the page that referenced it rather
-  // than guessed, so it proves the served document and its assets agree.
+  // Both bundler shapes the manifest can describe. Taken from the page that
+  // referenced it rather than guessed, so it proves the served document and its
+  // assets agree.
   const assetPath =
     /(?:src|href)="(\/(?:_next\/static|assets)\/[^"]+)"/u.exec(landing.body)?.[1] ?? null;
   const asset = assetPath
@@ -1866,8 +1871,8 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
       }))
     : null;
 
-  // 503 not-configured is the correct answer without `--rails`: `next dev` has no
-  // VPC binding, so a 200 here would mean the private Podman path is live.
+  // 503 not-configured is the correct answer without `--rails`: the dev server has
+  // no VPC binding, so a 200 here would mean the private Podman path is live.
   const railsHealth = await httpGet(`${base}/health`, 30_000, authHeaders).catch((e) => ({
     status: 0,
     body: String(e),
@@ -1880,7 +1885,7 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
     'Tunnel route',
     key,
     assetOk && railsOk ? PASS : FAIL,
-    `${assetPath ? `${assetPath.slice(0, 42)} ${asset.status}` : 'no _next asset in HTML'}, ` +
+    `${assetPath ? `${assetPath.slice(0, 42)} ${asset.status}` : 'no hashed asset in HTML'}, ` +
       `/health ${railsHealth.status} ${kind ?? '<unrecognised>'}`,
   );
 
@@ -1907,7 +1912,7 @@ const GATE_ORDER = [
   'Local /',
   'Local /health rails',
   'bundler build',
-  'workerd/OpenNext preview',
+  'workerd preview',
   'Preview /health',
   'Preview /',
   'Preview /health rails',
@@ -1937,7 +1942,7 @@ const GATE_ABBREVIATIONS = new Map([
   ['Local /', 'd:/'],
   ['Local /health rails', 'd:rh'],
   ['bundler build', 'build'],
-  ['workerd/OpenNext preview', 'wd'],
+  ['workerd preview', 'wd'],
   ['Preview /health', 'p:hlt'],
   ['Preview /', 'p:/'],
   ['Preview(vpc) /health', 'v:hlt'],

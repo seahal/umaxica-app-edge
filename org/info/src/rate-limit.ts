@@ -3,15 +3,13 @@ import { getEdgeEnv } from './lib/cloudflare-env';
 /*
  * First-touch rate limiting for this frame.
  *
- * The twelve content frames each carried this in `src/middleware.ts`, because
- * an OpenNext frame has no `worker.ts` and Next middleware was its only
- * first-touch hook (adr/010-first-touch-rate-limiting.md). This unit now owns
- * its server entry outright, so the check moved there — the same move the Cores
- * made — and Next's `matcher` went with it.
+ * The check runs at this unit's own server entry — the first-touch position
+ * `adr/010-first-touch-rate-limiting.md` requires, and the same place the Cores
+ * run it from.
  *
- * The matcher is not replaced by anything, and does not need to be: Cloudflare
- * matches static assets BEFORE the Worker runs, so `_next/static`, the favicon
- * and the service worker never reached this code in the first place. That is
+ * There is no path matcher and none is needed: Cloudflare matches static assets
+ * BEFORE the Worker runs, so the hashed bundles, the favicon and the service
+ * worker never reach this code in the first place. That is
  * also why `run_worker_first` stays unset — turning it on would invoke the
  * Worker for every asset request, converting free static-asset serving into
  * billed invocations.

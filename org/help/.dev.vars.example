@@ -1,1 +1,7 @@
-NEXTJS_ENV=development
+# wrangler reads this file for local secrets, and `@cloudflare/vite-plugin` keeps
+# that behaviour under `vite dev`. It is committed as an EXAMPLE only — copy it
+# to `.dev.vars`, which is gitignored.
+#
+# It is empty because this unit needs no local secret today. The two flags that
+# select the direct Rails transport are shell environment, not secrets: see
+# `.env.example`.

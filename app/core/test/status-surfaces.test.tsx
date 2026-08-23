@@ -10,12 +10,11 @@ import { handlers, renderDocument } from './utils/routes';
 /*
  * The failure and offline surfaces.
  *
- * Next had `error.tsx`, `global-error.tsx` and `global-not-found.tsx`, all
- * outside the `(page)` route group so they stayed chrome-free. TanStack renders
- * `errorComponent` and `notFoundComponent` inside the root shell but OUTSIDE
- * `src/routes/_page.tsx`, the pathless layout that carries the chrome — so this
- * frame keeps exactly the shape it had, which is what
- * `docs/design/ui-shell-contract.md` §15 asks for.
+ * `errorComponent` and `notFoundComponent` render inside the root shell but
+ * OUTSIDE `src/routes/_page.tsx`, the pathless layout that carries the chrome,
+ * so this frame's failure documents are chrome-free — which is what
+ * `docs/design/ui-shell-contract.md` §15 asks for, and where this archetype
+ * differs from the twelve satellites.
  */
 function clickButton(container: HTMLElement, label: string) {
   const button = Array.from(container.querySelectorAll('button')).find(

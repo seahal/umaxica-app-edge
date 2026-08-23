@@ -11,10 +11,9 @@ import { BRAND_TITLE } from '@/lib/title';
  * the router's defaults cover every descendant route that declares none.
  *
  * They render OUTSIDE `src/routes/_page.tsx`, the pathless layout that carries
- * the application chrome, so they stay chrome-free exactly as
- * `global-not-found.tsx` and `error.tsx` did — that is what
- * `docs/design/ui-shell-contract.md` §15 asks of a failure document, and unlike
- * the satellite frames this frame keeps it.
+ * the application chrome, so they stay chrome-free — that is what
+ * `docs/design/ui-shell-contract.md` §15 asks of a failure document, and where
+ * this archetype differs from the twelve satellites.
  *
  * Each renders its own `<title>`, which React hoists into `<head>`. That is why
  * `__root.tsx` deliberately emits no title: two sources would produce two

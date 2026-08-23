@@ -2,9 +2,17 @@
 
 ## Purpose
 
-Make the local Edge development environment — the Hono apex workers and the Next.js content
-frames running under Podman — reachable from its development / staging FQDNs through Cloudflare
-Tunnel, so a browser anywhere can load the surface a developer is editing.
+Make the local Edge development environment — the Hono apex workers and the content frames
+running under Podman — reachable from its development / staging FQDNs through Cloudflare Tunnel,
+so a browser anywhere can load the surface a developer is editing.
+
+## Note: the measurement logs are archived observations
+
+Everything under "Verification evidence" is a **dated log**, not an instruction. Those runs
+predate the current bundler, so the asset paths and dev-server names in them are as they were on
+the day. The ports, the statuses and the conclusions still hold — asset URLs were always taken
+from the page that referenced them rather than guessed, so nothing there depends on the path
+shape. The operational sections above the logs are current and are kept that way.
 
 ## Note: `/rails-health` was merged into `/health` (2026-08-12)
 
@@ -16,7 +24,7 @@ To read the Rails half:
 
 ```bash
 curl -s 127.0.0.1:5406/health | jq '.rails.liveness'
-# { "kind": "not-configured", "latency_ms": 0 }   under `next dev`, which has no VPC binding
+# { "kind": "not-configured", "latency_ms": 0 }   under the dev server, which has no VPC binding
 ```
 
 The contract tables and gate descriptions below are current. **The recorded observation tables
@@ -42,7 +50,7 @@ the connector joins. Because the name no longer distinguishes them, the guardrai
 contents — no `cloudflared` reference, no token, exactly one service.
 
 Sharing the one connector is also a requirement of the Core end state: `jp.umaxica.{app,com,org}`
-is a single FQDN where Rails owns some paths and Next.js the rest, and path routing can only
+is a single FQDN where Rails owns some paths and the frame the rest, and path routing can only
 resolve that on one connector.
 
 ## Naming policy
@@ -64,7 +72,7 @@ deliberately avoid that cost, so the region is folded into one label instead.
 `info` carries no region — it is a global surface, so it is `info.umaxica.{app,com,org}`.
 
 **Core is the sole exception** and uses `jp.umaxica.{app,com,org}`, because it is the one surface
-where Next.js and Rails share an FQDN. `core-jp.umaxica.*` is the Rails tunnel's own private
+where a frame and Rails share an FQDN. `core-jp.umaxica.*` is the Rails tunnel's own private
 endpoint and stays non-browser-facing; it is not Core's public hostname.
 
 The rule is encoded once, in `tunnelHostFor()` in `tools/verify-edge-connectivity.mjs`, so the
@@ -73,7 +81,7 @@ checker cannot drift from the policy. `EDGE_TUNNEL_HOSTS` overrides it per works
 
 ## Scope
 
-In scope: the four Hono apex workers and the twelve non-core Next.js content frames — sixteen
+In scope: the four Hono apex workers and the twelve non-core content frames — sixteen
 surfaces.
 
 Out of scope:
@@ -106,7 +114,7 @@ Podman  ── network `umaxica-edge-tunnel` (Edge-owned), Edge container alias 
   |
   +-- Hono          wrangler dev (local workerd)   :5101 :5201 :5301 :5401
   |
-  +-- Next.js       next dev (Node)                :5103 :5106 :5107 :5108
+  +-- TanStack      vite dev (local workerd)       :5103 :5106 :5107 :5108
                                                    :5303 :5306 :5307 :5308
                                                    :5403 :5406 :5407 :5408
 ```
@@ -159,24 +167,24 @@ Workers binding. See `docs/development/cloudflare-development-network.md` and AD
 Local origin is the alias on the shared network; `Port` is read from each workspace's own `dev`
 script. Path is the whole host in every case.
 
-| Application | Runtime | External FQDN         | Local origin            | Port | Path | Status                     |
-| ----------- | ------- | --------------------- | ----------------------- | ---- | ---- | -------------------------- |
-| `app/apex`  | Hono    | `umaxica.app`         | `http://edge-core:5401` | 5401 | `/`  | replaces production Worker |
-| `com/apex`  | Hono    | `umaxica.com`         | `http://edge-core:5101` | 5101 | `/`  | replaces production Worker |
-| `net/apex`  | Hono    | `umaxica.net`         | `http://edge-core:5201` | 5201 | `/`  | replaces production Worker |
-| `org/apex`  | Hono    | `umaxica.org`         | `http://edge-core:5301` | 5301 | `/`  | replaces production Worker |
-| `app/info`  | Next.js | `info.umaxica.app`    | `http://edge-core:5403` | 5403 | `/`  | new hostname               |
-| `com/info`  | Next.js | `info.umaxica.com`    | `http://edge-core:5103` | 5103 | `/`  | new hostname               |
-| `org/info`  | Next.js | `info.umaxica.org`    | `http://edge-core:5303` | 5303 | `/`  | new hostname               |
-| `app/docs`  | Next.js | `docs-jp.umaxica.app` | `http://edge-core:5406` | 5406 | `/`  | new hostname               |
-| `com/docs`  | Next.js | `docs-jp.umaxica.com` | `http://edge-core:5106` | 5106 | `/`  | replaces production Worker |
-| `org/docs`  | Next.js | `docs-jp.umaxica.org` | `http://edge-core:5306` | 5306 | `/`  | new hostname               |
-| `app/news`  | Next.js | `news-jp.umaxica.app` | `http://edge-core:5407` | 5407 | `/`  | new hostname               |
-| `com/news`  | Next.js | `news-jp.umaxica.com` | `http://edge-core:5107` | 5107 | `/`  | replaces production Worker |
-| `org/news`  | Next.js | `news-jp.umaxica.org` | `http://edge-core:5307` | 5307 | `/`  | replaces production Worker |
-| `app/help`  | Next.js | `help-jp.umaxica.app` | `http://edge-core:5408` | 5408 | `/`  | new hostname               |
-| `com/help`  | Next.js | `help-jp.umaxica.com` | `http://edge-core:5108` | 5108 | `/`  | new hostname               |
-| `org/help`  | Next.js | `help-jp.umaxica.org` | `http://edge-core:5308` | 5308 | `/`  | replaces production Worker |
+| Application | Runtime  | External FQDN         | Local origin            | Port | Path | Status                     |
+| ----------- | -------- | --------------------- | ----------------------- | ---- | ---- | -------------------------- |
+| `app/apex`  | Hono     | `umaxica.app`         | `http://edge-core:5401` | 5401 | `/`  | replaces production Worker |
+| `com/apex`  | Hono     | `umaxica.com`         | `http://edge-core:5101` | 5101 | `/`  | replaces production Worker |
+| `net/apex`  | Hono     | `umaxica.net`         | `http://edge-core:5201` | 5201 | `/`  | replaces production Worker |
+| `org/apex`  | Hono     | `umaxica.org`         | `http://edge-core:5301` | 5301 | `/`  | replaces production Worker |
+| `app/info`  | TanStack | `info.umaxica.app`    | `http://edge-core:5403` | 5403 | `/`  | new hostname               |
+| `com/info`  | TanStack | `info.umaxica.com`    | `http://edge-core:5103` | 5103 | `/`  | new hostname               |
+| `org/info`  | TanStack | `info.umaxica.org`    | `http://edge-core:5303` | 5303 | `/`  | new hostname               |
+| `app/docs`  | TanStack | `docs-jp.umaxica.app` | `http://edge-core:5406` | 5406 | `/`  | new hostname               |
+| `com/docs`  | TanStack | `docs-jp.umaxica.com` | `http://edge-core:5106` | 5106 | `/`  | replaces production Worker |
+| `org/docs`  | TanStack | `docs-jp.umaxica.org` | `http://edge-core:5306` | 5306 | `/`  | new hostname               |
+| `app/news`  | TanStack | `news-jp.umaxica.app` | `http://edge-core:5407` | 5407 | `/`  | new hostname               |
+| `com/news`  | TanStack | `news-jp.umaxica.com` | `http://edge-core:5107` | 5107 | `/`  | replaces production Worker |
+| `org/news`  | TanStack | `news-jp.umaxica.org` | `http://edge-core:5307` | 5307 | `/`  | replaces production Worker |
+| `app/help`  | TanStack | `help-jp.umaxica.app` | `http://edge-core:5408` | 5408 | `/`  | new hostname               |
+| `com/help`  | TanStack | `help-jp.umaxica.com` | `http://edge-core:5108` | 5108 | `/`  | new hostname               |
+| `org/help`  | TanStack | `help-jp.umaxica.org` | `http://edge-core:5308` | 5308 | `/`  | replaces production Worker |
 
 ### Expected response per surface
 
@@ -187,19 +195,19 @@ These are the **authenticated** answers. Where Access is applied — the four ap
 `/health*` included, because there is no Bypass. That is the correct answer too, and the checker
 records it as its own outcome rather than a failure.
 
-| Route                                | Expected                                               | Why                                                                                                                                                                                                                             |
-| ------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apex `/health.json`                  | 200, `service` equals the brand                        | `service` is a build-time literal from `createApexApp(..., { service })`, so it identifies which Worker answered. This is the only response-level proof against a brand mix-up                                                  |
-| apex `/health`, `/health.html`       | 200, HTML                                              | inline styles, no external assets                                                                                                                                                                                               |
-| apex `/about`                        | 200, HTML                                              | canonical is the production apex, which now equals the external FQDN                                                                                                                                                            |
-| `{app,com,org}/apex` `/`             | **301** to `https://jp.umaxica.<brand>/`               | hardcoded absolute URL in `src/root-redirect.ts`. As of 2026-08-10 that target resolves and is Access-protected (Core), so the redirect now lands somewhere real; the 301 itself is what is being asserted here, not the target |
-| `net/apex` `/`                       | **301** to `/about`                                    | relative, host-preserving; `net/apex` has no `root-redirect.ts`                                                                                                                                                                 |
-| apex non-GET                         | 404                                                    | the apex surface is GET-only                                                                                                                                                                                                    |
-| apex non-GET with a foreign `Origin` | 403                                                    | `hono/csrf` allows only the four production apexes, `{com,org,app,net}.localhost`, and two-label `*.workers.dev`                                                                                                                |
-| content frame `/`                    | 200, HTML containing `UMAXICA <Frame>`                 | identifies the FRAME only. The string is the same in all three brands' copies, so it cannot say which brand answered                                                                                                            |
-| `info` `/health.json`                | 200, `service` equals the brand, `frame` equals `info` | build-time literals, the content-frame equivalent of the apexes' `service`. This is the only response-level proof against a brand mix-up on a content frame. `docs`/`news`/`help` do not have it yet — see "Known limitations"  |
-| content frame `/_next/static/...`    | 200                                                    | asset URL taken from the page that referenced it, never guessed                                                                                                                                                                 |
-| content frame `/health`              | **503**, `rails.liveness.kind` `not-configured`        | `next dev` has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim. The `edge` half of the same document is still `ok` — that is how the two are told apart                       |
+| Route                                | Expected                                                                                                                                                                                                                                                      | Why                                                                                                                                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| apex `/health.json`                  | 200, `service` equals the brand                                                                                                                                                                                                                               | `service` is a build-time literal from `createApexApp(..., { service })`, so it identifies which Worker answered. This is the only response-level proof against a brand mix-up                                                  |
+| apex `/health`, `/health.html`       | 200, HTML                                                                                                                                                                                                                                                     | inline styles, no external assets                                                                                                                                                                                               |
+| apex `/about`                        | 200, HTML                                                                                                                                                                                                                                                     | canonical is the production apex, which now equals the external FQDN                                                                                                                                                            |
+| `{app,com,org}/apex` `/`             | **301** to `https://jp.umaxica.<brand>/`                                                                                                                                                                                                                      | hardcoded absolute URL in `src/root-redirect.ts`. As of 2026-08-10 that target resolves and is Access-protected (Core), so the redirect now lands somewhere real; the 301 itself is what is being asserted here, not the target |
+| `net/apex` `/`                       | **301** to `/about`                                                                                                                                                                                                                                           | relative, host-preserving; `net/apex` has no `root-redirect.ts`                                                                                                                                                                 |
+| apex non-GET                         | 404                                                                                                                                                                                                                                                           | the apex surface is GET-only                                                                                                                                                                                                    |
+| apex non-GET with a foreign `Origin` | 403                                                                                                                                                                                                                                                           | `hono/csrf` allows only the four production apexes, `{com,org,app,net}.localhost`, and two-label `*.workers.dev`                                                                                                                |
+| content frame `/`                    | 200, HTML containing `UMAXICA <Frame>`                                                                                                                                                                                                                        | identifies the FRAME only. The string is the same in all three brands' copies, so it cannot say which brand answered                                                                                                            |
+| `info` `/health.json`                | 200, `service` equals the brand, `frame` equals `info`                                                                                                                                                                                                        | build-time literals, the content-frame equivalent of the apexes' `service`. This is the only response-level proof against a brand mix-up on a content frame. `docs`/`news`/`help` do not have it yet — see "Known limitations"  |
+| content frame hashed asset           | 200                                                                                                                                                                                                                                                           | asset URL taken from the page that referenced it, never guessed                                                                                                                                                                 |
+| content frame `/health`              | **503**, `rails.liveness.kind` `not-configured` The dev server has no VPC binding. A 200 here would mean the private Podman path is live, which is a different claim. The `edge` half of the same document is still `ok` — that is how the two are told apart |
 
 ## Verification procedure
 
@@ -238,7 +246,7 @@ pnpm run check:tunnel:apex
 | `acs`   | Access, both halves. A 302 to the `*.cloudflareaccess.com` team domain **passes** the unauthenticated half and proves the connector was never contacted; no Access at all is a **WARN**. Without a service token the remaining gates are **BLOCKED** — unproven, deliberately not PASS. The login URL's query string carries a JWT and is never logged |
 | `orig`  | the connector reached a listening origin. 502/503/521/522/523/530 are reported **BLOCKED**, meaning "that dev server is not running" — an ordinary state, not a failure                                                                                                                                                                                |
 | `ident` | the intended application answered (apex `service`, or the frame marker in the HTML)                                                                                                                                                                                                                                                                    |
-| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames `_next` asset and `/health`                                                                                                                                                                                                                                              |
+| `route` | a representative route behaves: apex `/` redirect target and `/about`; frames a hashed asset and `/health`                                                                                                                                                                                                                                             |
 | `leak`  | no `localhost`, `127.0.0.1`, `edge-core`, or `0.0.0.0` in the redirect target or body                                                                                                                                                                                                                                                                  |
 
 It is deliberately excluded from `check:connectivity` (`all`), because it depends on hostnames
@@ -259,7 +267,7 @@ someone configured in Cloudflare.
 5. Add a Cache Rule bypassing cache for all sixteen hostnames. `docs-jp.umaxica.com` currently
    serves `cache-control: s-maxage=31536000`; without a bypass, stale production HTML would keep
    being served and dev responses would be cached at the edge. `public/_headers`
-   (`/_next/static/* → immutable`) is interpreted by Workers Assets and does not apply on this
+   (hashed assets → `immutable`) is interpreted by Workers Assets and does not apply on this
    path, so it must be bypassed too.
 
 6. Add a Cloudflare Access application per hostname, with an Allow policy. The apexes go first — see
@@ -327,7 +335,7 @@ never cached.
 Whether an authenticated response comes from cache cannot be decided unauthenticated —
 `cf-cache-status` is not readable through the 302. Rather than configure against a hypothesis, this
 waits until stale HTML is actually observed. If it is, bypass cache on the sixteen hostnames as step
-5 describes, and note that `public/_headers` (`/_next/static/* → immutable`) is interpreted by
+5 describes, and note that `public/_headers` (hashed assets → `immutable`) is interpreted by
 Workers Assets and does not apply on this path.
 
 **Do not add ingress for:** `{app,com,org}/core` (5405/5105/5305, out of scope), `dev/apex`
@@ -373,7 +381,7 @@ are absolute production URLs or a relative path, never the origin's own address,
 `umaxica.net` misbinding to the Cloudflare dashboard rather than the code.
 
 `/rails-health` answering 503 `not-configured` on all twelve frames is the expected result:
-`next dev` carries no VPC binding. A 200 would have meant the private Podman path was live, which is
+The dev server carries no VPC binding. A 200 would have meant the private Podman path was live, which is
 a different claim entirely.
 
 ### Baseline before the cutover — 2026-08-10, from inside the development container
@@ -667,7 +675,7 @@ Reading each column:
   Tunnel answered and not a deployed Worker.
 
 - **`route` ok** — a `/_next/static/chunks/…` asset 200 and `/rails-health` **503 `not-configured`**
-  on all three. The 503 is the correct answer: `next dev` carries no VPC binding, and a 200 there
+  on all three. The 503 is the correct answer: the dev server carries no VPC binding, and a 200 there
   would have meant the private Podman path was live.
 - **`leak` ok** — no `localhost`, `127.0.0.1`, `edge-core`, `0.0.0.0` or `10.89.*` in any body or
   `Location`.
@@ -948,7 +956,7 @@ two ways Edge traffic crosses the Tunnel.**
 
 - **`dev/apex`, `dev/acme`** — `umaxica.dev` is delegated to Vercel DNS, outside Cloudflare.
 - **`{app,com,org}/core`** (5405/5105/5305) — no Public Hostname. `jp.umaxica.*` points at a Rails
-  origin, so no path reaches the Next.js cores through ingress (ADR 007 is implemented in code but
+  origin, so no path reaches the cores through ingress (ADR 007 is implemented in code but
   receives nothing).
 - **Rails surfaces** — `auth`, `side-jp`, `jp`, `palm-jp`, `www` traverse the same connector but are
   the Rails repository's; Edge observes them read-only.
@@ -1245,7 +1253,7 @@ Deliberately outside this work, so that "not verified" is never mistaken for "ve
 - **Production deployment.** No production Tunnel, no production VPC Service, no production Access
   policy. Production is being rebuilt separately, using development as the reference implementation.
 - **Core shared-FQDN routing.** `jp.umaxica.{app,com,org}` needs path-level ingress splitting Rails
-  and Next.js (ADR 007) and is a separate piece of work. `core-jp.*` is deliberately not
+  and the frame (ADR 007) and is a separate piece of work. `core-jp.*` is deliberately not
   reintroduced as a canonical hostname. Nothing here points a Core hostname at an Edge port.
 
   As of 2026-08-11 the Public Hostname for each of the three sends the **whole** FQDN to a Rails
@@ -1254,7 +1262,7 @@ Deliberately outside this work, so that "not verified" is never mistaken for "ve
   no path is routed to an Edge port. Recorded so that "ADR 007: Implemented" is not read as "the
   shared FQDN is live".
 
-- **The Workers VPC transport.** `Next.js → Workers VPC → Rails` is a different graph and is
+- **The Workers VPC transport.** `frame → Workers VPC → Rails` is a different graph and is
   untouched; a Tunnel route neither creates nor replaces a Workers binding.
 - **`dev/apex`.** `umaxica.dev` is still delegated to Vercel DNS, outside the Cloudflare
   boundary, so the unit binds container loopback only even though it now deploys to Workers.

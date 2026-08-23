@@ -91,7 +91,7 @@
       "path": ["node_modules"]
     },
     "exclude": {
-      "path": ["\\.wrangler/", "\\.next/", "\\.open-next/", "^coverage/", "^dist/"]
+      "path": ["\\.wrangler/", "^coverage/", "^dist/"]
     },
     // `no-orphans` is deliberately NOT enabled. Every module in scope except
     // tools/lib/wrangler-config.mjs is a CLI entrypoint reached through a pnpm

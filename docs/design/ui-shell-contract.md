@@ -11,18 +11,21 @@ together is this document plus each unit's own shell-contract test, and neither
 replaces the other: the tests prove a unit does what it says, this document says
 what all of them are supposed to do and why.
 
-"Each unit's own test" is not one file name. The fifteen Next.js frames assert
-this contract in `test/ui-shell-contract.test.tsx`, by rendering the layout as a
-function; the five apex Workers assert it in `api/ui-shell-contract.hurl`, by
-XPath over a real response. Both make the same assertions — landmarks, document
+"Each unit's own test" is not one file name. The fifteen TanStack Start frames
+assert this contract in `test/ui-shell-contract.test.tsx`, by driving a real
+router and asserting on the document it emits; the five apex Workers assert it in
+`api/ui-shell-contract.hurl`, by XPath over a real response. Both make the same assertions — landmarks, document
 order, accessible names, which destinations are reachable, and no CSS class in
 sight — and neither is the archetype cutting a corner.
 
 apex is in the other layer on purpose, and the reason is worth keeping because
 it looks like an inconsistency until you read it. AGENTS.md puts assertions
 about a **response** in Hurl and assertions about **internal logic** in Vitest.
-A Next layout is a function this repository can call, so its shell is internal
-logic; an apex document only exists as a Worker response. apex did have a
+A frame's shell is a router this repository can render in-process, so it is
+internal logic; an apex document only exists as a Worker response. `<HeadContent />`
+reads router state, so a frame renders its paths through a real router in
+`beforeAll` and asserts synchronously afterwards; that is a driver detail, not a
+different layer. apex did have a
 `test/ui-shell-contract.test.tsx` once, and it was deleted rather than kept —
 reaching the document through happy-dom needed a regex that stripped
 `<link rel="stylesheet">` out of the HTML before parsing, because happy-dom
@@ -39,9 +42,9 @@ HTML surface.
 
 | Archetype     | Units                                 | Runtime                        |
 | ------------- | ------------------------------------- | ------------------------------ |
-| **core**      | `{app,com,org}/core`                  | Next.js App Router on OpenNext |
-| **satellite** | `{app,com,org}/{docs,help,info,news}` | Next.js App Router on OpenNext |
-| **apex**      | `{app,com,dev,net,org}/apex`          | Hono JSX                       |
+| **core**      | `{app,com,org}/core`                  | TanStack Start on Vite/workerd |
+| **satellite** | `{app,com,org}/{docs,help,info,news}` | TanStack Start on Vite/workerd |
+| **apex**      | `{app,com,dev,net,org}/apex`          | Hono JSX on Vite/workerd       |
 
 Within an archetype the shell sources are byte-identical across `app`/`com`/`org`
 (and `net`/`dev` for apex); only the TLD literal differs. Treat an archetype as
@@ -50,13 +53,19 @@ one thing: a change that applies to it applies to every unit in it.
 `dev/apex` used to sit outside this contract: it had no `wrangler.jsonc` and no
 shell, because it was a Vercel edge function that built HTML from template
 literals. It moved onto Cloudflare Workers and the apex archetype, so it is now
-inside the contract like the other four. `dev/acme`, the Next.js application
-that shared the `.dev` domain, was deleted.
+inside the contract like the other four. `dev/acme`, the application that shared
+the `.dev` domain, was deleted.
 
 That move is why the count above is 20 rather than the 19 this document said
 for a while: the table below has summed to 20 since `dev/apex` joined, and the
-prose had not caught up. 15 Next frames + 5 apex Workers, and `tools/vpc-probe`
+prose had not caught up. 15 frames + 5 apex Workers, and `tools/vpc-probe`
 outside.
+
+The one archetype difference worth reading before §15 is where each archetype
+puts its failure documents: the satellites render theirs inside the root
+document, so they carry the shell; the Cores render theirs outside a pathless
+layout route, so they do not. `adr/013-frames-tanstack-start.md` records why that
+split is allowed rather than a drift to fix.
 
 ## 2. Why the shell is duplicated
 
@@ -143,7 +152,7 @@ is a decision, not a detail.
 | Concern                                                                 | Library                                                | Where it is installed                        |
 | ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- |
 | Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty units that serve HTML             |
-| Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen Next units                       |
+| Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen frames                           |
 | URL / search-param state                                                | **`nuqs`**, catalog `^2.9.5`                           | **Catalog only — not installed in any unit** |
 
 **`react-aria-components` and `nuqs` do not go into apex.** The four apex units
@@ -163,16 +172,17 @@ Tailwind v4 has no JavaScript config file: the theme is declared in CSS with
 exactly — there is no root preset to inherit and nothing to `extends`. Each unit
 owns:
 
-- its own `postcss.config.mjs` (the sixteen Next units), naming
-  `@tailwindcss/postcss` and nothing else; and
-- its own stylesheet carrying its own `@theme` block.
+- its own stylesheet carrying its own `@theme` block; and
+- its own `@tailwindcss/vite` entry in its own `vite.config.ts`.
 
-The five apex Workers build through Vite, so they run `@tailwindcss/vite` like
-the frames run `@tailwindcss/postcss`. This was not always true: `wrangler
-deploy` bundles the entrypoint and copies `public/` byte for byte, so before
-Vite there was no bundler in that path at all and the units compiled CSS with
-`@tailwindcss/cli` into a `public/style.css` that could not carry a content
-hash. Vite emits the stylesheet into the client build with a hash in its name,
+All twenty units build through Vite, so all twenty run `@tailwindcss/vite`. There
+is no `postcss.config.mjs` anywhere and `@tailwindcss/postcss` is not installed:
+there is no PostCSS pipeline anywhere for it to sit in. This
+was not always true of apex either — `wrangler deploy` bundles the entrypoint and
+copies `public/` byte for byte, so before Vite there was no bundler in that path
+at all and those units compiled CSS with `@tailwindcss/cli` into a
+`public/style.css` that could not carry a content hash. Vite emits the stylesheet
+into the client build with a hash in its name,
 which is what lets `public/_headers` mark it `immutable` — an unhashed asset is
 revalidated on every document, because Cloudflare serves static assets as
 `public, max-age=0, must-revalidate` unless the filename is fingerprinted.
@@ -181,7 +191,7 @@ revalidated on every document, because Cloudflare serves static assets as
 `dist/` tree is gitignored, like the other generated artefacts in AGENTS.md.
 
 **Do not introduce a shared Tailwind preset, a shared theme package or a root
-`postcss.config`.** The duplication is the same deliberate duplication as §2, and
+Tailwind config.** The duplication is the same deliberate duplication as §2, and
 `test/deployment-unit-boundaries.test.ts` enforces it.
 
 ### React Aria is `<Button>` here, not `<Disclosure>`
@@ -227,7 +237,7 @@ and nothing else in that family. Two things enforce it:
 - No unit declares `react-aria`, `react-stately` or any `@react-aria/*`,
   `@react-stately/*`, `@react-types/*` or `@internationalized/*` package, so
   pnpm's strict layout already makes a direct import unresolvable from a unit.
-- Each of the fifteen units bans them by name in `.oxlintrc.json`, as a second
+- Each of the fifteen frames bans them by name in `.oxlintrc.json`, as a second
   `no-restricted-imports` pattern group alongside the `shared/` one. Verified to
   fire: importing `react-aria` fails `lint`, importing
   `react-aria-components` does not.
@@ -237,7 +247,7 @@ is the value type `react-aria-components`' date components require. Nothing uses
 those components today. If that changes, unban that single package here and in
 the fifteen configs deliberately — do not work around the rule at a call site.
 
-`react-aria-components` is installed across all fifteen Next units up front,
+`react-aria-components` is installed across all fifteen frames up front,
 ahead of any consumer, so that the first unit to build an interactive control
 does not get to choose a different library. The three core units now import it;
 the twelve satellites still do not, and each of those twelve keeps an
@@ -247,10 +257,11 @@ that unit gains its first consumer.** Verified that they are load-bearing rather
 than decorative — knip reports the dependency as unused the moment the entry is
 removed.
 
-`tailwindcss` sits in the same list for a different reason: it is genuinely
-used, but only from CSS (`@import 'tailwindcss'`), and knip resolves
-`@tailwindcss/postcss` from `postcss.config.mjs` without parsing CSS at-rules.
-The comment above each entry says which of the two cases it is.
+`tailwindcss` used to sit in the same list for a different reason — genuinely
+used, but only from CSS (`@import 'tailwindcss'`), which knip could not see. It
+can now that `.css` is in each unit's `project` globs, so the engine resolves
+like any other import and that suppression is gone. The comment above each
+remaining entry says why it is there.
 
 `nuqs` stays a catalog entry with no unit depending on it, because no surface in
 the repository uses a search parameter and `nuqs` v2 additionally requires a
@@ -295,7 +306,7 @@ the media query shows it unconditionally, with no state consulted.
 This requirement is the reason the trigger is a React Aria `<Button>` rather
 than a `<Disclosure>`; see §3a.
 
-Current entries (`*/core` only, from `src/app/(page)/layout.tsx`): Home, Explore,
+Current entries (`*/core` only, from `src/components/app-chrome.tsx`): Home, Explore,
 Messages, Notifications, Configuration, About. All six are served routes.
 
 ## 6. Main and aside
@@ -358,11 +369,11 @@ hostname, and a custom domain and a Tunnel Public Hostname cannot both own one
 name (ADR 008). `vars` carries only `EDGE_ENV`, `NODE_ENV` and `BRAND_NAME`. The
 origin literals that do exist in-repo are:
 
-| Archetype       | Source                                                                          | Example                                                 |
-| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| core, satellite | `src/app/sitemap.ts`, `src/app/robots.ts`                                       | `https://jp.umaxica.app`, `https://docs-jp.umaxica.app` |
-| core also       | `src/lib/core-dispatch.ts` `PUBLIC_CORE_HOST`                                   | `jp.umaxica.app`                                        |
-| apex            | `src/page-content.tsx` `ABOUT_CANONICAL_URL`; `src/root-redirect.ts` `SITE_URL` | `https://umaxica.app`                                   |
+| Archetype       | Source                                                                           | Example                                                 |
+| --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| core, satellite | `src/lib/canonical.ts` `CANONICAL_ORIGIN`, used by the sitemap and robots routes | `https://jp.umaxica.app`, `https://docs-jp.umaxica.app` |
+| core also       | `src/lib/core-dispatch.ts` `PUBLIC_CORE_HOST`                                    | `jp.umaxica.app`                                        |
+| apex            | `src/page-content.tsx` `ABOUT_CANONICAL_URL`; `src/root-redirect.ts` `SITE_URL`  | `https://umaxica.app`                                   |
 
 Never derive the origin from a folder name. There is no origin resolver — the
 literal is simply repeated two or three times per unit, which is itself a drift
@@ -379,19 +390,19 @@ cause to touch it.
 
 ### Allowed
 
-| Difference                  | core                              | satellite                         | apex                                                    | Why it is allowed                                                                                                                               |
-| --------------------------- | --------------------------------- | --------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main navigation             | yes, 6 routes                     | none                              | none                                                    | Satellites and apex serve a single surface; inventing destinations produces dead links                                                          |
-| Menu button                 | yes                               | none                              | none                                                    | A disclosure with nothing to disclose is a dead control                                                                                         |
-| Where the shell is wired    | `src/app/(page)/layout.tsx`       | `src/app/layout.tsx`              | `src/renderer.tsx`                                      | core scopes the shell to the `(page)` route group so `error.tsx`, `/offline` and `global-not-found.tsx` stay chrome-free                        |
-| CSS delivery                | `globals.css` via PostCSS         | `style.css` via PostCSS           | `src/style.css` → hashed `/assets/style-*.css` via Vite | apex builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)                                   |
-| Client components           | one (the disclosure)              | none                              | n/a                                                     | Only state justifies a client component                                                                                                         |
-| Breakpoint                  | 800px (`wide:`)                   | none                              | none                                                    | Only core has a layout that must reflow; wrapping flex rows need no media query                                                                 |
-| React Aria                  | **`Button`, imported**            | installed, no importer            | **not possible**                                        | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)                                  |
-| Tailwind RAC plugin         | installed                         | none                              | none                                                    | The plugin only earns its place where a React Aria component is actually rendered                                                               |
-| `aria-current`              | on the matching entry             | none                              | none                                                    | Only core has a main navigation, so only core has an entry to mark (§12)                                                                        |
-| `error.tsx`, `/offline`     | outside the shell                 | **inside the shell**              | n/a                                                     | Follows from where the shell is wired: core scopes it to `(page)`, the satellites wire it into the root layout (§15)                            |
-| Where the shell is asserted | `test/ui-shell-contract.test.tsx` | `test/ui-shell-contract.test.tsx` | `api/ui-shell-contract.hurl`                            | A Next layout is a function this repo can call; an apex document only exists as a response, and AGENTS.md puts response assertions in Hurl (§1) |
+| Difference                  | core                                       | satellite                                | apex                                           | Why it is allowed                                                                                                                                              |
+| --------------------------- | ------------------------------------------ | ---------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main navigation             | yes, 6 routes                              | none                                     | none                                           | Satellites and apex serve a single surface; inventing destinations produces dead links                                                                         |
+| Menu button                 | yes                                        | none                                     | none                                           | A disclosure with nothing to disclose is a dead control                                                                                                        |
+| Where the shell is wired    | `src/routes/_page.tsx`                     | `src/routes/__root.tsx`                  | `src/renderer.tsx`                             | core puts the shell on a pathless layout route, so `/offline` and the failure documents sit outside it and stay chrome-free (§15)                              |
+| CSS delivery                | `src/globals.css` → hashed `/assets/*.css` | `src/style.css` → hashed `/assets/*.css` | `src/style.css` → hashed `/assets/style-*.css` | every unit builds through Vite, so the stylesheet is fingerprinted and served `immutable` by the assets layer (§3a)                                            |
+| Client components           | one (the disclosure)                       | none                                     | n/a                                            | Only state justifies a client component                                                                                                                        |
+| Breakpoint                  | 800px (`wide:`)                            | none                                     | none                                           | Only core has a layout that must reflow; wrapping flex rows need no media query                                                                                |
+| React Aria                  | **`Button`, imported**                     | installed, no importer                   | **not possible**                               | apex carries no React; both agreed libraries peer-depend on it, so apex satisfies §4's behaviour by hand (§3a)                                                 |
+| Tailwind RAC plugin         | installed                                  | none                                     | none                                           | The plugin only earns its place where a React Aria component is actually rendered                                                                              |
+| `aria-current`              | on the matching entry                      | none                                     | none                                           | Only core has a main navigation, so only core has an entry to mark (§12)                                                                                       |
+| `error.tsx`, `/offline`     | outside the shell                          | **inside the shell**                     | n/a                                            | Follows from where the shell is wired: core scopes it to `(page)`, the satellites wire it into the root layout (§15)                                           |
+| Where the shell is asserted | `test/ui-shell-contract.test.tsx`          | `test/ui-shell-contract.test.tsx`        | `api/ui-shell-contract.hurl`                   | A frame's router is something this repo can render in-process; an apex document only exists as a response, and AGENTS.md puts response assertions in Hurl (§1) |
 
 ### Drift — resolved
 
@@ -513,13 +524,18 @@ The split is the point: a fact that Tailwind can name is a token, so it is
 reusable and greppable; a fact it cannot name stays an element rule with the
 reason written above it. Nothing declares a typographic property twice.
 
-On the Next units `--font-sans` names `var(--font-inter, 'Noto Sans JP')` first,
-because `next/font` supplies Inter through a CSS variable. That variable is
-`--font-inter`, **not** `--font-sans`: pointing both at the same name would make
-the theme token reference itself. The `'Noto Sans JP'` fallback inside the
-`var()` is load-bearing — `global-error.tsx` and `global-not-found.tsx` render
-their own `<html>` without the `next/font` class, and a bare `var()` with no
-fallback would invalidate the whole declaration there.
+On the frames `--font-sans` names `var(--font-inter, 'Noto Sans JP')` first. That
+variable is `--font-inter`, **not** `--font-sans`: pointing both at the same name
+would make the theme token reference itself.
+
+Inter is self-hosted. The CSP is `font-src 'self' data:`, so a CDN is not an
+option: each frame `@import`s `@fontsource-variable/inter`, which ships the woff2
+files and the `@font-face` rules, and Vite fingerprints them into the client
+build like any other asset. `--font-inter` is a plain `@theme` token rather than
+a class on one element, so every document the unit serves resolves the same
+stack — including the failure documents. The `'Noto Sans JP'` fallback inside the
+`var()` costs nothing and keeps the declaration valid if the token is ever
+removed.
 
 - **Font stack**: `--font-sans` (Inter, `latin` subset only) then `Noto Sans JP`,
   Hiragino, Yu Gothic, Meiryo, then the generic keywords. Noto Sans JP is named
@@ -569,7 +585,7 @@ Phone, tablet and desktop must all work. Requirements:
   The first line deletes Tailwind's five stock breakpoints, so `sm:`, `md:`,
   `lg:`, `xl:` and `2xl:` do not exist and a second breakpoint cannot be written
   without editing that block. The rule is mechanical rather than a convention
-  someone has to remember, and the compiled CSS is checkable: a Next frame emits
+  someone has to remember, and the compiled CSS is checkable: a frame emits
   exactly one `@media (min-width: 50rem)`, and apex emits none at all.
 
   Header and footer rows are wrapping flex rows, so they hold from phone to
@@ -615,11 +631,11 @@ xpath "string((//a|//button|//input|//select|//textarea|//*[@tabindex])[1]/@href
 
 Where it is placed follows where each archetype already puts its shell:
 
-| Archetype | Placed in                    | Target                                                     |
-| --------- | ---------------------------- | ---------------------------------------------------------- |
-| core      | `src/app/(page)/layout.tsx`  | `<PageMain>`                                               |
-| satellite | `src/app/layout.tsx`         | `<PageHero>`, **and** `error.tsx` and `/offline` — see §15 |
-| apex      | `src/shell.tsx` (`AppShell`) | the `<main>` `AppShell` renders                            |
+| Archetype | Placed in                    | Target                                                               |
+| --------- | ---------------------------- | -------------------------------------------------------------------- |
+| core      | `src/routes/_page.tsx`       | `<PageMain>`                                                         |
+| satellite | `src/routes/__root.tsx`      | `<PageHero>`, **and** the failure documents and `/offline` — see §15 |
+| apex      | `src/shell.tsx` (`AppShell`) | the `<main>` `AppShell` renders                                      |
 
 **It is hidden by a transform, not by `sr-only`.** Both keep the link in the
 accessibility tree and focusable, which `display: none` and `visibility: hidden`
@@ -738,12 +754,16 @@ Page:  {LOCALIZED_PAGE_TITLE} — UMAXICA ({TLD})
 - Satellite roots carry the product name: `Docs — UMAXICA (APP)`.
 - **No surface or runtime name may appear in a user-facing title** — not `auth`,
   `core`, `apex`, `side`, `edge`, `next`, `hono`, `workers`, `cloudflare` or
-  `opennext`. This is what lets Rails and Edge split routes inside one FQDN
+  `vite`. This is what lets Rails and Edge split routes inside one FQDN
   invisibly to the reader.
 
-Two mechanisms, one emitted contract: Next units use Metadata `title.default` +
-`template`; apex uses `buildBrandTitle()` in `src/brand.ts` rendered through
-`<SeoHead>` in `src/seo.tsx`. `test/html-title-contract.test.ts` at the repository
+Two mechanisms, one emitted contract: each frame composes the suffix in
+`brandTitle()` in `src/lib/title.ts` and passes a finished string to a route's
+`head.meta`; apex uses `buildBrandTitle()` in `src/brand.ts` rendered through
+`<SeoHead>` in `src/seo.tsx`. TanStack Router has no template primitive and a
+nested title simply overrides its ancestor's, so that one function per unit is
+the whole mechanism — and a route that sets a title without calling it is the
+two-title trap the repository-wide test exists to catch. `test/html-title-contract.test.ts` at the repository
 root is the single owner and checks the **final HTML**, not the source, across
 every unit, page, error document and 429 response.
 
@@ -752,37 +772,41 @@ every unit, page, error document and 429 response.
 A machine-readable or failure document with navigation in it is worse than one
 without.
 
-| Surface                                    | What it is                                                                                                                                                                                                   |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/health` (core, satellite)                | **JSON.** Edge state and Rails liveness in one document; `no-store`, `X-Robots-Tag: noindex`; **503 when Rails liveness fails** (ADR 009). Not a page. Do not add chrome, do not change the status contract. |
-| `/health`, `/health.html` (apex)           | **HTML**, but chrome-free: no `<header>`, no navigation, a `<dl>` of Worker status and a bare `<footer>© year BRAND</footer>` that is deliberately _not_ the shell footer.                                   |
-| `/health.json` (apex)                      | JSON.                                                                                                                                                                                                        |
-| `/revision`                                | JSON.                                                                                                                                                                                                        |
-| `robots.txt`, `sitemap.xml`                | Generated routes.                                                                                                                                                                                            |
-| apex `/`                                   | A region redirect, not a document.                                                                                                                                                                           |
-| 429 responses                              | Hand-written HTML; title contract applies, shell does not.                                                                                                                                                   |
-| `global-error.tsx`, `global-not-found.tsx` | Chrome-free on every unit: both replace the root layout entirely, which is correct for a failure document.                                                                                                   |
-| `error.tsx`, `/offline`                    | **Archetype-dependent — see below.** Chrome-free on core; inside the shell on the satellites.                                                                                                                |
+| Surface                           | What it is                                                                                                                                                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/health` (core, satellite)       | **JSON.** Edge state and Rails liveness in one document; `no-store`, `X-Robots-Tag: noindex`; **503 when Rails liveness fails** (ADR 009). Not a page. Do not add chrome, do not change the status contract. |
+| `/health`, `/health.html` (apex)  | **HTML**, but chrome-free: no `<header>`, no navigation, a `<dl>` of Worker status and a bare `<footer>© year BRAND</footer>` that is deliberately _not_ the shell footer.                                   |
+| `/health.json` (apex)             | JSON.                                                                                                                                                                                                        |
+| `/revision`                       | JSON.                                                                                                                                                                                                        |
+| `robots.txt`, `sitemap.xml`       | Generated routes.                                                                                                                                                                                            |
+| apex `/`                          | A region redirect, not a document.                                                                                                                                                                           |
+| 429 responses                     | Hand-written HTML; title contract applies, shell does not.                                                                                                                                                   |
+| 404 and 500 documents, `/offline` | **Archetype-dependent — see below.** Chrome-free on core; inside the shell on the satellites.                                                                                                                |
 
 Note that `/health` means different things in different archetypes — Edge+Rails
 with a 503 path on core and satellite, Worker-only with a 200 on apex. That is a
 real difference in what the endpoint answers, not a shell question, and it is
 recorded here only so nobody "unifies" the two by accident.
 
-### `error.tsx` and `/offline` are only chrome-free on core
+### The failure documents are only chrome-free on core
 
 This table used to list them as chrome-free everywhere, and that was wrong for
 the twelve satellites. It follows from where each archetype wires the shell
-(§8): core scopes it to the `(page)` route group, so `src/app/error.tsx` and
-`src/app/offline/` sit outside it and render bare. The satellites wire the shell
-into the **root** layout, so both documents render inside it and carry the
-header, the footer — and, since §12, the skip link the layout places ahead of
-them.
+(§8): core puts it on the pathless `_page.tsx` layout route, so `offline.tsx`
+and the router's `notFoundComponent` / `defaultErrorComponent` sit outside it and
+render bare. The satellites wire the shell into `__root.tsx`, so those documents
+render inside it and carry the header, the footer — and, since §12, the skip link
+the root places ahead of them.
 
-That last part is the consequence worth stating, because it is a way to ship a
+**On the satellites this is a known cost, not an oversight.** Everything a
+satellite serves renders inside `__root.tsx`, so there is no way to give the 404
+and the 500 a chrome-free document short of a second root that duplicates it.
+`adr/013-frames-tanstack-start.md` records the trade.
+
+The skip link is the consequence worth stating, because it is a way to ship a
 broken control: a skip link on a document whose `<main>` has no `id` lands
 nowhere, and the document it would land nowhere on is the one a reader reaches
-when something has already failed. So on the satellites `error.tsx` and
+when something has already failed. So on the satellites the failure documents and
 `/offline` carry `id="main-content"` and `tabIndex={-1}` exactly as `PageHero`
 does, and their unit's `test/ui-shell-contract.test.tsx` asserts it.
 
@@ -807,8 +831,10 @@ Closed since the last revision:
 - The footer identity row now renders the canonical URL on all 20 units (§7).
 - The three token sets are one (§8).
 - The status surfaces that shipped unstyled — apex's 404/500/offline and health
-  error documents, every `global-error.tsx`, `*/core`'s `unauthorized.tsx` —
-  are styled, because a linked or imported stylesheet costs nothing.
+  error documents, and the frames' error documents — are styled, because a linked
+  or imported stylesheet costs nothing. On the frames this is structural now
+  rather than remembered: the 404 and 500 render inside the root document, so
+  they cannot lose the stylesheet without every page losing it.
 - **The skip link and `aria-current` landed on all 20 units (§12).** They were
   gap 2 in the previous revision. Each landed with its assertions in the layer
   that archetype already uses — Vitest on the fifteen frames, Hurl on the five
@@ -839,8 +865,8 @@ Open:
    importer, so twelve `knip.jsonc` files carry an `ignoreDependencies`
    suppression (§3a). Each is deleted when its unit gains a consumer. The three
    core entries are already gone.
-9. The satellites' 429 document, built as a string in `src/middleware.ts`, is
-   the one HTML surface with no stylesheet. Middleware runs before the route
+9. The satellites' 429 document, built as a string in `src/rate-limit.ts`, is
+   the one HTML surface with no stylesheet. The limiter runs before the route
    that knows the hashed CSS chunk's URL, so there is nothing to link; it stays
    unstyled semantic HTML rather than gaining a hand-maintained inline copy.
    It has no skip link either, for the same reason it has no shell.
@@ -861,7 +887,7 @@ Open:
   cannot write the reason, it is drift, and it belongs in the _drift_ table
   instead — where the next reader can find it rather than rediscover it.
 - Do not resolve duplication by introducing a shared UI package, a shared
-  Tailwind preset, a shared theme file or a root `postcss.config`. The extraction
+  Tailwind preset, a shared theme file or a root Tailwind config. The extraction
   property is load-bearing and machine-checked.
 - Visual rules belong in the markup as utilities. A new CSS rule needs a written
   reason for why a utility cannot express it — the two that qualify today are the
