@@ -49,8 +49,8 @@ catalog:
   #
   # Its peer range pins wrangler at ^4.124.0, which is what moved the wrangler
   # entry below off ^4.123.0.
-  '@cloudflare/vite-plugin': ^1.53.0
-  '@cloudflare/workers-types': ^5.20260820.1
+  '@cloudflare/vite-plugin': ^1.53.1
+  '@cloudflare/workers-types': ^5.20260822.1
   # Inter, self-hosted. `next/font/google` downloaded and self-hosted it at build
   # time for the Next frames; a Vite unit has no equivalent, and the CSP is
   # `font-src 'self' data:`, so a CDN is not an option either. This package ships
@@ -178,7 +178,7 @@ catalog:
   #
   # Vitest already resolves a transitive copy of Vite; this entry is the direct,
   # version-pinned one, so the two cannot disagree about which major is in play.
-  vite: ^8.2.1
+  vite: ^8.2.2
   vitest: ^4.1.11
   # Floor set by `@cloudflare/vite-plugin`'s peer range (^4.124.0), not chosen
   # independently. Bumping the plugin without bumping this is a resolution
@@ -237,19 +237,21 @@ audit:
     - GHSA-jmr9-qjv8-65gv
 
 overrides:
-  nanoid: ^3.3.17
-  vitest: 'catalog:'
   # Advisory floors for transitive dev-only dependencies. Every entry below is
-  # reached through a devDependency (vite/vitest, wrangler, or the Next.js
-  # toolchain), so none of them ship in a Worker bundle — but `pnpm audit` is a
-  # gate here, and the packages that pull them pin ranges we do not control. A
-  # floor turns "whatever the parent resolved" into a version the advisory
-  # database is clean on, and fails resolution loudly if a future bump would
-  # reintroduce one. Drop an entry once its parent's own range has moved past
-  # the floor on its own.
+  # reached through a devDependency (vite/vitest or wrangler), so none of them
+  # ship in a Worker bundle — but `pnpm audit` is a gate here, and the packages
+  # that pull them pin ranges we do not control. A floor turns "whatever the
+  # parent resolved" into a version the advisory database is clean on, and
+  # fails resolution loudly if a future bump would reintroduce one. Drop an
+  # entry once its parent's own range has moved past the floor on its own.
   #
   # Where a package is live on two majors, the floor is keyed per major so the
-  # override cannot drag a consumer across a breaking boundary.
+  # override cannot drag a consumer across a breaking boundary. The KEY alone
+  # does not achieve that — it only decides which requests are caught. The
+  # VALUE needs the upper bound too, or the rewrite lands on the next major
+  # anyway. `js-yaml@4: '>=4.3.1'` did exactly that: it caught xmlbuilder2's
+  # `^4.1.1` and resolved it to js-yaml 5.3.0. Every floor here is now a range,
+  # not a bare `>=`.
   #
   # Six entries were dropped when dev/acme was deleted and dev/apex moved off
   # Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
@@ -257,13 +259,25 @@ overrides:
   # path-to-regexp majors, and tar. Nothing in the tree resolves those packages
   # now, so the floors constrained nothing — and a floor with no consumer reads
   # as protection while providing none.
-  ajv@8: '>=8.18.0'
-  # GHSA-g7r4-m6w7-qqqr only touches 0.27.3–0.28.0; the 0.25.x copy vite still
-  # resolves is unaffected and is deliberately left where it is.
+  #
+  # Five more were dropped on the same rule, each verified by removing it and
+  # regenerating the lockfile — none moved a single resolution:
+  #   ajv@8, minimatch@10  no consumer left in the tree at all
+  #   nanoid               postcss asks for ^3.3.16 and lands on 3.3.18 alone
+  #   smol-toml            knip moved its own range to ^1.7.1
+  #   vitest: 'catalog:'   redundant with the catalog, which already pins the
+  #                        direct devDependency in all twenty-two manifests —
+  #                        and actively harmful, because `pnpm update` cannot
+  #                        keep the catalog protocol through an override and
+  #                        rewrites `"vitest": "catalog:"` to a literal in
+  #                        every manifest, which `check:deps` then rejects.
+  #                        It was the ONLY package listed in both blocks.
+  #
+  # GHSA-g7r4-m6w7-qqqr touches 0.27.3–0.28.0. tsx pins `~0.27.0`, so without
+  # this floor the tree pulls esbuild 0.27.7 back in; vite's own range is
+  # `^0.27.0 || ^0.28.0` and needs no help. Verified by removal, 2026-08-23.
   esbuild@0.27: '>=0.28.1'
-  js-yaml@4: '>=4.3.1'
-  minimatch@10: '>=10.2.3'
-  smol-toml: '>=1.6.1'
+  js-yaml@4: '>=4.3.1 <5'
 
 peerDependencyRules:
   allowAny:
