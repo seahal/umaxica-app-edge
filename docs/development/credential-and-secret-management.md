@@ -36,6 +36,11 @@ Run these inside `core`, after `scripts/dev-start`:
 published on host loopback only by `compose.yaml`, which is what lets the host browser
 complete the redirect.
 
+When the browser cannot reach that port — `podman exec` publishes nothing, and a remote
+session has no host loopback to share — authenticate Wrangler with the Device
+Authorization Grant instead. See
+[Wrangler authentication](wrangler-authentication.md).
+
 Git remotes must be HTTPS. `~/.ssh` is not mounted and no SSH key exists in the container,
 so `git@github.com:` remotes cannot authenticate — `gh auth setup-git` wires the HTTPS
 credential helper instead.

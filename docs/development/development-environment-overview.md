@@ -61,4 +61,5 @@ alongside it are on `PATH` too. Bun is not part of the environment.
 The runtime/network architecture is documented in
 [cloudflare-development-network.md](cloudflare-development-network.md). Security and
 credential rules are in [container-security-policy.md](container-security-policy.md) and
-[credential-and-secret-management.md](credential-and-secret-management.md).
+[credential-and-secret-management.md](credential-and-secret-management.md); logging
+Wrangler in is [wrangler-authentication.md](wrangler-authentication.md).

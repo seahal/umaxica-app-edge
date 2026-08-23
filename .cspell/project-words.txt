@@ -117,6 +117,7 @@ changeme
 blkd        # the BLOCKED status abbreviation in tools/verify-edge-connectivity.mjs
 SPOF
 ERRO
+PKCE        # the OAuth Proof Key for Code Exchange extension, RFC 7636
 
 # --- Deliberate non-words inside test fixtures. Each is a fragment of an
 # --- encoded or intentionally malformed string, so there is no correct

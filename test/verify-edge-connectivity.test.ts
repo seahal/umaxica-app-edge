@@ -7,6 +7,8 @@ import {
   PASS,
   Report,
   SKIP,
+  WARN,
+  classifyIdentity,
   classifyProbeOutcome,
   extractInterfaceBlock,
   findMissingCells,
@@ -361,5 +363,72 @@ describe('isInsideContainer', () => {
     expect(isInsideContainer({ DEVCONTAINER: '1' }, () => false)).toBe(true);
     expect(isInsideContainer({}, (path) => path === '/.dockerenv')).toBe(true);
     expect(isInsideContainer({}, () => false)).toBe(false);
+  });
+});
+
+describe('classifyIdentity', () => {
+  const surface = { key: 'APP/CORE', brand: 'app', frame: 'core' };
+  const liveness = (namespace: unknown) =>
+    JSON.stringify({
+      status: 'ok',
+      check: 'liveness',
+      ...(namespace === undefined ? {} : { namespace }),
+    });
+
+  it('passes when the frame own namespace answered', () => {
+    const verdict = classifyIdentity({
+      surface,
+      entry: { status: 200, body: liveness('core/app') },
+      transport: PASS,
+    });
+    expect(verdict.status).toBe(PASS);
+    expect(verdict.detail).toContain('core/app');
+  });
+
+  it('fails when another namespace answered', () => {
+    /*
+     * The whole reason this gate exists. One VPC Service carries all fifteen
+     * frames, so a wrong Host reaches a different namespace and still answers
+     * 200 — every transport-level gate reads that as success.
+     */
+    const verdict = classifyIdentity({
+      surface,
+      entry: { status: 200, body: liveness('docs/app') },
+      transport: PASS,
+    });
+    expect(verdict.status).toBe(FAIL);
+    expect(verdict.detail).toContain('expected core/app');
+  });
+
+  it('warns rather than fails when Rails reports no namespace', () => {
+    // Unproven is not the same as wrong: Rails only began reporting the
+    // namespace on 2026-08-21, and an older backend must not read as a misroute.
+    for (const body of [liveness(undefined), liveness(''), liveness(7)]) {
+      expect(
+        classifyIdentity({ surface, entry: { status: 200, body }, transport: PASS }).status,
+      ).toBe(WARN);
+    }
+  });
+
+  it('fails when a 200 is not a liveness document at all', () => {
+    for (const body of ['<!DOCTYPE html>', '', 'null']) {
+      expect(
+        classifyIdentity({ surface, entry: { status: 200, body }, transport: PASS }).status,
+      ).toBe(FAIL);
+    }
+  });
+
+  it('blocks, never passes, when there is nothing to identify', () => {
+    expect(
+      classifyIdentity({
+        surface,
+        entry: { status: 200, body: liveness('core/app') },
+        transport: FAIL,
+      }).status,
+    ).toBe(BLOCKED);
+    expect(
+      classifyIdentity({ surface, entry: { status: 404, body: '' }, transport: PASS }).status,
+    ).toBe(BLOCKED);
+    expect(classifyIdentity({ surface, entry: undefined, transport: PASS }).status).toBe(BLOCKED);
   });
 });
