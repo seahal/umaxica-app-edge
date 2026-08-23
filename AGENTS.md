@@ -85,7 +85,7 @@ One thing is deliberately not true yet, and should not be quietly "fixed":
 There used to be a second exception — `dev/apex` had no `test:api`, because its
 only server was `vercel dev`, which blocks on interactive device authentication
 and so never listened in CI. That unit now runs on Cloudflare Workers with
-`vite dev` as its server, so it carries the same nine `.hurl` files as every
+`vite dev` as its server, so it carries the same ten `.hurl` files as every
 other apex and is in the `test-api` matrix. All twenty-one units implement the
 same contract; none is exempt from the split.
 

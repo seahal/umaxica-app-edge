@@ -443,13 +443,47 @@ scale — which is what removed the `Units` row from §8.
 | Footer padding | `py-4`                                                                        | 16px                      |
 | Utility nav    | `flex flex-wrap gap-x-6`; links `text-sm text-brand min-h-11`                 | gap 24px, 0.875rem        |
 | Identity row   | `flex flex-wrap justify-between gap-2 text-sm text-gray-600`                  | gap 8px, 0.875rem         |
-| Link colour    | `text-brand`                                                                  | `#2563eb`                 |
+| Link colour    | `text-brand`                                                                  | `#2563eb`, `#93c5fd` dark |
 
 `--color-brand` is the only colour this document pins by literal value, and the
 only one that is not a Tailwind stock colour. It is declared in every unit's
 `@theme`. The focus ring is the one place a base element rule is still correct:
 prose links inside page copy are not components, and a per-component utility
 would miss them.
+
+It is the one token with two values, and §9a is why. Against the two body
+backgrounds: `#2563eb` is 4.95:1 on `gray-50` and 3.90:1 on `gray-950` — over
+the 4.5:1 body-text threshold in light and under it in dark — and `#93c5fd` is
+11.17:1 on `gray-950` and 1.73:1 on `gray-50`. Neither value serves both, so
+the token carries one per scheme. It is set by overriding the token itself
+rather than by writing `dark:text-blue-300` at every call site, so `text-brand`
+and the focus ring keep moving together — which is the whole point of them
+sharing a token.
+
+### 9a. Colour scheme
+
+Two schemes, decided in this order:
+
+1. `data-theme="light"` / `data-theme="dark"` on `<html>`, from a `theme`
+   cookie read on the server (`src/theme.ts`).
+2. `prefers-color-scheme`, whenever that attribute is absent — which is every
+   request today.
+
+`style.css` declares the `dark` variant around exactly that split, so `dark:`
+in the markup means "the cookie says dark, or the OS does and the cookie has
+not said otherwise". `color-scheme` is declared alongside it so the UA's own
+surfaces — scrollbar, form controls — follow.
+
+Two limits are deliberate rather than pending:
+
+- **The five apex Workers only.** A frame never sees the cookie: its
+  `src/worker.ts` strips the inbound `Cookie` from every application-owned
+  request (ADR 007). A frame that wants a scheme has `prefers-color-scheme`
+  and Tailwind's stock `dark` variant, and none uses either yet.
+- **Nothing sets the cookie.** The header's actions slot is still empty (§4),
+  and a control that writes it is a browser-cookie decision bound by
+  `docs/development/browser-cookie-access.md`. Reading a cookie something else
+  sets costs one header; the OS preference works without it.
 
 The three interaction states React Aria publishes on the menu trigger —
 `hovered:`, `pressed:`, `focus-visible:` — come from

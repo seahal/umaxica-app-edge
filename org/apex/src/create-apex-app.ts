@@ -14,6 +14,7 @@ import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
 import { apexStructuredLogger, type BaseLogger } from './structured-logger';
+import { requestThemeAttribute, themeAttributeMarkup, type ThemeAttribute } from './theme';
 
 export type ApexEnv = {
   Bindings: AssetEnv;
@@ -46,16 +47,21 @@ type CreateApexAppOptions = {
  *
  * The three class strings are constants because Tailwind scans this file as
  * plain text — a class name assembled at runtime would not be generated.
+ *
+ * They carry the same `dark:` variants as the shell, and each document takes
+ * `data-theme` from the request for the same reason `renderer.tsx` does: these
+ * are separate root documents, so a scheme forced on the page a reader came
+ * from does not reach them on its own (`theme.ts`).
  */
 const STATUS_STYLESHEET = `<link rel="stylesheet" href="${styleUrl}">`;
 const STATUS_BODY =
-  'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body';
+  'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100';
 const STATUS_HEADING = 'text-2xl font-semibold leading-heading';
 
-function statusPage(status: number, title: string) {
+function statusPage(status: number, title: string, theme: ThemeAttribute) {
   const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
   return new Response(
-    `<!doctype html><html lang="${defaultLocale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
+    `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(theme)}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     {
       status,
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
@@ -92,10 +98,17 @@ export function createApexApp(
       const headers = new Headers(response.headers);
       headers.set('Cache-Control', 'no-store');
       headers.set('Content-Type', 'text/html; charset=UTF-8');
-      return new Response(statusPage(response.status, 'リクエストを処理できませんでした').body, {
-        status: response.status,
-        headers,
-      });
+      return new Response(
+        statusPage(
+          response.status,
+          'リクエストを処理できませんでした',
+          requestThemeAttribute(c.req.raw),
+        ).body,
+        {
+          status: response.status,
+          headers,
+        },
+      );
     }
 
     // oxlint-disable-next-line no-console
@@ -105,11 +118,15 @@ export function createApexApp(
       path: new URL(c.req.url).pathname,
     });
 
-    return statusPage(500, '現在、このページを表示できません');
+    return statusPage(500, '現在、このページを表示できません', requestThemeAttribute(c.req.raw));
   });
 
-  app.get('/health', timeout(2000), (c) => renderHealthPage(c.env, options));
-  app.get('/health.html', timeout(2000), (c) => renderHealthPage(c.env, options));
+  app.get('/health', timeout(2000), (c) =>
+    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
+  );
+  app.get('/health.html', timeout(2000), (c) =>
+    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
+  );
   app.get('/health.json', timeout(2000), (c) => renderHealthJson(c.env, options));
   app.get('/revision', (c) => {
     const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
@@ -120,11 +137,11 @@ export function createApexApp(
   });
   app.get('/offline', (c) =>
     c.html(
-      `<!doctype html><html lang="${defaultLocale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
+      `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(requestThemeAttribute(c.req.raw))}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
     ),
   );
   app.route('/', pageRoutes);
-  app.notFound(() => statusPage(404, 'ページが見つかりません'));
+  app.notFound((c) => statusPage(404, 'ページが見つかりません', requestThemeAttribute(c.req.raw)));
 
   return app;
 }

@@ -47,7 +47,7 @@ function labelsFor(language: string | undefined): ShellLabels {
  */
 export function SiteHeader({ brandName }: { brandName: string }) {
   return (
-    <header class="border-b border-gray-200 bg-white">
+    <header class="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div class="mx-auto flex min-h-14 w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4">
         <a class="inline-flex min-h-11 items-center text-xl font-bold tracking-wide" href="/">
           {brandName}
@@ -75,7 +75,7 @@ export function SiteFooter({
   const labels = labelsFor(language);
 
   return (
-    <footer class="mt-auto border-t border-gray-200 bg-white py-4">
+    <footer class="mt-auto border-t border-gray-200 bg-white py-4 dark:border-gray-800 dark:bg-gray-900">
       <nav
         class="mx-auto flex w-full max-w-7xl flex-wrap gap-x-6 px-4"
         aria-label={labels.utilityNav}
@@ -84,7 +84,7 @@ export function SiteFooter({
           {labels.about}
         </a>
       </nav>
-      <p class="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-2 px-4 text-sm text-gray-600">
+      <p class="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-2 px-4 text-sm text-gray-600 dark:text-gray-400">
         <span>
           &copy; {year} {brandName}
         </span>
@@ -120,7 +120,7 @@ export function SiteFooter({
 function SkipLink({ label }: { label: string }) {
   return (
     <a
-      class="absolute top-0 left-4 z-50 inline-flex min-h-11 -translate-y-full items-center rounded-b-lg border border-t-0 border-gray-200 bg-white px-4 text-brand focus:translate-y-0"
+      class="absolute top-0 left-4 z-50 inline-flex min-h-11 -translate-y-full items-center rounded-b-lg border border-t-0 border-gray-200 bg-white px-4 text-brand focus:translate-y-0 dark:border-gray-800 dark:bg-gray-900"
       href="#main-content"
     >
       {label}

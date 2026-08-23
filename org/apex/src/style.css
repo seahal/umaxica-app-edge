@@ -30,6 +30,30 @@
 
 @import 'tailwindcss' source('../src');
 
+/*
+ * `dark:`, resolved from the theme cookie first and the OS second.
+ *
+ * Tailwind's stock `dark` variant is `prefers-color-scheme` alone, which no
+ * server-rendered attribute can override. This one is the three-way split
+ * `src/theme.ts` produces: `data-theme="dark"` forces dark, `data-theme="light"`
+ * forces light even on a dark OS, and no attribute at all — the default, and
+ * the only state anything reaches today — follows `prefers-color-scheme`.
+ *
+ * `:where()` keeps the added selector at zero specificity, so `dark:bg-gray-900`
+ * still loses to a later utility exactly as `bg-gray-900` would.
+ */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme='light'], [data-theme='light'] *)) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   /*
    * `--font-sans` is Tailwind's own font token, so Preflight applies it to
@@ -85,6 +109,43 @@
 }
 
 @layer base {
+  /*
+   * `color-scheme` is what makes the UA's own surfaces — form controls, the
+   * scrollbar, `<input>` autofill — follow the document. It cannot be a
+   * utility here: `light dark` is the *pair* the UA chooses from, which is how
+   * the no-attribute case follows the OS, and the two overrides are element
+   * rules on the root because that is the element the attribute is on.
+   */
+  :root {
+    color-scheme: light dark;
+  }
+
+  :root[data-theme='light'] {
+    color-scheme: light;
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  /*
+   * The second literal colour in this file, and it exists for the same reason
+   * as the first: measured against the two body backgrounds, #2563eb is 4.95:1
+   * on gray-50 and 3.90:1 on gray-950 — over the 4.5:1 body-text threshold in
+   * light and under it in dark — so the pinned brand blue cannot be one value
+   * across both schemes. #93c5fd is 11.17:1 on gray-950, and 1.73:1 on
+   * gray-50, which is why it is an override rather than the token.
+   *
+   * Overriding the token rather than writing `dark:text-blue-300` at every
+   * call site keeps `text-brand` and the `:focus-visible` outline below
+   * shifting together — they are required to be the same blue (§9).
+   */
+  :root {
+    @variant dark {
+      --color-brand: #93c5fd;
+    }
+  }
+
   /*
    * Visible focus, at the shell contract's shared value (§9). One element rule
    * rather than a utility per control, because prose links inside page copy

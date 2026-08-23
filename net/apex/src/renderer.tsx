@@ -7,6 +7,7 @@ import type { ApexEnv } from './create-apex-app';
 import { defaultLocale } from './i18n/config';
 import { SeoHead } from './seo';
 import { AppShell } from './shell';
+import { requestThemeAttribute } from './theme';
 
 /*
  * The stylesheet is Tailwind's output, compiled from `src/style.css` by Vite
@@ -20,13 +21,17 @@ import { AppShell } from './shell';
  * permits this link, so the policy is now strictly `'self'` and one fewer
  * constant has to be kept in step with the stylesheet by hand. The same
  * reasoning is why a hashed filename changes nothing about the policy.
+ *
+ * `data-theme` is the one thing on this document that varies by request beyond
+ * its content: it is absent unless the `theme` cookie forces a scheme, and its
+ * absence is what leaves `prefers-color-scheme` in charge. See `theme.ts`.
  */
 export const renderer = jsxRenderer<ApexEnv>(({ children }, c) => {
   const currentYear = new Date().getUTCFullYear();
   const brandName = getBrandName(c.env);
   const language = c.get('language');
   return (
-    <html lang={defaultLocale}>
+    <html lang={defaultLocale} data-theme={requestThemeAttribute(c.req.raw)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -36,7 +41,7 @@ export const renderer = jsxRenderer<ApexEnv>(({ children }, c) => {
         <link rel="stylesheet" href={styleUrl} />
         <script src="/service-worker-register.js" defer></script>
       </head>
-      <body class="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900">
+      <body class="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900 dark:bg-gray-950 dark:text-gray-100">
         <AppShell brandName={brandName} year={currentYear} language={language}>
           {children}
         </AppShell>
