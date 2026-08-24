@@ -133,7 +133,7 @@ catalog:
   # The spell checker. Pinned here rather than per unit because the dictionary
   # it reads (.cspell/project-words.txt) is repository-wide: a unit resolving a
   # different major could disagree about what the config file even means.
-  cspell: ^10.0.1
+  cspell: ^10.1.0
   dependency-cruiser: ^18.2.0
   happy-dom: ^20.11.6
   hono: ^4.13.3

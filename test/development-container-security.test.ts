@@ -31,6 +31,30 @@ describe('development-container security contract', () => {
     },
   );
 
+  it('does not give any compose service the host gateway', () => {
+    // `extra_hosts: host.docker.internal:host-gateway` exposes the host's
+    // network to the container. Tunnel origin is the compose service itself
+    // (or a shared Podman network), so the mapping is unused exposure.
+    // Comments may name the anti-pattern; only non-comment lines are checked.
+    const files = [
+      'compose.yaml',
+      'compose.rails.yaml',
+      'compose.custom.yaml',
+      '.devcontainer/compose.override.yml',
+    ] as const;
+    for (const path of files) {
+      const instructionsOnly = read(path)
+        .split('\n')
+        .filter((line) => !line.trimStart().startsWith('#'))
+        .join('\n');
+      expect(instructionsOnly, `${path} extra_hosts`).not.toMatch(/^\s*extra_hosts\s*:/mu);
+      expect(instructionsOnly, `${path} host-gateway`).not.toContain('host-gateway');
+      expect(instructionsOnly, `${path} host.docker.internal`).not.toContain(
+        'host.docker.internal',
+      );
+    }
+  });
+
   it('does not mount host identities, homes, agents, or container-engine sockets', () => {
     const forbidden = [
       'localEnv:HOME',

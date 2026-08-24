@@ -5,10 +5,10 @@
  */
 export default {
   async fetch(request, env) {
-    const page = await env.ASSETS.fetch(new URL("/", request.url));
+    const page = await env.ASSETS.fetch(new URL('/', request.url));
     const headers = new Headers(page.headers);
-    headers.set("Retry-After", "3600");
-    headers.set("Cache-Control", "no-store");
-    return new Response(page.body, { status: 503, statusText: "Service Unavailable", headers });
+    headers.set('Retry-After', '3600');
+    headers.set('Cache-Control', 'no-store');
+    return new Response(page.body, { status: 503, statusText: 'Service Unavailable', headers });
   },
 };

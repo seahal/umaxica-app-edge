@@ -40,6 +40,7 @@ if ((${#unmasked_env_files[@]} > 0)); then
 fi
 
 compose=(podman compose -f compose.yaml)
+services=(core)
 
 if [[ ${use_rails} == true ]]; then
   if [[ -z ${EDGE_RAILS_NETWORK:-} ]]; then
@@ -55,15 +56,12 @@ if [[ ${use_rails} == true ]]; then
   compose+=(-f compose.rails.yaml)
 fi
 
-# Independent of --rails on purpose: Tunnel exposure and Rails connectivity are
-# different networks answering different questions, and either is useful alone.
-#
-# No network name to supply and no pre-existence check: compose.custom.yaml owns
-# the network under a literal name and creates it, so there is nothing to
-# misspell and nothing to set up first. The devcontainer gets the same file
-# through devcontainer.json, so both entry paths end up on the same network.
+# Independent of --rails on purpose: inbound Edge exposure and outbound Rails
+# connectivity answer different questions. The connector uses this compose
+# project's default network and requires an Edge-specific token from `.env`.
 if [[ ${use_tunnel} == true ]]; then
   compose+=(-f compose.custom.yaml)
+  services+=(cloudflare-tunnel)
 fi
 
 # There is no credential overlay any more. Long-lived API tokens and Podman
@@ -75,4 +73,4 @@ fi
 #   codex login
 # Nothing is persisted: recreating the container requires logging in again.
 
-"${compose[@]}" up -d core
+"${compose[@]}" up -d "${services[@]}"

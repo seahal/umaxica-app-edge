@@ -61,7 +61,9 @@ The Podman-specific properties are Compose concerns and need no flags: `userns_m
 `CONTAINER_UID`/`CONTAINER_GID` build arguments, loopback-only port publication on
 `127.0.0.1`, the `empty.env` masks over ignored environment paths, and the named volumes
 `node-volume`, `home-cache`, `pnpm-store`, and `workspace-secrets-mask`. The
-`umaxica-edge-tunnel` network is declared in `compose.custom.yaml` and created by `up` itself.
+Edge's `cloudflare-tunnel` sidecar is declared in `compose.custom.yaml`, uses the compose default
+network, and requires `EDGE_CLOUDFLARED_TOKEN` (or, as a fallback, `CLOUDFLARED_TOKEN`) from the gitignored
+root `.env`.
 
 ## What is now your responsibility
 

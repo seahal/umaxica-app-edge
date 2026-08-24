@@ -6,7 +6,8 @@ private keys, CLI credential stores, or Podman/Docker sockets.
 
 ## Dev Container startup
 
-Start the credential-free Dev Container through Dev Containers CLI, from the repository root:
+After setting the Edge-specific `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start the
+Dev Container through Dev Containers CLI, from the repository root:
 
 ```bash
 PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
@@ -40,9 +41,11 @@ scripts/dev-start --tunnel
 scripts/dev-start --rails --tunnel
 ```
 
-Every mode is credential-free: there is no credential overlay any more. `--rails` joins an
+The Tunnel modes require `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`. It is a scoped
+connector token for the Edge-specific Tunnel, not an API token, and must not match Global's token.
+`--rails` joins an
 existing rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or
-guesses one. `--tunnel` adds the Cloudflare Tunnel network from `compose.custom.yaml`.
+guesses one. `--tunnel` starts the Edge connector from `compose.custom.yaml`.
 Credentials are obtained inside the running container through browser logins — see
 [Credential and secret management](credential-and-secret-management.md).
 
