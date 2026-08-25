@@ -19,12 +19,12 @@ explicitly by each unit's `vite.config.ts`, and only while serving.
 
 4. production Worker ── production VPC binding (currently absent: fail closed)
 
-5. browser ── Cloudflare ── Tunnel (Rails-owned) ── shared Podman network
-                                                    └─ Edge dev server (vite dev, workerd)
+5. browser ── Cloudflare Access ── Edge-owned Tunnel ── Edge compose default network
+                                                          └─ Edge dev server (vite dev, workerd)
 ```
 
-Path 5 is inbound and browser-facing; paths 2–4 are outbound, server-to-server. They share the one
-connector and nothing else. A Tunnel route on path 5 does not give the local process a Workers
+Path 5 is inbound and browser-facing; paths 2–4 are outbound, server-to-server. The Edge Tunnel and
+Global/Rails Tunnel are independent. A Tunnel route on path 5 does not give the local process a Workers
 runtime or a Workers binding — that is what paths 3 and 4 are for.
 
 | Path            | Caller/runtime                                      | Destination                                              | Authentication/product                                 | Failure behavior                                                                                                            | Validation                                         | Status after repository implementation        |
@@ -45,12 +45,11 @@ tunnel. `tools/workers-manifest.json` holds the two ids as separate fields so th
 change to `vpcProductionServiceId` and the fifteen top-level `service_id`s, with no application
 change. See ADR 006.
 
-| Edge dev exposure | browser | sixteen published FQDNs, then `edge-core:<port>` | Cloudflare Access on all sixteen, whole host, no `/health*` Bypass | Container or dev server down returns 502, reported BLOCKED not FAIL; unauthenticated is 302 to the team domain | `pnpm run check:tunnel:edge` | `COMPLETE` (2026-08-11) |
+| Edge dev exposure | browser | sixteen published FQDNs, then `core:<port>` | Cloudflare Access on all sixteen, whole host, no `/health*` Bypass | Container or dev server down returns 502, reported BLOCKED not FAIL; unauthenticated is 302 to the team domain | `pnpm run check:tunnel:edge` | Runtime verification required after the Tunnel split |
 
-The Edge repository does not run `cloudflared`, hold a Tunnel token, or own Tunnel lifecycle. It
-does now define a Podman network, `umaxica-edge-tunnel`, that the connector joins so it can reach
-the Edge container — see
+The Edge repository runs its own `cloudflared` sidecar with a dedicated token and owns its Tunnel
+lifecycle. It shares no Podman network with Global — see
 [`docs/operations/cloudflare-tunnel-development.md`](../operations/cloudflare-tunnel-development.md)
-and `adr/008-edge-development-tunnel-exposure.md`, which amends ADR 006 §6 on that one point.
+and `adr/014-edge-owned-development-tunnel.md`.
 External Cloudflare dashboard/API changes are outside this refresh and must be documented and
 authorized separately.

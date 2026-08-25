@@ -50,7 +50,7 @@ catalog:
   # Its peer range pins wrangler at ^4.124.0, which is what moved the wrangler
   # entry below off ^4.123.0.
   '@cloudflare/vite-plugin': ^1.53.1
-  '@cloudflare/workers-types': ^5.20260822.1
+  '@cloudflare/workers-types': ^5.20260823.1
   # Inter, self-hosted. The CSP is `font-src 'self' data:`, so a CDN is not an
   # option: this package ships the woff2 files and the `@font-face` rules, which
   # Vite fingerprints into the client build like any other asset. All fifteen
@@ -111,8 +111,8 @@ catalog:
   # Start is at Release Candidate, not GA. Pin the minor and read the changelog
   # before bumping — that is one of the four constraints in
   # adr/013-frames-tanstack-start.md, not a preference.
-  '@tanstack/react-router': ^1.170.31
-  '@tanstack/react-start': ^1.168.48
+  '@tanstack/react-router': ^1.170.32
+  '@tanstack/react-start': ^1.168.49
   # The DOM-assertion and DOM-implementation halves of the Vitest setup. Every
   # unit's vitest.setup.ts imports `@testing-library/jest-dom`, and every
   # vitest.config.ts names happy-dom as its environment, so a per-unit drift
@@ -133,7 +133,7 @@ catalog:
   # The spell checker. Pinned here rather than per unit because the dictionary
   # it reads (.cspell/project-words.txt) is repository-wide: a unit resolving a
   # different major could disagree about what the config file even means.
-  cspell: ^10.0.1
+  cspell: ^10.1.0
   dependency-cruiser: ^18.2.0
   happy-dom: ^20.11.6
   hono: ^4.13.3

@@ -1,6 +1,9 @@
 # ADR 008: Edge development surfaces are published through the Rails-owned Tunnel
 
-## Status: Complete — sixteen surfaces published, verified end to end, and behind Access (2026-08-11). Cache Rule deliberately not applied; see the closeout amendment
+## Status: Superseded by ADR 014
+
+ADR 014 replaces the Rails-owned shared connector and Podman network with an Edge-owned Tunnel.
+The dated verification evidence below remains historical evidence for the previous topology.
 
 ## Amends
 

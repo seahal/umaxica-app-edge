@@ -31,27 +31,19 @@ The contract tables and gate descriptions below are current. **The recorded obse
 further down are not rewritten** — they are measurements taken on a date, and at that date the route
 was `/rails-health`. Read a `/rails-health` column in a results table as `/health`'s `rails` field.
 
-## Ownership: one connector, in the Rails repository
+## Ownership: an Edge-specific connector and tunnel
 
-Edge never runs `cloudflared` and never holds its token. The system has exactly one connector and
-it lives in `umaxica-apps-global` (compose project `umaxica-apps-global-dc`, service
-`cloudflare-tunnel`, `tunnel --protocol quic run`, network `frontend`).
+Edge runs its own `cloudflared` sidecar from `compose.custom.yaml`. It uses an Edge-specific Tunnel
+and `EDGE_CLOUDFLARED_TOKEN`; it must never reuse Global's Tunnel ID or token. The two compose
+projects share no Podman network.
 
-This is not a preference. Registering a second connector on the same tunnel makes Cloudflare
-load-balance across both, so Rails-bound requests — including the hostnames local development
-itself calls — would land on an Edge container roughly half the time.
-`test/compose-tunnel-invariants.test.ts` fails the suite if a connector reference or a tunnel token
-ever appears in any compose file here.
+The separation is load-bearing. Registering the Edge connector as a replica of Global's tunnel
+would let Cloudflare select a connector that cannot reach the requested origin.
 
-This repository's own overlay is called `compose.custom.yaml`, matching the Rails side's filename so
-that both ends of the shared connector are configured in a file of the same name. The contents are
-opposites: the Rails one defines the connector and carries its token, this one only defines the network
-the connector joins. Because the name no longer distinguishes them, the guardrail asserts on
-contents — no `cloudflared` reference, no token, exactly one service.
-
-Sharing the one connector is also a requirement of the Core end state: `jp.umaxica.{app,com,org}`
-is a single FQDN where Rails owns some paths and the frame the rest, and path routing can only
-resolve that on one connector.
+`compose.custom.yaml` pins `cloudflare/cloudflared:2026.8.2`, reads `EDGE_CLOUDFLARED_TOKEN` and
+falls back to `CLOUDFLARED_TOKEN` when it is unset, and starts with the standard Dev Container
+lifecycle. Compose refuses to render when neither is set. The token stays in
+the gitignored host `.env` and is passed only to the sidecar.
 
 ## Naming policy
 
@@ -106,11 +98,11 @@ Cloudflare  (DNS, TLS, WAF, cache)
   |
 Cloudflare Access  (identity; unauthenticated requests never reach the connector)
   |
-Cloudflare Tunnel  (one connector, Rails repository)
+Cloudflare Tunnel  (Edge-specific connector and token)
   |
 local development machine
   |
-Podman  ── network `umaxica-edge-tunnel` (Edge-owned), Edge container alias `edge-core`
+Podman  ── Edge compose default network
   |
   +-- Hono          wrangler dev (local workerd)   :5101 :5201 :5301 :5401
   |
@@ -119,36 +111,14 @@ Podman  ── network `umaxica-edge-tunnel` (Edge-owned), Edge container alias 
                                                    :5403 :5406 :5407 :5408
 ```
 
-`compose.yaml` publishes every dev port to host `127.0.0.1` only, which a containerised connector
-cannot reach — not even via `host.docker.internal`, because a host-gateway connection does not
-arrive on the loopback interface the publish is bound to. `compose.custom.yaml` therefore defines a
-network, `umaxica-edge-tunnel`, and attaches the Edge container to it under the alias `edge-core`.
-Ingress addresses it there.
+`compose.yaml` publishes every dev port to host `127.0.0.1` only. The Edge connector does not route
+back through those host ports; it reaches `core:<port>` directly on the Edge compose default
+network. Cloudflare Public Hostnames must use those service addresses and remain protected by
+Cloudflare Access.
 
-**Edge owns that network and the connector joins it**, not the other way round. The network is
-compose-managed rather than `external: true`, so `up` creates it and succeeds on a machine that has
-never run the connector — which is what lets the devcontainer, the primary development environment,
-read the overlay at all. Defining a network is not registering a connector: Edge still runs none and
-holds no token. See ADR 008 for why this was inverted.
-
-The Rails side joins by referencing the same name:
-
-```yaml
-services:
-  cloudflare-tunnel:
-    networks: [frontend, edge-tunnel]
-networks:
-  edge-tunnel:
-    external: true
-    name: umaxica-edge-tunnel
-```
-
-An always-present network is not exposure. Reaching a dev server from the internet additionally
-requires the connector to join it **and** a Cloudflare Public Hostname pointing at it.
-
-`edge-core`, not `core`: Podman registers the compose service name as a network-scoped DNS name,
-and the Rails project also has a service called `core`. Two containers answering to `core` on one
-network would make the connector's Rails origin ambiguous.
+Global has no route to this compose network. The Workers VPC path is separate and one-way: Edge
+Workers call Global/Rails through Global's VPC Service and Tunnel. It does not carry browser traffic
+to Edge.
 
 ### Paths this diagram does NOT describe
 
@@ -164,27 +134,27 @@ Workers binding. See `docs/development/cloudflare-development-network.md` and AD
 
 ## Route table
 
-Local origin is the alias on the shared network; `Port` is read from each workspace's own `dev`
+Local origin is the `core` service on the Edge compose default network; `Port` is read from each workspace's own `dev`
 script. Path is the whole host in every case.
 
-| Application | Runtime  | External FQDN         | Local origin            | Port | Path | Status                     |
-| ----------- | -------- | --------------------- | ----------------------- | ---- | ---- | -------------------------- |
-| `app/apex`  | Hono     | `umaxica.app`         | `http://edge-core:5401` | 5401 | `/`  | replaces production Worker |
-| `com/apex`  | Hono     | `umaxica.com`         | `http://edge-core:5101` | 5101 | `/`  | replaces production Worker |
-| `net/apex`  | Hono     | `umaxica.net`         | `http://edge-core:5201` | 5201 | `/`  | replaces production Worker |
-| `org/apex`  | Hono     | `umaxica.org`         | `http://edge-core:5301` | 5301 | `/`  | replaces production Worker |
-| `app/info`  | TanStack | `info.umaxica.app`    | `http://edge-core:5403` | 5403 | `/`  | new hostname               |
-| `com/info`  | TanStack | `info.umaxica.com`    | `http://edge-core:5103` | 5103 | `/`  | new hostname               |
-| `org/info`  | TanStack | `info.umaxica.org`    | `http://edge-core:5303` | 5303 | `/`  | new hostname               |
-| `app/docs`  | TanStack | `docs-jp.umaxica.app` | `http://edge-core:5406` | 5406 | `/`  | new hostname               |
-| `com/docs`  | TanStack | `docs-jp.umaxica.com` | `http://edge-core:5106` | 5106 | `/`  | replaces production Worker |
-| `org/docs`  | TanStack | `docs-jp.umaxica.org` | `http://edge-core:5306` | 5306 | `/`  | new hostname               |
-| `app/news`  | TanStack | `news-jp.umaxica.app` | `http://edge-core:5407` | 5407 | `/`  | new hostname               |
-| `com/news`  | TanStack | `news-jp.umaxica.com` | `http://edge-core:5107` | 5107 | `/`  | replaces production Worker |
-| `org/news`  | TanStack | `news-jp.umaxica.org` | `http://edge-core:5307` | 5307 | `/`  | replaces production Worker |
-| `app/help`  | TanStack | `help-jp.umaxica.app` | `http://edge-core:5408` | 5408 | `/`  | new hostname               |
-| `com/help`  | TanStack | `help-jp.umaxica.com` | `http://edge-core:5108` | 5108 | `/`  | new hostname               |
-| `org/help`  | TanStack | `help-jp.umaxica.org` | `http://edge-core:5308` | 5308 | `/`  | replaces production Worker |
+| Application | Runtime  | External FQDN         | Local origin       | Port | Path | Status                     |
+| ----------- | -------- | --------------------- | ------------------ | ---- | ---- | -------------------------- |
+| `app/apex`  | Hono     | `umaxica.app`         | `http://core:5401` | 5401 | `/`  | replaces production Worker |
+| `com/apex`  | Hono     | `umaxica.com`         | `http://core:5101` | 5101 | `/`  | replaces production Worker |
+| `net/apex`  | Hono     | `umaxica.net`         | `http://core:5201` | 5201 | `/`  | replaces production Worker |
+| `org/apex`  | Hono     | `umaxica.org`         | `http://core:5301` | 5301 | `/`  | replaces production Worker |
+| `app/info`  | TanStack | `info.umaxica.app`    | `http://core:5403` | 5403 | `/`  | new hostname               |
+| `com/info`  | TanStack | `info.umaxica.com`    | `http://core:5103` | 5103 | `/`  | new hostname               |
+| `org/info`  | TanStack | `info.umaxica.org`    | `http://core:5303` | 5303 | `/`  | new hostname               |
+| `app/docs`  | TanStack | `docs-jp.umaxica.app` | `http://core:5406` | 5406 | `/`  | new hostname               |
+| `com/docs`  | TanStack | `docs-jp.umaxica.com` | `http://core:5106` | 5106 | `/`  | replaces production Worker |
+| `org/docs`  | TanStack | `docs-jp.umaxica.org` | `http://core:5306` | 5306 | `/`  | new hostname               |
+| `app/news`  | TanStack | `news-jp.umaxica.app` | `http://core:5407` | 5407 | `/`  | new hostname               |
+| `com/news`  | TanStack | `news-jp.umaxica.com` | `http://core:5107` | 5107 | `/`  | replaces production Worker |
+| `org/news`  | TanStack | `news-jp.umaxica.org` | `http://core:5307` | 5307 | `/`  | replaces production Worker |
+| `app/help`  | TanStack | `help-jp.umaxica.app` | `http://core:5408` | 5408 | `/`  | new hostname               |
+| `com/help`  | TanStack | `help-jp.umaxica.com` | `http://core:5108` | 5108 | `/`  | new hostname               |
+| `org/help`  | TanStack | `help-jp.umaxica.org` | `http://core:5308` | 5308 | `/`  | replaces production Worker |
 
 ### Expected response per surface
 
@@ -214,9 +184,10 @@ records it as its own outcome rather than a failure.
 Needs no credential. Nothing below stores or prints a token.
 
 ```bash
-# 1. Start the container. Nothing to configure first: the network is created by
-#    compose under the literal name `umaxica-edge-tunnel`.
-#    In the devcontainer this is automatic — devcontainer.json reads the overlay.
+# 1. Put the Edge-specific connector token in the gitignored root `.env`:
+#    EDGE_CLOUDFLARED_TOKEN=<Edge tunnel token>
+#    chmod 600 .env
+#    In the devcontainer the connector starts automatically.
 scripts/dev-start --tunnel     # only for the non-devcontainer path
 
 # 2. Start each dev server needed for this check. The root has no dev fan-out.
@@ -224,7 +195,7 @@ pnpm --dir app/core run dev
 
 # 3. Local origins, before involving Cloudflare at all.
 pnpm run check:local          # HTTP reachability per port
-podman inspect --format '{{json .NetworkSettings.Networks}}' <edge container>   # confirm the edge-core alias
+podman inspect --format '{{json .NetworkSettings.Networks}}' <edge container>
 
 # 4. The published hostnames, layer by layer.
 pnpm run check:tunnel:apex    # the four Hono apexes only — do these first
@@ -254,10 +225,9 @@ someone configured in Cloudflare.
 
 ### Cloudflare-side configuration (done by the operator, not by this repository)
 
-1. Attach the `cloudflare-tunnel` service to `umaxica-edge-tunnel` (the YAML is under
-   "Architecture"), and give the
-   Rails `core` service a distinct alias and point the Rails ingress at that — so `core` is
-   unambiguous on the shared network.
+1. Create a dedicated Edge Tunnel and put its connector token in `.env` as
+   `EDGE_CLOUDFLARED_TOKEN`. Never reuse Global's Tunnel ID or token. Point each Public Hostname at
+   `http://core:<port>` from the route table.
 2. Remove the Worker custom domain from the four apex hostnames. A custom domain and a Tunnel
    Public Hostname cannot both own one name.
 3. Remove the existing Worker routes from `docs-jp.umaxica.com`, `news-jp.umaxica.com`,

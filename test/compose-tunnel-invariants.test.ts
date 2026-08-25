@@ -1,31 +1,7 @@
 /**
- * Static guardrails for secrets and for the tunnel topology.
- *
- * This file used to assert the shape of a `cloudflare-tunnel` connector defined
- * in this repository. That connector is gone: the system has ONE connector, and
- * it lives in the Rails repository. Registering a second one on the same tunnel
- * makes Cloudflare load-balance across both, so requests for the Rails
- * hostnames would land on an Edge container roughly half the time — including
- * `core-jp.umaxica.app`, which local development calls. The assertions below
- * keep a connector from reappearing here by accident.
- *
- * This file also used to assert that `compose.custom.yaml` did not exist, because
- * that is the Rails overlay's filename and its absence was a cheap proxy for "the
- * connector was not copied here". That proxy is retired: this repository now has a
- * `compose.custom.yaml` of its own, deliberately named to match the other side of
- * the shared connector, whose job is the opposite one — it owns the network the
- * connector visits instead of defining a connector. The guarantee is therefore
- * asserted on contents rather than on a filename, which is strictly stronger: no
- * `cloudflared` reference, no token, and exactly one service.
- *
- * Ownership of the network runs the other way from how this started. Edge defines
- * it and the connector joins, rather than Edge joining an `external` network the
- * connector already made. That is what lets the devcontainer — the primary
- * development environment — read the overlay at all: an external network must
- * exist before `up`, so its absence used to be a hard startup failure.
- *
- * Everything reads files directly — no container engine required, so it runs in
- * CI and in the pre-commit hook alongside the rest of the suite.
+ * Static guardrails for the Edge-owned Tunnel connector and secret boundary.
+ * Edge and Global use different Tunnel IDs and tokens and share no Podman network.
+ * Everything reads files directly, so the checks require no container engine.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -84,14 +60,11 @@ function trackedFiles(): string[] {
     .filter(Boolean);
 }
 
-describe('no tunnel connector in this repository', () => {
-  it('defines no cloudflared service in any compose file', () => {
-    // A connector here would be a SECOND connector on the shared tunnel.
-    // Cloudflare load-balances across connectors, so Rails-bound requests would
-    // start landing on an Edge container that cannot serve them.
-    for (const [name, contents] of composeFiles) {
-      expect(contents, `${name} must not define a connector`).not.toContain('cloudflared');
-    }
+describe('Edge-owned tunnel connector', () => {
+  it('pins the supported cloudflared release in the custom overlay only', () => {
+    expect(composeCustom).toContain('docker.io/cloudflare/cloudflared:2026.8.2');
+    expect(composeBase).not.toContain('cloudflared');
+    expect(composeOverride).not.toContain('cloudflared');
   });
 
   it('enumerates every compose file that can define a service', () => {
@@ -105,69 +78,36 @@ describe('no tunnel connector in this repository', () => {
     expect(composeFiles.map(([name]) => name)).toContain('compose.custom.yaml');
   });
 
-  it('owns the tunnel network without defining a second service', () => {
-    // compose.custom.yaml exists to make `core` reachable FROM the Rails-side
-    // connector, so it may define a network and an alias — and nothing else. A
-    // second service here would be a second container on the tunnel network,
-    // which is the failure this whole file is about.
-    // Scoped to the `services:` block: `networks:` uses the same indentation, so
-    // an unscoped match would count `tunnel` as a service.
+  it('defines one hardened connector without a cross-project network', () => {
     const servicesBlock = /^services:\n((?: .*\n|\n)*)/mu.exec(composeCustom)?.[1] ?? '';
     const serviceNames = [...servicesBlock.matchAll(/^ {2}([a-z0-9][\w-]*):/gmu)].map(
       (match) => match[1],
     );
-    expect(serviceNames).toEqual(['core']);
-
-    // `core` is also a Rails service name, and Podman registers the compose
-    // service name as a network-scoped DNS name. Ingress must therefore address
-    // the explicit alias, never the bare service name.
-    expect(composeCustom, 'compose.custom.yaml must publish the edge-core alias').toContain(
-      'edge-core',
-    );
-
-    // The network is compose-managed under a literal name, deliberately NOT
-    // `external: true`. An external network has to exist before `up`, which is
-    // what previously made this file unusable from the devcontainer: a machine
-    // that had never run the connector could not start at all. Owning the network
-    // inverts that — Edge creates it and the connector joins.
-    //
-    // A literal name also removes the failure mode an environment variable
-    // brought with it: a misspelled network name would silently create an empty
-    // network and leave the container isolated on it, which reads as a Cloudflare
-    // fault rather than a typo.
-    //
-    // Scoped to the `networks:` block rather than the whole file: the header
-    // comment quotes the `external: true` stanza the Rails side needs, and that
-    // example is worth keeping where the name it has to match is defined.
-    const networksBlock = /^networks:\n((?: .*\n|\n)*)/mu.exec(composeCustom)?.[1] ?? '';
-    expect(networksBlock).not.toContain('external: true');
-    expect(networksBlock).toContain('name: umaxica-edge-tunnel');
-    expect(composeCustom).not.toContain('EDGE_TUNNEL_NETWORK');
+    expect(serviceNames).toEqual(['cloudflare-tunnel']);
+    expect(composeCustom).not.toContain('umaxica-edge-tunnel');
+    expect(composeCustom).not.toContain('host.docker.internal');
+    expect(composeCustom).toContain('read_only: true');
+    expect(composeCustom).toContain('no-new-privileges:true');
+    expect(composeCustom).toContain('cap_drop:');
+    expect(composeCustom).toContain('restart: on-failure:3');
   });
 
-  it('gives the devcontainer the tunnel network', () => {
-    // The devcontainer is the primary development environment, so it must be able
-    // to be reached through the Tunnel. That only works if it reads this overlay,
-    // which is safe precisely because the network is not external.
-    //
-    // Matched with the trailing quote rather than both quotes, so the path form
-    // `dockerComposeFile` actually uses — `"../compose.custom.yaml"` — matches.
+  it('starts the connector with the standard devcontainer lifecycle', () => {
     expect(devcontainer).toContain('compose.custom.yaml"');
-
-    // Reading the overlay must not have brought a connector along with it. The
-    // devcontainer runs the dev servers and nothing else.
-    expect(devcontainer).not.toContain('"cloudflare-tunnel"');
-    expect(devcontainer).not.toContain('tunnel-warn');
+    expect(devcontainer).toContain('"runServices": ["core", "cloudflare-tunnel"]');
   });
 
-  it('holds no tunnel connector token', () => {
-    // The connector token belongs to whoever runs the connector. This
-    // repository does not, so it must not carry one — reusing the Rails token
-    // here is exactly how a second connector gets registered.
-    for (const [name, contents] of composeFiles) {
-      expect(contents, `${name} must not pass a tunnel token`).not.toContain('TUNNEL_TOKEN');
-      expect(contents, `${name} must not pass a tunnel token`).not.toContain('CLOUDFLARED_TOKEN');
-    }
+  /*
+   * The Edge-specific token is still what the connector prefers. The generic
+   * CLOUDFLARED_TOKEN is accepted only as a fallback, for a local setup that
+   * runs a single tunnel and has no separate Edge value; the `:?` guard stays
+   * on the fallback so an environment with neither still fails loudly rather
+   * than starting a connector with an empty token.
+   */
+  it('prefers the Edge-specific token and fails when neither is set', () => {
+    expect(composeCustom).toMatch(
+      /TUNNEL_TOKEN: ['"]\$\{EDGE_CLOUDFLARED_TOKEN:-\$\{CLOUDFLARED_TOKEN:\?EDGE_CLOUDFLARED_TOKEN or CLOUDFLARED_TOKEN must be set in \.env\}\}['"]/u,
+    );
   });
 });
 

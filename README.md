@@ -196,7 +196,8 @@ The development environment is started with Dev Containers CLI over rootless Pod
   - Security: Trivy, Gitleaks (via pre-commit hooks)
 - Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
 
-Start the credential-free Dev Container from the repository root:
+After setting `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start the Dev Container from
+the repository root:
 
 ```bash
 PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
@@ -245,8 +246,9 @@ Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
 
 ### Cloudflare
 
-Base local development needs **no Cloudflare credentials** — no API token, no
-`wrangler login`, and no tunnel connector. `vpc_services` exists only in the
+The standard Dev Container starts an Edge-owned Tunnel connector. Put its dedicated connector
+token in the gitignored root `.env` as `EDGE_CLOUDFLARED_TOKEN`; this is not a Cloudflare API token
+and it must not be reused from Global. `vpc_services` remains independent and exists only in the
 explicit `env.vpc` development environment; production remains fail-closed.
 
 Start only the deployment unit you are working on; the repository root does
@@ -256,17 +258,11 @@ not fan development servers out across workspaces.
 pnpm --dir app/core run dev
 ```
 
-This repository runs no tunnel connector. There is one connector for the whole
-system and it lives in the Rails repository — a second one on the same tunnel
-would make Cloudflare load-balance Rails traffic onto Edge containers.
-
-What this repository does own is the Podman network that connector reaches:
-`compose.custom.yaml` defines `umaxica-edge-tunnel` and gives the container the
-alias `edge-core`, so Cloudflare Public Hostname entries can point at
-`http://edge-core:<port>`. The network existing is not exposure — that
-additionally needs the connector to join it and a Public Hostname pointing at
-it, both operator acts. See `docs/operations/cloudflare-tunnel-development.md`
-and `adr/008-edge-development-tunnel-exposure.md`.
+`compose.custom.yaml` defines the Edge-owned connector. It reaches development services at
+`http://core:<port>` over this compose project's default network. Global shares neither this
+network nor this tunnel. Public Hostnames on the Edge tunnel remain protected by Cloudflare Access.
+See `docs/operations/cloudflare-tunnel-development.md` and
+`adr/014-edge-owned-development-tunnel.md`.
 
 To reach Rails from local Node development, set `EDGE_RAILS_NETWORK` to the existing
 Rails rootless Podman network and use `scripts/dev-start --rails`. Access credentials

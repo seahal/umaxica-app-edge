@@ -1,17 +1,7 @@
 {
   "name": "umaxica-apps-edge-dc",
-  // This repository no longer runs a Cloudflare Tunnel connector. There is one
-  // connector for the whole system, and it lives in the Rails repository — see
-  // docs/operations/cloudflare-tunnel-development.md for why.
-  //
-  // The network that lets that connector reach this container is defined in
-  // ../compose.custom.yaml — named to match the Rails side, though its contents do
-  // the opposite: it owns a network for the connector to visit rather than
-  // defining a connector. It is listed below because the network is
-  // compose-managed rather than `external: true`, so `up` creates it and succeeds
-  // on a machine that has never run the connector. An always-present network is
-  // not exposure: that additionally needs the connector to join it and a
-  // Cloudflare Public Hostname pointing at it, both operator acts.
+  // compose.custom.yaml runs the Edge-owned Cloudflare Tunnel connector. It uses an
+  // Edge-specific token and shares neither a Podman network nor a tunnel with Global.
   "dockerComposeFile": ["../compose.yaml", "./compose.override.yml", "../compose.custom.yaml"],
   // compose.yaml builds the image with CONTAINER_UID/GID taken from
   // ${UID}/${GID}. Those are bash builtins rather than exported variables, so
@@ -26,7 +16,7 @@
   "containerUser": "edge",
   "workspaceFolder": "/home/edge/workspace",
   "shutdownAction": "stopCompose",
-  "runServices": ["core"],
+  "runServices": ["core", "cloudflare-tunnel"],
   "overrideCommand": false,
   "remoteEnv": {
     "EDITOR": "code --wait --reuse-window",
@@ -190,8 +180,7 @@
     "ghcr.io/joedmck/devcontainer-features/wrangler:1": {},
     "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {},
     "ghcr.io/nolanjx/devcontainer-features/codex:1": {},
-    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {},
-    "ghcr.io/sliekens/devcontainer-features/grok-build:1": {}
+    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {}
   },
   "updateRemoteUserUID": false
 }
