@@ -243,5 +243,15 @@ Two live examples of the bar:
 | `spelling`               | `pnpm run check:spelling`                                 |
 | `knip:<platform>:<unit>` | `pnpm --dir <dir> run knip`                               |
 | `test`                   | `pnpm run test:cov`                                       |
-| `build` (size step)      | `pnpm -C <dir> run build && pnpm -C <dir> run check:size` |
+| `size`                   | `pnpm -C <dir> run build && pnpm -C <dir> run check:size` |
 | `test-api`               | `pnpm -C <dir> run test:api`                              |
+
+The `size` job builds, but it is not a build gate and must not be read as one.
+"Does this unit build?" is answered by Cloudflare Workers Builds, which runs on
+every push — including non-production branches, where `preview_urls` yields a
+deployed URL that shows the Worker starting and answering a request, rather than
+only that Vite exited zero. CI does not repeat that. What Cloudflare does not do
+is compare the output against `.size-limit.json`, and a bundle cannot be
+measured without having been built, so the build survives here as the input to
+the measurement. If the bundle budget is ever retired, retire the job with it
+instead of keeping a build for its own sake.
