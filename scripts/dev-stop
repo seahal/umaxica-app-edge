@@ -2,12 +2,14 @@
 set -euo pipefail
 
 compose=(podman compose -f compose.yaml)
+# `--tunnel` takes no overlay: the connector lives in compose.yaml, and `down`
+# stops every service in the project anyway. It is accepted so that a stop can be
+# spelled the same way as the start it undoes.
 for argument in "$@"; do
   case "${argument}" in
-    --rails) compose+=(-f compose.rails.yaml) ;;
-    --credentials) compose+=(-f compose.credentials.yaml) ;;
-    --tunnel) compose+=(-f compose.custom.yaml) ;;
-    *) echo "Usage: $0 [--rails] [--credentials] [--tunnel]" >&2; exit 2 ;;
+    --rails) compose+=(-f compose.custom.yaml) ;;
+    --tunnel) ;;
+    *) echo "Usage: $0 [--rails] [--tunnel]" >&2; exit 2 ;;
   esac
 done
 "${compose[@]}" down

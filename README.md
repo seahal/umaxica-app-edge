@@ -219,6 +219,25 @@ scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 ```
 
+##### The two compose files
+
+There are exactly two, and the split is by ownership rather than by topic:
+
+| File                  | Holds                                                                                               | Edit it?                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone      |
+| `compose.custom.yaml` | everything machine-specific — today, the external Rails Podman network                              | yes, freely; a local diff here is not a defect |
+
+`compose.yaml` alone is what `.devcontainer/devcontainer.json` names, so a devcontainer,
+`scripts/dev-start`, and a bare `podman compose` all resolve to one project called
+`umaxica-apps-edge` and share one set of containers and volumes. `compose.custom.yaml` is
+never loaded implicitly — its Rails network is external and named by you, so a devcontainer
+that loaded it unconditionally would fail to open on any machine without one. Add it with
+`scripts/dev-start --rails`, with `podman compose -f compose.yaml -f compose.custom.yaml`,
+or by listing it in `dockerComposeFile` yourself.
+
+`test/compose-tunnel-invariants.test.ts` fails if a third compose file appears.
+
 There is no credential overlay. Every credential is obtained inside the running
 container through a browser flow and is discarded when the container is
 recreated — see
@@ -230,7 +249,7 @@ Use `podman compose exec` (or `podman exec -it`) — both allocate a pseudo-term
 
 ```bash
 podman compose exec core bash -l
-podman exec -it umaxica-apps-edge-dc-core-1 bash -l
+podman exec -it umaxica-apps-edge-core-1 bash -l
 ```
 
 `devcontainer exec` is for **one-shot commands only**. It wires stdin to a plain pipe
@@ -258,7 +277,7 @@ not fan development servers out across workspaces.
 pnpm --dir app/core run dev
 ```
 
-`compose.custom.yaml` defines the Edge-owned connector. It reaches development services at
+`compose.yaml` defines the Edge-owned connector alongside `core`. It reaches development services at
 `http://core:<port>` over this compose project's default network. Global shares neither this
 network nor this tunnel. Public Hostnames on the Edge tunnel remain protected by Cloudflare Access.
 See `docs/operations/cloudflare-tunnel-development.md` and

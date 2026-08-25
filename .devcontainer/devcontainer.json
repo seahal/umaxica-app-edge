@@ -1,8 +1,14 @@
 {
-  "name": "umaxica-apps-edge-dc",
-  // compose.custom.yaml runs the Edge-owned Cloudflare Tunnel connector. It uses an
-  // Edge-specific token and shares neither a Podman network nor a tunnel with Global.
-  "dockerComposeFile": ["../compose.yaml", "./compose.override.yml", "../compose.custom.yaml"],
+  "name": "umaxica-apps-edge",
+  // One compose file, the same one `scripts/dev-start` and a bare `podman compose`
+  // use, so all three share one project name, one set of containers and one set of
+  // volumes. It defines both `core` and the Edge-owned Cloudflare Tunnel connector.
+  //
+  // `../compose.custom.yaml` is deliberately absent: it is the developer-local
+  // overlay, and its Rails network is external and machine-specific, so loading it
+  // unconditionally would break every devcontainer that has no such network. Add it
+  // here yourself if you want it, or use `scripts/dev-start --rails`.
+  "dockerComposeFile": ["../compose.yaml"],
   // compose.yaml builds the image with CONTAINER_UID/GID taken from
   // ${UID}/${GID}. Those are bash builtins rather than exported variables, so
   // without this hook compose silently falls back to 1000 and a host whose UID
@@ -10,7 +16,13 @@
   // wrong user under keep-id — repaired only by a manual chown after every
   // recreate. The script writes the real ids into the gitignored repo-root
   // .env that compose auto-loads.
-  "initializeCommand": ".devcontainer/write-host-ids.sh",
+  //
+  // `prune-stale-containers.sh` then removes containers left over from an
+  // earlier Compose project name for this same workspace folder. They share the
+  // `devcontainer.local_folder` label that `devcontainer exec` searches on, so
+  // one stopped leftover is enough to make every exec fail with
+  // `container state improper` while naming neither container.
+  "initializeCommand": ".devcontainer/write-host-ids.sh && .devcontainer/prune-stale-containers.sh",
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",

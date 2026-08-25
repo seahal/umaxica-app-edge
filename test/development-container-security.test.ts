@@ -6,8 +6,21 @@ import { describe, expect, it } from 'vitest';
 const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
-const composeFiles = ['compose.yaml', 'compose.rails.yaml'] as const;
+/**
+ * The two compose files this repository has: `compose.yaml` is what everyone
+ * shares, `compose.custom.yaml` is the developer-local overlay. There is no
+ * third one, and a new one would have to be added here to be covered.
+ */
+const composeFiles = ['compose.yaml', 'compose.custom.yaml'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
+
+/**
+ * One service's block out of `compose.yaml`, so an assertion about the workspace
+ * container cannot be satisfied — or violated — by the tunnel connector beside it.
+ */
+function service(name: string): string {
+  return new RegExp(`^  ${name}:\n((?:    .*\n|\n)*)`, 'mu').exec(read('compose.yaml'))?.[1] ?? '';
+}
 const containerfile = read('Containerfile');
 // Comments explain why Corepack is gone, so assertions about what the image
 // actually does have to read the instructions rather than the prose.
@@ -15,7 +28,7 @@ const instructions = containerfile
   .split('\n')
   .filter((line) => !line.trimStart().startsWith('#'))
   .join('\n');
-const devcontainer = `${read('.devcontainer/devcontainer.json')}\n${read('.devcontainer/compose.override.yml')}`;
+const devcontainer = read('.devcontainer/devcontainer.json');
 
 describe('development-container security contract', () => {
   it('uses Containerfile as the only repository-owned build definition', () => {
@@ -36,13 +49,7 @@ describe('development-container security contract', () => {
     // network to the container. Tunnel origin is the compose service itself
     // (or a shared Podman network), so the mapping is unused exposure.
     // Comments may name the anti-pattern; only non-comment lines are checked.
-    const files = [
-      'compose.yaml',
-      'compose.rails.yaml',
-      'compose.custom.yaml',
-      '.devcontainer/compose.override.yml',
-    ] as const;
-    for (const path of files) {
+    for (const path of composeFiles) {
       const instructionsOnly = read(path)
         .split('\n')
         .filter((line) => !line.trimStart().startsWith('#'))
@@ -90,14 +97,22 @@ describe('development-container security contract', () => {
 
   it('retains rootless keep-id and rejects privilege/network/storage shortcuts', () => {
     expect(read('compose.yaml')).toContain('userns_mode: keep-id');
-    for (const pattern of [
-      /privileged\s*:\s*true/u,
-      /network_mode\s*:\s*host/u,
-      /\btmpfs\s*:/u,
-      /cap_add\s*:/u,
-    ]) {
+    for (const pattern of [/privileged\s*:\s*true/u, /network_mode\s*:\s*host/u, /cap_add\s*:/u]) {
       expect(compose).not.toMatch(pattern);
     }
+
+    /*
+     * `tmpfs` is scoped to the workspace container rather than to the file. The
+     * connector beside it is `read_only: true` and needs a writable /tmp to run
+     * at all, so a blanket ban would forbid the safer of the two configurations.
+     * `core` is not read-only and has a bind-mounted workspace, so a tmpfs there
+     * would only be somewhere state hides from the host.
+     */
+    // An empty block would satisfy the negative assertion below without reading
+    // anything, so prove the extraction found the service first.
+    expect(service('core')).toContain('userns_mode: keep-id');
+    expect(service('core')).not.toMatch(/\btmpfs\s*:/u);
+    expect(read('compose.custom.yaml')).not.toMatch(/\btmpfs\s*:/u);
   });
 
   it('publishes every normal and OAuth port to host loopback only', () => {
@@ -115,8 +130,33 @@ describe('development-container security contract', () => {
     expect(containerfile).not.toMatch(
       /^\s*(?:COPY|ADD)\s+.*(?:\.secrets|\.ssh|\.gnupg|\.wrangler)/mu,
     );
-    expect(read('compose.yaml')).not.toMatch(/\$\{[^}]*(?:TOKEN|SECRET|API_KEY|PASSWORD)[^}]*\}/u);
     expect(read('compose.yaml')).not.toContain('CLOUDFLARE_API_TOKEN');
+
+    /*
+     * Interpolating a credential is no longer forbidden outright — the tunnel
+     * connector moved into `compose.yaml`, and reading its token from the
+     * gitignored `.env` is exactly how it is supposed to get one. What must stay
+     * true is that this is the ONLY such interpolation, and that no compose file
+     * ever assigns a credential a literal value.
+     */
+    const interpolated = read('compose.yaml')
+      .split('\n')
+      .filter((line) => /\$\{[^}]*(?:TOKEN|SECRET|API_KEY|PASSWORD)/u.test(line))
+      .map((line) => line.trim());
+    expect(interpolated).toEqual([
+      "TUNNEL_TOKEN: '${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:-}}'",
+    ]);
+    for (const path of composeFiles) {
+      const literals = read(path)
+        .split('\n')
+        .map((line) =>
+          /^\s*[A-Z0-9_]*(?:TOKEN|SECRET|API_KEY|PASSWORD)[A-Z0-9_]*:\s*(.*)$/u.exec(line),
+        )
+        .filter((match): match is RegExpExecArray => match !== null)
+        .map((match) => match[1] as string)
+        .filter((value) => !/^['"]?\$\{/u.test(value));
+      expect(literals, `${path} assigns a literal credential`).toEqual([]);
+    }
   });
 
   it('builds without Corepack', () => {

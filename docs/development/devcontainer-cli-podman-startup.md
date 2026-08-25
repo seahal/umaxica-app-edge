@@ -3,9 +3,8 @@
 This repository has no launcher script. `podman/tools/dcup` used to be one; it was removed
 because it was a wrapper around `devcontainer up` and nothing more. Everything it appeared to
 configure — the rootless user mapping, the workspace bind, the port publication, the build
-arguments — already lives in `compose.yaml`, `.devcontainer/compose.override.yml`,
-`compose.custom.yaml`, and `.devcontainer/devcontainer.json`, and Dev Containers CLI reads
-all of them itself. Only two flags and one environment variable were load-bearing, and they
+arguments — already lives in `compose.yaml` and `.devcontainer/devcontainer.json`, and Dev
+Containers CLI reads both itself. Only two flags and one environment variable were load-bearing, and they
 are written out below instead of hidden behind a script.
 
 ## Starting the container
@@ -56,12 +55,28 @@ writes the real `UID` and `GID` into the gitignored repository-root `.env`. `$UI
 are bash builtins rather than exported variables, so Compose cannot read them directly; this
 is why the file exists and why it edits in place rather than truncating.
 
+The same hook then runs `.devcontainer/prune-stale-containers.sh`. `devcontainer exec` picks
+its target by the `devcontainer.local_folder` label rather than by the Compose project, and
+every container this repository has ever produced carries the same value for that label. A
+leftover from an earlier project name therefore stays a candidate forever, and when the CLI
+picks the stopped leftover the only symptom is
+
+```
+Error: can only create exec sessions on running containers: container state improper
+```
+
+which names neither container. The script removes stopped containers belonging to a Compose
+project other than the one in use, whole project at a time — the `cloudflare-tunnel` sidecar
+carries no devcontainer label but does `depends_on: core`, and Podman refuses to remove a
+container that still has a dependent. It never touches a running container, never touches the
+project currently in use, and never removes a volume.
+
 The Podman-specific properties are Compose concerns and need no flags: `userns_mode: keep-id`,
 `security_opt: [no-new-privileges:true]`, `cap_drop: [ALL]`, `init: true`, the
 `CONTAINER_UID`/`CONTAINER_GID` build arguments, loopback-only port publication on
 `127.0.0.1`, the `empty.env` masks over ignored environment paths, and the named volumes
 `node-volume`, `home-cache`, `pnpm-store`, and `workspace-secrets-mask`. The
-Edge's `cloudflare-tunnel` sidecar is declared in `compose.custom.yaml`, uses the compose default
+Edge's `cloudflare-tunnel` sidecar is declared in `compose.yaml` beside `core`, uses the compose default
 network, and requires `EDGE_CLOUDFLARED_TOKEN` (or, as a fallback, `CLOUDFLARED_TOKEN`) from the gitignored
 root `.env`.
 

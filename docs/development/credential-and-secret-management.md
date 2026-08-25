@@ -67,7 +67,7 @@ remove the container:
 
 ```bash
 scripts/dev-stop
-podman container rm -f umaxica-apps-edge-dc-core-1
+podman container rm -f umaxica-apps-edge-core-1
 ```
 
 There is no host-side file to overwrite and no Podman Secret to delete.

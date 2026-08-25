@@ -53,14 +53,22 @@ if [[ ${use_rails} == true ]]; then
     echo 'Inspect available networks with `podman network ls`, then set EDGE_RAILS_NETWORK.' >&2
     exit 1
   fi
-  compose+=(-f compose.rails.yaml)
+  compose+=(-f compose.custom.yaml)
 fi
 
 # Independent of --rails on purpose: inbound Edge exposure and outbound Rails
-# connectivity answer different questions. The connector uses this compose
-# project's default network and requires an Edge-specific token from `.env`.
+# connectivity answer different questions. The connector is defined in
+# `compose.yaml` because it is shared, so this adds no overlay — it only asks for
+# the service to be started. It uses this compose project's default network and
+# requires an Edge-specific token from `.env`.
 if [[ ${use_tunnel} == true ]]; then
-  compose+=(-f compose.custom.yaml)
+  # Compose reads the repo-root `.env` itself; bash does not. Check both, or a
+  # token that is present and working would be reported as missing.
+  if [[ -z ${EDGE_CLOUDFLARED_TOKEN:-} && -z ${CLOUDFLARED_TOKEN:-} ]] &&
+    ! { [[ -f .env ]] && grep -Eq '^(EDGE_)?CLOUDFLARED_TOKEN=.+' .env; }; then
+    echo 'ERROR: --tunnel requires EDGE_CLOUDFLARED_TOKEN (or CLOUDFLARED_TOKEN) in .env.' >&2
+    exit 1
+  fi
   services+=(cloudflare-tunnel)
 fi
 

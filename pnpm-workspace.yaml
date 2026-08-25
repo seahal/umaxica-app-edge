@@ -136,7 +136,7 @@ catalog:
   cspell: ^10.1.0
   dependency-cruiser: ^18.2.0
   happy-dom: ^20.11.6
-  hono: ^4.13.3
+  hono: ^4.13.4
   knip: ^6.32.2
   nuqs: ^2.10.0
   # The static analysis toolchain. These were literal strings in twenty-two

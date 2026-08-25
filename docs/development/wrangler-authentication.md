@@ -38,7 +38,7 @@ From outside the container, the same thing without entering it first:
 
 ```bash
 podman exec -it -w /home/edge/workspace \
-  umaxica-apps-edge-dc-core-1 \
+  umaxica-apps-edge-core-1 \
   pnpm run login:device
 ```
 
