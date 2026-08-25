@@ -93,8 +93,8 @@ RUN npm rm --global corepack \
   && npm cache clean --force
 
 # The group is named after the user on purpose. Devcontainer features are
-# third-party scripts, and several of them (grok-build among them) chown their
-# state with a literal `${_REMOTE_USER}:${_REMOTE_USER}` — a group named
+# third-party scripts, and several of them chown their state with a literal
+# `${_REMOTE_USER}:${_REMOTE_USER}` — a group named
 # anything else makes those installs fail with "chown: invalid group".
 RUN set -eux; \
   base_user=node; \
