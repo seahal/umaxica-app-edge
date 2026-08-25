@@ -1,19 +1,60 @@
 name: umaxica-apps-edge-dc
 
-# Edge owns this connector and its tunnel. It is intentionally independent from the
-# Global/Rails connector: the two compose projects share neither a Podman network nor a
-# tunnel token. Public hostnames on this tunnel must be protected by Cloudflare Access.
+# This connector joins the SAME tunnel as the Global/Rails connector, on purpose, and so it
+# takes the SAME CLOUDFLARED_TOKEN. One tunnel is what makes the Rails <- Edge direction
+# work; a second, Edge-owned tunnel would not carry it. The two compose projects still share
+# no Podman network -- only the tunnel. Public hostnames on it must be protected by
+# Cloudflare Access.
+#
+# Practical consequence, since the token is the tunnel's identity: whatever is in this
+# repo's .env must be the same value as in the Global repo's .env. Two different tokens here
+# is a misconfiguration, not an isolation boundary.
 services:
+  # SELinux を Enforcing で動かしているホスト (Fedora/RHEL 系) 向けの上書き。
+  # compose.yaml の bind mount は :z / :Z を付けていないので、ホスト側の
+  # リポジトリは user_home_t のまま残り、container_t で動くコンテナからは
+  # 読めない。uid/gid は keep-id で一致しているため DAC は通っており、
+  # 落ちているのは MAC の側だけ (`ls` がディレクトリ一覧すら出せない)。
+  #
+  # bind mount は . と 16 個の empty.env の計 17 本あり、:z を全部に付けると
+  # ホスト側リポジトリを container_file_t へ再ラベルしてしまう。ラベル強制の
+  # 無効化はコンテナ1つに閉じ、ホストのラベルを書き換えないのでこちらを取る。
+  # security_opt はリストだが上書き側で置換されるため、compose.yaml 側の
+  # no-new-privileges も明示的に再掲する。
+  core:
+    security_opt:
+      - no-new-privileges:true
+      - label=disable
+
   cloudflare-tunnel:
     image: docker.io/cloudflare/cloudflared:2026.8.2
-    depends_on:
-      - core
+    # No `depends_on: core`. Podman translates depends_on into `--requires`,
+    # which makes core un-removable while this container exists ("container has
+    # dependent containers which must be removed before it") -- and that is
+    # exactly what `devcontainer up --remove-existing-container` does, so every
+    # rebuild aborts before it starts. The ordering bought nothing in exchange:
+    # cloudflared dials Cloudflare, not core, and reconnects to an origin that
+    # is not listening yet, so starting first is harmless.
     command: tunnel --protocol quic --metrics 0.0.0.0:2000 run
     environment:
-      # Prefer the Edge-specific token. A single-tunnel local setup may only have the
-      # generic CLOUDFLARED_TOKEN in .env, so fall back to it rather than refusing to
-      # render the compose file at all; one of the two must be set.
-      TUNNEL_TOKEN: '${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:?EDGE_CLOUDFLARED_TOKEN or CLOUDFLARED_TOKEN must be set in .env}}'
+      # One variable, no nesting, no `:?`.
+      #
+      # This used to read `${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:?...}}`, meaning
+      # "prefer the Edge-specific token, else the generic one, else fail". Podman's compose
+      # provider (podman-compose) substitutes variables with a single regex pass and does
+      # not recurse into a default value, so the whole inner `${CLOUDFLARED_TOKEN:?...}`
+      # survived as a LITERAL string and was handed to cloudflared as the token. The guard
+      # never fired, and the connector crash-looped on "Provided Tunnel token is not valid"
+      # even on a machine where CLOUDFLARED_TOKEN was set correctly. `${A:-$B}` fails the
+      # same way. Preferring one variable over another is simply not expressible here.
+      #
+      # `.env` is repo-local and Edge-only, so the generic name is already unambiguous: the
+      # tunnel it names is the Edge tunnel, independent from Global's. `:-` rather than `:?`
+      # keeps `devcontainer up` working on a machine with no tunnel at all -- substitution
+      # happens when Compose loads the file, before it knows this service was not wanted.
+      # Started without a token, cloudflared still says so itself, bounded by
+      # `restart: on-failure:3`.
+      TUNNEL_TOKEN: '${CLOUDFLARED_TOKEN:-}'
     restart: on-failure:3
     cpus: 0.5
     mem_limit: 256m
