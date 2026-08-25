@@ -4,11 +4,23 @@
   // use, so all three share one project name, one set of containers and one set of
   // volumes. It defines both `core` and the Edge-owned Cloudflare Tunnel connector.
   //
-  // `../compose.custom.yaml` is deliberately absent: it is the developer-local
-  // overlay, and its Rails network is external and machine-specific, so loading it
-  // unconditionally would break every devcontainer that has no such network. Add it
-  // here yourself if you want it, or use `scripts/dev-start --rails`.
-  "dockerComposeFile": ["../compose.yaml"],
+  // `../compose.custom.yaml` is loaded too. It used to be excluded because it
+  // declared an external, machine-specific Rails network that no other machine
+  // had; that `networks:` block is gone, and what is left is host-portable: a
+  // `label=disable` for the `core` container and a tunnel connector whose token
+  // reads `${CLOUDFLARED_TOKEN:-}`, so a machine with no tunnel still starts.
+  //
+  // Loading it is what makes SELinux Enforcing hosts work at all. `compose.yaml`
+  // has 17 bind mounts with no `:z`/`:Z`, so the repository stays `user_home_t`
+  // and `container_t` cannot read `/home/edge/workspace` — uid/gid match under
+  // keep-id, so DAC passes and only MAC denies. `label=disable` scopes the
+  // relaxation to this one container instead of relabelling the host tree.
+  //
+  // The overlay repeats `compose.yaml`'s `name:` on purpose, so this does not
+  // fork the project or the volume set away from `scripts/dev-start`. Compose
+  // takes the name from the LAST file that sets one, and the Dev Containers CLI
+  // passes that resolved value on as `--project-name`.
+  "dockerComposeFile": ["../compose.yaml", "../compose.custom.yaml"],
   // compose.yaml builds the image with CONTAINER_UID/GID taken from
   // ${UID}/${GID}. Those are bash builtins rather than exported variables, so
   // without this hook compose silently falls back to 1000 and a host whose UID
