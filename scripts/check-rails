@@ -13,7 +13,7 @@ fi
 for brand in app com org; do
   for frame in core docs help info news; do
     origin="http://${frame}.${brand}.localhost:3000"
-    if podman compose -f compose.yaml -f compose.rails.yaml exec -T core \
+    if podman compose -f compose.yaml -f compose.custom.yaml exec -T core \
       curl --fail --silent --show-error --max-time 10 --output /dev/null \
       "${origin}/health/liveness.json"; then
       echo "PASS ${origin}"

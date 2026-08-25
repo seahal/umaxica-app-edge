@@ -1,3 +1,7 @@
+# The one compose project for this repository. `.devcontainer/devcontainer.json`,
+# `scripts/dev-start` and a bare `podman compose` all resolve to this same name, so
+# they share one set of containers and volumes. Developer-local additions go in
+# `compose.custom.yaml`, which is the only other compose file in the repository.
 name: umaxica-apps-edge
 
 services:
@@ -134,7 +138,55 @@ services:
       - ALL
     environment:
       CLOUDFLARE_ENV: development
+      # Read only by `tools/verify-edge-connectivity.mjs` as an "am I inside the
+      # container" hint, alongside its `/.dockerenv` fallback. It is a property of
+      # this service rather than of the editor attached to it, so it belongs here
+      # rather than in an overlay only VS Code loads.
+      DEVCONTAINER: '1'
     restart: unless-stopped
+
+  # Edge owns this connector and its tunnel. It is intentionally independent from the
+  # Global/Rails connector: the two share neither a Podman network nor a tunnel token.
+  # Public hostnames on this tunnel must be protected by Cloudflare Access.
+  #
+  # It lives here rather than in `compose.custom.yaml` because the connector, its
+  # pinned release and its hardening are project-wide facts; only the token is
+  # per-developer, and that arrives from the gitignored `.env`. Starting it is still
+  # opt-in — `scripts/dev-start` names `core` alone unless `--tunnel` is passed.
+  cloudflare-tunnel:
+    image: docker.io/cloudflare/cloudflared:2026.8.2
+    depends_on:
+      - core
+    command: tunnel --protocol quic --metrics 0.0.0.0:2000 run
+    environment:
+      # Prefer the Edge-specific token; a single-tunnel local setup may only have the
+      # generic CLOUDFLARED_TOKEN in .env.
+      #
+      # Neither carries a `:?` guard, and that is not an oversight. Compose
+      # interpolates the whole file whichever services you name, so a required
+      # variable here would stop `podman compose -f compose.yaml up core` on every
+      # machine that never intends to run a tunnel — which, now that the connector
+      # is shared rather than an opt-in overlay, is most of them. The requirement is
+      # enforced where it is actually a requirement: `scripts/dev-start --tunnel`
+      # refuses to start without a token, and cloudflared itself exits non-zero on
+      # an empty one, bounded by `restart: on-failure:3`.
+      TUNNEL_TOKEN: '${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:-}}'
+    restart: on-failure:3
+    cpus: 0.5
+    mem_limit: 256m
+    pids_limit: 128
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 volumes:
   node-volume:

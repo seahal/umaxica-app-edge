@@ -13,7 +13,6 @@ const repoRoot = join(import.meta.dirname, '..');
 const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
 
 const composeBase = read('compose.yaml');
-const composeOverride = read('.devcontainer/compose.override.yml');
 const composeCustom = read('compose.custom.yaml');
 const devcontainer = read('.devcontainer/devcontainer.json');
 
@@ -22,11 +21,11 @@ const devcontainer = read('.devcontainer/devcontainer.json');
  *
  * Enumerated rather than globbed so that adding a compose file is a deliberate
  * act: a new overlay that nobody adds here would sit outside these assertions
- * while looking covered.
+ * while looking covered. The repository is meant to have exactly these two —
+ * shared and developer-local — so the count is asserted, not just the names.
  */
 const composeFiles = [
   ['compose.yaml', composeBase],
-  ['.devcontainer/compose.override.yml', composeOverride],
   ['compose.custom.yaml', composeCustom],
 ] as const;
 
@@ -61,53 +60,78 @@ function trackedFiles(): string[] {
 }
 
 describe('Edge-owned tunnel connector', () => {
-  it('pins the supported cloudflared release in the custom overlay only', () => {
-    expect(composeCustom).toContain('docker.io/cloudflare/cloudflared:2026.8.2');
-    expect(composeBase).not.toContain('cloudflared');
-    expect(composeOverride).not.toContain('cloudflared');
+  it('pins the supported cloudflared release in the shared file only', () => {
+    // The connector is shared infrastructure, so it is defined once, centrally.
+    // Only its token is per-developer, and that comes from the gitignored `.env`
+    // rather than from the developer-local overlay.
+    expect(composeBase).toContain('docker.io/cloudflare/cloudflared:2026.8.2');
+    expect(composeCustom).not.toContain('cloudflared');
   });
 
-  it('enumerates every compose file that can define a service', () => {
-    // The assertions above are only as complete as this list. `compose.custom.yaml`
-    // shares its name with the Rails overlay that DOES define the connector, so a
-    // future edit that copies content across would land in a file this suite has
-    // to be reading. Fail loudly if one of them disappears or is renamed.
+  it('keeps exactly two compose files, shared and developer-local', () => {
+    // The assertions above are only as complete as this list, and the repository
+    // deliberately has no third compose file: everything shared is in
+    // `compose.yaml` and everything machine-specific is in `compose.custom.yaml`.
+    // A new overlay must be added here to be covered, so make the omission fail.
     for (const [name] of composeFiles) {
       expect(existsSync(join(repoRoot, name)), `${name} is asserted on but missing`).toBe(true);
     }
-    expect(composeFiles.map(([name]) => name)).toContain('compose.custom.yaml');
+    expect(
+      trackedFiles()
+        .filter((path) => /(?:^|\/)compose\..*ya?ml$/u.test(path))
+        .sort(),
+    ).toEqual(['compose.custom.yaml', 'compose.yaml']);
   });
 
   it('defines one hardened connector without a cross-project network', () => {
-    const servicesBlock = /^services:\n((?: .*\n|\n)*)/mu.exec(composeCustom)?.[1] ?? '';
+    const servicesBlock = /^services:\n((?: .*\n|\n)*)/mu.exec(composeBase)?.[1] ?? '';
     const serviceNames = [...servicesBlock.matchAll(/^ {2}([a-z0-9][\w-]*):/gmu)].map(
       (match) => match[1],
     );
-    expect(serviceNames).toEqual(['cloudflare-tunnel']);
-    expect(composeCustom).not.toContain('umaxica-edge-tunnel');
-    expect(composeCustom).not.toContain('host.docker.internal');
-    expect(composeCustom).toContain('read_only: true');
-    expect(composeCustom).toContain('no-new-privileges:true');
-    expect(composeCustom).toContain('cap_drop:');
-    expect(composeCustom).toContain('restart: on-failure:3');
+    expect(serviceNames).toEqual(['core', 'cloudflare-tunnel']);
+
+    const connector = /^ {2}cloudflare-tunnel:\n((?: {4}.*\n|\n)*)/mu.exec(composeBase)?.[1] ?? '';
+    expect(connector).not.toBe('');
+    expect(connector).not.toContain('umaxica-edge-tunnel');
+    expect(connector).not.toContain('host.docker.internal');
+    expect(connector).toContain('read_only: true');
+    expect(connector).toContain('no-new-privileges:true');
+    expect(connector).toContain('cap_drop:');
+    expect(connector).toContain('restart: on-failure:3');
   });
 
   it('starts the connector with the standard devcontainer lifecycle', () => {
-    expect(devcontainer).toContain('compose.custom.yaml"');
+    // One compose file, shared with `scripts/dev-start` and with a bare
+    // `podman compose`, so all three resolve to one project and one set of
+    // volumes. The developer-local overlay is opt-in and must NOT be listed:
+    // its Rails network is external, so every machine without one would fail
+    // to open a devcontainer at all.
+    expect(devcontainer).toContain('"dockerComposeFile": ["../compose.yaml"]');
+    expect(devcontainer).not.toContain('compose.custom.yaml"');
     expect(devcontainer).toContain('"runServices": ["core", "cloudflare-tunnel"]');
   });
 
   /*
-   * The Edge-specific token is still what the connector prefers. The generic
-   * CLOUDFLARED_TOKEN is accepted only as a fallback, for a local setup that
-   * runs a single tunnel and has no separate Edge value; the `:?` guard stays
-   * on the fallback so an environment with neither still fails loudly rather
-   * than starting a connector with an empty token.
+   * The Edge-specific token is still what the connector prefers; the generic
+   * CLOUDFLARED_TOKEN is accepted as a fallback, for a local setup that runs a
+   * single tunnel and has no separate Edge value.
+   *
+   * Neither may carry a `:?` guard any more. Compose interpolates the whole file
+   * whichever services are named, so now that the connector shares `compose.yaml`
+   * with `core`, a required variable would stop `podman compose up core` on every
+   * machine that never runs a tunnel. `scripts/dev-start --tunnel` is where the
+   * requirement is enforced instead, and it has to look in `.env` as well as in
+   * the shell, because compose reads that file and bash does not.
    */
-  it('prefers the Edge-specific token and fails when neither is set', () => {
-    expect(composeCustom).toMatch(
-      /TUNNEL_TOKEN: ['"]\$\{EDGE_CLOUDFLARED_TOKEN:-\$\{CLOUDFLARED_TOKEN:\?EDGE_CLOUDFLARED_TOKEN or CLOUDFLARED_TOKEN must be set in \.env\}\}['"]/u,
+  it('prefers the Edge-specific token and refuses to start a tunnel without one', () => {
+    expect(composeBase).toMatch(
+      /TUNNEL_TOKEN: ['"]\$\{EDGE_CLOUDFLARED_TOKEN:-\$\{CLOUDFLARED_TOKEN:-\}\}['"]/u,
     );
+    expect(composeBase).not.toMatch(/CLOUDFLARED_TOKEN:\?/u);
+
+    const devStart = read('scripts/dev-start');
+    expect(devStart).toMatch(/--tunnel requires EDGE_CLOUDFLARED_TOKEN/u);
+    expect(devStart).toContain("grep -Eq '^(EDGE_)?CLOUDFLARED_TOKEN=.+' .env");
   });
 });
 

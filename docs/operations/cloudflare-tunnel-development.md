@@ -33,17 +33,22 @@ was `/rails-health`. Read a `/rails-health` column in a results table as `/healt
 
 ## Ownership: an Edge-specific connector and tunnel
 
-Edge runs its own `cloudflared` sidecar from `compose.custom.yaml`. It uses an Edge-specific Tunnel
+Edge runs its own `cloudflared` sidecar from `compose.yaml`. It uses an Edge-specific Tunnel
 and `EDGE_CLOUDFLARED_TOKEN`; it must never reuse Global's Tunnel ID or token. The two compose
 projects share no Podman network.
 
 The separation is load-bearing. Registering the Edge connector as a replica of Global's tunnel
 would let Cloudflare select a connector that cannot reach the requested origin.
 
-`compose.custom.yaml` pins `cloudflare/cloudflared:2026.8.2`, reads `EDGE_CLOUDFLARED_TOKEN` and
+`compose.yaml` pins `cloudflare/cloudflared:2026.8.2`, reads `EDGE_CLOUDFLARED_TOKEN` and
 falls back to `CLOUDFLARED_TOKEN` when it is unset, and starts with the standard Dev Container
-lifecycle. Compose refuses to render when neither is set. The token stays in
-the gitignored host `.env` and is passed only to the sidecar.
+lifecycle. The token stays in the gitignored host `.env` and is passed only to the sidecar.
+
+Neither variable is marked required in the compose file, because compose interpolates the whole
+file whichever services you name and the connector now shares that file with `core`: a `:?` guard
+would stop `podman compose up core` on every machine that never runs a tunnel. `scripts/dev-start
+--tunnel` enforces the token instead, checking the shell and `.env` both, and cloudflared exits
+non-zero on an empty token under `restart: on-failure:3`.
 
 ## Naming policy
 

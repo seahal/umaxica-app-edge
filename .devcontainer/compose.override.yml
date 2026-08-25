@@ -1,7 +1,0 @@
-name: umaxica-apps-edge-dc
-
-services:
-  core:
-    environment:
-      DEVCONTAINER: '1'
-    restart: unless-stopped

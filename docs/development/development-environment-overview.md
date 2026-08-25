@@ -45,7 +45,7 @@ The Tunnel modes require `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`.
 connector token for the Edge-specific Tunnel, not an API token, and must not match Global's token.
 `--rails` joins an
 existing rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or
-guesses one. `--tunnel` starts the Edge connector from `compose.custom.yaml`.
+guesses one. `--tunnel` starts the Edge connector, which is defined in `compose.yaml`.
 Credentials are obtained inside the running container through browser logins — see
 [Credential and secret management](credential-and-secret-management.md).
 

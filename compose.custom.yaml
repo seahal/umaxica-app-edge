@@ -1,32 +1,26 @@
-name: umaxica-apps-edge-dc
-
-# Edge owns this connector and its tunnel. It is intentionally independent from the
-# Global/Rails connector: the two compose projects share neither a Podman network nor a
-# tunnel token. Public hostnames on this tunnel must be protected by Cloudflare Access.
+# The developer-local overlay. This is the only compose file in the repository you
+# are expected to edit for your own machine; `compose.yaml` holds what everyone
+# shares. It is tracked so that the Rails wiring below has one known-good form, but
+# a local edit here is not a defect — do not treat a diff in this file as one.
+#
+# Nothing loads it implicitly. `.devcontainer/devcontainer.json` names `compose.yaml`
+# alone, so a devcontainer never picks this up; `scripts/dev-start --rails` adds it,
+# and so does a manual `podman compose -f compose.yaml -f compose.custom.yaml`.
+#
+# It deliberately declares no `name:`. The last `-f` wins, so setting one here would
+# silently fork the compose project and strand the volumes created without it.
 services:
-  cloudflare-tunnel:
-    image: docker.io/cloudflare/cloudflared:2026.8.2
-    depends_on:
-      - core
-    command: tunnel --protocol quic --metrics 0.0.0.0:2000 run
+  core:
+    # Outbound connectivity to a Rails stack running in its own rootless Podman
+    # project on this machine. The network is external and named by you, because
+    # nothing in this repository creates or owns it.
     environment:
-      # Prefer the Edge-specific token. A single-tunnel local setup may only have the
-      # generic CLOUDFLARED_TOKEN in .env, so fall back to it rather than refusing to
-      # render the compose file at all; one of the two must be set.
-      TUNNEL_TOKEN: '${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:?EDGE_CLOUDFLARED_TOKEN or CLOUDFLARED_TOKEN must be set in .env}}'
-    restart: on-failure:3
-    cpus: 0.5
-    mem_limit: 256m
-    pids_limit: 128
-    read_only: true
-    tmpfs:
-      - /tmp:mode=1777
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    logging:
-      driver: json-file
-      options:
-        max-size: '10m'
-        max-file: '3'
+      EDGE_LOCAL_RAILS_ENABLED: '1'
+    networks:
+      - default
+      - rails
+
+networks:
+  rails:
+    external: true
+    name: ${EDGE_RAILS_NETWORK:?EDGE_RAILS_NETWORK must name an existing rootless Podman network}
