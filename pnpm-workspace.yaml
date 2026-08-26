@@ -29,11 +29,6 @@ allowBuilds:
   # where `ignore-scripts=true` has to be relaxed, and it is relaxed for a
   # version-pinned devDependency that never reaches a Worker bundle.
   '@orangeopensource/hurl': true
-  # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
-  # which nothing here uses. The package ships prebuilt binaries for the
-  # platforms it supports, so declining its build script costs nothing and keeps
-  # the `ignore-scripts=true` posture in .npmrc intact.
-  '@parcel/watcher': false
   esbuild: true
   lefthook: true
   sharp: true
@@ -83,24 +78,18 @@ catalog:
   # Containerfile installs — the same reason `test:e2e` is not a CI gate.
   '@size-limit/file': ^13.0.3
   # Tailwind v4 has no JS config file: the theme is declared in each unit's own
-  # stylesheet with `@theme`. One engine, three delivery mechanisms, one per
-  # bundler the estate actually has:
+  # stylesheet with `@theme`. One engine, one delivery mechanism, because every
+  # unit builds with Vite: `@tailwindcss/vite`.
   #
-  #   @tailwindcss/vite     every unit, through Vite
-  #   @tailwindcss/cli      nothing, today — see below
+  # Neither of the other two front ends is installed. `@tailwindcss/postcss`
+  # would need a PostCSS pipeline, and there is none. `@tailwindcss/cli` was how
+  # the apex Workers got a stylesheet before they had a bundler — `wrangler
+  # deploy` bundles the entrypoint and copies `public/` byte for byte, so
+  # nothing in that path could process CSS — and it was catalogued with no
+  # consumer until ADR 012 moved the last apex to Vite.
   #
-  # `@tailwindcss/postcss` is not installed: every unit runs the engine through
-  # Vite, so there is no PostCSS pipeline for it to sit in.
-  #
-  # `@tailwindcss/cli` was how the apex Workers got a stylesheet before they had
-  # a bundler: `wrangler deploy` bundles the entrypoint and copies `public/`
-  # byte for byte, so nothing in that path could process CSS. It stays only
-  # while apex units remain unmigrated; the last one to move to Vite should
-  # delete this entry rather than leave it as a catalogue of a dead toolchain.
-  #
-  # All three are pinned here rather than per unit so the twenty units
-  # cannot drift onto different Tailwind versions.
-  '@tailwindcss/cli': ^4.3.3
+  # `tailwindcss` and `@tailwindcss/vite` are pinned here rather than per unit
+  # so the twenty units cannot drift onto different Tailwind versions.
   '@tailwindcss/vite': ^4.3.3
   # TanStack Router and TanStack Start, the framework behind all fifteen frames.
   # They move in lockstep — Start's peer range pins Router — so a per-unit drift
@@ -119,7 +108,7 @@ catalog:
   # here changes what a test MEANS rather than whether it runs.
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.2
-  '@types/node': ^26.2.0
+  '@types/node': ^26.3.0
   '@types/react': ^19.2.18
   '@types/react-dom': ^19.2.4
   # React Fast Refresh and the JSX transform for the Vite-built units. The five
@@ -138,7 +127,6 @@ catalog:
   happy-dom: ^20.11.6
   hono: ^4.13.4
   knip: ^6.32.2
-  nuqs: ^2.10.0
   # The static analysis toolchain. These were literal strings in twenty-two
   # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
   # the root), which is exactly the failure a catalog exists to prevent: a lint

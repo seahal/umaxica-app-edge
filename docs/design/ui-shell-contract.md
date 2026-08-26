@@ -145,25 +145,24 @@ on a padding change while still passing if a `<nav>` lost its accessible name.
 
 ## 3a. Agreed libraries
 
-Three libraries are fixed by decision, so that the archetypes cannot each answer
-the same question differently. None is a licence to add more: a fourth library
+Two libraries are fixed by decision, so that the archetypes cannot each answer
+the same question differently. Neither is a licence to add more: a third library
 is a decision, not a detail.
 
-| Concern                                                                 | Library                                                | Where it is installed                        |
-| ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- |
-| Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty units that serve HTML             |
-| Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen frames                           |
-| URL / search-param state                                                | **`nuqs`**, catalog `^2.9.5`                           | **Catalog only — not installed in any unit** |
+| Concern                                                                 | Library                                                | Where it is installed            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------- |
+| Visual styling — every colour, space, size and responsive rule          | **Tailwind CSS v4**, catalog `^4.3.3`                  | All twenty units that serve HTML |
+| Interactive shell controls — disclosure, menu, dialog, focus management | **`react-aria-components`** (Adobe), catalog `^1.20.0` | All fifteen frames               |
 
-**`react-aria-components` and `nuqs` do not go into apex.** The four apex units
-run Hono JSX and carry no React at all (`hono` and `@hono/structured-logger` are
-their only dependencies), while both libraries peer-depend on `react` and
-`react-dom`. Adding React to a Hono Worker would be a runtime change, not a
-library addition, so apex keeps implementing the same interaction contract by
-hand. That is an **allowed** archetype difference (§8), and it is the reason
-§4's disclosure requirements are written as behaviour — `aria-expanded`,
-`aria-controls`, button semantics — rather than as a component name: apex has to
-satisfy them without the library.
+**`react-aria-components` does not go into apex.** The five apex units run Hono
+JSX and carry no React at all (`hono` and `@hono/structured-logger` are their
+only dependencies), while the library peer-depends on `react` and `react-dom`.
+Adding React to a Hono Worker would be a runtime change, not a library addition,
+so apex keeps implementing the same interaction contract by hand. That is an
+**allowed** archetype difference (§8), and it is the reason §4's disclosure
+requirements are written as behaviour — `aria-expanded`, `aria-controls`,
+button semantics — rather than as a component name: apex has to satisfy them
+without the library.
 
 ### Tailwind goes everywhere, but never through a shared config
 
@@ -262,11 +261,6 @@ used, but only from CSS (`@import 'tailwindcss'`), which knip could not see. It
 can now that `.css` is in each unit's `project` globs, so the engine resolves
 like any other import and that suppression is gone. The comment above each
 remaining entry says why it is there.
-
-`nuqs` stays a catalog entry with no unit depending on it, because no surface in
-the repository uses a search parameter and `nuqs` v2 additionally requires a
-`<NuqsAdapter>` in the root layout. When the first such surface exists, add
-`"nuqs": "catalog:"` to that unit alone and wire the adapter there.
 
 ## 4. Header
 
