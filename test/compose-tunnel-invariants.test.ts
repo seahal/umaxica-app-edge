@@ -101,13 +101,28 @@ describe('Edge-owned tunnel connector', () => {
   });
 
   it('starts the connector with the standard devcontainer lifecycle', () => {
-    // One compose file, shared with `scripts/dev-start` and with a bare
-    // `podman compose`, so all three resolve to one project and one set of
-    // volumes. The developer-local overlay is opt-in and must NOT be listed:
-    // its Rails network is external, so every machine without one would fail
-    // to open a devcontainer at all.
-    expect(devcontainer).toContain('"dockerComposeFile": ["../compose.yaml"]');
-    expect(devcontainer).not.toContain('compose.custom.yaml"');
+    // Both compose files, so the project resolves the same way it does under
+    // `scripts/dev-start` and a bare `podman compose`, with one set of volumes
+    // — which is why the overlay has to repeat the same `name:`, checked below.
+    //
+    // The overlay is no longer opt-in. It stopped being machine-specific when
+    // its external Rails `networks:` block was removed, and what remains is
+    // what an SELinux Enforcing host needs: `label=disable` on `core`, without
+    // which `/home/edge/workspace` is unreadable inside the container.
+    expect(devcontainer).toContain(
+      '"dockerComposeFile": ["../compose.yaml", "../compose.custom.yaml"]',
+    );
+    // Loading it unconditionally is only safe while it stays host-portable, so
+    // the overlay must declare nothing machine-specific: no external network,
+    // and no service the base file already owns (see the `cloudflared` check
+    // above, and the project-name check below).
+    expect(composeCustom).not.toContain('external: true');
+    expect(composeCustom).not.toMatch(/^networks:/m);
+    // Compose takes the project name from the last file that sets one, so a
+    // divergent `name:` here forks the project away from `compose.yaml` and
+    // `scripts/dev-start` — a second volume set, and a port clash with the
+    // containers `--remove-existing-container` then fails to find.
+    expect(composeCustom).toMatch(/^name: umaxica-apps-edge$/m);
     expect(devcontainer).toContain('"runServices": ["core", "cloudflare-tunnel"]');
   });
 
