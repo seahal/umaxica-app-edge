@@ -73,7 +73,7 @@ if podman volume exists "${state_volume}" 2> /dev/null; then
       "See ${doc}."
   fi
 else
-  # Not enrolled. Without a key the sidecar starts, fails to authenticate, and
+  # Not enrolled. Without a key tailscaled starts, fails to authenticate, and
   # retries -- reachable nowhere, explained only in its own log.
   if [[ -z ${authkey} ]]; then
     fail "first remote-access start needs a one-off TS_AUTHKEY." \

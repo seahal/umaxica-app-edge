@@ -4,7 +4,7 @@ Codex App, VS Code Remote SSH, or a plain `ssh` from any device on the tailnet,
 landing in a shell **inside `core`** — the same container the dev container uses,
 with the same workspace bind and the same toolchain.
 
-    client ---- tailnet tcp/22 ----> tailscale sidecar ---- core:2222 ----> sshd
+    client ---- tailnet tcp/22 ----> tailscaled in core ---- 127.0.0.1:2222 ----> sshd
 
 Opt-in. Nothing loads `compose.remote-access.yaml` implicitly.
 
@@ -22,18 +22,22 @@ hostname and the toolchain differ. **Fix something here, fix it in all three.**
 | sshd wrapper         | `/usr/local/bin/remote-sshd-entrypoint` (baked, 0555 root)                                 |
 | authorized keys      | `.secrets/codex_authorized_keys` → `/home/edge/.config/umaxica/authorized_keys`, read-only |
 | sshd host key        | volume `umaxica-apps-edge_sshd-host-keys` → `/home/edge/.local/state/remote-sshd`          |
-| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/var/lib/tailscale`                          |
+| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/home/edge/.local/state/tailscale`                          |
 | tailnet hostname     | `umaxica-edge-core`                                                                        |
 | tailnet tag          | `tag:umaxica-devcontainer`                                                                 |
 
-Tailscale runs in a **sidecar**, never inside `core`, and in **userspace
-networking** mode: no `/dev/net/tun`, no `CAP_NET_ADMIN`, no `privileged`, no
-`network_mode: host`, no Podman socket. The sidecar drops every capability and
-publishes no host port.
+Tailscale runs **inside `core`**, in **userspace networking** mode: no
+`/dev/net/tun`, no `CAP_NET_ADMIN`, no `privileged`, no `network_mode: host`, no
+Podman socket. `core`'s own `cap_drop: ALL` and `no-new-privileges` hold
+unchanged — tailscaled runs as `edge`, its netstack terminates tailnet
+connections, and `tailscale serve` forwards tcp/22 to sshd over loopback. The
+pinned client is baked by the Containerfile; the remote-access overlay starts it
+via `remote-sshd-entrypoint`, and in a plain dev container the
+`/usr/local/bin/tailscale` wrapper starts it on first use, so an interactive
+`tailscale up` also works. (This used to be a sidecar.)
 
-Tailscale SSH (`tailscale up --ssh`) is deliberately **not** used. It would put
-the session in the sidecar's filesystem, which is the one thing this arrangement
-exists to avoid.
+Tailscale SSH (`tailscale up --ssh`) is deliberately **not** used. It would
+bypass sshd and the authorized-keys contract below.
 
 ## Before the first start: the tailnet policy
 
@@ -104,7 +108,7 @@ the compose file nor sshd can substitute for it.
 5. **Confirm the node registered.**
 
    ```bash
-   podman exec umaxica-apps-edge_tailscale_1 tailscale status
+   podman exec umaxica-apps-edge_core_1 tailscale status
    ```
 
    `umaxica-edge-core` should appear, tagged, and not marked ephemeral.
@@ -162,19 +166,12 @@ destroys both volumes, which deregisters the node and forces a fresh enrolment.
 
 ## Known constraints
 
-- **`TCPForward` to a non-localhost address is undocumented.** The serve config
-  says `"TCPForward": "core:2222"`, but the supported CLI form is
-  `tailscale serve --tcp=22 tcp://localhost:22` — localhost only. The JSON path
-  accepts a sibling container name today and this is the standard sidecar
-  arrangement, but it is not in Tailscale's documentation, so a future
-  `tailscaled` could tighten it. That is why the image is pinned by digest.
-
-  If it ever breaks, the documented replacement is to put the sidecar in `core`'s
-  network namespace (`network_mode: "service:core"`, which podman-compose 1.6.0
-  supports, mapping to `--network=container:...`) and forward to
-  `127.0.0.1:2222`. It is not the default here because the sidecar would then see
-  every network `core` is attached to, which is a wider blast radius than a
-  dedicated bridge.
+- **The tcp/22 forward is the documented CLI form.**
+  `tailscale serve --bg --tcp=22 tcp://127.0.0.1:2222`, run by
+  `remote-sshd-entrypoint` on every start — a same-config re-run is a no-op, so
+  the script stays the source of truth. The former sidecar relied on an
+  undocumented `TCPForward` to a sibling container name; forwarding over
+  loopback inside `core` is the supported shape.
 
 - **Rootless restart policies need the user unit.** `restart: on-failure:3` does
   nothing across a host reboot without
