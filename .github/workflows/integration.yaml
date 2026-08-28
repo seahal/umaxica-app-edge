@@ -24,7 +24,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -41,7 +41,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -97,7 +97,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -134,7 +134,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -151,7 +151,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -211,7 +211,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -231,7 +231,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -262,7 +262,7 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
@@ -279,14 +279,25 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm run test:cov
 
-  build:
+  # The browser bundle budget. This job builds, but building is the *means*,
+  # not the question: "does it build?" is already answered by Cloudflare, which
+  # runs Workers Builds on every push — including non-production branches, where
+  # `preview_urls` gives a real deployed URL that proves the Worker starts and
+  # responds, not merely that Vite exited zero. Duplicating that here bought a
+  # weaker signal twice.
+  #
+  # What Cloudflare does NOT do is measure the output against
+  # `.size-limit.json`, and a bundle cannot be sized without having been built.
+  # That is the whole reason this matrix survives. If the size budget is ever
+  # dropped, drop this job with it rather than keeping a build for its own sake.
+  size:
     runs-on: ubuntu-slim
     timeout-minutes: 15
     strategy:
@@ -294,7 +305,6 @@ jobs:
       matrix:
         target:
           - app/apex
-          - dev/apex
           - app/core
           - app/docs
           - app/news
@@ -321,17 +331,13 @@ jobs:
           cache: true
           # `install` defaults to true, so leaving it out ran `pnpm install`
           # here AND again in the explicit step below — twice per job, across
-          # 53 jobs. The explicit step is the one kept, because
+          # 52 jobs. The explicit step is the one kept, because
           # `--frozen-lockfile` is the stricter contract: it fails on a lockfile
           # the manifests no longer agree with instead of quietly updating it.
           install: false
       - run: pnpm install --frozen-lockfile
+      # Not a build gate — the input the measurement below needs.
       - run: pnpm -C ${{ matrix.target }} run build
-      # The performance budget, measured on the output the step above just
-      # produced. It lives here rather than in a job of its own because the only
-      # way to size a bundle is to have built it, and building all twenty units
-      # a second time would double this matrix to buy nothing.
-      #
       # `--if-present` is kept as a guard rather than a carve-out: every unit
       # in this matrix now declares `check:size`, including dev/apex, which
       # gained a .size-limit.json when it moved onto Workers and the shared

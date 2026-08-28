@@ -1,26 +1,40 @@
-# The developer-local overlay. This is the only compose file in the repository you
-# are expected to edit for your own machine; `compose.yaml` holds what everyone
-# shares. It is tracked so that the Rails wiring below has one known-good form, but
-# a local edit here is not a defect — do not treat a diff in this file as one.
+# Must match `compose.yaml`'s `name:`. Compose takes the project name from the
+# LAST file that sets one, so a different value here forks the project: a second
+# set of containers and volumes, and `--remove-existing-container` looking under
+# the wrong name while the old project still holds the published ports
+# (`rootlessport listen tcp 127.0.0.1:5101: bind: address already in use`).
+name: umaxica-apps-edge
+
+# The developer-local overlay, loaded unconditionally by
+# `.devcontainer/devcontainer.json` and by `scripts/dev-start --rails/--tunnel`.
+# It holds only host-portable overrides now: the Cloudflare Tunnel connector and
+# the external Rails network that used to live here both moved out, the former
+# into `compose.yaml` (where it prefers EDGE_CLOUDFLARED_TOKEN and falls back to
+# CLOUDFLARED_TOKEN, neither with a `:?` guard) and the latter away entirely.
 #
-# Nothing loads it implicitly. `.devcontainer/devcontainer.json` names `compose.yaml`
-# alone, so a devcontainer never picks this up; `scripts/dev-start --rails` adds it,
-# and so does a manual `podman compose -f compose.yaml -f compose.custom.yaml`.
-#
-# It deliberately declares no `name:`. The last `-f` wins, so setting one here would
-# silently fork the compose project and strand the volumes created without it.
+# Do not reintroduce a `cloudflare-tunnel:` block here. `security_opt` is a list,
+# and Compose appends overlay list entries to the base rather than replacing
+# them, so a redeclared `no-new-privileges:true` collides with `compose.yaml`'s
+# and Compose v2.24+ rejects the merged file outright:
+#   services.cloudflare-tunnel.security_opt items at 0 and 1 are equal
 services:
   core:
-    # Outbound connectivity to a Rails stack running in its own rootless Podman
-    # project on this machine. The network is external and named by you, because
-    # nothing in this repository creates or owns it.
-    environment:
-      EDGE_LOCAL_RAILS_ENABLED: '1'
-    networks:
-      - default
-      - rails
-
-networks:
-  rails:
-    external: true
-    name: ${EDGE_RAILS_NETWORK:?EDGE_RAILS_NETWORK must name an existing rootless Podman network}
+    # SELinux Enforcing (Fedora/RHEL) 向け。compose.yaml の bind mount は
+    # :z / :Z を付けていないのでホスト側リポジトリは user_home_t のまま残り、
+    # container_t のコンテナからは読めない。uid/gid は keep-id で一致して
+    # いるため DAC は通っており、落ちているのは MAC の側だけ
+    # (`ls /home/edge/workspace` がディレクトリ一覧すら出せない)。
+    #
+    # bind mount は . と 16 個の empty.env で計 17 本あり、:z を全部に付けると
+    # ホスト側リポジトリを container_file_t へ再ラベルしてしまう。ラベル強制の
+    # 無効化はコンテナ1つに閉じ、ホストのラベルを書き換えないのでこちらを取る。
+    #
+    # compose.yaml の `no-new-privileges:true` を再掲しないこと。security_opt は
+    # リストで、Compose はオーバーレイ側の要素を base に「追記」するため、再掲は
+    # `services.core.security_opt items at 0 and 1 are equal` で弾かれる。
+    # 追記だけで狙いどおり [no-new-privileges:true, label=disable] になる。
+    # `!override` で置き換える手もあるが、podman-compose 1.5.0 はこのタグを
+    # 解釈できず `TypeError: 'OverrideTag' object is not iterable` で落ちるので、
+    # プロバイダを選ばないこちらを取る。
+    security_opt:
+      - label=disable
