@@ -106,7 +106,7 @@ neutral, so it belongs under a display face rather than carrying one.
   characters are taller and denser.
 - Body letter-spacing is slightly open (not solid-set).
 - Heading letter-spacing is tighter (feels more composed at large sizes).
-- Label and caption letter-spacing is wider (for scannability).
+- Label and caption letter-spacing is wider (so a label is easier to scan).
 
 ### Typographic Pitfalls
 
@@ -186,6 +186,7 @@ Hierarchy and separation come from background color difference, border,
 spacing, and typography, never from shadow.
 
 Shadow is limited to two cases:
+
 - **Drag state**: the element being dragged gets shadow to communicate
   "lifted off the surface." Remove on drop.
 - **Sticky header on scroll**: shadow appears dynamically when content
@@ -247,6 +248,7 @@ costs a transition instead of the content.
 
 Design for variable-length content. User names, titles, descriptions, and
 translations will overflow, truncate, or wrap. Test every text container with:
+
 - Single-character input
 - Maximum-length input (or a long unbroken string)
 - Multi-line overflow

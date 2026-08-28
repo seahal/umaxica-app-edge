@@ -14,6 +14,7 @@ const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath)
 
 const composeBase = read('compose.yaml');
 const composeCustom = read('compose.custom.yaml');
+const composeRemoteAccess = read('compose.remote-access.yaml');
 const devcontainer = read('.devcontainer/devcontainer.json');
 
 /**
@@ -21,12 +22,14 @@ const devcontainer = read('.devcontainer/devcontainer.json');
  *
  * Enumerated rather than globbed so that adding a compose file is a deliberate
  * act: a new overlay that nobody adds here would sit outside these assertions
- * while looking covered. The repository is meant to have exactly these two —
- * shared and developer-local — so the count is asserted, not just the names.
+ * while looking covered. The repository is meant to have exactly these three —
+ * shared, developer-local, and the opt-in remote-access overlay — so the count
+ * is asserted, not just the names.
  */
 const composeFiles = [
   ['compose.yaml', composeBase],
   ['compose.custom.yaml', composeCustom],
+  ['compose.remote-access.yaml', composeRemoteAccess],
 ] as const;
 
 /**
@@ -66,13 +69,14 @@ describe('Edge-owned tunnel connector', () => {
     // rather than from the developer-local overlay.
     expect(composeBase).toContain('docker.io/cloudflare/cloudflared:2026.8.2');
     expect(composeCustom).not.toContain('cloudflared');
+    expect(composeRemoteAccess).not.toContain('cloudflared');
   });
 
-  it('keeps exactly two compose files, shared and developer-local', () => {
-    // The assertions above are only as complete as this list, and the repository
-    // deliberately has no third compose file: everything shared is in
-    // `compose.yaml` and everything machine-specific is in `compose.custom.yaml`.
-    // A new overlay must be added here to be covered, so make the omission fail.
+  it('keeps exactly three compose files, each with a distinct role', () => {
+    // The assertions above are only as complete as this list: everything shared
+    // is in `compose.yaml`, everything machine-specific in `compose.custom.yaml`,
+    // and remote SSH access in the opt-in `compose.remote-access.yaml`. A new
+    // overlay must be added here to be covered, so make the omission fail.
     for (const [name] of composeFiles) {
       expect(existsSync(join(repoRoot, name)), `${name} is asserted on but missing`).toBe(true);
     }
@@ -80,7 +84,7 @@ describe('Edge-owned tunnel connector', () => {
       trackedFiles()
         .filter((path) => /(?:^|\/)compose\..*ya?ml$/u.test(path))
         .sort(),
-    ).toEqual(['compose.custom.yaml', 'compose.yaml']);
+    ).toEqual(['compose.custom.yaml', 'compose.remote-access.yaml', 'compose.yaml']);
   });
 
   it('defines one hardened connector without a cross-project network', () => {
@@ -117,12 +121,12 @@ describe('Edge-owned tunnel connector', () => {
     // and no service the base file already owns (see the `cloudflared` check
     // above, and the project-name check below).
     expect(composeCustom).not.toContain('external: true');
-    expect(composeCustom).not.toMatch(/^networks:/m);
+    expect(composeCustom).not.toMatch(/^networks:/mu);
     // Compose takes the project name from the last file that sets one, so a
     // divergent `name:` here forks the project away from `compose.yaml` and
     // `scripts/dev-start` — a second volume set, and a port clash with the
     // containers `--remove-existing-container` then fails to find.
-    expect(composeCustom).toMatch(/^name: umaxica-apps-edge$/m);
+    expect(composeCustom).toMatch(/^name: umaxica-apps-edge$/mu);
     expect(devcontainer).toContain('"runServices": ["core", "cloudflare-tunnel"]');
   });
 

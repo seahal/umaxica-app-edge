@@ -31,7 +31,7 @@ Each deployment unit owns its own `.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.j
 
 ## Build & deploy
 
-`vite build` produces the deployed Worker bundle and hashed assets — it builds for production, not just dev. Vite is a devDependency because it doesn't run *in* production; CI cannot drop the build step. Production starts no Node process and no server. `adr/012-apex-vite-build-and-static-assets.md` is normative.
+`vite build` produces the deployed Worker bundle and hashed assets — it builds for production, not just dev. Vite is a devDependency because it doesn't run _in_ production; CI cannot drop the build step. Production starts no Node process and no server. `adr/012-apex-vite-build-and-static-assets.md` is normative.
 
 ## Test layers — placement by assertion, not by tool capability
 

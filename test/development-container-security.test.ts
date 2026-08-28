@@ -128,7 +128,7 @@ describe('development-container security contract', () => {
       .join('\n');
 
     // Userspace networking is the whole reason none of these are needed.
-    expect(instructionsOnly).toContain('TS_USERSPACE: "true"');
+    expect(instructionsOnly).toMatch(/TS_USERSPACE: ['"]true['"]/u);
 
     // The sidecar is the only container on this host that listens to the
     // tailnet, so it is also the one whose image must not be able to change
@@ -149,7 +149,7 @@ describe('development-container security contract', () => {
 
     // Bootstrap-only. A literal key here would be a long-lived credential in
     // version control; it must stay an unset-by-default interpolation.
-    expect(instructionsOnly).toMatch(/TS_AUTHKEY: "\$\{TS_AUTHKEY:-\}"/u);
+    expect(instructionsOnly).toMatch(/TS_AUTHKEY: ['"]\$\{TS_AUTHKEY:-\}['"]/u);
     expect(instructionsOnly).not.toMatch(/tskey-/u);
     for (const pattern of [
       /\bcap_add\s*:/u,

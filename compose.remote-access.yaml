@@ -73,21 +73,21 @@ services:
       # has to be a visible diff rather than a silent capability request.
       # Tailscale's own Docker example pairs NET_ADMIN and NET_RAW with userspace
       # mode -- that is over-provisioned, do not copy it.
-      TS_USERSPACE: "true"
+      TS_USERSPACE: 'true'
       # The default re-runs `tailscale up` with the auth key on EVERY start, which
       # makes a one-off key fail on the second boot. `true` means the persisted
       # state below is enough once the node has registered.
-      TS_AUTH_ONCE: "true"
+      TS_AUTH_ONCE: 'true'
       TS_STATE_DIR: /var/lib/tailscale
       TS_HOSTNAME: umaxica-edge-core
       # Must stay off. Accepting tailnet DNS would replace the container's
       # resolver and the sidecar would stop resolving the sibling name `core`.
-      TS_ACCEPT_DNS: "false"
+      TS_ACCEPT_DNS: 'false'
       # One tag for all three dev containers, so a single ACL grant covers them.
       # Tagged nodes are also exempt from user key expiry, which is what a
       # long-lived development container needs. The tag is where reachability is
       # decided -- see the remote-access document for the grant this expects.
-      TS_EXTRA_ARGS: "--advertise-tags=tag:umaxica-devcontainer"
+      TS_EXTRA_ARGS: '--advertise-tags=tag:umaxica-devcontainer'
       TS_SERVE_CONFIG: /etc/tailscale/serve/serve.json
       # Deliberately NOT set: TS_ENABLE_HEALTH_CHECK. It opens an unauthenticated
       # /healthz and a metrics endpoint on [::]:9002, reachable by anything on
@@ -97,7 +97,7 @@ services:
       # and revoked immediately after enrolment, so requiring it here would make
       # every later start fail. `.devcontainer/remote-access-preflight.sh` is what
       # enforces "present on the first start, absent on every one after".
-      TS_AUTHKEY: "${TS_AUTHKEY:-}"
+      TS_AUTHKEY: '${TS_AUTHKEY:-}'
     volumes:
       # The node's identity. Surviving `podman compose down` is the entire point:
       # without it every start registers a NEW node and the tailnet name drifts to
@@ -137,8 +137,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
 networks:
   # podman-compose resolves every named network against this block and fails with

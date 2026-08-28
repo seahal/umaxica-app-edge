@@ -15,16 +15,16 @@ hostname and the toolchain differ. **Fix something here, fix it in all three.**
 
 ## What runs where
 
-| | |
-|---|---|
-| SSH server | inside `core`, as `edge`, on port 2222 |
-| sshd config | `/etc/ssh/remote-sshd_config` (baked, 0444 root) |
-| sshd wrapper | `/usr/local/bin/remote-sshd-entrypoint` (baked, 0555 root) |
-| authorized keys | `.secrets/codex_authorized_keys` → `/home/edge/.config/umaxica/authorized_keys`, read-only |
-| sshd host key | volume `umaxica-apps-edge_sshd-host-keys` → `/home/edge/.local/state/remote-sshd` |
-| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/var/lib/tailscale` |
-| tailnet hostname | `umaxica-edge-core` |
-| tailnet tag | `tag:umaxica-devcontainer` |
+|                      |                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| SSH server           | inside `core`, as `edge`, on port 2222                                                     |
+| sshd config          | `/etc/ssh/remote-sshd_config` (baked, 0444 root)                                           |
+| sshd wrapper         | `/usr/local/bin/remote-sshd-entrypoint` (baked, 0555 root)                                 |
+| authorized keys      | `.secrets/codex_authorized_keys` → `/home/edge/.config/umaxica/authorized_keys`, read-only |
+| sshd host key        | volume `umaxica-apps-edge_sshd-host-keys` → `/home/edge/.local/state/remote-sshd`          |
+| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/var/lib/tailscale`                          |
+| tailnet hostname     | `umaxica-edge-core`                                                                        |
+| tailnet tag          | `tag:umaxica-devcontainer`                                                                 |
 
 Tailscale runs in a **sidecar**, never inside `core`, and in **userspace
 networking** mode: no `/dev/net/tun`, no `CAP_NET_ADMIN`, no `privileged`, no
@@ -44,7 +44,7 @@ the compose file nor sshd can substitute for it.
 ```jsonc
 {
   "tagOwners": {
-    // Only you may mint keys carrying this tag, and only you may retag a node.
+    // Only you may mint keys carrying this tag, and only you may re-tag a node.
     "tag:umaxica-devcontainer": ["autogroup:admin"],
   },
 
@@ -55,7 +55,7 @@ the compose file nor sshd can substitute for it.
       // tailnet has members who should not reach it.
       "src": ["autogroup:owner"],
       "dst": ["tag:umaxica-devcontainer"],
-      "ip":  ["tcp:22"],
+      "ip": ["tcp:22"],
     },
   ],
 

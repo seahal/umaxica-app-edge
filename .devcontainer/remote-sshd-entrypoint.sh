@@ -26,7 +26,7 @@ if [[ ! -s ${authorized_keys} ]]; then
 fi
 
 # StrictModes rejects these too, but per connection and only in sshd's own log.
-# Naming it at startup keeps a mis-moded bind mount a visible failure.
+# Naming it at startup keeps a bind mount with the wrong mode a visible failure.
 if [[ $(( 0$(stat -c %a "${authorized_keys}") & 0022 )) -ne 0 ]]; then
   echo "remote-sshd: ${authorized_keys} is group- or other-writable; sshd will refuse it." >&2
   exit 78

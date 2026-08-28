@@ -44,6 +44,7 @@ tzdata
 nocopy
 NOPASSWD
 ISIG
+SHLVL
 infocmp
 ncdu
 entr
