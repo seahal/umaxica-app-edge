@@ -46,6 +46,7 @@ NOPASSWD
 ISIG
 SHLVL
 infocmp
+nohup
 ncdu
 entr
 wscript
