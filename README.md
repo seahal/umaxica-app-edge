@@ -13,7 +13,7 @@ runs on workerd; nothing here deploys to Vercel any more.
 ## Prerequisites
 
 - Node.js 24.19.0 — Active LTS "Krypton" (declared in `package.json#devEngines.runtime`, matched by `Containerfile` as `node:24.19.0-trixie`)
-- [pnpm](https://pnpm.io/) 11.22.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
+- [pnpm](https://pnpm.io/) 12.0.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
 - Docker & Docker Compose (optional)
 
 ## Workspaces
@@ -127,7 +127,7 @@ enforces this.
 
 | Tool                                                            | Role                                 | Version |
 | --------------------------------------------------------------- | ------------------------------------ | ------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 11.22.0 |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 12.0.0  |
 | [Vite](https://vite.dev/)                                       | Dev server & production build        | 8.2.x   |
 | [TanStack Start](https://tanstack.com/start)                    | Framework, the fifteen frames        | 1.168.x |
 | [Hono](https://hono.dev/)                                       | Framework, the five apex Workers     | 4.13.x  |
@@ -147,7 +147,7 @@ enforces this.
 ```jsonc
 "devEngines": {
   "runtime":        { "name": "node", "version": "24.19.0", "onFail": "warn" },
-  "packageManager": { "name": "pnpm", "version": "11.22.0", "onFail": "download" }
+  "packageManager": { "name": "pnpm", "version": "12.0.0", "onFail": "download" }
 }
 ```
 
@@ -176,7 +176,7 @@ together; the test tells you when you have edited only one.
 
 The development environment is started with Dev Containers CLI over rootless Podman.
 
-- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 11.22.0
+- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 12.0.0
   pre-installed via the standalone script documented at <https://pnpm.io/installation>.
   Both are
   pinned to exact versions so a rebuild reproduces the same toolchain, and both match

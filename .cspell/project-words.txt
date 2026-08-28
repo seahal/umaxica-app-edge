@@ -51,6 +51,13 @@ wscript
 gsub
 Ghostty
 
+# --- Tailscale, for the opt-in remote-SSH overlay. Product and protocol names
+# --- quoted from tailnet configuration and the tailscale/tailscale image.
+tailnet
+tskey
+netavark
+DERP
+
 # --- Chromium's shared-library dependencies, listed in Containerfile so
 # --- Playwright can run. These are package names, not words.
 libasound

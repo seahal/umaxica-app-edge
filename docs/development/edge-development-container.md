@@ -1,8 +1,8 @@
 # Edge development container
 
 `Containerfile` builds the Podman-first development image. It pins Node 24.19.0, pnpm
-11.22.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
-Wrangler through project dependencies, and Tailscale tooling. No credential enters a build
+12.0.0, Claude Code, Codex, and OpenCode, and installs GitHub CLI, Chromium prerequisites,
+Wrangler through project dependencies. No credential enters a build
 argument, environment instruction, copy, or image layer.
 
 pnpm comes from the standalone install script at <https://pnpm.io/installation> and lands in
@@ -36,11 +36,16 @@ The optional direct-Compose workflows remain available separately:
 
 ```bash
 scripts/dev-build
-scripts/dev-start [--rails] [--tunnel]
+scripts/dev-start [--rails] [--tunnel] [--remote-access]
 podman compose exec core bash -l
 node --version
 pnpm --version
 ```
+
+`--remote-access` adds an opt-in Tailscale sidecar and an unprivileged SSH server inside
+`core`, so a Remote SSH client lands in this container rather than in the sidecar. It is off
+by default and documented separately in
+[Remote SSH into `core` over Tailscale](tailscale-remote-ssh.md).
 
 The interactive `core` service has a TTY and open stdin; infrastructure overlays do not.
 Validate `tty`, Ctrl-L, Ctrl-C, pnpm, Wrangler, and each AI CLI after building on the real

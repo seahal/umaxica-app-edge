@@ -60,4 +60,26 @@ describe('package manager invariants', () => {
     // `devEngines` declares and the one `pnpm-lock.yaml` records.
     expect(manifest.packageManager).toBeUndefined();
   });
+
+  // pnpm 12 parses pnpm-workspace.yaml with a Rust YAML parser that refuses a
+  // run of more than 32 comment lines waiting on an entry inside a collection:
+  // "too many consecutive comments before resolving collection entry". The file
+  // is heavily commented by design, so the limit is easy to cross by adding one
+  // more paragraph — and the failure is a hard config-load error on every pnpm
+  // command, not a warning. Comments before a top-level key are not capped, so
+  // block-level rationale belongs at column 1 above the key it explains.
+  it('keeps indented comment runs in pnpm-workspace.yaml under pnpm 12 limit', () => {
+    const lines = readFileSync(join(repoRoot, 'pnpm-workspace.yaml'), 'utf8').split('\n');
+    let run = 0;
+    let longest = 0;
+    for (const line of lines) {
+      if (/^\s+#/u.test(line)) {
+        run += 1;
+        longest = Math.max(longest, run);
+      } else if (line.trim() !== '') {
+        run = 0;
+      }
+    }
+    expect(longest).toBeLessThanOrEqual(32);
+  });
 });

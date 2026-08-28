@@ -2,7 +2,7 @@
 
 # Keep these runtime pins aligned with package.json and the documented Edge baseline.
 ARG NODE_VERSION=24.19.0-trixie
-ARG PNPM_VERSION=11.22.0
+ARG PNPM_VERSION=12.0.0
 ARG CLAUDE_CODE_VERSION=2.1.220
 ARG CODEX_VERSION=0.147.0
 ARG OPENCODE_VERSION=1.18.16
@@ -61,6 +61,7 @@ RUN apt-get update \
     libxtst6 \
     ncdu \
     openssh-client \
+    openssh-server \
     python3 \
     ripgrep \
     tig \
@@ -70,12 +71,6 @@ RUN apt-get update \
     watch \
     wget \
     yq \
-  && curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg \
-    -o /usr/share/keyrings/tailscale-archive-keyring.gpg \
-  && curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list \
-    -o /etc/apt/sources.list.d/tailscale.list \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends tailscale \
   && rm -rf /var/lib/apt/lists/*
 
 # Corepack is removed, not merely unused. Node ships it only up to (not
@@ -125,7 +120,26 @@ RUN set -eux; \
     "${home}/.local/state" \
     "${home}/.npm" \
     "${home}/.codex" \
-    "${home}/.claude"
+    "${home}/.claude" \
+    "${home}/.config/umaxica" \
+    "${home}/.local/state/remote-sshd"; \
+  install -d -m 0755 -o "${CONTAINER_USER}" -g "${CONTAINER_GROUP}" /run/sshd; \
+  chmod 0700 "${home}/.local/state/remote-sshd"
+
+# The SSH server's configuration and its PID 1 wrapper are baked into the image,
+# not read from the workspace bind. `edge` owns that bind, so leaving them there
+# would let anything with a shell rewrite what the next container start executes
+# — including the authorized-keys path. 0555/0444 under root ownership makes the
+# running user unable to alter either one.
+#
+# Both are inert unless `compose.remote-access.yaml` overrides `core`'s command;
+# the base image still idles on `sleep infinity`.
+#
+# The names are the shared ones. umaxica-apps-global and portal bake the same two
+# paths from the same two source files, so a Remote-SSH problem debugged in one
+# repository transfers to the others unchanged.
+COPY --chmod=0444 .devcontainer/remote-sshd_config /etc/ssh/remote-sshd_config
+COPY --chmod=0555 .devcontainer/remote-sshd-entrypoint.sh /usr/local/bin/remote-sshd-entrypoint
 
 ENV HOME=/home/edge \
     USER=edge \
@@ -146,7 +160,8 @@ USER edge:edge
 # lands under $HOME rather than /usr/local.
 #
 # The PATH above ends in `/bin` for a reason. pnpm 11 moved every global binary
-# into a `bin` subdirectory of PNPM_HOME — the install script runs `pnpm setup`,
+# into a `bin` subdirectory of PNPM_HOME and 12 keeps that layout — the install
+# script runs `pnpm setup`,
 # which installs the CLI with `pnpm add -g` and writes `pn`/`pnpx`/`pnx` there
 # too, then deletes the v10-era shims that used to sit in PNPM_HOME itself.
 # Pointing PATH at PNPM_HOME directly, as the v10 layout required, leaves this
@@ -165,13 +180,18 @@ RUN wget -qO- https://get.pnpm.io/install.sh \
   | env PNPM_VERSION="${PNPM_VERSION}" bash -
 
 # The global install that `pnpm setup` performs is a SYMLINK into
-# $PNPM_HOME/store (`store/v11/links/@pnpm/exe/...`) — but compose.yaml mounts
+# $PNPM_HOME/store (`store/v<major>/links/@pnpm/exe/...`) — but compose.yaml mounts
 # the named volume `pnpm-store` over that store at runtime, hiding the image's
 # copy behind an empty volume. The symlink then dangles and every `pn`/`pnpm`
 # invocation fails with "exec: .../@pnpm/exe/pnpm: not found". Dereference it
 # here so the global install is self-contained and survives the mount.
+#
+# The `global/v*` glob stays version-agnostic on purpose: pnpm bumps that
+# directory with its major, and a hardcoded `v11` would silently match nothing
+# on the next upgrade — the loop would skip, the build would still succeed, and
+# only a container with the volume mounted would fail.
 RUN set -eu; \
-  for link in "${PNPM_HOME}"/global/v11/*/node_modules/@pnpm/exe; do \
+  for link in "${PNPM_HOME}"/global/v*/*/node_modules/@pnpm/exe; do \
     [ -L "${link}" ] || continue; \
     real="$(readlink -f "${link}")"; \
     rm "${link}"; \

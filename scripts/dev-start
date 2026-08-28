@@ -3,11 +3,13 @@ set -euo pipefail
 
 use_rails=false
 use_tunnel=false
+use_remote_access=false
 for argument in "$@"; do
   case "${argument}" in
     --rails) use_rails=true ;;
     --tunnel) use_tunnel=true ;;
-    *) echo "Usage: $0 [--rails] [--tunnel]" >&2; exit 2 ;;
+    --remote-access) use_remote_access=true ;;
+    *) echo "Usage: $0 [--rails] [--tunnel] [--remote-access]" >&2; exit 2 ;;
   esac
 done
 
@@ -70,6 +72,20 @@ if [[ ${use_tunnel} == true ]]; then
     exit 1
   fi
   services+=(cloudflare-tunnel)
+fi
+
+# Inbound SSH from the tailnet, terminating in `core` rather than in the
+# sidecar. See `docs/development/tailscale-remote-ssh.md`.
+#
+# Every check lives in the preflight script rather than here, so that the
+# devcontainer path, a bare `podman compose` and this script all enforce the same
+# rules -- including the one that matters most, refusing to start while a spent
+# TS_AUTHKEY is still sitting in `.env`.
+if [[ ${use_remote_access} == true ]]; then
+  .devcontainer/remote-access-preflight.sh
+
+  compose+=(-f compose.remote-access.yaml)
+  services+=(tailscale)
 fi
 
 # There is no credential overlay any more. Long-lived API tokens and Podman

@@ -192,7 +192,6 @@
     "ghcr.io/joedmck/devcontainer-features/wrangler:1": {},
     "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {},
     "ghcr.io/nolanjx/devcontainer-features/codex:1": {},
-    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {},
     "ghcr.io/sliekens/devcontainer-features/grok-build:1": {}
   },
   "updateRemoteUserUID": false
