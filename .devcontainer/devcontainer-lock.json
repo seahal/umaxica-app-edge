@@ -1,10 +1,5 @@
 {
   "features": {
-    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {
-      "version": "1.0.2",
-      "resolved": "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com@sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4",
-      "integrity": "sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4"
-    },
     "ghcr.io/joedmck/devcontainer-features/wrangler:1": {
       "version": "1.0.0",
       "resolved": "ghcr.io/joedmck/devcontainer-features/wrangler@sha256:fed4e30539e33daec9581180f80c60d3ef0aed516f4d733fae70071fdc7b880e",

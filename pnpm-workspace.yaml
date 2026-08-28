@@ -29,11 +29,6 @@ allowBuilds:
   # where `ignore-scripts=true` has to be relaxed, and it is relaxed for a
   # version-pinned devDependency that never reaches a Worker bundle.
   '@orangeopensource/hurl': true
-  # Reached only through `@tailwindcss/cli`, and only by its `--watch` mode,
-  # which nothing here uses. The package ships prebuilt binaries for the
-  # platforms it supports, so declining its build script costs nothing and keeps
-  # the `ignore-scripts=true` posture in .npmrc intact.
-  '@parcel/watcher': false
   esbuild: true
   lefthook: true
   sharp: true
@@ -83,24 +78,18 @@ catalog:
   # Containerfile installs — the same reason `test:e2e` is not a CI gate.
   '@size-limit/file': ^13.0.3
   # Tailwind v4 has no JS config file: the theme is declared in each unit's own
-  # stylesheet with `@theme`. One engine, three delivery mechanisms, one per
-  # bundler the estate actually has:
+  # stylesheet with `@theme`. One engine, one delivery mechanism, because every
+  # unit builds with Vite: `@tailwindcss/vite`.
   #
-  #   @tailwindcss/vite     every unit, through Vite
-  #   @tailwindcss/cli      nothing, today — see below
+  # Neither of the other two front ends is installed. `@tailwindcss/postcss`
+  # would need a PostCSS pipeline, and there is none. `@tailwindcss/cli` was how
+  # the apex Workers got a stylesheet before they had a bundler — `wrangler
+  # deploy` bundles the entrypoint and copies `public/` byte for byte, so
+  # nothing in that path could process CSS — and it was catalogued with no
+  # consumer until ADR 012 moved the last apex to Vite.
   #
-  # `@tailwindcss/postcss` is not installed: every unit runs the engine through
-  # Vite, so there is no PostCSS pipeline for it to sit in.
-  #
-  # `@tailwindcss/cli` was how the apex Workers got a stylesheet before they had
-  # a bundler: `wrangler deploy` bundles the entrypoint and copies `public/`
-  # byte for byte, so nothing in that path could process CSS. It stays only
-  # while apex units remain unmigrated; the last one to move to Vite should
-  # delete this entry rather than leave it as a catalogue of a dead toolchain.
-  #
-  # All three are pinned here rather than per unit so the twenty units
-  # cannot drift onto different Tailwind versions.
-  '@tailwindcss/cli': ^4.3.3
+  # `tailwindcss` and `@tailwindcss/vite` are pinned here rather than per unit
+  # so the twenty units cannot drift onto different Tailwind versions.
   '@tailwindcss/vite': ^4.3.3
   # TanStack Router and TanStack Start, the framework behind all fifteen frames.
   # They move in lockstep — Start's peer range pins Router — so a per-unit drift
@@ -119,7 +108,7 @@ catalog:
   # here changes what a test MEANS rather than whether it runs.
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.2
-  '@types/node': ^26.2.0
+  '@types/node': ^26.4.0
   '@types/react': ^19.2.18
   '@types/react-dom': ^19.2.4
   # React Fast Refresh and the JSX transform for the Vite-built units. The five
@@ -133,12 +122,11 @@ catalog:
   # The spell checker. Pinned here rather than per unit because the dictionary
   # it reads (.cspell/project-words.txt) is repository-wide: a unit resolving a
   # different major could disagree about what the config file even means.
-  cspell: ^10.1.0
+  cspell: ^10.1.1
   dependency-cruiser: ^18.2.0
-  happy-dom: ^20.11.6
-  hono: ^4.13.4
-  knip: ^6.32.2
-  nuqs: ^2.10.0
+  happy-dom: ^20.11.8
+  hono: ^4.13.5
+  knip: ^6.32.3
   # The static analysis toolchain. These were literal strings in twenty-two
   # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
   # the root), which is exactly the failure a catalog exists to prevent: a lint
@@ -183,7 +171,7 @@ catalog:
   # Floor set by `@cloudflare/vite-plugin`'s peer range (^4.124.0), not chosen
   # independently. Bumping the plugin without bumping this is a resolution
   # failure rather than a subtle one.
-  wrangler: ^4.125.0
+  wrangler: ^4.126.0
 
 ignoredBuiltDependencies:
   - esbuild
@@ -236,43 +224,47 @@ audit:
     # Hurl has no newer release. Remove this exception as soon as either exists.
     - GHSA-jmr9-qjv8-65gv
 
+# Advisory floors for transitive dev-only dependencies. Every entry below is
+# reached through a devDependency (vite/vitest or wrangler), so none of them
+# ship in a Worker bundle — but `pnpm audit` is a gate here, and the packages
+# that pull them pin ranges we do not control. A floor turns "whatever the
+# parent resolved" into a version the advisory database is clean on, and
+# fails resolution loudly if a future bump would reintroduce one. Drop an
+# entry once its parent's own range has moved past the floor on its own.
+#
+# Where a package is live on two majors, the floor is keyed per major so the
+# override cannot drag a consumer across a breaking boundary. The KEY alone
+# does not achieve that — it only decides which requests are caught. The
+# VALUE needs the upper bound too, or the rewrite lands on the next major
+# anyway. `js-yaml@4: '>=4.3.1'` did exactly that: it caught xmlbuilder2's
+# `^4.1.1` and resolved it to js-yaml 5.3.0. Every floor here is now a range,
+# not a bare `>=`.
+#
+# Six entries were dropped when dev/acme was deleted and dev/apex moved off
+# Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
+# that reached them: @opentelemetry/core, @tootallnate/once, undici, both
+# path-to-regexp majors, and tar. Nothing in the tree resolves those packages
+# now, so the floors constrained nothing — and a floor with no consumer reads
+# as protection while providing none.
+#
+# Five more were dropped on the same rule, each verified by removing it and
+# regenerating the lockfile — none moved a single resolution:
+#   ajv@8, minimatch@10  no consumer left in the tree at all
+#   nanoid               postcss asks for ^3.3.16 and lands on 3.3.18 alone
+#   smol-toml            knip moved its own range to ^1.7.1
+#   vitest: 'catalog:'   redundant with the catalog, which already pins the
+#                        direct devDependency in all twenty-two manifests —
+#                        and actively harmful, because `pnpm update` cannot
+#                        keep the catalog protocol through an override and
+#                        rewrites `"vitest": "catalog:"` to a literal in
+#                        every manifest, which `check:deps` then rejects.
+#                        It was the ONLY package listed in both blocks.
+#
+# This rationale sits at column 1 rather than indented under the key: pnpm 12's
+# YAML parser rejects a run of more than 32 comment lines waiting on an entry
+# *inside* a collection, and this block is longer than that. Comments before a
+# top-level key are not capped. Keep entry-specific notes with their entries.
 overrides:
-  # Advisory floors for transitive dev-only dependencies. Every entry below is
-  # reached through a devDependency (vite/vitest or wrangler), so none of them
-  # ship in a Worker bundle — but `pnpm audit` is a gate here, and the packages
-  # that pull them pin ranges we do not control. A floor turns "whatever the
-  # parent resolved" into a version the advisory database is clean on, and
-  # fails resolution loudly if a future bump would reintroduce one. Drop an
-  # entry once its parent's own range has moved past the floor on its own.
-  #
-  # Where a package is live on two majors, the floor is keyed per major so the
-  # override cannot drag a consumer across a breaking boundary. The KEY alone
-  # does not achieve that — it only decides which requests are caught. The
-  # VALUE needs the upper bound too, or the rewrite lands on the next major
-  # anyway. `js-yaml@4: '>=4.3.1'` did exactly that: it caught xmlbuilder2's
-  # `^4.1.1` and resolved it to js-yaml 5.3.0. Every floor here is now a range,
-  # not a bare `>=`.
-  #
-  # Six entries were dropped when dev/acme was deleted and dev/apex moved off
-  # Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
-  # that reached them: @opentelemetry/core, @tootallnate/once, undici, both
-  # path-to-regexp majors, and tar. Nothing in the tree resolves those packages
-  # now, so the floors constrained nothing — and a floor with no consumer reads
-  # as protection while providing none.
-  #
-  # Five more were dropped on the same rule, each verified by removing it and
-  # regenerating the lockfile — none moved a single resolution:
-  #   ajv@8, minimatch@10  no consumer left in the tree at all
-  #   nanoid               postcss asks for ^3.3.16 and lands on 3.3.18 alone
-  #   smol-toml            knip moved its own range to ^1.7.1
-  #   vitest: 'catalog:'   redundant with the catalog, which already pins the
-  #                        direct devDependency in all twenty-two manifests —
-  #                        and actively harmful, because `pnpm update` cannot
-  #                        keep the catalog protocol through an override and
-  #                        rewrites `"vitest": "catalog:"` to a literal in
-  #                        every manifest, which `check:deps` then rejects.
-  #                        It was the ONLY package listed in both blocks.
-  #
   # GHSA-g7r4-m6w7-qqqr touches 0.27.3–0.28.0. tsx pins `~0.27.0`, so without
   # this floor the tree pulls esbuild 0.27.7 back in; vite's own range is
   # `^0.27.0 || ^0.28.0` and needs no help. Verified by removal, 2026-08-23.

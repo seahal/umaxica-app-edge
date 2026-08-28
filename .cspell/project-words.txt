@@ -25,7 +25,7 @@ NOERROR     # DNS response codes, in the tunnel operations runbook
 NXDOMAIN
 
 # --- The toolchain, by package or binary name ---
-nuqs
+nuqs        # named in plans/ only; the catalog entry it pinned is gone
 Pulumi      # named in docs/operations/ only to record that it is NOT used
 tsgolint
 hurlfmt
@@ -44,12 +44,20 @@ tzdata
 nocopy
 NOPASSWD
 ISIG
+SHLVL
 infocmp
 ncdu
 entr
 wscript
 gsub
 Ghostty
+
+# --- Tailscale, for the opt-in remote-SSH overlay. Product and protocol names
+# --- quoted from tailnet configuration and the tailscale/tailscale image.
+tailnet
+tskey
+netavark
+DERP
 
 # --- Chromium's shared-library dependencies, listed in Containerfile so
 # --- Playwright can run. These are package names, not words.

@@ -7,11 +7,12 @@ const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
 /**
- * The two compose files this repository has: `compose.yaml` is what everyone
- * shares, `compose.custom.yaml` is the developer-local overlay. There is no
- * third one, and a new one would have to be added here to be covered.
+ * Every compose file this repository has: `compose.yaml` is what everyone
+ * shares, `compose.custom.yaml` is the developer-local Rails overlay, and
+ * `compose.remote-access.yaml` is the opt-in Tailscale/SSH overlay. A new one
+ * would have to be added here to be covered.
  */
-const composeFiles = ['compose.yaml', 'compose.custom.yaml'] as const;
+const composeFiles = ['compose.yaml', 'compose.custom.yaml', 'compose.remote-access.yaml'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 
 /**
@@ -65,7 +66,6 @@ describe('development-container security contract', () => {
   it('does not mount host identities, homes, agents, or container-engine sockets', () => {
     const forbidden = [
       'localEnv:HOME',
-      '/.ssh',
       'SSH_AUTH_SOCK',
       '/.gnupg',
       '/.config/gh',
@@ -79,6 +79,163 @@ describe('development-container security contract', () => {
     for (const value of forbidden) {
       expect(devcontainer, `devcontainer contains ${value}`).not.toContain(value);
       expect(compose, `compose contains ${value}`).not.toContain(value);
+    }
+  });
+
+  /*
+   * The ban on host `.ssh` paths is absolute again. The SSH server inside `core`
+   * authenticates against a repository-local file instead — `.secrets/` is
+   * gitignored, and the file holds only the one public key Codex App connects
+   * with. Binding the host's own `~/.ssh/authorized_keys`, as an earlier version
+   * of this overlay did, would have admitted every key that can log into the
+   * host, which is a much wider grant than this container has any use for.
+   */
+  it('takes authorized keys from .secrets and never from a host .ssh path', () => {
+    expect(devcontainer, 'devcontainer references .ssh').not.toContain('/.ssh');
+
+    // Comments are stripped first: the overlay explains at length why it does
+    // NOT bind a host `.ssh` path, and that explanation must not be what fails
+    // the check.
+    const directives = (path: string): string =>
+      read(path)
+        .split('\n')
+        .filter((line) => !line.trimStart().startsWith('#'))
+        .join('\n');
+
+    for (const path of composeFiles) {
+      expect(directives(path), `${path} references .ssh`).not.toContain('/.ssh');
+    }
+
+    const overlay = read('compose.remote-access.yaml');
+    expect(overlay).toContain('source: ./.secrets/codex_authorized_keys');
+
+    // A writable mount would let anything with a shell in `core` append its own
+    // key and grant itself permanent access.
+    expect(overlay).toMatch(
+      /source: \.\/\.secrets\/codex_authorized_keys\n\s+target: [^\n]+\n\s+read_only: true/u,
+    );
+
+    // The file is where a bootstrap mistake would put a private key, and
+    // `.secrets/` must stay untracked for the same reason `.env` does.
+    expect(read('.gitignore')).toMatch(/^\.secrets\/$/mu);
+  });
+
+  it('keeps the Tailscale sidecar unprivileged and unpublished', () => {
+    const overlay = read('compose.remote-access.yaml');
+    const instructionsOnly = overlay
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('#'))
+      .join('\n');
+
+    // Userspace networking is the whole reason none of these are needed.
+    expect(instructionsOnly).toMatch(/TS_USERSPACE: ['"]true['"]/u);
+
+    // The sidecar is the only container on this host that listens to the
+    // tailnet, so it is also the one whose image must not be able to change
+    // under a re-tagged upstream release.
+    expect(instructionsOnly, 'sidecar image is not digest-pinned').toMatch(
+      /image: docker\.io\/tailscale\/tailscale:v[\d.]+@sha256:[0-9a-f]{64}$/mu,
+    );
+
+    // Least privilege on the one reachable container, matching what `core`
+    // already declares in compose.yaml.
+    expect(instructionsOnly).toMatch(/^\s+- no-new-privileges:true$/mu);
+    expect(instructionsOnly).toMatch(/cap_drop:\n\s+- ALL/u);
+
+    // An unauthenticated /healthz and metrics listener on [::]:9002, reachable
+    // by anything on this network, in exchange for nothing `podman logs` does
+    // not already report.
+    expect(instructionsOnly).not.toMatch(/TS_ENABLE_HEALTH_CHECK/u);
+
+    // Bootstrap-only. A literal key here would be a long-lived credential in
+    // version control; it must stay an unset-by-default interpolation.
+    expect(instructionsOnly).toMatch(/TS_AUTHKEY: ['"]\$\{TS_AUTHKEY:-\}['"]/u);
+    expect(instructionsOnly).not.toMatch(/tskey-/u);
+    for (const pattern of [
+      /\bcap_add\s*:/u,
+      /\bdevices\s*:/u,
+      /\/dev\/net\/tun/u,
+      /\bnetwork_mode\s*:/u,
+      /\bprivileged\s*:/u,
+      /\bports\s*:/u,
+    ]) {
+      expect(instructionsOnly, `remote-access overlay matches ${pattern}`).not.toMatch(pattern);
+    }
+
+    // Tailscale SSH would terminate the session in the sidecar instead of in
+    // `core`, which is the one thing this whole arrangement exists to avoid.
+    expect(instructionsOnly).not.toMatch(/--ssh\b/u);
+
+    // The tailnet sees one port, and the public internet sees none.
+    const serve = JSON.parse(read('.devcontainer/tailscale-serve.json'));
+    expect(Object.keys(serve)).toEqual(['TCP']);
+    expect(Object.keys(serve.TCP)).toEqual(['22']);
+    expect(serve.TCP['22']).toEqual({ TCPForward: 'core:2222' });
+    expect(read('.devcontainer/tailscale-serve.json')).not.toContain('Funnel');
+  });
+
+  it('serves SSH by public key only, as a non-root user', () => {
+    const sshd = read('.devcontainer/remote-sshd_config')
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('#'))
+      .join('\n');
+
+    for (const directive of [
+      'PasswordAuthentication no',
+      'KbdInteractiveAuthentication no',
+      'PermitEmptyPasswords no',
+      'PubkeyAuthentication yes',
+      'AuthenticationMethods publickey',
+      'PermitRootLogin no',
+      'AllowUsers edge',
+      'AllowAgentForwarding no',
+      'AllowStreamLocalForwarding no',
+      'GatewayPorts no',
+      'X11Forwarding no',
+      'PermitTunnel no',
+      'UsePAM no',
+      'StrictModes yes',
+      // ~/.ssh/environment lives in the account that owns the workspace bind,
+      // so honouring it would let a compromised shell set PATH or LD_PRELOAD
+      // for the next login.
+      'PermitUserEnvironment no',
+      'MaxAuthTries 3',
+      'LoginGraceTime 20',
+    ]) {
+      expect(sshd, `sshd_config lacks ${directive}`).toMatch(new RegExp(`^${directive}$`, 'mu'));
+    }
+
+    // `core` drops every capability, so a privileged port is unreachable. The
+    // tailnet still only ever sees 22; the sidecar forwards it here.
+    expect(sshd).toMatch(/^Port 2222$/mu);
+
+    // Forwarding the host agent into the container would reintroduce exactly
+    // the host credential reuse the mount rules above prevent.
+    expect(sshd).not.toMatch(/^AllowAgentForwarding yes$/mu);
+
+    // Port forwarding stays on — Remote SSH needs it to preview a dev server —
+    // but only to ports inside this container, so an SSH session can never
+    // become a pivot into the Podman networks the sidecar deliberately avoids.
+    expect(sshd).toMatch(/^AllowTcpForwarding yes$/mu);
+    expect(sshd).toMatch(/^PermitOpen localhost:\* 127\.0\.0\.1:\* \[::1\]:\*$/mu);
+
+    // The key paths must stay off the workspace bind: `edge` owns it, so a
+    // host key or a PID file there is writable by anything with a shell.
+    expect(sshd).not.toMatch(/^(?:HostKey|PidFile|AuthorizedKeysFile) .*\/workspace\//mu);
+
+    // Codex App and VS Code Remote SSH read and write files over SFTP. Without
+    // the subsystem the connection succeeds and editing silently does not.
+    expect(sshd).toMatch(/^Subsystem sftp internal-sftp$/mu);
+
+    // Exactly one SetEnv line. sshd_config keeps the FIRST value it sees for a
+    // keyword and discards the rest, so a second SetEnv line parses cleanly and
+    // is silently ignored -- the session gets the PATH and none of the rest,
+    // which reads as a broken toolchain rather than as dropped configuration.
+    // This was a real defect here, not a hypothetical one.
+    const setEnvLines = sshd.split('\n').filter((line) => line.startsWith('SetEnv '));
+    expect(setEnvLines, 'more than one SetEnv line; all but the first are ignored').toHaveLength(1);
+    for (const name of ['PATH=', 'PNPM_HOME=', 'XDG_CONFIG_HOME=', 'BASH_ENV=']) {
+      expect(setEnvLines[0], `SetEnv lacks ${name}`).toContain(name);
     }
   });
 
@@ -170,8 +327,9 @@ describe('development-container security contract', () => {
   it('installs pnpm from exactly one source, on a predictable PATH', () => {
     expect(containerfile).toMatch(/get\.pnpm\.io\/install\.sh/u);
     expect(containerfile).not.toMatch(/npm\s+(?:install|i)\s+--global[^\n]*\bpnpm@/u);
-    // pnpm 11 puts the CLI and its `pn`/`pnpx`/`pnx` aliases in PNPM_HOME/bin.
-    // Pointing PATH at PNPM_HOME itself is the v10 layout and leaves no pnpm.
+    // pnpm 11 onwards puts the CLI and its `pn`/`pnpx`/`pnx` aliases in
+    // PNPM_HOME/bin. Pointing PATH at PNPM_HOME itself is the v10 layout and
+    // leaves no pnpm.
     expect(containerfile).toMatch(/PATH=[^\n]*\$\{?PNPM_HOME\}?\/bin|PATH=[^\n]*\/pnpm\/bin/u);
   });
 

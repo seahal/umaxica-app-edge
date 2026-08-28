@@ -243,6 +243,13 @@ like its siblings.
 units pass 9/9 Hurl files each; the root invariant suite passes 428 tests;
 `check-workers` validates twenty Workers.
 
+**Follow-up, 2026-08-25.** Nothing reclaimed `@tailwindcss/cli`, so the catalog
+entry named above was deleted. All twenty units run the engine through
+`@tailwindcss/vite`. Its `allowBuilds` companion went with it: `@parcel/watcher`
+was reachable only through the CLI's `--watch` mode, and with no consumer for
+the CLI it appears nowhere in the lockfile — the entry declined a build script
+for a package that was never in the tree.
+
 Two pre-existing conditions were found and deliberately **not** fixed here,
 because both predate this work and neither is caused by it:
 
