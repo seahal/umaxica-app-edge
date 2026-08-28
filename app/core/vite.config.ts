@@ -99,6 +99,12 @@ export default defineConfig(({ command }) => ({
   // The core's pages and components import through `@/`, declared in its own
   // tsconfig. Vite resolves it from there rather than from a second list here.
   resolve: { tsconfigPaths: true },
+  // The Cloudflare Tunnel forwards the browser's Host unchanged, so `vite dev`
+  // sees the public hostname and refuses it: Vite allowlists Hosts to block DNS
+  // rebinding against a dev server. Only this unit's own tunnel hostname is
+  // listed — never `true` and never a wildcard, which would give that defence
+  // up. `server` is read while serving only, so `vite build` is unaffected.
+  server: { allowedHosts: ['us.umaxica.app'] },
   plugins: [
     tailwindcss(),
     cloudflare({

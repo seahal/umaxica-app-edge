@@ -143,6 +143,26 @@ services:
       # this service rather than of the editor attached to it, so it belongs here
       # rather than in an overlay only VS Code loads.
       DEVCONTAINER: '1'
+    # `default` is written out rather than left implicit: a service-level
+    # `networks:` list REPLACES the implicit membership instead of merging with
+    # it, so omitting it would detach `core` from this project's own network.
+    #
+    # `edge.localhost` is the address the Global/Rails Cloudflare Tunnel
+    # connector names in its ingress rules, and it has to be unambiguous. Podman
+    # registers the service name as an alias on every network a container joins,
+    # so a rule naming `core` would resolve on this network AND on Global's
+    # `frontend` (where Rails' own `core` lives), resolution-order-dependent —
+    # the failure the Global repository recorded in
+    # `notes/implementation/2026-08-11-cloudflare-tunnel-edge-network-join.md`.
+    #
+    # One alias covers every unit because this container serves all twenty on
+    # their own ports. Rails needs one alias per surface only because it
+    # distinguishes them by Host on a single port.
+    networks:
+      default: {}
+      edge-tunnel:
+        aliases:
+          - edge.localhost
     restart: unless-stopped
 
   # Edge owns this connector and its tunnel. It is intentionally independent from the
@@ -187,6 +207,19 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
+
+networks:
+  # Created and owned by this project. The Global/Rails compose declares the same
+  # network `external: true` and joins its Cloudflare Tunnel connector to it
+  # alongside its own `frontend`, which is what lets a tunnel ingress rule reach
+  # a dev server here. Without the join there is no shared Podman DNS and every
+  # Edge-bound ingress rule answers 502.
+  #
+  # The ownership direction is deliberate: `external: true` on the Global side
+  # makes its `up` fail loudly while this stack is down, rather than starting a
+  # connector that silently reaches only Rails.
+  edge-tunnel:
+    name: umaxica-edge-tunnel
 
 volumes:
   node-volume:
