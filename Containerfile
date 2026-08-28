@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Keep these runtime pins aligned with package.json and the documented Edge baseline.
-ARG NODE_VERSION=24.19.0-trixie
+ARG NODE_VERSION=24.20.0-trixie
 ARG PNPM_VERSION=12.0.0
 ARG CLAUDE_CODE_VERSION=2.1.220
 ARG CODEX_VERSION=0.147.0
@@ -24,6 +24,18 @@ ARG CONTAINER_UID
 ARG CONTAINER_GID
 ARG CONTAINER_USER
 ARG CONTAINER_GROUP
+
+# Tailscale is baked in rather than run as a sidecar: `core` itself joins the
+# tailnet, in userspace-networking mode, which needs no /dev/net/tun, no
+# NET_ADMIN and no root — the same properties the sidecar relied on. The version
+# is pinned to what the sidecar ran; bump deliberately, and keep it in step with
+# the `tailscale` client on the host so the two behave the same. Started only by
+# remote-sshd-entrypoint, so a container without the remote-access overlay never
+# runs it.
+RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg \
+      -o /usr/share/keyrings/tailscale-archive-keyring.gpg \
+  && echo 'deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian trixie main' \
+      > /etc/apt/sources.list.d/tailscale.list
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -64,6 +76,7 @@ RUN apt-get update \
     openssh-server \
     python3 \
     ripgrep \
+    tailscale=1.102.3 \
     tig \
     time \
     tree \
@@ -122,9 +135,11 @@ RUN set -eux; \
     "${home}/.codex" \
     "${home}/.claude" \
     "${home}/.config/umaxica" \
-    "${home}/.local/state/remote-sshd"; \
+    "${home}/.local/state/remote-sshd" \
+    "${home}/.local/state/tailscale"; \
   install -d -m 0755 -o "${CONTAINER_USER}" -g "${CONTAINER_GROUP}" /run/sshd; \
-  chmod 0700 "${home}/.local/state/remote-sshd"
+  chmod 0700 "${home}/.local/state/remote-sshd"; \
+  chmod 0700 "${home}/.local/state/tailscale"
 
 # The SSH server's configuration and its PID 1 wrapper are baked into the image,
 # not read from the workspace bind. `edge` owns that bind, so leaving them there
@@ -140,6 +155,11 @@ RUN set -eux; \
 # repository transfers to the others unchanged.
 COPY --chmod=0444 .devcontainer/remote-sshd_config /etc/ssh/remote-sshd_config
 COPY --chmod=0555 .devcontainer/remote-sshd-entrypoint.sh /usr/local/bin/remote-sshd-entrypoint
+
+# Shadows /usr/bin/tailscale on PATH: the bare CLI expects a root tailscaled
+# this container can never run. The wrapper targets — and on first use starts —
+# the user-space daemon, so `tailscale up` works in any shell. See the script.
+COPY --chmod=0555 .devcontainer/tailscale-wrapper.sh /usr/local/bin/tailscale
 
 ENV HOME=/home/edge \
     USER=edge \
