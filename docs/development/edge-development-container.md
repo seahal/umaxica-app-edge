@@ -42,9 +42,9 @@ node --version
 pnpm --version
 ```
 
-`--remote-access` adds an opt-in Tailscale sidecar and an unprivileged SSH server inside
-`core`, so a Remote SSH client lands in this container rather than in the sidecar. It is off
-by default and documented separately in
+`--remote-access` starts `core` with an unprivileged SSH server and a userspace-networking
+`tailscaled` beside it in the same container, so a Remote SSH client lands in this container
+itself. It is off by default and documented separately in
 [Remote SSH into `core` over Tailscale](tailscale-remote-ssh.md).
 
 The interactive `core` service has a TTY and open stdin; infrastructure overlays do not.
