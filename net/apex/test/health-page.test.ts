@@ -56,6 +56,15 @@ describe('renderHealthPage', () => {
   it('renders the environment in the health page', async () => {
     const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'net' }, undefined);
 
-    expect(await response.text()).toContain('<dd>production</dd>');
+    /*
+     * Matched as a `<dt>`/`<dd>` pair with the attributes left open, rather than
+     * as the literal `<dd>production</dd>` this replaces. The value's typography
+     * is a styling decision — it is set in the monospace family, like every
+     * other identifier this unit renders — and a test that pins the tag exactly
+     * fails on a font change while still passing if the row lost its label.
+     */
+    expect(await response.text()).toMatch(
+      /<dt[^>]*>environment<\/dt>\s*<dd[^>]*>production<\/dd>/u,
+    );
   });
 });

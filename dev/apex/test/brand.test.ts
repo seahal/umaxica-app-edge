@@ -124,4 +124,9 @@ describe('getBrandName', () => {
     expect(getBrandName()).toBe('UMAXICA');
     expect(getBrandName({})).toBe('UMAXICA');
   });
+
+  it('falls back to DEFAULT_BRAND_NAME when BRAND_NAME is present but not a non-empty string', () => {
+    expect(getBrandName({ BRAND_NAME: '' })).toBe('UMAXICA');
+    expect(getBrandName({ BRAND_NAME: 123 })).toBe('UMAXICA');
+  });
 });

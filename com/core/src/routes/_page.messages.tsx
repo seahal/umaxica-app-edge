@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { PageHeading } from '@/components/page-heading';
 import { PageMain } from '@/components/page-main';
 import { defaultLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
@@ -16,8 +17,8 @@ function MessagesPage() {
 
   return (
     <PageMain>
-      <h1>{dict.messages.title}</h1>
-      <p>{dict.messages.wip}</p>
+      <PageHeading>{dict.messages.title}</PageHeading>
+      <p className="max-w-prose text-gray-600">{dict.messages.wip}</p>
     </PageMain>
   );
 }

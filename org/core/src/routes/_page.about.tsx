@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { PageHeading } from '@/components/page-heading';
 import { PageMain } from '@/components/page-main';
 import { defaultLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
@@ -16,7 +17,7 @@ function AboutPage() {
 
   return (
     <PageMain>
-      <h1>{dict.about.title}</h1>
+      <PageHeading>{dict.about.title}</PageHeading>
     </PageMain>
   );
 }

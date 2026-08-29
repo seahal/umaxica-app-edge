@@ -15,8 +15,11 @@
 # parsing, because happy-dom would otherwise try to fetch `/style.css` over a
 # network no unit test has. XPath over a real response needs none of that.
 
-# `/about` is the only user-facing HTML page this unit serves, so it is the
-# whole shell surface.
+# `/about` carries the whole shell, so it is the surface asserted here. This
+# unit also serves `/` — see api/routes.hurl — and both pages go through the
+# same `renderer.tsx`, so the shell they emit is the same document chrome;
+# asserting it twice would fail twice for one cause. What differs between
+# them is page content, which routes.hurl owns.
 GET {{base}}/about
 HTTP 200
 [Asserts]

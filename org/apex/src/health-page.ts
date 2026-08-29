@@ -50,20 +50,20 @@ function buildHealthPageHtml(
   <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100">
     <main class="mx-auto w-full max-w-7xl grow px-4 py-8">
       <div class="space-y-4">
-        <h1 class="text-3xl font-semibold leading-heading">status</h1>
+        <h1 class="text-3xl font-semibold leading-heading tracking-tight">status</h1>
         <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
           <dt class="font-medium text-gray-600 dark:text-gray-400">status</dt>
-          <dd>${payload.status}</dd>
+          <dd class="font-mono">${payload.status}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">service</dt>
-          <dd>${payload.service}</dd>
+          <dd class="font-mono">${payload.service}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">version</dt>
-          <dd>${String(payload.version)}</dd>
+          <dd class="font-mono">${String(payload.version)}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">environment</dt>
-          <dd>${String(payload.environment)}</dd>
+          <dd class="font-mono">${String(payload.environment)}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">edge</dt>
-          <dd>${payload.edge}</dd>
+          <dd class="font-mono">${payload.edge}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">time</dt>
-          <dd>${payload.time}</dd>
+          <dd class="font-mono">${payload.time}</dd>
         </dl>
       </div>
     </main>
