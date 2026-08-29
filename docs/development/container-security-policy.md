@@ -10,7 +10,7 @@ Forbidden inputs include host HOME, the `.ssh` directory, SSH agents, `.gnupg`, 
 Wrangler/Claude/Codex/OpenCode/Copilot state, private keys, Podman/Docker sockets, arbitrary
 credential directories, privileged mode, added capabilities, and host networking.
 
-There is one exception, and it is deliberately narrow. `compose.remote-access.yaml` mounts
+There is one exception, and it is deliberately narrow. `compose.custom.yaml` mounts
 `./.secrets/codex_authorized_keys` — a single file, read-only, out of the gitignored
 `.secrets/` directory rather than off the host — so that an SSH server inside `core` has
 something to authenticate against. A public key carries no secret; the host's `.ssh`

@@ -147,8 +147,8 @@ RUN set -eux; \
 # — including the authorized-keys path. 0555/0444 under root ownership makes the
 # running user unable to alter either one.
 #
-# Both are inert unless `compose.remote-access.yaml` overrides `core`'s command;
-# the base image still idles on `sleep infinity`.
+# Both are inert unless `compose.custom.yaml` overrides `core`'s command; the
+# base image still idles on `sleep infinity`.
 #
 # The names are the shared ones. umaxica-apps-global and portal bake the same two
 # paths from the same two source files, so a Remote-SSH problem debugged in one

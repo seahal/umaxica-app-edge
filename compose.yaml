@@ -209,6 +209,15 @@ services:
         max-file: '3'
 
 networks:
+  # Declared, not merely used. `core` names `default` explicitly (it has to: a
+  # service-level `networks:` list replaces the implicit membership rather than
+  # merging with it), and podman-compose 1.6.0 then requires the network to be
+  # declared at the top level too -- otherwise every command, `config` included,
+  # dies with `RuntimeError: missing networks: default` before it does anything.
+  # An empty declaration changes nothing about the network itself; Compose still
+  # creates the same project-default bridge.
+  default: {}
+
   # Created and owned by this project. The Global/Rails compose declares the same
   # network `external: true` and joins its Cloudflare Tunnel connector to it
   # alongside its own `frontend`, which is what lets a tunnel ingress rule reach

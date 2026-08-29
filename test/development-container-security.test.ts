@@ -8,11 +8,11 @@ const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
 /**
  * Every compose file this repository has: `compose.yaml` is what everyone
- * shares, `compose.custom.yaml` is the developer-local Rails overlay, and
- * `compose.remote-access.yaml` is the opt-in Tailscale/SSH overlay. A new one
- * would have to be added here to be covered.
+ * shares and `compose.custom.yaml` is the developer-local overlay, which now
+ * also carries the Tailscale/SSH wiring that `compose.remote-access.yaml` used
+ * to hold. A new one would have to be added here to be covered.
  */
-const composeFiles = ['compose.yaml', 'compose.custom.yaml', 'compose.remote-access.yaml'] as const;
+const composeFiles = ['compose.yaml', 'compose.custom.yaml'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 
 /**
@@ -106,7 +106,7 @@ describe('development-container security contract', () => {
       expect(directives(path), `${path} references .ssh`).not.toContain('/.ssh');
     }
 
-    const overlay = read('compose.remote-access.yaml');
+    const overlay = read('compose.custom.yaml');
     expect(overlay).toContain('source: ./.secrets/codex_authorized_keys');
 
     // A writable mount would let anything with a shell in `core` append its own
@@ -127,9 +127,10 @@ describe('development-container security contract', () => {
         .filter((line) => !line.trimStart().startsWith('#'))
         .join('\n');
 
-    const overlay = directives('compose.remote-access.yaml');
-    // Both scripts start the daemon: the entrypoint under the remote-access
-    // overlay, the wrapper on first `tailscale` call in an ordinary shell.
+    const overlay = directives('compose.custom.yaml');
+    // Both scripts start the daemon: the entrypoint that `compose.custom.yaml`
+    // sets as `core`'s command, the wrapper on first `tailscale` call in an
+    // ordinary shell.
     const entrypoint = directives('.devcontainer/remote-sshd-entrypoint.sh');
     const wrapper = directives('.devcontainer/tailscale-wrapper.sh');
 
@@ -180,8 +181,9 @@ describe('development-container security contract', () => {
     expect(overlay).toMatch(/TS_AUTHKEY: ['"]\$\{TS_AUTHKEY:-\}['"]/u);
     expect(overlay + entrypoint).not.toMatch(/tskey-/u);
 
-    // The overlay adds a command and volumes and nothing else; anything below
-    // would hand the tailnet-facing container more than it had before.
+    // The overlay adds a command, volumes and the SELinux label opt-out and
+    // nothing else; anything below would hand the tailnet-facing container more
+    // than it had before.
     for (const pattern of [
       /\bcap_add\s*:/u,
       /\bdevices\s*:/u,
@@ -190,7 +192,7 @@ describe('development-container security contract', () => {
       /\bprivileged\s*:/u,
       /\bports\s*:/u,
     ]) {
-      expect(overlay, `remote-access overlay matches ${pattern}`).not.toMatch(pattern);
+      expect(overlay, `developer-local overlay matches ${pattern}`).not.toMatch(pattern);
     }
 
     // Enrolment carries the shared devcontainer tag -- one ACL grant covers all

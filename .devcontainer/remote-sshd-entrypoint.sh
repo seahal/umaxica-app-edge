@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# `core`'s main process when `compose.remote-access.yaml` is loaded.
+# `core`'s main process when `compose.custom.yaml` is loaded.
 #
 # Identical in umaxica-apps-global, umaxica-apps-edge and portal except for the
 # account name and its home. Change one, change all three.
@@ -19,7 +19,7 @@ authorized_keys=/home/edge/.config/umaxica/authorized_keys
 # fails. Fail here instead, where the reason is one `podman logs` away.
 if [[ ! -s ${authorized_keys} ]]; then
   echo "remote-sshd: ${authorized_keys} is missing or empty." >&2
-  echo 'compose.remote-access.yaml binds it read-only from .secrets/codex_authorized_keys' >&2
+  echo 'compose.custom.yaml binds it read-only from .secrets/codex_authorized_keys' >&2
   echo 'in the repository. Put the public key Codex App connects with there, then' >&2
   echo 'recreate core. See the remote-access document for the full procedure.' >&2
   exit 78
@@ -164,7 +164,7 @@ done
 # container's resolver).
 if [[ -n ${TS_AUTHKEY:-} ]]; then
   echo 'remote-sshd: enrolling in the tailnet (first start only).' >&2
-  tailscale --socket="${ts_socket}" up \
+  /usr/bin/tailscale --socket="${ts_socket}" up \
     --authkey="${TS_AUTHKEY}" \
     --hostname=umaxica-edge-core \
     --advertise-tags=tag:umaxica-devcontainer \
@@ -175,7 +175,26 @@ fi
 # connecting to port 22 while sshd keeps its unprivileged 2222. The config
 # persists in the state volume, and re-declaring the same forward is a no-op,
 # so running it every start keeps the file the source of truth.
-tailscale --socket="${ts_socket}" serve --bg --tcp=22 tcp://127.0.0.1:2222
+# `/usr/bin/tailscale`, not a bare `tailscale`: PATH resolves that to the
+# wrapper baked at /usr/local/bin/tailscale, which injects a `--socket` of its
+# own. Two of them is not a duplicate that the CLI ignores -- it exits with
+# `flag provided multiple times`, prints its usage, and `set -e` takes the
+# entrypoint down with it, leaving a container that dies at startup with a page
+# of help text as its only log. The wrapper exists for interactive shells; this
+# script already knows the socket path.
+#
+# Not fatal when it fails. `serve` refuses on a node that is not enrolled yet
+# ("Logged out."), and under `set -e` that used to kill the container at
+# startup -- so a missing TS_AUTHKEY produced no sshd, no shell, and therefore
+# no way to enrol from inside. Warning instead leaves sshd running and the
+# `tailscale` wrapper usable, which is what makes `tailscale up` in a shell a
+# recovery path rather than a chicken-and-egg problem.
+if ! /usr/bin/tailscale --socket="${ts_socket}" serve --bg --tcp=22 tcp://127.0.0.1:2222; then
+  echo 'remote-sshd: tailnet tcp/22 -> sshd is NOT configured; this node is not enrolled.' >&2
+  echo 'sshd is listening on 127.0.0.1:2222 all the same, and is reachable by `podman exec`.' >&2
+  echo 'Enrol from a shell in this container with `tailscale up`, then restart core so this' >&2
+  echo 'line installs the forward. See the remote-access document for the auth-key procedure.' >&2
+fi
 
 # The fingerprint clients must expect. Printed once at startup so setting up
 # known_hosts does not require a second command.

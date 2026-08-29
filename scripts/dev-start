@@ -74,11 +74,15 @@ if [[ ${use_tunnel} == true ]]; then
   services+=(cloudflare-tunnel)
 fi
 
-# Inbound SSH from the tailnet, terminating in `core`. The overlay adds no
-# service of its own -- it replaces `core`'s command with the entrypoint that
-# runs sshd and a userspace `tailscaled` -- so `services` is left alone; naming
-# a service the overlay does not define would fail the `up` outright.
+# Inbound SSH from the tailnet, terminating in `core`. It adds no service of its
+# own -- `compose.custom.yaml` replaces `core`'s command with the entrypoint that
+# runs sshd and a userspace `tailscaled` -- so `services` is left alone; naming a
+# service no compose file defines would fail the `up` outright.
 # See `docs/development/tailscale-remote-ssh.md`.
+#
+# `compose.remote-access.yaml` was folded into `compose.custom.yaml`, so the flag
+# no longer selects a file of its own: it adds the developer-local overlay (if
+# --rails has not already) and runs the preflight.
 #
 # Every check lives in the preflight script rather than here, so that the
 # devcontainer path, a bare `podman compose` and this script all enforce the same
@@ -87,7 +91,9 @@ fi
 if [[ ${use_remote_access} == true ]]; then
   .devcontainer/remote-access-preflight.sh
 
-  compose+=(-f compose.remote-access.yaml)
+  if [[ ${use_rails} != true ]]; then
+    compose+=(-f compose.custom.yaml)
+  fi
 fi
 
 # There is no credential overlay any more. Long-lived API tokens and Podman

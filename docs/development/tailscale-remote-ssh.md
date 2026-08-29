@@ -6,7 +6,7 @@ with the same workspace bind and the same toolchain.
 
     client ---- tailnet tcp/22 ----> tailscaled in core ---- 127.0.0.1:2222 ----> sshd
 
-Opt-in. Nothing loads `compose.remote-access.yaml` implicitly.
+The wiring lives in `compose.custom.yaml`, which `.devcontainer/devcontainer.json` loads unconditionally.
 
 This document is one of three. `umaxica-apps-global`, `umaxica-apps-edge` and
 `portal` share one contract, described in
@@ -102,7 +102,7 @@ the compose file nor sshd can substitute for it.
 
    ```bash
    .devcontainer/remote-access-preflight.sh
-   podman compose -f compose.yaml -f compose.remote-access.yaml up -d
+   podman compose -f compose.yaml -f compose.custom.yaml up -d
    ```
 
 5. **Confirm the node registered.**
@@ -156,8 +156,8 @@ workspace bind, not a copy.
 ## Restart behaviour
 
 ```bash
-podman compose -f compose.yaml -f compose.remote-access.yaml down
-podman compose -f compose.yaml -f compose.remote-access.yaml up -d
+podman compose -f compose.yaml -f compose.custom.yaml down
+podman compose -f compose.yaml -f compose.custom.yaml up -d
 ssh umaxica-edge-core hostname
 ```
 

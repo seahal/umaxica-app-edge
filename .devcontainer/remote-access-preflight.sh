@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Host-side checks for the Tailscale remote-access overlay, run before
-# `podman compose -f compose.yaml -f compose.remote-access.yaml up`.
+# `podman compose -f compose.yaml -f compose.custom.yaml up`.
 #
 # Identical in umaxica-apps-global, umaxica-apps-edge and portal except for the
 # compose project name, the tailnet hostname, and the document it points at.
