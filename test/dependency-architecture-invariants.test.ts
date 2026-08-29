@@ -62,17 +62,13 @@ function cruiseTargets(): string[] {
 }
 
 function cruise(): CruiseOutput {
+  // The binary directly, NOT `pnpm exec`: pnpm writes its own notices (a
+  // devEngines runtime mismatch, for one) to STDOUT, which prefixes the report
+  // with a line no JSON parser accepts and fails this suite for a reason that
+  // has nothing to do with the dependency graph.
   const stdout = execFileSync(
-    'pnpm',
-    [
-      'exec',
-      'depcruise',
-      '--config',
-      '.dependency-cruiser.jsonc',
-      '--output-type',
-      'json',
-      ...cruiseTargets(),
-    ],
+    join(repoRoot, 'node_modules/.bin/depcruise'),
+    ['--config', '.dependency-cruiser.jsonc', '--output-type', 'json', ...cruiseTargets()],
     { cwd: repoRoot, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
   );
   return JSON.parse(stdout) as CruiseOutput;

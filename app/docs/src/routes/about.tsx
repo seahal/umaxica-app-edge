@@ -21,7 +21,7 @@ export const Route = createFileRoute('/about')({
 function About() {
   return (
     <PageHero
-      eyebrow="UMAXICA ドキュメント"
+      siteName="UMAXICA ドキュメント"
       title="このサイトについて"
       paragraphs={[
         'このサイトでは、UMAXICA のサービスをご利用いただくための使い方と技術情報をご案内しています。設定手順、API リファレンス、運用上の注意点を掲載しています。',

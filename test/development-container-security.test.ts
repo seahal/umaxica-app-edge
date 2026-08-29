@@ -120,37 +120,68 @@ describe('development-container security contract', () => {
     expect(read('.gitignore')).toMatch(/^\.secrets\/$/mu);
   });
 
-  it('keeps the Tailscale sidecar unprivileged and unpublished', () => {
-    const overlay = read('compose.remote-access.yaml');
-    const instructionsOnly = overlay
-      .split('\n')
-      .filter((line) => !line.trimStart().startsWith('#'))
-      .join('\n');
+  it('keeps Tailscale in-container, unprivileged, and unpublished', () => {
+    const directives = (path: string): string =>
+      read(path)
+        .split('\n')
+        .filter((line) => !line.trimStart().startsWith('#'))
+        .join('\n');
 
-    // Userspace networking is the whole reason none of these are needed.
-    expect(instructionsOnly).toMatch(/TS_USERSPACE: ['"]true['"]/u);
+    const overlay = directives('compose.remote-access.yaml');
+    // Both scripts start the daemon: the entrypoint under the remote-access
+    // overlay, the wrapper on first `tailscale` call in an ordinary shell.
+    const entrypoint = directives('.devcontainer/remote-sshd-entrypoint.sh');
+    const wrapper = directives('.devcontainer/tailscale-wrapper.sh');
 
-    // The sidecar is the only container on this host that listens to the
-    // tailnet, so it is also the one whose image must not be able to change
-    // under a re-tagged upstream release.
-    expect(instructionsOnly, 'sidecar image is not digest-pinned').toMatch(
-      /image: docker\.io\/tailscale\/tailscale:v[\d.]+@sha256:[0-9a-f]{64}$/mu,
+    // tailscaled moved INTO `core`; the sidecar and the serve.json it mounted
+    // are gone. A service that pulls a tailscale image back in would reopen a
+    // second container on the tailnet, which is what this whole shape avoids.
+    expect(overlay, 'a tailscale sidecar is back in the overlay').not.toMatch(
+      /^\s+image:[^\n]*tailscale/mu,
     );
+    expect(existsSync(join(repoRoot, '.devcontainer/tailscale-serve.json'))).toBe(false);
 
-    // Least privilege on the one reachable container, matching what `core`
-    // already declares in compose.yaml.
-    expect(instructionsOnly).toMatch(/^\s+- no-new-privileges:true$/mu);
-    expect(instructionsOnly).toMatch(/cap_drop:\n\s+- ALL/u);
+    // Userspace networking is the whole reason none of the capabilities below
+    // are needed: netstack terminates the tailnet connection and dials sshd
+    // over loopback, so tailscaled runs as `edge` with no /dev/net/tun. Every
+    // --tun value in either script has to be that one, not just one of them.
+    for (const [name, script] of [
+      ['remote-sshd-entrypoint', entrypoint],
+      ['tailscale-wrapper', wrapper],
+    ] as const) {
+      const tun = [...script.matchAll(/--tun=(\S+)/gu)].map((match) => match[1]);
+      expect(tun.length, `${name} never starts tailscaled`).toBeGreaterThan(0);
+      expect([...new Set(tun)], `${name} asks for a tun device`).toEqual(['userspace-networking']);
+      // No root, and no route to it: `core` runs `no-new-privileges`, so an
+      // escalation here would fail at runtime instead of at review.
+      expect(script, `${name} escalates`).not.toMatch(/\bsudo\b/u);
+    }
 
-    // An unauthenticated /healthz and metrics listener on [::]:9002, reachable
-    // by anything on this network, in exchange for nothing `podman logs` does
-    // not already report.
-    expect(instructionsOnly).not.toMatch(/TS_ENABLE_HEALTH_CHECK/u);
+    // `core` is now the container on the tailnet, so its posture IS the
+    // sidecar's former posture and has to be asserted here too.
+    expect(service('core')).toMatch(/^\s+- no-new-privileges:true$/mu);
+    expect(service('core')).toMatch(/cap_drop:\n\s+- ALL/u);
+
+    // The client is what listens to the tailnet, so it must not change under a
+    // re-published upstream release: an exact apt pin, from a repository keyed
+    // by a keyring baked into the image.
+    expect(instructions, 'the Tailscale client is not version-pinned').toMatch(
+      /^\s+tailscale=\d+\.\d+\.\d+\s*\\?$/mu,
+    );
+    expect(instructions).toContain('signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg');
+
+    // An unauthenticated /healthz and metrics listener, reachable by anything
+    // that can route to it, in exchange for nothing `podman logs` does not
+    // already report.
+    expect(overlay + entrypoint).not.toMatch(/TS_ENABLE_HEALTH_CHECK|--debug-listen/u);
 
     // Bootstrap-only. A literal key here would be a long-lived credential in
     // version control; it must stay an unset-by-default interpolation.
-    expect(instructionsOnly).toMatch(/TS_AUTHKEY: ['"]\$\{TS_AUTHKEY:-\}['"]/u);
-    expect(instructionsOnly).not.toMatch(/tskey-/u);
+    expect(overlay).toMatch(/TS_AUTHKEY: ['"]\$\{TS_AUTHKEY:-\}['"]/u);
+    expect(overlay + entrypoint).not.toMatch(/tskey-/u);
+
+    // The overlay adds a command and volumes and nothing else; anything below
+    // would hand the tailnet-facing container more than it had before.
     for (const pattern of [
       /\bcap_add\s*:/u,
       /\bdevices\s*:/u,
@@ -159,19 +190,24 @@ describe('development-container security contract', () => {
       /\bprivileged\s*:/u,
       /\bports\s*:/u,
     ]) {
-      expect(instructionsOnly, `remote-access overlay matches ${pattern}`).not.toMatch(pattern);
+      expect(overlay, `remote-access overlay matches ${pattern}`).not.toMatch(pattern);
     }
 
-    // Tailscale SSH would terminate the session in the sidecar instead of in
-    // `core`, which is the one thing this whole arrangement exists to avoid.
-    expect(instructionsOnly).not.toMatch(/--ssh\b/u);
+    // Enrolment carries the shared devcontainer tag -- one ACL grant covers all
+    // three containers, and tagged nodes do not expire with a user key -- and
+    // refuses tailnet DNS, which would replace this container's resolver.
+    expect(entrypoint).toMatch(/--advertise-tags=tag:umaxica-devcontainer/u);
+    expect(entrypoint).toMatch(/--accept-dns=false/u);
+    expect(entrypoint).toMatch(/--hostname=umaxica-edge-core/u);
 
-    // The tailnet sees one port, and the public internet sees none.
-    const serve = JSON.parse(read('.devcontainer/tailscale-serve.json'));
-    expect(Object.keys(serve)).toEqual(['TCP']);
-    expect(Object.keys(serve.TCP)).toEqual(['22']);
-    expect(serve.TCP['22']).toEqual({ TCPForward: 'core:2222' });
-    expect(read('.devcontainer/tailscale-serve.json')).not.toContain('Funnel');
+    // Tailscale SSH would terminate the session in tailscaled instead of in
+    // sshd, which is the one thing this whole arrangement exists to avoid.
+    expect(overlay + entrypoint + wrapper).not.toMatch(/--ssh\b/u);
+
+    // The tailnet sees one port, forwarded to sshd over loopback, and the
+    // public internet sees none: `serve` is tailnet-only, `funnel` is not.
+    expect(entrypoint).toMatch(/serve --bg --tcp=22 tcp:\/\/127\.0\.0\.1:2222/u);
+    expect(overlay + entrypoint + wrapper).not.toMatch(/funnel/iu);
   });
 
   it('serves SSH by public key only, as a non-root user', () => {
@@ -206,7 +242,8 @@ describe('development-container security contract', () => {
     }
 
     // `core` drops every capability, so a privileged port is unreachable. The
-    // tailnet still only ever sees 22; the sidecar forwards it here.
+    // tailnet still only ever sees 22; `tailscale serve` forwards it here over
+    // loopback.
     expect(sshd).toMatch(/^Port 2222$/mu);
 
     // Forwarding the host agent into the container would reintroduce exactly
@@ -215,7 +252,7 @@ describe('development-container security contract', () => {
 
     // Port forwarding stays on — Remote SSH needs it to preview a dev server —
     // but only to ports inside this container, so an SSH session can never
-    // become a pivot into the Podman networks the sidecar deliberately avoids.
+    // become a pivot into the Podman networks `core` is attached to.
     expect(sshd).toMatch(/^AllowTcpForwarding yes$/mu);
     expect(sshd).toMatch(/^PermitOpen localhost:\* 127\.0\.0\.1:\* \[::1\]:\*$/mu);
 

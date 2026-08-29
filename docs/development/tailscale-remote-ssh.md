@@ -22,7 +22,7 @@ hostname and the toolchain differ. **Fix something here, fix it in all three.**
 | sshd wrapper         | `/usr/local/bin/remote-sshd-entrypoint` (baked, 0555 root)                                 |
 | authorized keys      | `.secrets/codex_authorized_keys` → `/home/edge/.config/umaxica/authorized_keys`, read-only |
 | sshd host key        | volume `umaxica-apps-edge_sshd-host-keys` → `/home/edge/.local/state/remote-sshd`          |
-| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/home/edge/.local/state/tailscale`                          |
+| Tailscale node state | volume `umaxica-apps-edge_tailscale-state` → `/home/edge/.local/state/tailscale`           |
 | tailnet hostname     | `umaxica-edge-core`                                                                        |
 | tailnet tag          | `tag:umaxica-devcontainer`                                                                 |
 
@@ -173,8 +173,8 @@ destroys both volumes, which deregisters the node and forces a fresh enrolment.
   undocumented `TCPForward` to a sibling container name; forwarding over
   loopback inside `core` is the supported shape.
 
-- **Rootless restart policies need the user unit.** `restart: on-failure:3` does
-  nothing across a host reboot without
+- **Rootless restart policies need the user unit.** The `restart` policy `core`
+  carries does nothing across a host reboot without
   `systemctl --user enable --now podman-restart.service`.
 
 - **`podman-compose` needs `default` declared.** Any overlay that gives a service

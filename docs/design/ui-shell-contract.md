@@ -432,6 +432,96 @@ It stays recorded as open gap 6 in §16.
 a second one. A new value belongs in `@theme` in every unit that needs it, with
 the same name, or it is not a token.
 
+### 8a. Inside `<main>`: the page body
+
+Everything above this line is chrome. This section is what goes under it, and it
+is here for the same reason the token set is: twenty units that each answer the
+question separately drift.
+
+Three rules hold across all three archetypes. They are not a style preference —
+each one replaced something measurably wrong:
+
+1. **The page body sits on the shell's width carrier.** Whatever run the header
+   and footer rows use (§9), `<main>`'s content uses the same one, so the `<h1>`
+   starts on the same left edge as the brand above it and the copyright below
+   it. Both frame archetypes failed this before it was written down: the
+   satellites centred a `max-w-3xl` block inside a `px-5` main, putting the
+   heading 224px right of the brand on a desktop viewport, and core's `<main>`
+   was `px-5` against the shell's `px-4`, so on a phone the gutters differed by
+   four pixels. A gutter that is nearly equal reads as a mistake in a way an
+   obviously different one does not.
+2. **Body copy has a reading measure.** `max-w-prose` — Tailwind's stock 65ch,
+   so no new token. `<main>` is `max-w-7xl` because the header and footer rows
+   are, and copy set that wide runs past 150 characters a line.
+3. **Vertical rhythm is parent `gap`, never `space-y-*` or per-child `mt-*`.**
+   Margins on children collapse against one another and have to be re-tuned
+   whenever one is added or removed.
+
+Type scale is per archetype, because the role differs and §8's test is whether
+the reason can be written down:
+
+| Archetype | `<h1>`                      | Under it                                      | Why that size                                                                                            |
+| --------- | --------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| core      | `text-2xl`                  | `text-lg` lead, or `text-gray-600` for a stub | An application screen reached from a persistent navigation; a landing-page heading competes with the nav |
+| satellite | `text-4xl`, `wide:text-5xl` | `text-sm` site name, then `text-lg` body      | The opening page of a content site, which is the one place a large heading is the content                |
+| apex      | `text-3xl`                  | `text-xl` lead, base copy, `text-sm` caption  | A domain directory: bigger than an app screen, smaller than a landing page                               |
+
+All three carry `leading-heading` and `tracking-tight`, and within an archetype
+the value is identical in every unit — that is the part that is not negotiable.
+
+**core's headings had no treatment at all until this was written.** Every page
+rendered a bare `<h1>`, and Preflight resets a heading to the surrounding size
+and weight, so all nine pages shipped a title pixel-identical to the paragraph
+under it. `PageHeading` exists so that cannot recur silently.
+
+**The satellites' eyebrow is gone.** A small label above a large heading is the
+form that arrives when nothing was decided, and this one was `text-brand` — the
+link colour — on a label that is not a link. The site name now follows the
+heading as attribution, in muted grey, which also means a screen reader reaches
+the page's own `<h1>` first. Accent stays on interactive elements.
+
+**The current navigation entry is styled off `aria-[current=page]:`, not off a
+second class.** core is the only archetype with a main navigation (§5), and it
+marked the current entry in the accessibility tree only — a sighted reader had
+no indication of where they were. Driving the fill and the weight off the same
+attribute the assistive technology reads means the two cannot drift apart, and
+fill plus weight is two cues rather than colour alone (§12).
+
+#### apex only
+
+The five apex Workers are the only units whose page body is written in this
+repository rather than in a frame's route, and the five of them serve one
+composition — the same on `/about` everywhere, and on `/` where `net` and `dev`
+have one.
+
+| Concern        | Value                                                                                               | Why                                                                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Identifiers    | `font-mono` on every host name and every health-page value                                          | A host name is a string the reader may retype, not running copy; the mono column is also what makes the directory rows align            |
+| Directory rows | one `<a>` per row at `min-h-11`, host and purpose on one baseline, `flex-wrap` for narrow viewports | Adds no media query, so §11's "apex emits none at all" still holds                                                                      |
+| Row hover      | surface step to `bg-white` / `dark:bg-gray-900` under `group-hover`, plus an underline on the host  | The same surface the header and footer sit on; hovering the purpose text, which is not itself a link, shows the whole row is the target |
+
+Two consequences worth keeping:
+
+- **`--font-mono` is Tailwind's stock stack and is deliberately not declared in
+  `@theme`.** `--font-sans` is named face by face because which face resolves
+  decides how Japanese body text sets (§10); every string set in mono here is
+  ASCII — a host name or a version id — so the stock stack has nothing to get
+  wrong, and apex still downloads no font.
+- **The host a page is served from is a label, not a link.** It used to be an
+  `<a>` pointing at its own origin — a control returning the reader to where
+  they already are.
+- **`/about` describes the host it is served from, and the description is
+  checked against the routes.** It used to say the domain "is not operated as a
+  public-facing website" on all five, and that was true on none of them: `app`,
+  `com` and `org` answer `/` with a 301 to a regional host, so the domain is
+  exactly how a visitor reaches the service, and `net` and `dev` serve an
+  `index,follow` homepage of their own. It also contradicted the
+  `<meta name="description">` on the same page. The three redirectors now say
+  that opening the domain takes you to the regional site; `net` and `dev` say
+  the host carries no service of its own. Copy that describes behaviour is
+  checkable — read `src/root-redirect.ts` and `api/routes.hurl` before changing
+  either sentence.
+
 ## 9. Shared tokens
 
 These resolve to the same computed value in all three archetypes and must stay
@@ -823,6 +913,15 @@ proves it (§1).
 Closed since the last revision:
 
 - The footer identity row now renders the canonical URL on all 20 units (§7).
+- **The page body is written down (§8a).** It had never been: §9 pinned the
+  chrome and stopped at `<main>`, so what went inside was whatever each
+  archetype had grown. Three things were wrong rather than merely undecided —
+  both frame archetypes misaligned the page against the shell's own gutter,
+  core's `<h1>` had no treatment at all and rendered identically to body copy on
+  all nine pages, and core marked the current navigation entry only in the
+  accessibility tree. All three are fixed in all 20 units, and §8a is what
+  stops them recurring. It is a page convention rather than a shell one, so it
+  sits beside §8 instead of inside §9's token table.
 - The three token sets are one (§8).
 - The status surfaces that shipped unstyled — apex's 404/500/offline and health
   error documents, and the frames' error documents — are styled, because a linked

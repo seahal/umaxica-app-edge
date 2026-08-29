@@ -96,10 +96,16 @@ export function AppChrome({
        * toggle is the only way to reach the navigation. Above it `wide:grid`
        * shows it unconditionally, so no state — and no absent JavaScript — can
        * strand a desktop user.
+       *
+       * The padding is the link's own `px-3` subtracted from the shell's
+       * gutter — 4px + 12px below the breakpoint, 20px + 12px above it — so a
+       * navigation LABEL lands on the same left edge as the brand in the header
+       * and the copyright in the footer (§9). Padding the container to the
+       * gutter instead put every label twelve pixels right of both.
        */}
       <nav
         id="main-navigation"
-        className="hidden content-start gap-2 border-b border-gray-200 bg-white px-5 py-4 data-[open=true]:grid wide:col-start-1 wide:grid wide:border-r wide:border-b-0 wide:p-8"
+        className="hidden content-start gap-1 border-b border-gray-200 bg-white px-1 py-4 data-[open=true]:grid wide:col-start-1 wide:grid wide:border-r wide:border-b-0 wide:px-5 wide:py-8"
         aria-label={labels.primaryNav}
         data-open={open}
       >
@@ -119,10 +125,19 @@ export function AppChrome({
          * only to the active link — so nothing has to read the pathname here any
          * more, and `activeOptions={{ exact: true }}` is what keeps the match
          * exact rather than prefix-based.
+         *
+         * The current entry is styled off that same attribute —
+         * `aria-[current=page]:` — rather than off a second class applied
+         * alongside it. One state, one source: the entry cannot look current
+         * while reading as an ordinary link to a screen reader, or the reverse.
+         * It was marked only in the accessibility tree before this, so a
+         * sighted reader had no indication of where they were at all. Fill and
+         * weight together, because §12's rule is that colour never carries a
+         * state on its own.
          */}
         {links.map((link) => (
           <Link
-            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+            className="flex min-h-11 items-center rounded-lg px-3 py-2 hover:bg-gray-100 aria-[current=page]:bg-gray-100 aria-[current=page]:font-semibold"
             activeProps={{ 'aria-current': 'page' }}
             activeOptions={{ exact: true }}
             to={link.to}
