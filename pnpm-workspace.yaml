@@ -114,7 +114,7 @@ catalog:
   # React Fast Refresh and the JSX transform for the Vite-built units. The five
   # apex Workers do not install it — they render with hono/jsx and have no React
   # at all (docs/design/ui-shell-contract.md §3a).
-  '@vitejs/plugin-react': ^6.1.0
+  '@vitejs/plugin-react': ^6.1.1
   # Exact, not a range, and deliberately so: V8 coverage remapping has to match
   # the vitest it instruments, and this was already an exact literal in all
   # twenty-two manifests. Catalogued to keep it that way from one place.
@@ -223,53 +223,6 @@ audit:
     # 2.0.2 as the patched floor, but npm publishes no version after 2.0.1 and
     # Hurl has no newer release. Remove this exception as soon as either exists.
     - GHSA-jmr9-qjv8-65gv
-
-# Advisory floors for transitive dev-only dependencies. Every entry below is
-# reached through a devDependency (vite/vitest or wrangler), so none of them
-# ship in a Worker bundle — but `pnpm audit` is a gate here, and the packages
-# that pull them pin ranges we do not control. A floor turns "whatever the
-# parent resolved" into a version the advisory database is clean on, and
-# fails resolution loudly if a future bump would reintroduce one. Drop an
-# entry once its parent's own range has moved past the floor on its own.
-#
-# Where a package is live on two majors, the floor is keyed per major so the
-# override cannot drag a consumer across a breaking boundary. The KEY alone
-# does not achieve that — it only decides which requests are caught. The
-# VALUE needs the upper bound too, or the rewrite lands on the next major
-# anyway. `js-yaml@4: '>=4.3.1'` did exactly that: it caught xmlbuilder2's
-# `^4.1.1` and resolved it to js-yaml 5.3.0. Every floor here is now a range,
-# not a bare `>=`.
-#
-# Six entries were dropped when dev/acme was deleted and dev/apex moved off
-# Vercel, because the `vercel` CLI and @sentry/nextjs were the only things
-# that reached them: @opentelemetry/core, @tootallnate/once, undici, both
-# path-to-regexp majors, and tar. Nothing in the tree resolves those packages
-# now, so the floors constrained nothing — and a floor with no consumer reads
-# as protection while providing none.
-#
-# Five more were dropped on the same rule, each verified by removing it and
-# regenerating the lockfile — none moved a single resolution:
-#   ajv@8, minimatch@10  no consumer left in the tree at all
-#   nanoid               postcss asks for ^3.3.16 and lands on 3.3.18 alone
-#   smol-toml            knip moved its own range to ^1.7.1
-#   vitest: 'catalog:'   redundant with the catalog, which already pins the
-#                        direct devDependency in all twenty-two manifests —
-#                        and actively harmful, because `pnpm update` cannot
-#                        keep the catalog protocol through an override and
-#                        rewrites `"vitest": "catalog:"` to a literal in
-#                        every manifest, which `check:deps` then rejects.
-#                        It was the ONLY package listed in both blocks.
-#
-# This rationale sits at column 1 rather than indented under the key: pnpm 12's
-# YAML parser rejects a run of more than 32 comment lines waiting on an entry
-# *inside* a collection, and this block is longer than that. Comments before a
-# top-level key are not capped. Keep entry-specific notes with their entries.
-overrides:
-  # GHSA-g7r4-m6w7-qqqr touches 0.27.3–0.28.0. tsx pins `~0.27.0`, so without
-  # this floor the tree pulls esbuild 0.27.7 back in; vite's own range is
-  # `^0.27.0 || ^0.28.0` and needs no help. Verified by removal, 2026-08-23.
-  esbuild@0.27: '>=0.28.1'
-  js-yaml@4: '>=4.3.1 <5'
 
 peerDependencyRules:
   allowAny:

@@ -153,7 +153,7 @@ catalogs:
       specifier: ^19.2.5
       version: 19.2.5
     '@vitejs/plugin-react':
-      specifier: ^6.1.0
+      specifier: ^6.1.1
       version: 6.1.1
     '@vitest/coverage-v8':
       specifier: 4.1.11
@@ -215,10 +215,6 @@ catalogs:
     wrangler:
       specifier: ^4.127.0
       version: 4.127.0
-
-overrides:
-  esbuild@0.27: '>=0.28.1'
-  js-yaml@4: '>=4.3.1 <5'
 
 importers:
 
@@ -5030,7 +5026,7 @@ packages:
       '@farmfe/core': '*'
       '@rspack/core': '*'
       bun-types-no-globals: '*'
-      esbuild: '>=0.28.1'
+      esbuild: '*'
       rolldown: '*'
       rollup: '*'
       unloader: '*'
@@ -5074,7 +5070,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.4.0 || ^0.5.0
-      esbuild: '>=0.28.1'
+      esbuild: ^0.27.0 || ^0.28.0
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
