@@ -6,11 +6,19 @@ import { themeAttributeMarkup, type ThemeAttribute } from './theme';
 
 const HEALTH_ROBOTS_HEADER = 'noindex, nofollow';
 
+/*
+ * `EDGE_ENV` is deliberately absent.
+ *
+ * These surfaces are unauthenticated, and naming the tier a host is serving —
+ * production, development, test — tells a prober which of several deployments
+ * of the same code it has reached, for no benefit an operator cannot get from
+ * `version` (which identifies the deployment exactly) or from the hostname
+ * they typed. The binding stays bound; it just does not leave the Worker.
+ */
 type HealthPayload = {
   status: 'OK';
   service: string;
   version: string | null;
-  environment: string | null;
   edge: 'cloudflare';
   time: string;
 };
@@ -27,7 +35,6 @@ function buildHealthPayload(env: AssetEnv | undefined, options: HealthPageOption
     status: 'OK',
     service: options.service,
     version: env?.CF_VERSION_METADATA?.id ?? null,
-    environment: env?.EDGE_ENV ?? null,
     edge: 'cloudflare',
     time: new Date().toISOString(),
   };
@@ -58,8 +65,6 @@ function buildHealthPageHtml(
           <dd class="font-mono">${payload.service}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">version</dt>
           <dd class="font-mono">${String(payload.version)}</dd>
-          <dt class="font-medium text-gray-600 dark:text-gray-400">environment</dt>
-          <dd class="font-mono">${String(payload.environment)}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">edge</dt>
           <dd class="font-mono">${payload.edge}</dd>
           <dt class="font-medium text-gray-600 dark:text-gray-400">time</dt>

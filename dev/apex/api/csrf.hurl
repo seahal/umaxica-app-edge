@@ -8,7 +8,7 @@
 #
 # Note the origins below are the point of the file: the server under test is
 # reached at `http://localhost:5501`, which is NOT an allowed origin
-# (`net.localhost` is). A cross-origin POST must be refused even though it comes
+# (`dev.localhost` is). A cross-origin POST must be refused even though it comes
 # from the same host the suite is talking to.
 
 POST {{base}}/about
@@ -26,17 +26,25 @@ POST {{base}}/about
 Origin: http://localhost:5501
 HTTP 403
 
-# A lookalike that must not pass the `^https://umaxica\.(com|org|app|net)$`
-# anchor — a substring match here would be a real vulnerability.
+# A lookalike that must not pass the `^https://umaxica\.dev$` anchor — a
+# substring match here would be a real vulnerability.
 POST {{base}}/about
 Origin: https://umaxica.dev.evil.example.com
 HTTP 403
 
-# Allowed origins are the local apex hosts and the production apexes. This one
-# clears the origin check, so it fails on routing (no POST handler on /about)
-# rather than on CSRF — a 403 here would mean the allowlist had regressed.
+# A sibling UMAXICA apex. These are separate sites and this worker has no
+# reason to accept a form posted from one; the predicate used to be shared
+# verbatim across all five units and allowed every one of them.
 POST {{base}}/about
-Origin: http://net.localhost:5501
+Origin: https://umaxica.net
+HTTP 403
+
+# The local development origin clears the check on this tier (`EDGE_ENV` is
+# `development` under `pnpm run dev`), so it fails on routing — no POST handler
+# on /about — rather than on CSRF. A 403 here would mean the allowlist had
+# regressed. On production `allowLocalhost` is false and this origin is refused.
+POST {{base}}/about
+Origin: http://dev.localhost:5501
 HTTP 404
 
 # Safe methods are never challenged.

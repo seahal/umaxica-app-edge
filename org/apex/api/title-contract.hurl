@@ -68,7 +68,7 @@ header "content-type" matches /^application\/json/
 jsonpath "$.status" exists
 jsonpath "$.service" exists
 jsonpath "$.version" exists
-jsonpath "$.environment" exists
+jsonpath "$.environment" not exists
 jsonpath "$.edge" exists
 jsonpath "$.time" exists
 jsonpath "$.title" not exists
@@ -77,7 +77,7 @@ jsonpath "$.title" not exists
 # a breaking change as a dropped one. Moved here from Guard C of
 # `test/html-title-contract.test.ts`, which asserted the same set with
 # `Object.keys().sort()` against an in-process response.
-jsonpath "$.*" count == 6
+jsonpath "$.*" count == 5
 
 GET {{base}}/revision
 HTTP 200

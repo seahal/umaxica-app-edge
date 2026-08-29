@@ -41,30 +41,25 @@ describe('renderHealthPage', () => {
       status: 'OK',
       service: 'app',
       version: 'test-version-id',
-      environment: null,
       edge: 'cloudflare',
       time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u),
     });
   });
 
-  it('reports the wrangler environment when EDGE_ENV is bound', async () => {
-    const response = renderHealthJson({ EDGE_ENV: 'test' }, { service: 'dev' });
+  /*
+   * The tier is not a field. `EDGE_ENV` is bound and read by `csrf.ts`, but an
+   * unauthenticated response naming it tells a prober which deployment of this
+   * code it reached; `version` already identifies the deployment for an
+   * operator. Asserted as an absence in both surfaces, because a payload key is
+   * easy to reintroduce by habit.
+   */
+  it('never reports EDGE_ENV in either health surface', async () => {
+    const json = renderHealthJson({ EDGE_ENV: 'production' }, { service: 'dev' });
+    const html = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'dev' }, undefined);
 
-    expect(await response.json()).toMatchObject({ environment: 'test' });
-  });
-
-  it('renders the environment in the health page', async () => {
-    const response = renderHealthPage({ EDGE_ENV: 'production' }, { service: 'dev' }, undefined);
-
-    /*
-     * Matched as a `<dt>`/`<dd>` pair with the attributes left open, rather than
-     * as the literal `<dd>production</dd>` this replaces. The value's typography
-     * is a styling decision — it is set in the monospace family, like every
-     * other identifier this unit renders — and a test that pins the tag exactly
-     * fails on a font change while still passing if the row lost its label.
-     */
-    expect(await response.text()).toMatch(
-      /<dt[^>]*>environment<\/dt>\s*<dd[^>]*>production<\/dd>/u,
-    );
+    expect(await json.text()).not.toContain('production');
+    const body = await html.text();
+    expect(body).not.toContain('>environment<');
+    expect(body).not.toContain('production');
   });
 });
