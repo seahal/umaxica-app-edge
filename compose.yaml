@@ -10,8 +10,8 @@ services:
       context: .
       dockerfile: Containerfile
       args:
-        CONTAINER_UID: ${UID:-1000}
-        CONTAINER_GID: ${GID:-1000}
+        CONTAINER_UID: 1000
+        CONTAINER_GID: 1000
         CONTAINER_USER: edge
         CONTAINER_GROUP: edge
     working_dir: /home/edge/workspace
@@ -31,6 +31,14 @@ services:
       - type: volume
         source: pnpm-store
         target: /home/edge/.local/share/pnpm/store
+      # The tailnet node's identity, for the interactive `tailscale up` the image
+      # ships a wrapper for. Surviving a container recreate is the whole point:
+      # without it every start registers a NEW node and the tailnet name drifts
+      # to umaxica-edge-core-1, -2, ... `down --volumes` destroys it and the next
+      # `tailscale up` enrols afresh.
+      - type: volume
+        source: tailscale-state
+        target: /home/edge/.local/state/tailscale
       - type: volume
         source: workspace-secrets-mask
         target: /home/edge/workspace/.secrets
@@ -38,67 +46,67 @@ services:
         volume:
           nocopy: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/.env
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/app/core/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/app/docs/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/app/help/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/app/info/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/app/news/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/com/core/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/com/docs/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/com/help/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/com/info/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/com/news/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/org/core/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/org/docs/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/org/help/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/org/info/.env.development.local
         read_only: true
       - type: bind
-        source: ./.devcontainer/empty.env
+        source: ./empty.env
         target: /home/edge/workspace/org/news/.env.development.local
         read_only: true
     ports:
@@ -131,7 +139,14 @@ services:
     tty: true
     stdin_open: true
     init: true
-    userns_mode: keep-id
+    # `keep-id:uid=1000,gid=1000` rather than a bare `keep-id`: the host user is
+    # mapped to 1000 INSIDE the container whatever its host id is, which is the
+    # id the image bakes into /home/edge. A bare `keep-id` passes the host id
+    # through unchanged, so a host whose uid is not 1000 gets a home and a
+    # workspace owned by the wrong user -- which is why this used to need a
+    # host-side hook writing the real ids into `.env` before every build.
+    # Pinning both ends removes that bootstrap entirely.
+    userns_mode: keep-id:uid=1000,gid=1000
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -173,10 +188,17 @@ services:
   # pinned release and its hardening are project-wide facts; only the token is
   # per-developer, and that arrives from the gitignored `.env`. Starting it is still
   # opt-in — `scripts/dev-start` names `core` alone unless `--tunnel` is passed.
+  #
+  # No `depends_on: core`. Podman turns a Compose dependency into a container
+  # dependency, and the Dev Containers CLI's `--remove-existing-container` runs a
+  # bare `podman rm -f <core>` with no `--depend`, which then fails with
+  #   has dependent containers which must be removed before it
+  # and takes the whole `devcontainer up` down with it. The ordering bought
+  # nothing in return: the connector dials Cloudflare outbound and resolves
+  # `core` per request, so starting first costs at most a 502 until `core`
+  # answers, and `devcontainer up` names both services in one `up` anyway.
   cloudflare-tunnel:
     image: docker.io/cloudflare/cloudflared:2026.8.2
-    depends_on:
-      - core
     command: tunnel --protocol quic --metrics 0.0.0.0:2000 run
     environment:
       # Prefer the Edge-specific token; a single-tunnel local setup may only have the
@@ -209,6 +231,15 @@ services:
         max-file: '3'
 
 networks:
+  # Declared, not merely used. `core` names `default` explicitly (it has to: a
+  # service-level `networks:` list replaces the implicit membership rather than
+  # merging with it), and podman-compose 1.6.0 then requires the network to be
+  # declared at the top level too -- otherwise every command, `config` included,
+  # dies with `RuntimeError: missing networks: default` before it does anything.
+  # An empty declaration changes nothing about the network itself; Compose still
+  # creates the same project-default bridge.
+  default: {}
+
   # Created and owned by this project. The Global/Rails compose declares the same
   # network `external: true` and joins its Cloudflare Tunnel connector to it
   # alongside its own `frontend`, which is what lets a tunnel ingress rule reach
@@ -229,4 +260,6 @@ volumes:
   pnpm-store:
     driver: local
   workspace-secrets-mask:
+    driver: local
+  tailscale-state:
     driver: local

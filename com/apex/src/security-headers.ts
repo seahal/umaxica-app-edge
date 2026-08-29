@@ -21,7 +21,16 @@ export const apexSecurityHeaders = secureHeaders({
     baseUri: ["'self'"],
     fontSrc: ["'self'", 'data:'],
     formAction: ["'self'"],
-    frameAncestors: ["'self'"],
+    /*
+     * `'none'`, not `'self'`, because `xFrameOptions: 'DENY'` below says the
+     * same thing and only one of the two is actually consulted: a browser that
+     * sees `frame-ancestors` MUST ignore `X-Frame-Options` entirely. With
+     * `'self'` here the effective policy was same-origin framing while the
+     * header beside it read DENY — the weaker of the two silently winning.
+     * These apex documents are framed by nothing, and every frame unit's
+     * `security-headers.ts` already sends `frame-ancestors 'none'`.
+     */
+    frameAncestors: ["'none'"],
     imgSrc: ["'self'", 'data:'],
     objectSrc: ["'none'"],
     scriptSrc: ["'self'"],

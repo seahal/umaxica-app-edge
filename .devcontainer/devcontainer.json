@@ -21,20 +21,6 @@
   // takes the name from the LAST file that sets one, and the Dev Containers CLI
   // passes that resolved value on as `--project-name`.
   "dockerComposeFile": ["../compose.yaml", "../compose.custom.yaml"],
-  // compose.yaml builds the image with CONTAINER_UID/GID taken from
-  // ${UID}/${GID}. Those are bash builtins rather than exported variables, so
-  // without this hook compose silently falls back to 1000 and a host whose UID
-  // is not 1000 gets a container whose home and workspace are owned by the
-  // wrong user under keep-id — repaired only by a manual chown after every
-  // recreate. The script writes the real ids into the gitignored repo-root
-  // .env that compose auto-loads.
-  //
-  // `prune-stale-containers.sh` then removes containers left over from an
-  // earlier Compose project name for this same workspace folder. They share the
-  // `devcontainer.local_folder` label that `devcontainer exec` searches on, so
-  // one stopped leftover is enough to make every exec fail with
-  // `container state improper` while naming neither container.
-  "initializeCommand": ".devcontainer/write-host-ids.sh && .devcontainer/prune-stale-containers.sh",
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",
@@ -204,8 +190,7 @@
     "ghcr.io/joedmck/devcontainer-features/wrangler:1": {},
     "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {},
     "ghcr.io/nolanjx/devcontainer-features/codex:1": {},
-    "ghcr.io/sliekens/devcontainer-features/grok-build:1": {},
-    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {}
+    "ghcr.io/sliekens/devcontainer-features/grok-build:1": {}
   },
   "updateRemoteUserUID": false
 }

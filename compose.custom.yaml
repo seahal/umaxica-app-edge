@@ -7,9 +7,11 @@ name: umaxica-apps-edge
 
 # The developer-local overlay, loaded unconditionally by
 # `.devcontainer/devcontainer.json` and by `scripts/dev-start --rails/--tunnel`.
-# It holds only host-portable overrides now: the Cloudflare Tunnel connector and
-# the external Rails network that used to live here both moved out, the former
-# into `compose.yaml` (where it prefers EDGE_CLOUDFLARED_TOKEN and falls back to
+#
+# It holds the host-portable overrides -- the SELinux relabel opt-out below --
+# and nothing else. The Cloudflare Tunnel connector and the
+# external Rails network that used to live here both moved out, the former into
+# `compose.yaml` (where it prefers EDGE_CLOUDFLARED_TOKEN and falls back to
 # CLOUDFLARED_TOKEN, neither with a `:?` guard) and the latter away entirely.
 #
 # Do not reintroduce a `cloudflare-tunnel:` block here. `security_opt` is a list,
@@ -17,6 +19,7 @@ name: umaxica-apps-edge
 # them, so a redeclared `no-new-privileges:true` collides with `compose.yaml`'s
 # and Compose v2.24+ rejects the merged file outright:
 #   services.cloudflare-tunnel.security_opt items at 0 and 1 are equal
+#
 services:
   core:
     # SELinux Enforcing (Fedora/RHEL) 向け。compose.yaml の bind mount は

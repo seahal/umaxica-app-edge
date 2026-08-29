@@ -4,19 +4,27 @@
 
 （ ＾ν＾） Hello, World!
 
-A multi-domain monorepo of Cloudflare Workers applications — fifteen TanStack
-Start frames and five Hono apex Workers — spanning three domain families:
-`umaxica.com` (corporate), `umaxica.app` (service), and `umaxica.org` (staff),
-plus the `umaxica.net` and `umaxica.dev` apexes. Every unit builds with Vite and
-runs on workerd; nothing here deploys to Vercel any more.
+The edge layer of Umaxica: a multi-domain monorepo of Cloudflare Workers —
+fifteen TanStack Start frames and five Hono apex Workers — spanning three
+domain families: `umaxica.com` (corporate), `umaxica.app` (service), and
+`umaxica.org` (staff), plus the `umaxica.net` and `umaxica.dev` apexes. Every
+deployment unit builds with Vite, runs on workerd, and implements one shared
+script contract; nothing here deploys anywhere but Cloudflare Workers.
 
 ## Prerequisites
 
-- Node.js 24.19.0 — Active LTS "Krypton" (declared in `package.json#devEngines.runtime`, matched by `Containerfile` as `node:24.19.0-trixie`)
-- [pnpm](https://pnpm.io/) 12.0.0 (declared in `package.json#devEngines.packageManager`, matched by `Containerfile`)
-- Docker & Docker Compose (optional)
+- Node.js 24.20.0 — Active LTS "Krypton" (declared in
+  `package.json#devEngines.runtime`, matched by `Containerfile` as
+  `node:24.20.0-trixie`)
+- [pnpm](https://pnpm.io/) 12.0.0 (declared in
+  `package.json#devEngines.packageManager`, matched by `Containerfile`) — the
+  ONLY package manager; `pnpm-lock.yaml` is the only lockfile and
+  `test/package-manager-invariants.test.ts` enforces both
+- Podman with `podman-compose` (optional, for the Dev Container)
 
 ## Workspaces
+
+Twenty deployment units, all in `pnpm-workspace.yaml`:
 
 | Package    | Role                | Domain             | Dev Port |
 | ---------- | ------------------- | ------------------ | -------- |
@@ -41,20 +49,24 @@ runs on workerd; nothing here deploys to Vercel any more.
 | `app/help` | Service help        | `help.umaxica.app` | 5408     |
 | `dev/apex` | Apex/static worker  | `umaxica.dev`      | 5501     |
 
-`{com,org,app}/apex` are lightweight Hono workers (root redirect, `/health`,
-`/about`); `{com,org,app}/core` are the TanStack Start applications behind
-them at regional subdomains. Cloudflare's custom domain for each apex root
+`{com,org,app}/apex` are lightweight Hono Workers (root redirect, `/health`,
+`/about`); `{com,org,app}/core` are the TanStack Start applications behind them
+at regional subdomains. Cloudflare's custom domain for each apex root
 (`umaxica.com` / `.org` / `.app`) must point at the `*-apex` Worker, not
-`*-core` — reassigning production domain routing is a Cloudflare
-dashboard/DNS change outside this repo and must be coordinated before
-deploying `*/apex`.
+`*-core` — reassigning production domain routing is a Cloudflare dashboard/DNS
+change outside this repo and must be coordinated before deploying `*/apex`.
 
-Those custom domains are currently **removed**: since 2026-08-11 the four apex
+Those custom domains are currently **removed**: since 2026-08-11 the apex
 hostnames are Public Hostnames on the development Cloudflare Tunnel, and a
 custom domain and a Public Hostname cannot both own one name. Each
 `*/apex/wrangler.jsonc` therefore declares `"routes": []`. Returning an apex to
 its Worker means removing the Public Hostname entry first, then restoring the
 route — in that order. See `adr/008-edge-development-tunnel-exposure.md`.
+
+One deliberate outlier lives outside the workspace list: `all/busy` is a
+dependency-free static maintenance Worker (`umaxica-apps-edge-all-busy`) with a
+hand-written `src/index.js` and `public/` — no build step, no package.json, not
+part of the pnpm workspace or the script contract.
 
 ## Quick Start
 
@@ -73,7 +85,7 @@ pnpm exec playwright install chromium
 pnpm --filter <workspace> run dev   # e.g. com/core, app/core
 
 # Podman (optional)
-podman compose up -d && podman compose exec core bash
+podman compose up -d && podman compose exec core bash -l
 ```
 
 ## Scripts
@@ -82,8 +94,8 @@ The toolchain is plain pnpm scripts backed by standalone Oxfmt, Oxlint, tsc,
 Vitest, Hurl and Playwright. The only build tool is Vite, and nothing wraps it:
 a script calls `vite build` directly, never a framework CLI on top of it.
 
-Every deployment unit exposes the same script contract, and the root scripts are
-thin `pnpm -r` fan-outs over them plus the repository-level files:
+Every deployment unit exposes the same script contract, and the root scripts
+are thin `pnpm -r` fan-outs over them plus the repository-level files:
 
 ```bash
 pnpm run format          # each unit's `format`, then oxfmt . at the root
@@ -100,11 +112,20 @@ pnpm run build           # each unit's `vite build` — all twenty, one bundler
 pnpm run check           # check:static + test
 pnpm run check:static    # format:check + lint + lint:types + check:generated
                          #   + typecheck + knip + check:workers
+                         #   + check:architecture + check:deps + check:spelling
+pnpm run check:size      # bundle budgets via size-limit (run `build` first;
+                         #   deliberately NOT part of check:static)
 ```
 
+A few checks run once from the root rather than fanning out:
+`check:architecture` (dependency-cruiser), `check:deps` (syncpack against the
+`pnpm-workspace.yaml` catalog), and `check:spelling` (cspell). `fix:deps` is
+local-only. `pnpm run knip` hunts dead code per unit.
+
 `check` deliberately stops short of `test:api` and `test:e2e`: those start
-servers, so they are a separate gate rather than part of the one a pre-push hook
-can afford. See [Testing](#testing) for what each layer is responsible for.
+servers, so they are a separate gate rather than part of the one a pre-push
+hook can afford. See [Testing](#testing) for what each layer is responsible
+for.
 
 Run any of them for a single deployment unit — this is the same command the
 root fan-out uses, and it works from the unit's own directory:
@@ -121,24 +142,31 @@ repository-root config, so a unit can be extracted into its own repository
 without rewriting its toolchain. `test/deployment-unit-boundaries.test.ts`
 enforces this.
 
+Shared dependency versions live in the `catalog:` section of
+`pnpm-workspace.yaml`, so twenty units cannot drift onto different versions of
+the same tool; `check:deps` fails if a manifest steps outside the catalog. The
+workspace file also enforces supply-chain policy: `minimumReleaseAge: 1440`
+(strict) holds newly published versions back a day before they can install.
+
 ## Development Environment
 
 ### Toolchain
 
-| Tool                                                            | Role                                 | Version |
-| --------------------------------------------------------------- | ------------------------------------ | ------- |
-| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 12.0.0  |
-| [Vite](https://vite.dev/)                                       | Dev server & production build        | 8.2.x   |
-| [TanStack Start](https://tanstack.com/start)                    | Framework, the fifteen frames        | 1.168.x |
-| [Hono](https://hono.dev/)                                       | Framework, the five apex Workers     | 4.13.x  |
-| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.63.x  |
-| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.78.x  |
-| [TypeScript](https://www.typescriptlang.org/)                   | Type checker (`pnpm run typecheck`)  | 7.0.x   |
-| [Vitest](https://vitest.dev/)                                   | Unit tests (`pnpm run test`)         | 4.1.x   |
-| [Hurl](https://hurl.dev/)                                       | HTTP tests (`pnpm run test:api`)     | 8.0.x   |
-| [Playwright](https://playwright.dev/)                           | Browser E2E (`pnpm run test:e2e`)    | 1.62.x  |
-| [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x   |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.x     |
+| Tool                                                            | Role                                 | Version  |
+| --------------------------------------------------------------- | ------------------------------------ | -------- |
+| [pnpm](https://pnpm.io/)                                        | Package manager & task orchestration | 12.0.0   |
+| [Vite](https://vite.dev/)                                       | Dev server & production build        | 8.2.x    |
+| [TanStack Start](https://tanstack.com/start)                    | Framework, the fifteen frames        | 1.168.x  |
+| [Hono](https://hono.dev/)                                       | Framework, the five apex Workers     | 4.13.x   |
+| [Tailwind CSS](https://tailwindcss.com/)                        | Styling, via `@tailwindcss/vite`     | 4.3.x    |
+| [Oxfmt](https://oxc.rs/)                                        | Formatter (`pnpm run format`)        | 0.65.x   |
+| [Oxlint](https://oxc.rs/)                                       | Linter (`pnpm run lint`)             | 1.80.x   |
+| [TypeScript](https://www.typescriptlang.org/)                   | Type checker (`pnpm run typecheck`)  | 7.0.x    |
+| [Vitest](https://vitest.dev/)                                   | Unit tests (`pnpm run test`)         | 4.1.x    |
+| [Hurl](https://hurl.dev/)                                       | HTTP tests (`pnpm run test:api`)     | 8.0.x    |
+| [Playwright](https://playwright.dev/)                           | Browser E2E (`pnpm run test:e2e`)    | 1.62.x   |
+| [Lefthook](https://github.com/evilmartians/lefthook)            | Git hooks                            | 2.1.x    |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI               | 4.127.x+ |
 
 ### Node and pnpm versions
 
@@ -146,7 +174,7 @@ enforces this.
 
 ```jsonc
 "devEngines": {
-  "runtime":        { "name": "node", "version": "24.19.0", "onFail": "warn" },
+  "runtime":        { "name": "node", "version": "24.20.0", "onFail": "warn" },
   "packageManager": { "name": "pnpm", "version": "12.0.0", "onFail": "download" }
 }
 ```
@@ -155,15 +183,15 @@ Three separate things keep that declaration true, and they are worth not
 confusing with one another:
 
 - **Declaration** — `devEngines`, replacing the legacy `packageManager` field.
-  pnpm 11 records the resolved package-manager version in `pnpm-lock.yaml`, which
-  the legacy field does not do below pnpm 12.
+  pnpm records the resolved package-manager version in `pnpm-lock.yaml`, which
+  the legacy field alone did not guarantee.
 - **Installation** — the Dev Container installs pnpm from the standalone script
   at a version fixed by `ARG PNPM_VERSION`; CI installs it with
   [`pnpm/setup`](https://github.com/pnpm/setup), which reads `devEngines`
-  directly. Neither uses Corepack. `pnpm/setup` supplies Node as well, so CI has
-  no separate `setup-node` step and no floating major version.
-- **Enforcement** — pnpm's default `pmOnFail: download` runs the declared version
-  if the invoking one differs, and
+  directly. Neither uses Corepack. `pnpm/setup` supplies Node as well, so CI
+  has no separate `setup-node` step and no floating major version.
+- **Enforcement** — pnpm's default `pmOnFail: download` runs the declared
+  version if the invoking one differs, and
   `test/development-container-security.test.ts` fails if `Containerfile` and
   `package.json` ever disagree. `runtime.onFail` is `warn`, deliberately not
   `download`: `download` would have pnpm fetch a second Node.js into
@@ -174,30 +202,36 @@ together; the test tells you when you have edited only one.
 
 ### Podman / DevContainer
 
-The development environment is started with Dev Containers CLI over rootless Podman.
+The development environment is started with the Dev Containers CLI over
+rootless Podman.
 
-- **Base image**: `node:24.19.0-trixie` from `Containerfile`, with pnpm 12.0.0
-  pre-installed via the standalone script documented at <https://pnpm.io/installation>.
-  Both are
-  pinned to exact versions so a rebuild reproduces the same toolchain, and both match
-  the sibling Rails repo (`seahal/umaxica-apps-jit-global`).
-- **No Corepack**: the image deletes it (`npm rm --global corepack`) rather than
-  merely declining to call it. Node ships Corepack only below 25.0.0 and pnpm no
-  longer documents it as an installation method, so it is a dependency with an
-  expiry date; removing it also stops `corepack enable` from putting a second
-  `pnpm` on `PATH`. The standalone install under `$PNPM_HOME/bin` is the single
-  source of pnpm in the image.
-- **Package manager**: use the directly available `pnpm` command; the `pn` and `pnx`
-  short commands that ship with pnpm 11 are also on `PATH`. Scripts and documented
-  commands stay on `pnpm`. Bun is intentionally absent.
+- **Base image**: `node:24.20.0-trixie` from `Containerfile`, with pnpm 12.0.0
+  pre-installed via the standalone script documented at
+  <https://pnpm.io/installation>. Both are pinned to exact versions so a
+  rebuild reproduces the same toolchain, and both match the sibling Rails repo
+  (`seahal/umaxica-apps-jit-global`).
+- **No Corepack**: the image deletes it (`npm rm --global corepack`) rather
+  than merely declining to call it. Node ships Corepack only below 25.0.0 and
+  pnpm no longer documents it as an installation method, so it is a dependency
+  with an expiry date; removing it also stops `corepack enable` from putting a
+  second `pnpm` on `PATH`. The standalone install under `$PNPM_HOME/bin` is
+  the single source of pnpm in the image.
+- **Package manager**: use the directly available `pnpm` command; the `pn` and
+  `pnx` short commands are also on `PATH`. Scripts and documented commands
+  stay on `pnpm`. npm, yarn and Bun are intentionally absent from the
+  workflow.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
-- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`; the container has no `sudo` or `visudo`, and `su` cannot authenticate as root.
+- Runs as the non-root `edge` user (uid/gid 1000) via
+  `userns_mode: keep-id:uid=1000,gid=1000`, which maps the host user onto 1000
+  whatever its host id is, so no host-side hook has to discover it;
+  the container has no `sudo` or `visudo`, and `su` cannot authenticate as
+  root.
 
-After setting `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start the Dev Container from
-the repository root:
+After setting `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start
+the Dev Container from the repository root:
 
 ```bash
 PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
@@ -207,9 +241,9 @@ devcontainer up \
   --workspace-folder .
 ```
 
-There is no launcher script. `PODMAN_COMPOSE_PROVIDER` and `--docker-path` are both mandatory
-and have no `devcontainer.json` equivalent; run the command as the normal rootless user, never
-through `sudo`. See
+There is no launcher script. `PODMAN_COMPOSE_PROVIDER` and `--docker-path` are
+both mandatory and have no `devcontainer.json` equivalent; run the command as
+the normal rootless user, never through `sudo`. See
 [Dev Containers CLI startup on rootless Podman](docs/development/devcontainer-cli-podman-startup.md).
 
 The direct Compose launcher remains available for optional overlays:
@@ -219,56 +253,58 @@ scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 ```
 
-##### The two compose files
+#### The three compose files
 
-There are exactly two, and the split is by ownership rather than by topic:
+The split is by ownership rather than by topic, and
+`test/compose-tunnel-invariants.test.ts` fails if a third file appears:
 
 | File                  | Holds                                                                                               | Edit it?                                       |
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone      |
-| `compose.custom.yaml` | everything machine-specific — today, the external Rails Podman network                              | yes, freely; a local diff here is not a defect |
+| `compose.custom.yaml` | everything machine-specific — the SELinux label opt-out for `core`                                  | yes, freely; a local diff here is not a defect |
 
-`compose.yaml` alone is what `.devcontainer/devcontainer.json` names, so a devcontainer,
-`scripts/dev-start`, and a bare `podman compose` all resolve to one project called
-`umaxica-apps-edge` and share one set of containers and volumes. `compose.custom.yaml` is
-never loaded implicitly — its Rails network is external and named by you, so a devcontainer
-that loaded it unconditionally would fail to open on any machine without one. Add it with
-`scripts/dev-start --rails`, with `podman compose -f compose.yaml -f compose.custom.yaml`,
-or by listing it in `dockerComposeFile` yourself.
+`compose.yaml` alone is what `.devcontainer/devcontainer.json` names, so a
+devcontainer, `scripts/dev-start`, and a bare `podman compose` all resolve to
+one project called `umaxica-apps-edge` and share one set of containers and
+volumes. `scripts/dev-start` loads the overlay only for `--rails`; a bare
+`podman compose` needs `-f compose.yaml -f compose.custom.yaml` spelled out.
 
-`test/compose-tunnel-invariants.test.ts` fails if a third compose file appears.
-
-There is no credential overlay. Every credential is obtained inside the running
-container through a browser flow and is discarded when the container is
-recreated — see
+There is no credential overlay. Every credential is obtained inside the
+running container through a browser flow and is discarded when the container
+is recreated — see
 [Credential and secret management](docs/development/credential-and-secret-management.md).
 
 #### Getting an interactive shell
 
-Use `podman compose exec` (or `podman exec -it`) — both allocate a pseudo-terminal:
+Use `podman compose exec` (or `podman exec -it`) — both allocate a
+pseudo-terminal:
 
 ```bash
 podman compose exec core bash -l
 podman exec -it umaxica-apps-edge-core-1 bash -l
 ```
 
-`devcontainer exec` is for **one-shot commands only**. It wires stdin to a plain pipe
-and never allocates a PTY, so the shell has no line discipline: Ctrl+C is delivered as
-a raw `0x03` byte instead of `SIGINT`, line editing and history are dead, and Ctrl+D
-closes the pipe rather than sending EOF — the shell exits instantly and it looks like
-the container died. Confirm with `tty`: an interactive shell answers `/dev/pts/N`, a
-broken one answers `not a tty`. VS Code's integrated terminal allocates its own PTY and
-is unaffected.
+`devcontainer exec` is for **one-shot commands only**. It wires stdin to a
+plain pipe and never allocates a PTY, so the shell has no line discipline:
+Ctrl+C is delivered as a raw `0x03` byte instead of `SIGINT`, line editing and
+history are dead, and Ctrl+D closes the pipe rather than sending EOF — the
+shell exits instantly and it looks like the container died. Confirm with
+`tty`: an interactive shell answers `/dev/pts/N`, a broken one answers
+`not a tty`. VS Code's integrated terminal allocates its own PTY and is
+unaffected.
 
-Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to PID 1
-(`sleep infinity`) only — they have no bearing on shells started later via `exec`.
+Note also that `tty: true` / `stdin_open: true` in `compose.yaml` apply to
+PID 1 (`sleep infinity`) only — they have no bearing on shells started later
+via `exec`.
 
 ### Cloudflare
 
-The standard Dev Container starts an Edge-owned Tunnel connector. Put its dedicated connector
-token in the gitignored root `.env` as `EDGE_CLOUDFLARED_TOKEN`; this is not a Cloudflare API token
-and it must not be reused from Global. `vpc_services` remains independent and exists only in the
-explicit `env.vpc` development environment; production remains fail-closed.
+The standard Dev Container starts an Edge-owned Tunnel connector. Put its
+dedicated connector token in the gitignored root `.env` as
+`EDGE_CLOUDFLARED_TOKEN`; this is not a Cloudflare API token and it must not
+be reused from Global. `vpc_services` remains independent and exists only in
+the explicit `env.vpc` development environment; production remains
+fail-closed.
 
 Start only the deployment unit you are working on; the repository root does
 not fan development servers out across workspaces.
@@ -277,23 +313,33 @@ not fan development servers out across workspaces.
 pnpm --dir app/core run dev
 ```
 
-`compose.yaml` defines the Edge-owned connector alongside `core`. It reaches development services at
-`http://core:<port>` over this compose project's default network. Global shares neither this
-network nor this tunnel. Public Hostnames on the Edge tunnel remain protected by Cloudflare Access.
-See `docs/operations/cloudflare-tunnel-development.md` and
+`compose.yaml` defines the Edge-owned connector alongside `core`. It reaches
+development services at `http://core:<port>` over this compose project's
+default network. Global shares neither this network nor this tunnel. Public
+Hostnames on the Edge tunnel remain protected by Cloudflare Access. See
+`docs/operations/cloudflare-tunnel-development.md` and
 `adr/014-edge-owned-development-tunnel.md`.
 
-To reach Rails from local Node development, set `EDGE_RAILS_NETWORK` to the existing
-Rails rootless Podman network and use `scripts/dev-start --rails`. Access credentials
-are reserved for the independent `scripts/check-tunnel` path.
+To reach Rails from local Node development, set `EDGE_RAILS_NETWORK` to the
+existing Rails rootless Podman network and use `scripts/dev-start --rails`.
+Access credentials are reserved for the independent `scripts/check-tunnel`
+path.
+
+Connectivity diagnostics are first-class root scripts:
+`pnpm run check:connectivity` runs the whole suite, and
+`check:config` / `check:vpc` / `check:local` / `check:preview` /
+`check:host` / `check:tunnel:edge` / `check:tunnel:apex` / `check:links`
+run each probe individually (all via
+`tools/verify-edge-connectivity.mjs`). `pnpm run login` wraps
+`scripts/wrangler-login` (`login:device` for the device flow).
 
 The authoritative topology and security documentation begins at
 [`docs/development/development-environment-overview.md`](docs/development/development-environment-overview.md).
 
 ## Testing
 
-Three tools, split by **responsibility, not by capability**. Each can technically
-do the others' job; none may.
+Three tools, split by **responsibility, not by capability**. Each can
+technically do the others' job; none may.
 
 | Layer           | Tool       | Lives in       | Answers                                      |
 | --------------- | ---------- | -------------- | -------------------------------------------- |
@@ -305,21 +351,28 @@ The rule that decides where something goes is **what the assertion is about**,
 not what the tool can reach:
 
 - If the assertion is on a **response** — status, headers, body, cookies,
-  redirects — it belongs in a `.hurl` file and runs against a real server.
-- If the assertion is on **something no HTTP client can produce** — a route that
-  throws, an injected `RATE_LIMITER`, a Workers binding, a `console` line — it
-  stays in Vitest. There `app.request()` is the driver and the assertion is
-  elsewhere; every such case says so in a comment.
-- If the assertion needs a **real engine** — rendering, the accessibility tree,
-  service-worker activation, offline navigation — it belongs in Playwright.
+  redirects — it belongs in a `.hurl` file and runs against a real server. It
+  must not import from `src/` or call `app.request()`.
+- If the assertion is on **something no HTTP client can produce** — a route
+  that throws, an injected `RATE_LIMITER`, a Workers binding, a `console`
+  line — it stays in Vitest. There `app.request()` is allowed only as the
+  driver and the assertion is elsewhere; every such case says so in a comment.
+- If the assertion needs a **real engine** — rendering, the accessibility
+  tree, service-worker activation, offline navigation — it belongs in
+  Playwright. Status codes and `Content-Type` never belong in a `.spec.ts`.
 
-Duplication across layers is allowed only when the layers have different failure
-modes. `POST /sign/in → Set-Cookie → GET /me` is a Hurl test, the JWT parser
-behind it is a Vitest test, and the login screen is a Playwright test; the same
-`GET /health → 200` in all three is not.
+Duplication across layers is allowed only when the layers have different
+failure modes. `POST /sign/in → Set-Cookie → GET /me` is a Hurl test, the JWT
+parser behind it is a Vitest test, and the login screen is a Playwright test;
+the same `GET /health → 200` in all three is not.
 
 Each unit's `api/README.md` states this contract locally and names the Vitest
-file each `.hurl` file replaced.
+file each `.hurl` file replaced. All twenty units implement the same contract,
+including `dev/apex`; none is exempt.
+
+Root-level `vitest` runs only `test/` — the repository invariants (package
+manager, deployment-unit boundaries, compose files, container security). A
+unit's tests live in `<unit>/test/` and run via `pnpm --dir <unit> run test`.
 
 ### Running them
 
@@ -330,40 +383,46 @@ pnpm exec vitest run path/to/file.test.ts  # one file
 pnpm exec vitest run -t "test name"        # one test
 
 pnpm --dir app/core run test:api           # starts a server, runs Hurl, stops it
-EDGE_API_BASE=https://preview.example run  # ...or point it at a deployment
+EDGE_API_BASE=https://preview.example ...  # ...or point it at a deployment
 pnpm --dir app/core run test:e2e           # Playwright, with its own webServer
 ```
 
-`test:api` needs no running server: each unit's `api/run.mjs` starts one, waits
-for it, and stops it — and reuses one that is already listening, so a unit's
-`pnpm run dev` in another terminal keeps working. Setting `EDGE_API_BASE`
-targets an existing deployment and spawns nothing.
+`test:api` needs no running server: each unit's `api/run.mjs` starts one,
+waits for it, and stops it — and reuses one that is already listening, so a
+unit's `pnpm run dev` in another terminal keeps working. Setting
+`EDGE_API_BASE` targets an existing deployment and spawns nothing.
 
-**Vitest** runs with the `happy-dom` environment and globals enabled, from each
-unit's own `vitest.config.ts` and `vitest.setup.ts`
-(`@testing-library/jest-dom`, `@testing-library/react`).
+**Vitest** runs with the `happy-dom` environment and globals enabled, from
+each unit's own `vitest.config.ts` and `vitest.setup.ts`
+(`@testing-library/jest-dom`, `@testing-library/react`). Import test utilities
+from `vitest` directly, never through a wrapper.
 
 Two caveats worth knowing before a first run:
 
 - **Playwright browsers are not installed** by the image or by CI. Run
   `pnpm exec playwright install chromium` once before `test:e2e`.
-- **There is no longer an exception to the split.** `dev/apex` used to have no
-  `test:api`, because its only server was `vercel dev`, which blocks on
-  interactive device authentication. It runs on Workers with `vite dev` now, so
-  it carries the same Hurl suite as every other apex.
-
-CI runs `test:api` for all twenty units. It does not run `test:e2e`, for the
-browser reason above.
+- **CI deliberately skips `test:e2e`** for the same browser reason — do not
+  "fix" that. CI does run `test:api` for all twenty units.
 
 ## TypeScript
 
 Strict mode is enabled across the monorepo. Key compiler options:
 `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`.
-Module resolution is `Bundler`.
+Module resolution is `Bundler`. TypeScript 7 (`tsc` is the native Go compiler)
+comes from the catalog; every unit declares it explicitly rather than leaning
+on root hoisting.
 
-> Do not modify the configurations for Oxlint, Oxfmt, TypeScript, Vitest, Hurl or
-> Playwright without
-> explicit user permission.
+Generated files follow two opposite rules:
+
+- `cloudflare-env.d.ts` (frames) and `worker-configuration.d.ts` (apex) come
+  from `wrangler types` and are **gitignored — never commit them**. Frames run
+  `cf-typegen` inside `typecheck`; apex workers compile without the file.
+- `src/routeTree.gen.ts` **IS committed** in every frame (regenerated by the
+  TanStack Router plugin on `vite dev`/`vite build`; excluded from Oxfmt,
+  Oxlint, and coverage). Rationale: `adr/013-frames-tanstack-start.md`.
+
+> Do not modify the configurations for Oxlint, Oxfmt, TypeScript, Vitest, Hurl
+> or Playwright without explicit user permission.
 
 ## Production Environment
 
@@ -372,8 +431,10 @@ Module resolution is `Bundler`.
 | [Cloudflare Workers](https://workers.cloudflare.com/) | all twenty — `app/*`, `com/*`, `org/*`, `net/apex`, `dev/apex` | `umaxica.app`, `umaxica.com`, `umaxica.org`, `umaxica.net`, `umaxica.dev` |
 
 There is no second platform. `dev/apex` moved from Vercel to Workers and
-`dev/acme` was deleted (`adr/012-apex-vite-build-and-static-assets.md`), so every
-deployable unit in this repository is a Cloudflare Worker built by Vite.
+`dev/acme` was deleted (`adr/012-apex-vite-build-and-static-assets.md`), so
+every deployable unit in this repository is a Cloudflare Worker built by Vite.
+`vite build` produces the deployed Worker bundle and hashed assets — it builds
+for production, not just dev; production starts no Node process and no server.
 
 ### Deployment
 
@@ -383,39 +444,37 @@ pnpm --filter <workspace> run deploy:upload    # versioned: upload, then promote
 pnpm --filter <workspace> run deploy:promote
 ```
 
-Root-level shortcuts exist for the docs workspaces:
-
-```bash
-pnpm run deploy:app-docs:upload
-pnpm run deploy:com-docs:upload
-pnpm run deploy:org-docs:upload
-```
+Root-level shortcuts exist for the docs workspaces
+(`deploy:{app,com,org}-docs:upload`) plus `deploy:edge:preview` for the
+preview environment via `scripts/deploy-edge-preview`.
 
 Notes:
 
 - Do not point Cloudflare at the removed `post` workspace. If Wrangler reports
   that CI expected a `*-post` Worker while the workspace config uses `*-docs`,
-  the Cloudflare Workers Build is still connected to the removed `post` Worker —
-  reconnect or recreate that build for the matching docs Worker before deploying.
+  the Cloudflare Workers Build is still connected to the removed `post`
+  Worker — reconnect or recreate that build for the matching docs Worker
+  before deploying.
 - `npm --dir` is not a valid flag — but neither is reaching for npm here. pnpm
-  is the only package manager this repository supports, `pnpm-lock.yaml` is the
-  only lockfile it tracks, and `test/package-manager-invariants.test.ts` fails
-  the build if another one appears. Use `pnpm --dir app/docs run deploy:upload`.
-  If a platform genuinely cannot run pnpm, that is a platform decision to make
-  deliberately, not a flag to swap.
-- **Cloudflare Workers Builds must call a repo script, never `wrangler` directly.**
-  The build environment exports `CLOUDFLARE_ENV=production`, and wrangler reads it
-  as `--env=production`. The top level of every `wrangler.jsonc` here _is_
-  production and there is deliberately no `env.production`, so a deploy command of
+  is the only package manager this repository supports, `pnpm-lock.yaml` is
+  the only lockfile it tracks, and `test/package-manager-invariants.test.ts`
+  fails the build if another one appears. Use
+  `pnpm --dir app/docs run deploy:upload`. If a platform genuinely cannot run
+  pnpm, that is a platform decision to make deliberately, not a flag to swap.
+- **Cloudflare Workers Builds must call a repo script, never `wrangler`
+  directly.** The build environment exports `CLOUDFLARE_ENV=production`, and
+  wrangler reads it as `--env=production`. The top level of every
+  `wrangler.jsonc` here _is_ production and there is deliberately no
+  `env.production`, so a deploy command of
   `pnpm --dir org/core exec wrangler versions upload` fails with
   `No environment found in configuration with name "production"`. A raw
   `wrangler versions upload` is wrong for a second reason too: `vite build`
   writes the deployable config to `dist/server/wrangler.json` and points
   `.wrangler/deploy/config.json` at it, so wrangler only uploads the built
   Worker and its hashed assets if the build ran first. Passing
-  `--config wrangler.jsonc` bypasses that redirect and uploads the INPUT config,
-  whose `main` is the unbundled source. Configure the Workers Builds commands
-  as:
+  `--config wrangler.jsonc` bypasses that redirect and uploads the INPUT
+  config, whose `main` is the unbundled source. Configure the Workers Builds
+  commands as:
 
   ```text
   Build command:   pnpm --dir org/core run build
@@ -423,17 +482,18 @@ Notes:
   ```
 
   `upload:ci` is `pnpm run build && CLOUDFLARE_ENV= wrangler versions upload` —
-  it builds, blanks the injected variable and uploads the output the build step
-  just produced. All twenty deployable workspaces define it, and since every one
-  of them builds with Vite the definition is now identical in each. Keep it in
-  place when adding a workspace, and substitute the workspace path in both
-  commands above.
+  it builds, blanks the injected variable and uploads the output the build
+  step just produced. All twenty deployable workspaces define it, and since
+  every one of them builds with Vite the definition is identical in each. Keep
+  it in place when adding a workspace, and substitute the workspace path in
+  both commands above. Watch the build configuration's root directory too — a
+  one-letter typo there has broken every build on a branch before.
 
 ### Environment Variables
 
 Cloudflare workspaces use `wrangler.jsonc` (`vars` + environments).
 
-For local Docker Compose development, the workspace URL convention is:
+For local Compose development, the workspace URL convention is:
 
 ```text
 JIT_{COM,ORG,APP}_{CORE,DOCS,NEWS,INFO,HELP}_URL
@@ -449,23 +509,49 @@ Core workspaces run TanStack Start on Cloudflare Workers. They own RP/BFF
 behavior, authenticated UI, React Aria surfaces, logged-in state, and account,
 organization, and avatar operations.
 
-Public information workspaces (`docs`, `news`, `info`, and `help`) run the same
-stack. They are limited to public content and read-only content APIs. Every HTML
-route is server-rendered per request — there is no prerendering and no image
-optimization layer, because the security headers and the rate limiter in each
-frame's `src/server.ts` only apply to requests the Worker actually sees.
+Public information workspaces (`docs`, `news`, `info`, and `help`) run the
+same stack. They are limited to public content and read-only content APIs.
+Every HTML route is server-rendered per request — there is no prerendering and
+no image optimization layer, because the security headers and the rate limiter
+in each frame's `src/server.ts` only apply to requests the Worker actually
+sees.
 
 Rails Core/Base remains the source of truth for policy, mutation, authority,
 and content JSON APIs. Public information surfaces may consume only public,
-read-only Rails content APIs through the Cloudflare Workers private connectivity
-boundary. They must not receive Acme refresh tokens, user-scoped secrets, or
-authenticated Core session material.
+read-only Rails content APIs through the Cloudflare Workers private
+connectivity boundary. They must not receive Acme refresh tokens, user-scoped
+secrets, or authenticated Core session material.
+
+Cross-cutting contracts, enforced by lint rules and repository tests rather
+than convention:
+
+- **Logging** — `no-console` is an error in every unit. The only two
+  sanctioned emitters are `*/apex/src/structured-logger.ts`
+  (`@hono/structured-logger`) and `*/core/src/lib/rails-dispatch-log.ts`; both
+  emit one JSON line collected by `observability.logs.enabled`, and
+  `RailsDispatchLogEntry` has no free-text field by design.
+- **Cookies** — browser code touches cookies only via the Cookie Store API
+  (`cookieStore`); server side stays on `hono/cookie` and Rails.
+  `*/core/src/worker.ts` strips every `Set-Cookie` from application responses,
+  so a browser-visible cookie can only come from an apex Worker or Rails
+  (ADR 007). `docs/development/browser-cookie-access.md` is normative.
+- **Styling** — Tailwind CSS v4 is the only styling layer: no CSS Modules, no
+  CSS-in-JS, no `tailwind.config.*`, no static `style=`. Each unit owns its
+  own stylesheet and `@theme`; the engine runs via `@tailwindcss/vite` with no
+  PostCSS pipeline. `docs/design/ui-shell-contract.md` §3a is normative.
+
+Design decisions live in `adr/` (fourteen records to date) and the deeper
+documentation under `docs/`.
 
 ## Review Checklist for Agents
 
-- [ ] Run `pnpm install` after pulling remote changes and before getting started.
-- [ ] Run `pnpm run check` — `format:check`, `lint`, `lint:types`,
-      `check:generated`, `typecheck`, `knip`, `check:workers`, then `test`.
+- [ ] Run `pnpm install` after pulling remote changes and before getting
+      started.
+- [ ] Run `pnpm run check` before finishing any change — `check:static`
+      (format, lint, types, generated files, knip, workers, architecture,
+      deps, spelling), then `test`.
+- [ ] Run `pnpm run build && pnpm run check:size` if the change reaches a
+      browser bundle.
 - [ ] Run `pnpm run test:api` when you touched anything a client can observe:
       a route, a header, a redirect, a status, a rendered document.
 

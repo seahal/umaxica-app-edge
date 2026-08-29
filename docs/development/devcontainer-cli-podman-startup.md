@@ -50,28 +50,27 @@ from the repository root.
 
 ## What the configuration already does
 
-`devcontainer.json` runs `.devcontainer/write-host-ids.sh` as `initializeCommand`, which
-writes the real `UID` and `GID` into the gitignored repository-root `.env`. `$UID` and `$GID`
-are bash builtins rather than exported variables, so Compose cannot read them directly; this
-is why the file exists and why it edits in place rather than truncating.
+`devcontainer.json` declares no `initializeCommand` of its own, and nothing has to run on
+the host before a build. Two hooks used to: one wrote the host `UID`/`GID` into the
+repository-root `.env` because a bare `userns_mode: keep-id` passes the host id through
+while the image bakes 1000 into `/home/edge`; the other deleted containers left over from an
+earlier Compose project name for this workspace folder, which `devcontainer exec` — it
+selects by the `devcontainer.local_folder` label, not by Compose project — would otherwise
+pick, failing with `can only create exec sessions on running containers: container state
+improper` while naming neither container.
 
-The same hook then runs `.devcontainer/prune-stale-containers.sh`. `devcontainer exec` picks
-its target by the `devcontainer.local_folder` label rather than by the Compose project, and
-every container this repository has ever produced carries the same value for that label. A
-leftover from an earlier project name therefore stays a candidate forever, and when the CLI
-picks the stopped leftover the only symptom is
+Both causes were removed rather than papered over. `userns_mode: keep-id:uid=1000,gid=1000`
+pins the in-container id, so the host id no longer needs to be discovered, and both compose
+files now set the same `name: umaxica-apps-edge`, so no new project name can appear for this
+folder. If a leftover from before that fix is still around, `podman rm --force` it once.
 
-```
-Error: can only create exec sessions on running containers: container state improper
-```
+`cloudflare-tunnel` declares no `depends_on: core` for a related reason. Podman turns a
+Compose dependency into a container dependency, and `--remove-existing-container` runs a bare
+`podman rm -f <core>` with no `--depend`, so the connector beside it would fail the removal
+and take the whole `devcontainer up` with it.
 
-which names neither container. The script removes stopped containers belonging to a Compose
-project other than the one in use, whole project at a time — the `cloudflare-tunnel` sidecar
-carries no devcontainer label but does `depends_on: core`, and Podman refuses to remove a
-container that still has a dependent. It never touches a running container, never touches the
-project currently in use, and never removes a volume.
-
-The Podman-specific properties are Compose concerns and need no flags: `userns_mode: keep-id`,
+The Podman-specific properties are Compose concerns and need no flags:
+`userns_mode: keep-id:uid=1000,gid=1000`,
 `security_opt: [no-new-privileges:true]`, `cap_drop: [ALL]`, `init: true`, the
 `CONTAINER_UID`/`CONTAINER_GID` build arguments, loopback-only port publication on
 `127.0.0.1`, the `empty.env` masks over ignored environment paths, and the named volumes

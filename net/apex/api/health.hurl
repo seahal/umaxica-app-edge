@@ -19,12 +19,15 @@ jsonpath "$.status" == "OK"
 jsonpath "$.service" == "net"
 jsonpath "$.edge" == "cloudflare"
 jsonpath "$.time" matches /^\d{4}-\d{2}-\d{2}T/
-# Present but not pinned: both are read from bindings, so their values differ
-# between `wrangler dev`, preview and production. That the keys are always
+# Present but not pinned: it is read from a binding, so its value differs
+# between `wrangler dev`, preview and production. That the key is always
 # emitted — null rather than absent when the binding is missing — is the part
 # of the contract a consumer can rely on.
+#
+# `environment` is deliberately NOT here: this surface is unauthenticated and
+# does not name the tier it is serving. See `src/health-page.ts`.
 jsonpath "$.version" exists
-jsonpath "$.environment" exists
+jsonpath "$.environment" not exists
 [Captures]
 health_version: jsonpath "$.version"
 

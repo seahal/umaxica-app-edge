@@ -180,15 +180,15 @@ export function renderHomeContent(language: string | undefined) {
         <DomainTitle host="umaxica.dev" />
         <p class="max-w-prose text-xl">
           {locale === 'ja'
-            ? '本ドメインは、UMAXICA の開発・エンジニアリング領域を担うドメインでございます。'
-            : 'This domain carries the development and engineering side of UMAXICA.'}
+            ? 'UMAXICA の開発・エンジニアリングを担うドメインです。'
+            : 'The UMAXICA domain for development and engineering.'}
         </p>
       </div>
       <div class="flex flex-col gap-2">
         <p class="max-w-prose">
           {locale === 'ja'
-            ? 'サービスをご利用の際は、各サービスの公式ウェブサイトへごアクセス賜りますようお願い申し上げます。'
-            : 'To use our services, please visit the official website for the service you want.'}
+            ? '各サービスは、それぞれの公式サイトからご利用ください。'
+            : 'Each service is available from its own official website.'}
         </p>
         <DomainList entries={HOME_DOMAINS[locale]} />
       </div>
@@ -234,9 +234,8 @@ export function renderAboutContent(language: string | undefined) {
         <p class="max-w-prose text-xl">
           {locale === 'ja' ? (
             <>
-              本ドメイン（<span class="font-mono">umaxica.dev</span>
-              ）は、UMAXICA
-              のプラットフォームドメインでございます。本ドメイン上でサービスの提供はいたしておりません。
+              <span class="font-mono">umaxica.dev</span> は UMAXICA
+              のプラットフォームドメインです。このドメイン上でサービスは提供していません。
             </>
           ) : (
             <>
@@ -249,8 +248,8 @@ export function renderAboutContent(language: string | undefined) {
       <div class="flex flex-col gap-2">
         <p class="max-w-prose">
           {locale === 'ja'
-            ? '弊社サービスのご利用につきましては、下記の公式ウェブサイトへごアクセス賜りますようお願い申し上げます。'
-            : 'To use our services, please visit their official websites.'}
+            ? '各サービスは、下記の公式サイトからご利用ください。'
+            : 'Our services are available from the official websites below.'}
         </p>
         <DomainList entries={ABOUT_DOMAINS[locale]} />
       </div>

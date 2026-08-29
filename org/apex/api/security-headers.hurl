@@ -24,7 +24,7 @@ header "content-security-policy" contains "base-uri 'self'"
 header "content-security-policy" contains "object-src 'none'"
 header "content-security-policy" contains "script-src 'self'"
 header "content-security-policy" contains "script-src-attr 'none'"
-header "content-security-policy" contains "frame-ancestors 'self'"
+header "content-security-policy" contains "frame-ancestors 'none'"
 header "content-security-policy" contains "form-action 'self'"
 header "content-security-policy" contains "upgrade-insecure-requests"
 # `style-src` is 'self' alone. It used to carry a sha256 of an inline <style>
