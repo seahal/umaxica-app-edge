@@ -12,7 +12,8 @@ below 25.0.0, and leaving the binary in place would let `corepack enable` shadow
 standalone install. The pinned version is `ARG PNPM_VERSION`, held equal to
 `package.json#devEngines.packageManager` by `test/development-container-security.test.ts`.
 
-The effective user is `edge`, mapped through rootless `keep-id`. HOME is `/home/edge` and
+The effective user is `edge`, mapped through rootless `keep-id:uid=1000,gid=1000` — the
+host user lands on 1000 inside the container regardless of its id on the host. HOME is `/home/edge` and
 the XDG config/cache/data/state paths are writable without sudo. The image creates exact
 tool paths at build time.
 
@@ -36,16 +37,11 @@ The optional direct-Compose workflows remain available separately:
 
 ```bash
 scripts/dev-build
-scripts/dev-start [--rails] [--tunnel] [--remote-access]
+scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 node --version
 pnpm --version
 ```
-
-`--remote-access` starts `core` with an unprivileged SSH server and a userspace-networking
-`tailscaled` beside it in the same container, so a Remote SSH client lands in this container
-itself. It is off by default and documented separately in
-[Remote SSH into `core` over Tailscale](tailscale-remote-ssh.md).
 
 The interactive `core` service has a TTY and open stdin; infrastructure overlays do not.
 Validate `tty`, Ctrl-L, Ctrl-C, pnpm, Wrangler, and each AI CLI after building on the real

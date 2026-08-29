@@ -17,7 +17,7 @@ dist
 plans
 *.log
 
-# Compose bind-mounts `.devcontainer/empty.env` onto these paths inside the
+# Compose bind-mounts `empty.env` onto these paths inside the
 # container. Podman creates any missing mount target, and because the workspace
 # is itself a bind mount that creation lands on the HOST — owned by a rootless
 # subuid (e.g. 524288) with mode 0700, which the unprivileged build frontend

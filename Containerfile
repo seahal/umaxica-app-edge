@@ -25,13 +25,17 @@ ARG CONTAINER_GID
 ARG CONTAINER_USER
 ARG CONTAINER_GROUP
 
-# Tailscale is baked in rather than run as a sidecar: `core` itself joins the
-# tailnet, in userspace-networking mode, which needs no /dev/net/tun, no
-# NET_ADMIN and no root — the same properties the sidecar relied on. The version
-# is pinned to what the sidecar ran; bump deliberately, and keep it in step with
-# the `tailscale` client on the host so the two behave the same. Started only by
-# remote-sshd-entrypoint, so a container without the remote-access overlay never
-# runs it.
+# Tailscale, for an interactive `tailscale up` in a shell in this container.
+#
+# The client is baked into the image rather than run as a sidecar: `core` itself
+# joins the tailnet, in userspace-networking mode, which needs no /dev/net/tun,
+# no NET_ADMIN and no root, so `cap_drop: ALL` and `no-new-privileges` hold
+# unchanged. Nothing starts it automatically and no SSH server rides along --
+# `tailscale up` prints a login URL and the developer signs in, the same way
+# every other credential in this container is obtained.
+#
+# The version is pinned: keep it in step with the `tailscale` client on the host
+# so the two behave the same, and bump it deliberately.
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg \
       -o /usr/share/keyrings/tailscale-archive-keyring.gpg \
   && echo 'deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian trixie main' \
@@ -73,7 +77,6 @@ RUN apt-get update \
     libxtst6 \
     ncdu \
     openssh-client \
-    openssh-server \
     python3 \
     ripgrep \
     tailscale=1.102.3 \
@@ -134,32 +137,52 @@ RUN set -eux; \
     "${home}/.npm" \
     "${home}/.codex" \
     "${home}/.claude" \
-    "${home}/.config/umaxica" \
-    "${home}/.local/state/remote-sshd" \
     "${home}/.local/state/tailscale"; \
-  install -d -m 0755 -o "${CONTAINER_USER}" -g "${CONTAINER_GROUP}" /run/sshd; \
-  chmod 0700 "${home}/.local/state/remote-sshd"; \
   chmod 0700 "${home}/.local/state/tailscale"
 
-# The SSH server's configuration and its PID 1 wrapper are baked into the image,
-# not read from the workspace bind. `edge` owns that bind, so leaving them there
-# would let anything with a shell rewrite what the next container start executes
-# — including the authorized-keys path. 0555/0444 under root ownership makes the
-# running user unable to alter either one.
+# `tailscale` for interactive shells, shadowing /usr/bin/tailscale on PATH.
 #
-# Both are inert unless `compose.custom.yaml` overrides `core`'s command; the
-# base image still idles on `sleep infinity`.
+# The real CLI, run bare, dials the system socket of a root tailscaled that this
+# container can never run: no systemd, `cap_drop: ALL`, and `no-new-privileges`
+# so no sudo either. This wrapper points every invocation at a user-space daemon
+# instead -- running as the login account, `--tun=userspace-networking`, no
+# capability needed -- and starts that daemon on first use, so a plain
+# `tailscale up` works in a fresh shell.
 #
-# The names are the shared ones. umaxica-apps-global and portal bake the same two
-# paths from the same two source files, so a Remote-SSH problem debugged in one
-# repository transfers to the others unchanged.
-COPY --chmod=0444 .devcontainer/remote-sshd_config /etc/ssh/remote-sshd_config
-COPY --chmod=0555 .devcontainer/remote-sshd-entrypoint.sh /usr/local/bin/remote-sshd-entrypoint
+# Written here rather than COPYed from `.devcontainer/`: this is the only thing
+# the image needs from the host besides the build context itself, and a heredoc
+# keeps `.devcontainer/` down to `devcontainer.json` and its lock file. It lands
+# 0555 under root ownership, so the workspace bind -- which `edge` owns and any
+# development shell can write -- cannot influence what a `tailscale` call runs.
+RUN cat > /usr/local/bin/tailscale <<'WRAPPER' && chmod 0555 /usr/local/bin/tailscale
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Shadows /usr/bin/tailscale on PATH: the bare CLI expects a root tailscaled
-# this container can never run. The wrapper targets — and on first use starts —
-# the user-space daemon, so `tailscale up` works in any shell. See the script.
-COPY --chmod=0555 .devcontainer/tailscale-wrapper.sh /usr/local/bin/tailscale
+state=${HOME}/.local/state/tailscale
+socket=${state}/tailscaled.sock
+
+# `version --daemon` round-trips to the daemon and fails when the socket is
+# missing OR stale -- a leftover socket file from a stopped container would make
+# a bare socket test lie.
+if ! /usr/bin/tailscale --socket="${socket}" version --daemon > /dev/null 2>&1; then
+  mkdir -p "${state}"
+  chmod 0700 "${state}"
+  echo 'tailscale: starting user-space tailscaled (log: ~/.local/state/tailscale/tailscaled.log)' >&2
+  # One line on purpose: a backslash continuation inside a Containerfile
+  # heredoc is eaten by the Dockerfile parser before the shell ever sees it.
+  nohup /usr/sbin/tailscaled --tun=userspace-networking --statedir="${state}" --socket="${socket}" >> "${state}/tailscaled.log" 2>&1 &
+  for _ in $(seq 1 50); do
+    /usr/bin/tailscale --socket="${socket}" version --daemon > /dev/null 2>&1 && break
+    sleep 0.2
+  done
+  if ! /usr/bin/tailscale --socket="${socket}" version --daemon > /dev/null 2>&1; then
+    echo "tailscale: tailscaled did not come up; see ${state}/tailscaled.log" >&2
+    exit 69
+  fi
+fi
+
+exec /usr/bin/tailscale --socket="${socket}" "$@"
+WRAPPER
 
 ENV HOME=/home/edge \
     USER=edge \

@@ -6,12 +6,10 @@
 name: umaxica-apps-edge
 
 # The developer-local overlay, loaded unconditionally by
-# `.devcontainer/devcontainer.json` and by `scripts/dev-start --rails/--tunnel/
-# --remote-access`.
+# `.devcontainer/devcontainer.json` and by `scripts/dev-start --rails/--tunnel`.
 #
 # It holds the host-portable overrides -- the SELinux relabel opt-out below --
-# and, since `compose.remote-access.yaml` was folded in here, the remote-SSH
-# -over-Tailscale wiring for `core`. The Cloudflare Tunnel connector and the
+# and nothing else. The Cloudflare Tunnel connector and the
 # external Rails network that used to live here both moved out, the former into
 # `compose.yaml` (where it prefers EDGE_CLOUDFLARED_TOKEN and falls back to
 # CLOUDFLARED_TOKEN, neither with a `:?` guard) and the latter away entirely.
@@ -22,40 +20,8 @@ name: umaxica-apps-edge
 # and Compose v2.24+ rejects the merged file outright:
 #   services.cloudflare-tunnel.security_opt items at 0 and 1 are equal
 #
-# Remote SSH into `core` over Tailscale, for Codex App and any other Remote-SSH
-# client:
-#
-#   client --- tailnet tcp/22 ---> tailscaled in core --- 127.0.0.1:2222 ---> sshd
-#
-# Tailscale runs INSIDE `core` rather than as a sidecar: the Containerfile bakes
-# the pinned client, and remote-sshd-entrypoint starts tailscaled in
-# userspace-networking mode -- no /dev/net/tun, no NET_ADMIN, no root, so `core`'s
-# `cap_drop: ALL` and `no-new-privileges` hold unchanged. It never runs
-# `tailscale up --ssh`: Tailscale SSH would bypass sshd and the authorized-keys
-# contract below.
-#
-# It is no longer opt-in. Because this file is loaded unconditionally, every
-# `core` start runs the sshd entrypoint and needs `./.secrets/codex_authorized_keys`
-# to exist -- `.devcontainer/remote-access-preflight.sh` is what checks that, and
-# what refuses to start while a spent TS_AUTHKEY is still sitting in `.env`.
-#
-# This file is kept identical across umaxica-apps-global, umaxica-apps-edge and
-# portal apart from the account name and the tailnet hostname. See
-# plans/global-portal-edge-dreamy-spring.md for the shared contract.
 services:
   core:
-    # Replaces the idle command. Both files below are baked into the image at
-    # 0555/0444 under root ownership, so the workspace bind -- which `edge` owns
-    # and any development shell can write -- cannot influence what this runs or
-    # which keys it accepts. `overrideCommand: false` in devcontainer.json is what
-    # lets this survive `devcontainer up`.
-    command: /usr/local/bin/remote-sshd-entrypoint
-    environment:
-      # Bootstrap only, and `:-` rather than `:?` on purpose: the key is single-use
-      # and revoked immediately after enrolment, so requiring it here would make
-      # every later start fail. `.devcontainer/remote-access-preflight.sh` is what
-      # enforces "present on the first start, absent on every one after".
-      TS_AUTHKEY: '${TS_AUTHKEY:-}'
     # SELinux Enforcing (Fedora/RHEL) 向け。compose.yaml の bind mount は
     # :z / :Z を付けていないのでホスト側リポジトリは user_home_t のまま残り、
     # container_t のコンテナからは読めない。uid/gid は keep-id で一致して
@@ -75,44 +41,3 @@ services:
     # プロバイダを選ばないこちらを取る。
     security_opt:
       - label=disable
-    volumes:
-      # sshd's host key and PID file. A volume, not the workspace: the private
-      # host key must never be written into a bind-mounted git repository, and the
-      # fingerprint has to survive a container recreate.
-      - type: volume
-        source: sshd-host-keys
-        target: /home/edge/.local/state/remote-sshd
-      # Podman mounts /run as a root-owned tmpfs, so the privilege-separation
-      # directory baked into the image disappears at runtime and sshd exits with
-      # "Missing privilege separation directory". An empty named volume restores a
-      # writable one; Podman seeds its ownership from the image path.
-      - type: volume
-        source: sshd-run
-        target: /run/sshd
-      # The tailnet node's identity. Surviving `podman compose down` is the entire
-      # point: without it every start registers a NEW node and the tailnet name
-      # drifts to umaxica-edge-core-1, -2, ... `down -v` destroys it and forces
-      # a fresh enrolment with a fresh key.
-      - type: volume
-        source: tailscale-state
-        target: /home/edge/.local/state/tailscale
-      # The PUBLIC key Codex App connects with, and the single deliberate
-      # exception to the no-host-credentials rule. A public key is not a
-      # credential. Read-only, one file, and outside the workspace, so nothing
-      # with a shell here can grant itself new access.
-      #
-      # Deliberately NOT the host's ~/.ssh/authorized_keys: that file admits every
-      # key that can log into the host, which is a far wider grant than this
-      # container needs. `.secrets/` is gitignored in all three repositories.
-      - type: bind
-        source: ./.secrets/codex_authorized_keys
-        target: /home/edge/.config/umaxica/authorized_keys
-        read_only: true
-
-volumes:
-  tailscale-state:
-    driver: local
-  sshd-host-keys:
-    driver: local
-  sshd-run:
-    driver: local

@@ -18,18 +18,14 @@ directory, private keys, and the agent socket stay forbidden, and agent forwardi
 disabled in `sshd_config`. The invariant test rejects every `.ssh` occurrence in every
 compose file, without exception.
 
-The `core` service runs as `edge` through rootless `userns_mode: keep-id`, drops all
+The `core` service runs as `edge` through rootless
+`userns_mode: keep-id:uid=1000,gid=1000`, drops all
 capabilities, and enables `no-new-privileges`. Only `core` has `tty` and `stdin_open`.
 Normal ports and the temporary OAuth callback are published on `127.0.0.1` only.
 
-That capability set is why the optional SSH server runs **as `edge` on port 2222** rather than
-as root on 22: a container that drops `CAP_NET_BIND_SERVICE` cannot bind a privileged port,
-and one with `no-new-privileges` cannot separate privileges to another account. The tailnet
-still sees only port 22, because `tailscale serve` forwards it to 2222 over loopback.
-Granting a capability to recover port 22 would trade an enforced invariant for cosmetics.
-`tailscaled` runs inside `core` itself, in userspace-networking mode, so it needs no
-`/dev/net/tun`, no `NET_ADMIN`, and no host networking, and it publishes no ports. See
-[Remote SSH into `core` over Tailscale](tailscale-remote-ssh.md).
+There is no SSH server and no Tailscale client in the image. Development shells reach
+`core` through `devcontainer exec` or `podman exec`, and the AI CLIs sign in themselves
+through their own browser flows, so the container needs no inbound network path at all.
 
 ## Filesystem
 

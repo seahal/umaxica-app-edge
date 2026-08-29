@@ -224,7 +224,9 @@ rootless Podman.
   - Extensions: Claude Code, Oxc, Playwright
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
   - Security: Trivy, Gitleaks (via pre-commit hooks)
-- Runs as the non-root `edge` user (uid/gid 1000) via `userns_mode: keep-id`;
+- Runs as the non-root `edge` user (uid/gid 1000) via
+  `userns_mode: keep-id:uid=1000,gid=1000`, which maps the host user onto 1000
+  whatever its host id is, so no host-side hook has to discover it;
   the container has no `sudo` or `visudo`, and `su` cannot authenticate as
   root.
 
@@ -256,19 +258,16 @@ podman compose exec core bash -l
 The split is by ownership rather than by topic, and
 `test/compose-tunnel-invariants.test.ts` fails if a third file appears:
 
-| File                  | Holds                                                                                                       | Edit it?                                       |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector         | only as a change that applies to everyone      |
-| `compose.custom.yaml` | everything machine-specific — the SELinux label opt-out and the remote-SSH-over-Tailscale wiring for `core` | yes, freely; a local diff here is not a defect |
+| File                  | Holds                                                                                               | Edit it?                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone      |
+| `compose.custom.yaml` | everything machine-specific — the SELinux label opt-out for `core`                                  | yes, freely; a local diff here is not a defect |
 
 `compose.yaml` alone is what `.devcontainer/devcontainer.json` names, so a
 devcontainer, `scripts/dev-start`, and a bare `podman compose` all resolve to
 one project called `umaxica-apps-edge` and share one set of containers and
-volumes. `scripts/dev-start` loads the overlay only for `--rails` and
-`--remote-access`; a bare `podman compose` needs
-`-f compose.yaml -f compose.custom.yaml` spelled out. Because the overlay now
-carries remote SSH too, run `.devcontainer/remote-access-preflight.sh` before
-loading it — `scripts/dev-start --remote-access` does that for you.
+volumes. `scripts/dev-start` loads the overlay only for `--rails`; a bare
+`podman compose` needs `-f compose.yaml -f compose.custom.yaml` spelled out.
 
 There is no credential overlay. Every credential is obtained inside the
 running container through a browser flow and is discarded when the container

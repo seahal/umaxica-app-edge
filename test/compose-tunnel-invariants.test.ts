@@ -22,8 +22,8 @@ const devcontainer = read('.devcontainer/devcontainer.json');
  * Enumerated rather than globbed so that adding a compose file is a deliberate
  * act: a new overlay that nobody adds here would sit outside these assertions
  * while looking covered. The repository is meant to have exactly these two —
- * shared, and the developer-local overlay that also carries remote SSH — so the
- * count is asserted, not just the names.
+ * shared, and the developer-local overlay — so the count is asserted, not just
+ * the names.
  */
 const composeFiles = [
   ['compose.yaml', composeBase],
@@ -71,9 +71,9 @@ describe('Edge-owned tunnel connector', () => {
 
   it('keeps exactly two compose files, each with a distinct role', () => {
     // The assertions above are only as complete as this list: everything shared
-    // is in `compose.yaml`, and everything machine-specific — including remote
-    // SSH access — in `compose.custom.yaml`. A new overlay must be added here to
-    // be covered, so make the omission fail.
+    // is in `compose.yaml`, and everything machine-specific in
+    // `compose.custom.yaml`. A new overlay must be added here to be covered, so
+    // make the omission fail.
     for (const [name] of composeFiles) {
       expect(existsSync(join(repoRoot, name)), `${name} is asserted on but missing`).toBe(true);
     }
