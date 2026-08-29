@@ -31,11 +31,11 @@ served by its own Worker, by reading the `service` field of `/health.json`:
 
 | Hostname      | Expected Worker              | `service` |
 | ------------- | ---------------------------- | --------- |
-| `umaxica.com` | `umaxica-apps-edge-apex-com` | `com`     |
-| `umaxica.net` | `umaxica-apps-edge-apex-net` | `net`     |
-| `umaxica.org` | `umaxica-apps-edge-apex-org` | `org`     |
-| `umaxica.app` | `umaxica-apps-edge-apex-app` | `app`     |
-| `umaxica.dev` | `umaxica-apps-edge-apex-dev` | `dev`     |
+| `umaxica.com` | `umaxica-apps-edge-com-apex` | `com`     |
+| `umaxica.net` | `umaxica-apps-edge-net-apex` | `net`     |
+| `umaxica.org` | `umaxica-apps-edge-org-apex` | `org`     |
+| `umaxica.app` | `umaxica-apps-edge-app-apex` | `app`     |
+| `umaxica.dev` | `umaxica-apps-edge-dev-apex` | `dev`     |
 
 `umaxica.dev` is listed for completeness and does not pass yet: the `.dev` zone
 is delegated to Vercel DNS, so the Worker has no custom domain. See

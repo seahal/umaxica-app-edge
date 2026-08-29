@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "umaxica-apps-edge-apex-net",
+  "name": "umaxica-apps-edge-net-apex",
   "keep_vars": true,
   "compatibility_date": "2026-02-27",
   "compatibility_flags": ["nodejs_als"],
