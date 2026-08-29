@@ -136,3 +136,6 @@ eevil           # from the percent-encoded host 'jp%2eevil%2ecom'
 Ffoo            # from the percent-encoded path '%2Ffoo.png'
 vpcc            # a mistyped CLI argument, asserted to exit non-zero
 Bāshettihalli   # a real place name, used as a cf-ipcity value to be stripped
+
+# --- Security standards cited in the header and rate-limit rationales ---
+ASVS        # OWASP Application Security Verification Standard

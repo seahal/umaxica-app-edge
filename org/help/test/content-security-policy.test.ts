@@ -4,11 +4,15 @@
 // That suite asserts on a real response, which is where every header value a
 // client can observe belongs — but the server it starts is `vite dev`, so the
 // only policy it ever sees is the development one. The two differ in exactly one
-// source expression: `script-src` carries 'unsafe-eval' in development, because
-// the dev bundle and React's development build both call eval(). Shipping it to
-// production is the mistake worth catching, and no HTTP client pointed at a dev
-// server can catch it, so the branch that decides it is asserted here from both
-// sides.
+// source expression set: development carries 'unsafe-inline' and 'unsafe-eval',
+// because the dev bundle and React's development build both call eval() and Vite
+// injects inline scripts this code never sees. Production carries neither — it
+// names a per-request nonce instead. Shipping the development list to production
+// is the mistake worth catching, and no HTTP client pointed at a dev server can
+// catch it, so the branch that decides it is asserted here from both sides.
+//
+// The nonce assertions live here for the same reason: the Hurl suite only ever
+// observes the development policy, which has no nonce in it at all.
 //
 // The branch used to read `process.env.NODE_ENV` at module scope, which is why
 // this file used to stub the environment and reset the module registry. It is
@@ -18,23 +22,59 @@
 import { describe, expect, it } from 'vitest';
 
 import { securityHeaders, withSecurityHeaders } from '../src/security-headers';
+import { createNonce } from '../src/security-nonce';
 
-function scriptSrcFor(isProduction: boolean): string {
-  const policy = securityHeaders(isProduction)['Content-Security-Policy'];
-  const directive = policy?.split('; ').find((entry) => entry.startsWith('script-src '));
+function directiveFor(isProduction: boolean, name: string, nonce?: string): string {
+  const policy = securityHeaders(isProduction, nonce)['Content-Security-Policy'];
+  const directive = policy?.split('; ').find((entry) => entry.startsWith(`${name} `));
   if (directive === undefined) {
-    throw new Error(`no script-src directive in ${policy ?? 'a missing policy'}`);
+    throw new Error(`no ${name} directive in ${policy ?? 'a missing policy'}`);
   }
   return directive;
 }
 
+function scriptSrcFor(isProduction: boolean, nonce?: string): string {
+  return directiveFor(isProduction, 'script-src', nonce);
+}
+
 describe('content security policy', () => {
-  it("omits 'unsafe-eval' in production", () => {
-    expect(scriptSrcFor(true)).toBe("script-src 'self' 'unsafe-inline'");
+  it("omits both 'unsafe-eval' and 'unsafe-inline' in production", () => {
+    expect(scriptSrcFor(true)).toBe("script-src 'self'");
   });
 
   it("allows 'unsafe-eval' in development, where the dev bundle and React call eval()", () => {
     expect(scriptSrcFor(false)).toBe("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+  });
+
+  // The nonce is what replaces 'unsafe-inline' rather than joining it: naming a
+  // nonce makes a browser ignore 'unsafe-inline' entirely, so a policy carrying
+  // both would be the development policy with extra characters.
+  it('names the nonce it was given, and no unsafe-inline beside it', () => {
+    expect(scriptSrcFor(true, 'abc123')).toBe("script-src 'self' 'nonce-abc123'");
+  });
+
+  it('nonces style-src too, so TanStack inline CSS needs no unsafe-inline', () => {
+    expect(directiveFor(true, 'style-src', 'abc123')).toBe("style-src 'self' 'nonce-abc123'");
+    expect(directiveFor(true, 'style-src')).toBe("style-src 'self'");
+    expect(directiveFor(false, 'style-src')).toBe("style-src 'self' 'unsafe-inline'");
+  });
+
+  // A nonce authorises elements, not attributes, so `script-src` alone leaves
+  // `onclick="..."` permitted once a nonce is present.
+  it('forbids event-handler and style attributes outright', () => {
+    const policy = securityHeaders(true, 'abc123')['Content-Security-Policy'] ?? '';
+    expect(policy).toContain("script-src-attr 'none'");
+    expect(policy).toContain("style-src-attr 'none'");
+  });
+
+  it('never emits the same nonce twice', () => {
+    const nonces = new Set(Array.from({ length: 50 }, () => createNonce()));
+    expect(nonces.size).toBe(50);
+  });
+
+  it('mints a nonce with at least 128 bits of entropy', () => {
+    // base64 of 16 bytes is 24 characters including padding.
+    expect(createNonce()).toMatch(/^[A-Za-z0-9+/]{22}==$/u);
   });
 
   it('carries the full defense-in-depth set, not only a policy', () => {

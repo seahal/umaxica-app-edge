@@ -1,5 +1,53 @@
+/*
+ * The 429 document, and the key the limiter counts against.
+ *
+ * `checkRateLimit` returns a bare document: `src/worker.ts` puts the security
+ * headers on it, in the same place it puts them on every other response it
+ * answers itself. A 429 is a full HTML document an attacker can elicit on
+ * demand, so it must not be the one page on this origin served without a CSP,
+ * an `X-Frame-Options` or a `nosniff` — which is what it was when this function
+ * returned a finished response.
+ */
 export interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
+const RATE_LIMITED_DOCUMENT =
+  '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">' +
+  '<title>リクエストを処理できませんでした — UMAXICA (COM)</title></head>' +
+  '<body><main><h1>リクエストを処理できませんでした</h1><p>HTTP 429</p>' +
+  '<a href="/">トップへ戻る</a></main></body></html>';
+
+export function rateLimitedResponse(): Response {
+  return new Response(RATE_LIMITED_DOCUMENT, {
+    status: 429,
+    headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
+  });
+}
+
+/*
+ * The bucket a request with no `CF-Connecting-IP` counts against.
+ *
+ * Cloudflare sets that header on every request it forwards, so in production
+ * this fallback is unreachable. It is reachable in `vite dev`, in `vite preview`
+ * and on any future path that reaches this Worker without going through the
+ * edge — and the previous spelling, `|| 'unknown'`, put every such request into
+ * ONE shared bucket. A shared bucket is both a bypass (many clients sharing one
+ * budget is only a restriction if they are the same client) and a denial of
+ * service against everyone else in it: one caller can spend the whole budget and
+ * lock out every other unattributable request.
+ *
+ * Keying by pathname instead keeps the fallback per-path rather than global. It
+ * is deliberately NOT a fallthrough that skips the limiter: an unattributable
+ * request is still counted, just not counted together with unrelated ones.
+ */
+function rateLimitKey(request: Request): string {
+  const ip = request.headers.get('cf-connecting-ip');
+  if (ip !== null && ip !== '') {
+    return ip;
+  }
+
+  return `no-ip:${new URL(request.url).pathname}`;
 }
 
 export async function checkRateLimit(
@@ -7,19 +55,7 @@ export async function checkRateLimit(
   rateLimiter: RateLimiter | undefined,
 ): Promise<Response | null> {
   if (!rateLimiter) return null;
-  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const { success } = await rateLimiter.limit({ key: ip });
-  if (!success) {
-    return new Response(
-      '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">' +
-        '<title>リクエストを処理できませんでした — UMAXICA (COM)</title></head>' +
-        '<body><main><h1>リクエストを処理できませんでした</h1><p>HTTP 429</p>' +
-        '<a href="/">トップへ戻る</a></main></body></html>',
-      {
-        status: 429,
-        headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
-      },
-    );
-  }
-  return null;
+
+  const { success } = await rateLimiter.limit({ key: rateLimitKey(request) });
+  return success ? null : rateLimitedResponse();
 }

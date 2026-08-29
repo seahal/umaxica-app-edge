@@ -49,10 +49,54 @@ describe('request handler', () => {
 
     expect(response.status).toBe(429);
     expect(router).not.toHaveBeenCalled();
-    // A complete, self-contained document: it carries its own two headers and
-    // deliberately does not go through the security-header wrapper.
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(response.headers.get('Content-Type')).toBe('text/html; charset=UTF-8');
+  });
+
+  /*
+   * The 429 goes through the security-header wrapper, and this reverses an
+   * earlier rule that exempted it for being "self-contained".
+   *
+   * `Cache-Control` and `Content-Type` are caching headers, not security ones.
+   * Exempting the 429 left the single easiest response for an attacker to elicit
+   * as the one HTML document on this origin served with no CSP, no
+   * `X-Frame-Options` and no `nosniff` — a framable page, on demand.
+   */
+  it('hardens the 429 too, which is the easiest document to elicit on this origin', async () => {
+    setEnv({ RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } });
+
+    const response = await handleRequest(new Request('http://localhost/'), vi.fn(ok), true);
+
+    expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
+    expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(response.headers.get('Referrer-Policy')).toBe('no-referrer');
+  });
+
+  /*
+   * One mint per request, read twice: the policy must authorise the script the
+   * document actually carries. A second `createNonce()` call for the header
+   * would emit a policy that blocks the very script TanStack just stamped.
+   */
+  it('names one nonce in the policy per production request, and a fresh one each time', async () => {
+    const first = await handleRequest(new Request('http://localhost/'), ok, true);
+    const second = await handleRequest(new Request('http://localhost/'), ok, true);
+
+    const nonceOf = (response: Response) =>
+      /'nonce-([^']+)'/u.exec(response.headers.get('Content-Security-Policy') ?? '')?.[1];
+
+    expect(nonceOf(first)).toBeDefined();
+    expect(nonceOf(second)).toBeDefined();
+    expect(nonceOf(first)).not.toBe(nonceOf(second));
+  });
+
+  // Development mints none: naming a nonce makes a browser ignore
+  // 'unsafe-inline', which is what Vite's own injected scripts rely on.
+  it('mints no nonce in development, where Vite injects scripts it cannot stamp', async () => {
+    const response = await handleRequest(new Request('http://localhost/'), ok, false);
+
+    expect(response.headers.get('Content-Security-Policy')).not.toContain('nonce-');
+    expect(response.headers.get('Content-Security-Policy')).toContain("'unsafe-inline'");
   });
 
   it('runs the router when the limiter allows the request', async () => {

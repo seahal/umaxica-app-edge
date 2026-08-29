@@ -31,15 +31,42 @@ export function rateLimitedResponse(): Response {
   });
 }
 
+/*
+ * The bucket a request with no `CF-Connecting-IP` counts against.
+ *
+ * Cloudflare sets that header on every request it forwards, so in production
+ * this fallback is unreachable. It is reachable in `vite dev`, in `vite preview`
+ * and on any future path that reaches this Worker without going through the
+ * edge — and the previous spelling, `|| 'unknown'`, put every such request into
+ * ONE shared bucket. A shared bucket is both a bypass (many clients sharing one
+ * budget is only a restriction if they are the same client) and a denial of
+ * service against everyone else in it: one caller can spend the whole budget and
+ * lock out every other unattributable request.
+ *
+ * Keying by pathname instead keeps the fallback per-path rather than global. It
+ * is deliberately NOT a fallthrough that skips the limiter: an unattributable
+ * request is still counted, just not counted together with unrelated ones.
+ */
+function rateLimitKey(request: Request): string {
+  const ip = request.headers.get('cf-connecting-ip');
+  if (ip !== null && ip !== '') {
+    return ip;
+  }
+
+  return `no-ip:${new URL(request.url).pathname}`;
+}
+
 /**
  * Returns the 429 document when the limiter refuses, and `null` when the
  * request may proceed — including when no limiter is bound at all.
+ *
+ * The document is bare: `src/request-handler.ts` puts the security headers on
+ * it, in the same place it puts them on every other response this unit answers.
  */
 export async function checkRateLimit(request: Request): Promise<Response | null> {
   const rateLimiter = getEdgeEnv().RATE_LIMITER;
   if (!rateLimiter) return null;
 
-  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const { success } = await rateLimiter.limit({ key: ip });
+  const { success } = await rateLimiter.limit({ key: rateLimitKey(request) });
   return success ? null : rateLimitedResponse();
 }

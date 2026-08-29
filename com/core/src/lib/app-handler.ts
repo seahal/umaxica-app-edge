@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-start/server';
 
 import { withSecurityHeaders } from '../security-headers';
+import { createNonce, runWithNonce } from '../security-nonce';
 
 /*
  * The application half of this Worker, behind a one-function seam.
@@ -24,11 +25,23 @@ import { withSecurityHeaders } from '../security-headers';
  * load-bearing: streaming flushes the shell before a failure is known, which
  * produces a 200 with no `<title>` for a thrown error. Measured, and one of the
  * four constraints in `adr/013-frames-tanstack-start.md`.
+ *
+ * The CSP nonce is minted here and used twice: `runWithNonce` publishes it to
+ * `getRouter()` for the whole asynchronous extent of the render, so TanStack
+ * stamps it on the inline hydration script, and `withSecurityHeaders` names the
+ * same value in `script-src`. Both readings must come from ONE mint per request
+ * — a second call would emit a policy that does not authorise the script the
+ * document actually carries. Development mints nothing; see `security-nonce.ts`
+ * for why a nonce there would block Vite's own bootstrap.
  */
 const fetchHandler = createStartHandler(defineHandlerCallback((ctx) => defaultRenderHandler(ctx)));
 
 export default {
   async fetch(request: Request): Promise<Response> {
-    return withSecurityHeaders(await fetchHandler(request), import.meta.env.PROD);
+    const isProduction = import.meta.env.PROD;
+    const nonce = isProduction ? createNonce() : undefined;
+    const response = await runWithNonce(nonce, () => fetchHandler(request));
+
+    return withSecurityHeaders(response, isProduction, nonce);
   },
 };

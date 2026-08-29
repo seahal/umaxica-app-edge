@@ -34,13 +34,52 @@ describe(checkRateLimit, () => {
     expect(await result?.text()).toContain('HTTP 429');
   });
 
-  it('uses "unknown" as fallback IP when cf-connecting-ip is missing', async () => {
+  // A missing `CF-Connecting-IP` must not put every such request into one shared
+  // bucket: that bucket is a bypass for the clients inside it and a denial of
+  // service against each other, since any one of them can spend it for all.
+  it('falls back to a per-path key, not one bucket shared by every caller', async () => {
     const request = new Request('http://localhost/');
     const mockRateLimiter = {
       limit: vi.fn().mockResolvedValue({ success: true }),
     };
     await checkRateLimit(request, mockRateLimiter);
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'unknown' });
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'no-ip:/' });
+  });
+
+  it('keeps two header-less requests to different paths in different buckets', async () => {
+    const mockRateLimiter = {
+      limit: vi.fn().mockResolvedValue({ success: true }),
+    };
+    await checkRateLimit(new Request('http://localhost/oidc/authorize'), mockRateLimiter);
+    await checkRateLimit(new Request('http://localhost/about'), mockRateLimiter);
+
+    expect(mockRateLimiter.limit).toHaveBeenNthCalledWith(1, { key: 'no-ip:/oidc/authorize' });
+    expect(mockRateLimiter.limit).toHaveBeenNthCalledWith(2, { key: 'no-ip:/about' });
+  });
+
+  // An empty header value is as unattributable as an absent one.
+  it('treats an empty cf-connecting-ip as absent', async () => {
+    const mockRateLimiter = {
+      limit: vi.fn().mockResolvedValue({ success: true }),
+    };
+    await checkRateLimit(
+      new Request('http://localhost/', { headers: { 'cf-connecting-ip': '' } }),
+      mockRateLimiter,
+    );
+
+    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: 'no-ip:/' });
+  });
+
+  // The 429 is a bare document on purpose: `src/worker.ts` is what puts the
+  // security headers on it, in the same place it headers the block and the 503.
+  it('returns the 429 without security headers, leaving them to the worker', async () => {
+    const mockRateLimiter = {
+      limit: vi.fn().mockResolvedValue({ success: false }),
+    };
+    const result = await checkRateLimit(new Request('http://localhost/'), mockRateLimiter);
+
+    expect(result?.headers.get('Content-Security-Policy')).toBeNull();
+    expect(result?.headers.get('Content-Type')).toBe('text/html; charset=UTF-8');
   });
 
   it('derives the key from the first path segment', async () => {
