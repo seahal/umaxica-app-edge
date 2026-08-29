@@ -115,6 +115,21 @@
   },
   "placement": { "mode": "smart" },
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+  //
+  // This brand deploys one Worker, so this namespace_id is not shared today.
+  // It follows the same scheme as the multi-unit brands anyway — leading digit
+  // the tier, trailing digit the brand — because a second unit here would have
+  // to join this budget rather than open its own (a per-unit namespace hands a
+  // client one budget per subdomain, which is a bypass no limit value closes).
+  //
+  // Counters are per (namespace_id, key) and account-wide, so any binding added
+  // on this id must declare the SAME limit and period; tools/check-workers.mjs
+  // enforces that repository-wide.
+  //
+  // 2000/60 is a starting point to tune against real traffic, not a measured
+  // figure. Note limits are enforced per Cloudflare location, so the effective
+  // ceiling is this value times the number of locations a client reaches.
+  // See adr/010-first-touch-rate-limiting.md.
   "ratelimits": [
     {
       "name": "RATE_LIMITER",

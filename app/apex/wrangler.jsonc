@@ -117,6 +117,28 @@
   },
   "placement": { "mode": "smart" },
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+  //
+  // The namespace_id is SHARED, on purpose, with every other unit of this brand
+  // at this tier. Counters are per (namespace_id, key) and are account-wide —
+  // "even across different Workers on the same account" — so all six Workers of
+  // this brand count one budget per client IP.
+  //
+  // That is the point. A per-unit namespace would hand any client six separate
+  // budgets reachable by rotating subdomains, which is a bypass no limit value
+  // can close. Sharing costs little in return: the key is the client IP, so a
+  // merged budget bounds one client's own total rather than letting strangers
+  // exhaust each other's.
+  //
+  // CONSEQUENCE: every binding on this namespace_id must declare the SAME limit
+  // and period. Cloudflare does not define what happens when two bindings
+  // disagree, and the strictest one would fire against the combined count —
+  // making this Worker's effective limit depend on other units' traffic.
+  // tools/check-workers.mjs enforces the agreement repository-wide.
+  //
+  // 2000/60 is a starting point to tune against real traffic, not a measured
+  // figure. Note limits are enforced per Cloudflare location, so the effective
+  // ceiling is this value times the number of locations a client reaches.
+  // See adr/010-first-touch-rate-limiting.md.
   "ratelimits": [
     {
       "name": "RATE_LIMITER",

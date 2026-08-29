@@ -58,21 +58,74 @@ function checkEnvironments(ws, config, requiredEnvs = ['development', 'test']) {
     }
   }
 
+  // Every deployment unit is rate limited, at every tier it deploys to.
+  //
+  // `ratelimits` is one of the NON_INHERITABLE keys above, so a top-level
+  // declaration is silently absent the moment `--env` is passed. That failure is
+  // invisible at runtime: `checkRateLimit` treats an unbound limiter as a
+  // pass-through by design (a local loop that rate-limits itself is a worse
+  // contract than one that does not), so a dropped binding does not throw, log,
+  // or change a single response — it just quietly stops limiting. Config is the
+  // only place it can be caught, which is why it is asserted here rather than
+  // left to a unit test.
+  //
+  // Only the twenty units in the manifest reach this function. `all/busy` (a
+  // maintenance page answering 503 straight from the assets binding) and
+  // `tools/vpc-probe` (never deployed, no environments) are outside it, and are
+  // exempt for those reasons rather than by oversight.
+  const requireLimiter = (label, ratelimits) => {
+    const declared = ratelimits ?? [];
+    if (!declared.some((limit) => limit.name === 'RATE_LIMITER')) {
+      fail(ws, `${label} declares no RATE_LIMITER — ratelimits is not inherited into env.*`);
+      return;
+    }
+    for (const limit of declared) {
+      // A limiter with no budget is not a limiter. Wrangler accepts the block
+      // and the binding resolves, so nothing downstream would notice.
+      if (typeof limit.simple?.limit !== 'number' || typeof limit.simple?.period !== 'number') {
+        fail(ws, `${label} ratelimit ${limit.name} needs numeric simple.limit and simple.period`);
+      }
+    }
+  };
+
+  requireLimiter('the top level (production)', config.ratelimits);
+  for (const envName of requiredEnvs) {
+    if (config.env?.[envName]) requireLimiter(`env.${envName}`, config.env[envName].ratelimits);
+  }
+
   // Rate limiter counters are per-namespace_id, so sharing one across tiers lets
   // local/CI traffic burn production's budget. namespace_id is plain config, not
   // a provisioned resource, so every tier can simply pick its own.
+  //
+  // Seeded from the top level, which IS production: an env reusing a production
+  // namespace_id is the worst version of this collision, and checking only
+  // env-against-env missed exactly that one.
+  //
+  // Keyed on the namespace_id ALONE, never on `name:namespace_id`. A counter is
+  // identified by its namespace; the binding name is just how the Worker reaches
+  // it. Including the name in the key made two DIFFERENTLY named bindings on one
+  // namespace invisible — which is precisely the collision that matters most
+  // here, because `AUTH_RATE_LIMITER` exists to be a budget that RATE_LIMITER
+  // cannot spend. Sharing an id would silently merge the two back into the one
+  // limiter the split exists to undo, and the deploy output would still print
+  // two bindings.
   const rateLimitIds = new Map();
-  for (const [envName, env] of Object.entries(config.env ?? {})) {
-    for (const limit of env.ratelimits ?? []) {
-      const key = `${limit.name}:${limit.namespace_id}`;
-      if (rateLimitIds.has(key)) {
-        fail(
-          ws,
-          `env.${envName} shares ratelimit namespace_id ${limit.namespace_id} with env.${rateLimitIds.get(key)}`,
-        );
-      }
-      rateLimitIds.set(key, envName);
+  const noteId = (limit, where) => {
+    const seen = rateLimitIds.get(limit.namespace_id);
+    if (seen) {
+      const bindings = seen.name === limit.name ? limit.name : `${seen.name} and ${limit.name}`;
+      fail(
+        ws,
+        `${where} uses ratelimit namespace_id ${limit.namespace_id}, already used by ${seen.where} (${bindings}) — one namespace is one counter`,
+      );
+      return;
     }
+    rateLimitIds.set(limit.namespace_id, { where, name: limit.name });
+  };
+
+  for (const limit of config.ratelimits ?? []) noteId(limit, 'production (top level)');
+  for (const [envName, env] of Object.entries(config.env ?? {})) {
+    for (const limit of env.ratelimits ?? []) noteId(limit, `env.${envName}`);
   }
 
   // The top level IS production; there is no `env.production`.
@@ -531,6 +584,60 @@ for (const ws of manifest.standalone) {
       ws,
       'must not be listed in pnpm-workspace.yaml — a workspace entry exposes it to `pnpm -r`',
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rate limit namespaces, ACROSS units
+// ---------------------------------------------------------------------------
+//
+// A rate limit counter is keyed on (namespace_id, key) and is scoped to the
+// Cloudflare ACCOUNT, not to the Worker: "Two rate limiting bindings that share
+// the same namespace_id — even across different Workers on the same account —
+// share the same rate limit counters for a given key."
+//
+// This repository shares one namespace per brand per tier on purpose. The key is
+// the client IP, so a merged budget bounds one client's own total across the
+// brand; giving each unit its own namespace would instead hand every client a
+// fresh budget per subdomain, which is a bypass no limit value can close.
+//
+// What that buys has a price, and this is it: bindings sharing a namespace_id
+// must agree on the budget. Cloudflare does not define the behaviour when two
+// disagree, and the strictest binding would fire against the COMBINED count —
+// so a unit that quietly lowered its own limit would start rejecting traffic at
+// a threshold set by its siblings' load. Nothing at runtime would report that;
+// the binding resolves and the 429s look ordinary. Config is the only place it
+// can be caught.
+{
+  const byNamespace = new Map();
+  for (const ws of [
+    ...manifest.railsBacked,
+    ...(manifest.railsBackedVite ?? []),
+    ...manifest.contentSurface,
+    ...manifest.standalone,
+  ]) {
+    const config = loadWrangler(ws);
+    if (!config) continue;
+    const tiers = [
+      ['production', config.ratelimits],
+      ...Object.entries(config.env ?? {}).map(([name, env]) => [name, env.ratelimits]),
+    ];
+    for (const [tier, ratelimits] of tiers) {
+      for (const limit of ratelimits ?? []) {
+        const budget = `${limit.simple?.limit}/${limit.simple?.period}s`;
+        const seen = byNamespace.get(limit.namespace_id);
+        if (!seen) {
+          byNamespace.set(limit.namespace_id, { budget, where: `${ws} ${tier} (${limit.name})` });
+          continue;
+        }
+        if (seen.budget !== budget) {
+          fail(
+            ws,
+            `${tier} ratelimit ${limit.name} declares ${budget} on namespace_id ${limit.namespace_id}, but ${seen.where} declares ${seen.budget} — bindings sharing a namespace share the counter and must share the budget`,
+          );
+        }
+      }
+    }
   }
 }
 

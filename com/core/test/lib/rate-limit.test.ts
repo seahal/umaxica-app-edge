@@ -82,7 +82,10 @@ describe(checkRateLimit, () => {
     expect(result?.headers.get('Content-Type')).toBe('text/html; charset=UTF-8');
   });
 
-  it('derives the key from the first path segment', async () => {
+  // The path is attacker-controlled and the IP is not, so an IP-keyed request
+  // must count the same bucket whatever path it asks for — otherwise a client
+  // gets a fresh budget per URL and the limit means nothing.
+  it('ignores the path when a client IP is present', async () => {
     const request = new Request('http://localhost/api/widgets', {
       headers: { 'cf-connecting-ip': '10.0.0.1' },
     });

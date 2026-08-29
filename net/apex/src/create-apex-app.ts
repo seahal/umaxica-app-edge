@@ -4,17 +4,16 @@ import { HTTPException } from 'hono/http-exception';
 import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
 
-import { styleUrl } from './assets';
-import { BRAND_TLD, buildBrandTitle, DEFAULT_BRAND_NAME } from './brand';
 import { apexCsrf } from './csrf';
 import { renderHealthJson, renderHealthPage } from './health-page';
-import { defaultLocale, locales } from './i18n/config';
+import { locales } from './i18n/config';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
+import { offlinePageMarkup, statusPage } from './status-page';
 import { apexStructuredLogger, type BaseLogger } from './structured-logger';
-import { requestThemeAttribute, themeAttributeMarkup, type ThemeAttribute } from './theme';
+import { requestThemeAttribute } from './theme';
 
 export type ApexEnv = {
   Bindings: AssetEnv;
@@ -85,36 +84,6 @@ type CreateApexAppOptions = {
   service: string;
 };
 
-/*
- * The status, offline and 404 documents are chrome-free by design (see
- * docs/design/ui-shell-contract.md §15) but no longer unstyled: they link the
- * same compiled stylesheet as every other document this unit serves, which the
- * assets binding answers without invoking the Worker.
- *
- * The three class strings are constants because Tailwind scans this file as
- * plain text — a class name assembled at runtime would not be generated.
- *
- * They carry the same `dark:` variants as the shell, and each document takes
- * `data-theme` from the request for the same reason `renderer.tsx` does: these
- * are separate root documents, so a scheme forced on the page a reader came
- * from does not reach them on its own (`theme.ts`).
- */
-const STATUS_STYLESHEET = `<link rel="stylesheet" href="${styleUrl}">`;
-const STATUS_BODY =
-  'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100';
-const STATUS_HEADING = 'text-2xl font-semibold leading-heading';
-
-function statusPage(status: number, title: string, theme: ThemeAttribute) {
-  const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
-  return new Response(
-    `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(theme)}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
-    {
-      status,
-      headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
-    },
-  );
-}
-
 export function createApexApp(
   configurePageRoutes: ConfigurePageRoutes,
   options: CreateApexAppOptions,
@@ -182,11 +151,7 @@ export function createApexApp(
       'X-Robots-Tag': 'noindex, nofollow',
     });
   });
-  app.get('/offline', (c) =>
-    c.html(
-      `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(requestThemeAttribute(c.req.raw))}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle('オフライン', { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p><p><a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
-    ),
-  );
+  app.get('/offline', (c) => c.html(offlinePageMarkup(requestThemeAttribute(c.req.raw))));
   app.route('/', pageRoutes);
   app.notFound((c) => statusPage(404, 'ページが見つかりません', requestThemeAttribute(c.req.raw)));
 
