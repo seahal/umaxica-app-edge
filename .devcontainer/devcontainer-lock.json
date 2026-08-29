@@ -1,5 +1,10 @@
 {
   "features": {
+    "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/devcontainer-community/devcontainer-features/tailscale.com@sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4",
+      "integrity": "sha256:886605a8be14b1ac99d1f0a86cd095c5517ddc8ca7ed4169a614cdad206e95c4"
+    },
     "ghcr.io/joedmck/devcontainer-features/wrangler:1": {
       "version": "1.0.0",
       "resolved": "ghcr.io/joedmck/devcontainer-features/wrangler@sha256:fed4e30539e33daec9581180f80c60d3ef0aed516f4d733fae70071fdc7b880e",
@@ -19,6 +24,11 @@
       "version": "1.0.0",
       "resolved": "ghcr.io/nolanjx/devcontainer-features/codex@sha256:8928ccd1d5914f1c783de85ec4cef0ea6dd7e6f193e213b245f048697e0e7c25",
       "integrity": "sha256:8928ccd1d5914f1c783de85ec4cef0ea6dd7e6f193e213b245f048697e0e7c25"
+    },
+    "ghcr.io/sliekens/devcontainer-features/grok-build:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/sliekens/devcontainer-features/grok-build@sha256:22c5e406f1c1c55126a40c8ac668b5cad61b96762c794ef5ae390461432ce0c3",
+      "integrity": "sha256:22c5e406f1c1c55126a40c8ac668b5cad61b96762c794ef5ae390461432ce0c3"
     },
     "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {
       "version": "1.0.1",
