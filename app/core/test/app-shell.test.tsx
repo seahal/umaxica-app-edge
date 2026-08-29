@@ -9,9 +9,9 @@ import { getDictionary } from '@/i18n/dictionaries';
 import { resetEnv, setEnv, setEnvShouldThrow } from './__mocks__/cloudflare-workers';
 import { handlers, renderDocument } from './utils/routes';
 
-// `latency_ms` is measured, so it is not pinned here — the contract is the kind
-// and the status. `test/health-route.test.ts` freezes the clock where the timing
-// itself matters.
+// The contract is the kind and the status, which is now the whole of the public
+// probe shape: `latency_ms` was removed from `RailsProbeReport` rather than left
+// unpinned here.
 const RAILS_OK = { liveness: { kind: 'ok' as const, status: 200 } };
 
 afterEach(() => {

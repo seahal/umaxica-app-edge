@@ -24,7 +24,7 @@ To read the Rails half:
 
 ```bash
 curl -s 127.0.0.1:5406/health | jq '.rails.liveness'
-# { "kind": "not-configured", "latency_ms": 0 }   under the dev server, which has no VPC binding
+# { "kind": "not-configured" }   under the dev server, which has no VPC binding
 ```
 
 The contract tables and gate descriptions below are current. **The recorded observation tables

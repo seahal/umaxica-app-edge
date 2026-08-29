@@ -261,9 +261,7 @@ describe('parseRailsHealthJson', () => {
   // All fifteen frames answer `/health` with the merged document; the Rails half
   // sits at `rails.liveness`.
   it.each(['ok', 'http-error', 'unreachable', 'not-configured'])('reads kind %j', (kind) => {
-    expect(
-      parseRailsHealthJson(JSON.stringify({ rails: { liveness: { kind, latency_ms: 1 } } })),
-    ).toBe(kind);
+    expect(parseRailsHealthJson(JSON.stringify({ rails: { liveness: { kind } } }))).toBe(kind);
   });
 
   it('rejects a kind it does not know, rather than passing it through', () => {

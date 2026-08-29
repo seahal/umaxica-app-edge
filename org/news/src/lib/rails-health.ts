@@ -32,11 +32,19 @@ export type RailsProbeKind = 'ok' | 'http-error' | 'unreachable' | 'not-configur
  *
  * Rails response bodies are never reported here either — this says whether
  * Rails answered, never what it said.
+ *
+ * There is no `latency_ms` either, and its removal is the same decision one step
+ * further. `/health` is unauthenticated by design (ADR 009), so every field on it
+ * is offered to anyone who asks, continuously and for free. A caller of a health
+ * endpoint needs to know whether the surface is serving; an edge-to-backend
+ * timing measurement is not that, and publishing one hands out a view of the
+ * private hop's behaviour under load that nothing outside the account has a
+ * reason to hold. Timing belongs with the other operational detail, in Workers
+ * Logs, where it is not attacker-visible.
  */
 export interface RailsProbeReport {
   kind: RailsProbeKind;
   status?: number;
-  latency_ms: number;
 }
 
 export interface RailsHealthReport {
@@ -51,23 +59,21 @@ async function probeLiveness(client: RailsClient | null): Promise<RailsProbeRepo
   if (!client) {
     // Fail closed, visibly. No transport is a reportable state, not a silent
     // success — see `getRailsClient()`.
-    return { kind: 'not-configured', latency_ms: 0 };
+    return { kind: 'not-configured' };
   }
 
-  const startedAt = Date.now();
   const result = await client.fetch(RAILS_LIVENESS_PATH);
-  const latencyMs = Date.now() - startedAt;
 
   switch (result.kind) {
     case 'ok':
-      return { kind: 'ok', status: result.status, latency_ms: latencyMs };
+      return { kind: 'ok', status: result.status };
     case 'http-error':
-      return { kind: 'http-error', status: result.status, latency_ms: latencyMs };
+      return { kind: 'http-error', status: result.status };
     case 'unreachable':
     case 'invalid-path':
       // Both mean nothing reached Rails. `invalid-path` cannot arise while the
       // path above is a literal, but the client's result type admits it and
       // collapsing it here keeps the public vocabulary to four kinds.
-      return { kind: 'unreachable', latency_ms: latencyMs };
+      return { kind: 'unreachable' };
   }
 }
