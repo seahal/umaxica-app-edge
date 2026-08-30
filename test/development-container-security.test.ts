@@ -66,7 +66,6 @@ describe('development-container security contract', () => {
   it('does not mount host identities, homes, agents, or container-engine sockets', () => {
     const forbidden = [
       'localEnv:HOME',
-      'SSH_AUTH_SOCK',
       '/.gnupg',
       '/.config/gh',
       '/.claude',
@@ -80,15 +79,37 @@ describe('development-container security contract', () => {
       expect(devcontainer, `devcontainer contains ${value}`).not.toContain(value);
       expect(compose, `compose contains ${value}`).not.toContain(value);
     }
+
+    /*
+     * `SSH_AUTH_SOCK` is the one host-identity input this repository accepts,
+     * and it is accepted in exactly one place. The forwarded agent carries no
+     * key material — the private key stays in the host agent and only signature
+     * requests cross the socket — which is what distinguishes it from every
+     * entry above. The contract it has to satisfy is asserted in full by
+     * `forwards only the host ssh-agent socket…` below.
+     *
+     * Here we only pin WHERE it may appear: never in the editor's own
+     * configuration, and never in the file every developer shares.
+     */
+    expect(devcontainer, 'devcontainer contains SSH_AUTH_SOCK').not.toContain('SSH_AUTH_SOCK');
+    expect(read('compose.yaml'), 'the shared compose file forwards an agent').not.toContain(
+      'SSH_AUTH_SOCK',
+    );
   });
 
   /*
-   * The ban on host `.ssh` paths is absolute: nothing in this repository binds
-   * one, and no SSH server runs in `core`. Development shells reach the
-   * container through `devcontainer exec` / `podman exec`, and the agents that
-   * run inside it sign in themselves.
+   * Host SSH input is permitted, but only in the two shapes that carry no
+   * secret: the ssh-agent socket (the private key never leaves the host agent;
+   * only signature requests cross it) and `known_hosts` read-only (public host
+   * keys). A private key, and the `.ssh` directory that would smuggle one in,
+   * stay forbidden — and so does an SSH server inside `core`, which would give
+   * the container an inbound network path it has no reason to have.
+   *
+   * Written as a positive contract rather than a keyword ban: the exact set of
+   * `.ssh` paths is asserted, so a second mount cannot be added without this
+   * test failing, however it is spelled.
    */
-  it('never binds a host .ssh path and runs no SSH server', () => {
+  it('forwards only the host ssh-agent socket and a read-only known_hosts', () => {
     expect(devcontainer, 'devcontainer references .ssh').not.toContain('/.ssh');
 
     // Comments are stripped first: the compose files discuss credentials at
@@ -99,9 +120,40 @@ describe('development-container security contract', () => {
         .filter((line) => !line.trimStart().startsWith('#'))
         .join('\n');
 
-    for (const path of composeFiles) {
-      expect(directives(path), `${path} references .ssh`).not.toContain('/.ssh');
-    }
+    // The shared file stays absolutely clean. Host identity is a per-developer
+    // fact, so it belongs to the overlay and nowhere else.
+    expect(directives('compose.yaml'), 'compose.yaml references .ssh').not.toContain('/.ssh');
+
+    const overlay = directives('compose.custom.yaml');
+
+    // Exactly one source and one target, in that order, and nothing else.
+    expect([...overlay.matchAll(/\S*\/\.ssh\/\S*/gu)].map((match) => match[0])).toEqual([
+      '${HOME}/.ssh/known_hosts',
+      '/home/edge/.ssh/known_hosts',
+    ]);
+
+    // A bare `~/.ssh` bind, or any private key, whatever the key type.
+    expect(overlay, 'the overlay mounts a private key').not.toMatch(
+      /id_(?:rsa|dsa|ecdsa|ed25519)|\bidentity\b|\/\.ssh['"]?\s*$/mu,
+    );
+
+    // known_hosts is public data the container may read and must not rewrite.
+    expect(overlay).toMatch(
+      /source: \$\{HOME\}\/\.ssh\/known_hosts\n\s+target: \/home\/edge\/\.ssh\/known_hosts\n\s+read_only: true/u,
+    );
+
+    // The agent arrives as an interpolation, never as a literal socket path: a
+    // literal would name one machine and one session, and this file is shared.
+    expect(overlay).toMatch(/SSH_AUTH_SOCK: \/ssh-agent/u);
+    expect(overlay).toMatch(/source: \$\{SSH_AUTH_SOCK:-\/dev\/null\}\n\s+target: \/ssh-agent/u);
+
+    // `:-` rather than `:?`, on both host-supplied values. Compose interpolates
+    // the whole file whichever services are named, and this overlay is loaded
+    // unconditionally, so a required variable would stop `up core` on every
+    // machine that has no agent or no token.
+    expect(overlay, 'a required interpolation would break agent-less hosts').not.toMatch(
+      /\$\{(?:SSH_AUTH_SOCK|GH_TOKEN|HOME):\?/u,
+    );
 
     // The remote-SSH half of the old Tailscale overlay was removed deliberately:
     // no sshd, no entrypoint override, no authorized-keys bind, no TS_AUTHKEY.

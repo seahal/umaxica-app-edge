@@ -107,6 +107,12 @@ RUN npm rm --global corepack \
 # third-party scripts, and several of them chown their state with a literal
 # `${_REMOTE_USER}:${_REMOTE_USER}` — a group named
 # anything else makes those installs fail with "chown: invalid group".
+#
+# `.ssh` is created empty, 0700, owned by the login account. No key material is
+# ever placed there: `compose.custom.yaml` binds the host's `known_hosts` read-
+# only onto it, and the host ssh-agent socket arrives separately. Creating it
+# here is what makes that mount well defined — Podman would otherwise invent the
+# missing parent directory itself, owned by root.
 RUN set -eux; \
   base_user=node; \
   base_group=node; \
@@ -137,7 +143,9 @@ RUN set -eux; \
     "${home}/.npm" \
     "${home}/.codex" \
     "${home}/.claude" \
+    "${home}/.ssh" \
     "${home}/.local/state/tailscale"; \
+  chmod 0700 "${home}/.ssh"; \
   chmod 0700 "${home}/.local/state/tailscale"
 
 # `tailscale` for interactive shells, shadowing /usr/bin/tailscale on PATH.

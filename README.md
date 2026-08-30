@@ -253,7 +253,7 @@ scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 ```
 
-#### The three compose files
+#### The two compose files
 
 The split is by ownership rather than by topic, and
 `test/compose-tunnel-invariants.test.ts` fails if a third file appears:
@@ -261,17 +261,23 @@ The split is by ownership rather than by topic, and
 | File                  | Holds                                                                                               | Edit it?                                       |
 | --------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone      |
-| `compose.custom.yaml` | everything machine-specific — the SELinux label opt-out for `core`                                  | yes, freely; a local diff here is not a defect |
+| `compose.custom.yaml` | everything host-supplied — the SELinux label opt-out, and the forwarded host GitHub identity        | yes, freely; a local diff here is not a defect |
 
-`compose.yaml` alone is what `.devcontainer/devcontainer.json` names, so a
-devcontainer, `scripts/dev-start`, and a bare `podman compose` all resolve to
-one project called `umaxica-apps-edge` and share one set of containers and
-volumes. `scripts/dev-start` loads the overlay only for `--rails`; a bare
+The overlay is host-_supplied_ rather than host-_specific_: every value in it is a
+`${VAR}` interpolation, so the same tracked content resolves correctly on every
+machine and no local diff is normally required.
+
+Both files are loaded everywhere — `.devcontainer/devcontainer.json` names both,
+and so do `scripts/dev-start` and `scripts/dev-stop` — so a devcontainer,
+`scripts/dev-start`, and a bare `podman compose` all resolve to one project
+called `umaxica-apps-edge` and share one set of containers and volumes. A bare
 `podman compose` needs `-f compose.yaml -f compose.custom.yaml` spelled out.
 
-There is no credential overlay. Every credential is obtained inside the
-running container through a browser flow and is discarded when the container
-is recreated — see
+There is no credential overlay. GitHub access is the host's, borrowed through a
+forwarded ssh-agent socket and `GH_TOKEN`; every other credential is obtained
+inside the running container through a browser flow and is discarded when the
+container is recreated — see
+[Git and GitHub access](docs/development/git-and-github-access.md) and
 [Credential and secret management](docs/development/credential-and-secret-management.md).
 
 #### Getting an interactive shell

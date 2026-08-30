@@ -1,29 +1,67 @@
 # Git and GitHub access
 
-The authoritative repository is `https://github.com/seahal/umaxica-apps-edge.git`.
-Container-side Git uses HTTPS only. Host SSH keys, SSH agents, host GitHub CLI state, and
-host Git configuration are not mounted.
+The authoritative repository is `git@github.com:seahal/umaxica-apps-edge.git`.
 
-Authenticate with the browser device flow inside `core`. No token is registered on the
-host and none is mounted in:
+The container reuses the **host's** GitHub identity, borrowed rather than copied. Nothing
+is registered inside `core`, and no key file or token literal exists in this repository or
+in the image:
+
+| Operation                  | Credential         | How it arrives                                                                        |
+| -------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `git` clone / fetch / push | Host ssh-agent     | `${SSH_AUTH_SOCK}` bound to `/ssh-agent`; the private key never leaves the host agent |
+| Host key verification      | Host `known_hosts` | `${HOME}/.ssh/known_hosts` bound **read-only**                                        |
+| `gh` API calls             | `GH_TOKEN`         | Interpolated from the host environment                                                |
+
+`gh auth login` is not part of this flow and must not be relied on. `gh` resolves tokens
+in the order `GH_TOKEN` → `GITHUB_TOKEN` → its configuration file, so `GH_TOKEN` wins even
+when a stale token is left in the image's `gh` state.
+
+## Host-side prerequisites
+
+Set up once, on the host, before starting the container:
 
 ```bash
-gh auth login --web --git-protocol https
-gh auth setup-git
+eval "$(ssh-agent -s)"          # if no agent is running
+ssh-add                          # load the GitHub key
+ssh-add -l                       # must list it
+ssh -T git@github.com            # "Hi <user>! You've successfully authenticated"
+
+test -f ~/.ssh/known_hosts       # must be a regular FILE, or Podman creates a directory
+                                 #   ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+export GH_TOKEN="$(gh auth token)"   # persist this in the shell profile
 ```
 
-Grant the OAuth app only the scopes the work needs — `repo` and `read:org` cover normal
-development. Do not grant `admin:org`, `admin:repo_hook`, `workflow`, or any secret
-administration scope. Revoke the session at GitHub `Settings → Applications` when done;
-recreating the container discards the credential either way.
+Both variables must be exported in the shell that runs `scripts/dev-start` or
+`devcontainer up`: Compose reads that process environment, not the container's.
+`scripts/dev-start` refuses to start when `known_hosts` is missing and warns when either
+variable is unset. Neither is required — an agent-less, token-less host still boots, it
+just cannot reach GitHub.
 
-`gh auth setup-git` wires the HTTPS credential helper. `~/.ssh` is not mounted, so a
-`git@github.com:` remote cannot authenticate — use the HTTPS remote.
+New mounts apply only to a **new** container. Recreate rather than restart after changing
+either value.
 
-Then run inside `core`:
+Scope the token to what the work needs — `repo` and `read:org` cover normal development.
+Do not grant `admin:org`, `admin:repo_hook`, `workflow`, or any secret administration
+scope. Bound the agent's reach on the host too: a dedicated agent holding only the GitHub
+key, and `ssh-add -t <seconds>` for a lifetime limit.
+
+## Verifying, inside `core`
 
 ```bash
 scripts/github-readonly-check
 ```
 
-This runs `gh auth status` and `git ls-remote`; it does not push or mutate GitHub.
+It checks `gh auth status`, `ssh -T git@github.com`, that `origin` is an SSH remote, and
+`git ls-remote`. It does not push or mutate GitHub. Run the pieces directly if one fails:
+
+```bash
+ssh-add -l                # proves the forwarded agent is reachable
+ssh -T git@github.com     # exit status 1 is SUCCESS here — GitHub grants no shell
+git fetch
+gh auth status
+gh repo view
+```
+
+The container may read `known_hosts` but not write it, so `ssh` cannot record a new host
+key. That is deliberate: add the entry on the host instead.

@@ -1,15 +1,59 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# GitHub access comes from `gh auth login --web` performed inside this container.
-# No token is mounted from the host and none is written back to it.
-if ! gh auth status >/dev/null 2>&1; then
-  echo 'BLOCKED: not authenticated. Run inside the container:' >&2
-  echo '  gh auth login --web --git-protocol https && gh auth setup-git' >&2
+# GitHub access is the host's identity, borrowed rather than copied. No key file
+# and no token literal exists in this repository or this image:
+#   - Git authenticates over SSH through the host ssh-agent socket forwarded at
+#     $SSH_AUTH_SOCK. The private key never leaves the host agent.
+#   - The gh CLI authenticates with GH_TOKEN, passed in from the host
+#     environment by `compose.custom.yaml`.
+# Read-only throughout: this pushes nothing and mutates nothing on GitHub.
+
+if [[ -z ${GH_TOKEN:-} ]]; then
+  echo 'BLOCKED: GH_TOKEN is unset in this container.' >&2
+  echo 'Export it on the HOST before starting, then recreate the container:' >&2
+  echo '  export GH_TOKEN="$(gh auth token)"' >&2
   exit 2
 fi
 
-gh auth status
-git -c credential.helper='!gh auth git-credential' \
-  ls-remote https://github.com/seahal/umaxica-apps-edge.git HEAD >/dev/null
-echo 'PASS: GitHub authentication and HTTPS read access succeeded.'
+# `gh auth status` is NOT a usable gate: it exits 0 even when it has just
+# reported "The token ... is invalid", and it reports every configured account,
+# including a stale in-image one that GH_TOKEN has already overridden. Spend a
+# real API call instead — `gh api user` fails on a bad token and is read-only.
+if gh_login=$(gh api user --jq .login 2>/dev/null); then
+  echo "gh: authenticated as ${gh_login} via GH_TOKEN"
+else
+  echo 'BLOCKED: GitHub rejected GH_TOKEN.' >&2
+  # Re-run for the diagnostic alone: `2>&1 1>/dev/null` keeps gh's own message
+  # and drops the response body the first call already discarded. `|| true`
+  # because this pipeline is EXPECTED to fail -- without it `set -e -o pipefail`
+  # aborts here and the deliberate exit code below never runs.
+  gh api user --jq .login 2>&1 1>/dev/null | sed 's/^/  /' >&2 || true
+  echo 'Refresh it on the HOST and recreate the container:' >&2
+  echo '  export GH_TOKEN="$(gh auth token)"' >&2
+  exit 2
+fi
+
+# `ssh -T git@github.com` exits 1 even on success: GitHub authenticates the key
+# and then refuses the shell it was never going to grant. The greeting is the
+# only reliable signal, so match on it rather than on the exit status.
+ssh_greeting=$(ssh -T -o BatchMode=yes git@github.com 2>&1 || true)
+if [[ ${ssh_greeting} != *'successfully authenticated'* ]]; then
+  echo 'BLOCKED: SSH to GitHub failed.' >&2
+  printf '  %s\n' "${ssh_greeting}" >&2
+  echo 'On the HOST: ssh-add -l && ssh -T git@github.com, then recreate the container.' >&2
+  exit 2
+fi
+printf '%s\n' "${ssh_greeting}"
+
+# The remote itself, so a leftover HTTPS URL is reported rather than silently
+# taking a different credential path than the one just verified.
+remote_url=$(git remote get-url origin)
+if [[ ${remote_url} != git@github.com:* && ${remote_url} != ssh://git@github.com/* ]]; then
+  echo "BLOCKED: origin is not an SSH remote: ${remote_url}" >&2
+  echo '  git remote set-url origin git@github.com:seahal/umaxica-apps-edge.git' >&2
+  exit 2
+fi
+git ls-remote "${remote_url}" HEAD >/dev/null
+
+echo 'PASS: gh (GH_TOKEN) and Git-over-SSH read access succeeded.'
