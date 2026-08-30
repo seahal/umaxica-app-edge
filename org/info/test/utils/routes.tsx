@@ -1,4 +1,5 @@
 import { RouterProvider, createMemoryHistory } from '@tanstack/react-router';
+import { render } from '@testing-library/react';
 import type { ComponentType } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
@@ -85,6 +86,25 @@ export async function renderDocument(path: string): Promise<string> {
  * fact that they render inside the shell is proved by `renderDocument()` on an
  * unmatched path.
  */
+
+/**
+ * The application mounted into the DOM at `path`, for the tests that interact
+ * with it.
+ *
+ * `renderDocument()` answers what the server sends; this answers what happens
+ * after it. A client-side navigation exists only in a mounted tree, so the route
+ * announcer — the one part of this shell whose subject is a SECOND navigation
+ * rather than a first response — cannot be reached any other way. The router
+ * comes back alongside the render result because a test that has to make a
+ * navigation FAIL needs the route objects, and they cannot be reached through
+ * the rendered tree.
+ */
+export async function renderApp(path: string) {
+  const router = getRouter();
+  router.update({ history: createMemoryHistory({ initialEntries: [path] }) });
+  await router.load();
+  return { ...render(<RouterProvider router={router} />), router };
+}
 
 /** The `<title>` a route declares through its `head()`, or `undefined`. */
 export function headTitleOf(route: { options: unknown }): string | undefined {

@@ -37,7 +37,16 @@ export async function readBoundedText(response: Response, maxChars: number): Pro
       text += value;
     }
   } finally {
-    await reader.cancel().catch(() => undefined);
+    try {
+      await reader.cancel();
+    } catch {
+      /*
+       * Cancelling is a courtesy to the connection, not part of the result, so a
+       * cancel that rejects must not turn a completed read into a failure.
+       * Node's `pipeThrough` swallows the upstream rejection already; workerd
+       * makes no such promise, and this is the runtime that matters.
+       */
+    }
   }
 
   return text.slice(0, maxChars).trim();

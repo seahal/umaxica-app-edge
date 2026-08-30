@@ -1,8 +1,13 @@
 # Edge development environment overview
 
 The Edge development environment is a rootless Podman workspace. The container is an
-independent security principal: it never receives the host HOME, authentication agents,
-private keys, CLI credential stores, or Podman/Docker sockets.
+independent security principal: it never receives the host HOME, private keys, CLI
+credential stores, or Podman/Docker sockets.
+
+It borrows one thing from the host, and only to reach GitHub: the ssh-agent socket (for
+Git over SSH) and `GH_TOKEN` (for the `gh` API), alongside a read-only `known_hosts`. No
+key material crosses either — see
+[Git and GitHub access](git-and-github-access.md).
 
 ## Dev Container startup
 

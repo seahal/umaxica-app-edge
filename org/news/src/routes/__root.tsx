@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { RouteAnnouncer } from '../components/route-announcer';
 import { ServiceWorkerRegistration } from '../components/service-worker-registration';
 import { SiteFooter } from '../components/site-footer';
 import { SiteHeader } from '../components/site-header';
@@ -81,6 +82,15 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <SiteHeader />
         {children}
         <SiteFooter />
+        {/*
+         * Last in the body and outside every landmark, because it is not
+         * content: it is the announcement channel for a client-side
+         * navigation. It sits in the shell rather than beside any one route so
+         * that every document this unit serves — the two failure documents and
+         * `/offline` included — is announced when it is reached by a `<Link>`
+         * rather than by a fresh request.
+         */}
+        <RouteAnnouncer />
         <Scripts />
       </body>
     </html>

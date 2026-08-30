@@ -10,15 +10,21 @@ container-local process state only
 discarded when the container is recreated
 ```
 
-**No credential enters this repository or this container from the host.** There is no
-`.secrets/` registration flow, no Podman Secret Store delivery, no `/run/secrets` mount,
-and no host bind of `~/.ssh`, `~/.config/gh`, `~/.gitconfig`, `~/.claude`, or `~/.codex`.
-Long-lived API tokens were retired entirely: the failure mode they carried — a credential
-that stays valid long after the container that read it is gone — is the thing this design
-removes.
+That is the rule for every credential but one. **GitHub is the single exception**: the
+host's identity is borrowed through a forwarded ssh-agent socket and `GH_TOKEN`, so that
+`git` and `gh` survive a container recreate without a login. It is an exception because
+neither input is a copy — the private key stays in the host agent, and the token literal
+appears in no tracked file. See [Git and GitHub access](git-and-github-access.md) and
+[Development-container security policy](container-security-policy.md).
 
-Nothing is persisted. Recreating the container means logging in again, and that is the
-point: an abandoned container leaks nothing.
+Otherwise **no credential enters this repository or this container from the host.** There
+is no `.secrets/` registration flow, no Podman Secret Store delivery, no `/run/secrets`
+mount, and no host bind of `~/.gitconfig`, `~/.claude`, or `~/.codex`. Long-lived API
+tokens were retired: the failure mode they carried — a credential that stays valid long
+after the container that read it is gone — is the thing this design removes.
+
+Nothing else is persisted. Recreating the container means logging back in to Cloudflare,
+Claude, and Codex, and that is the point: an abandoned container leaks nothing.
 
 ## Obtaining credentials
 
@@ -26,7 +32,7 @@ Run these inside `core`, after `scripts/dev-start`:
 
 | Need                | Command                                                           | Flow                    |
 | ------------------- | ----------------------------------------------------------------- | ----------------------- |
-| GitHub + HTTPS Git  | `gh auth login --web --git-protocol https && gh auth setup-git`   | OAuth device flow       |
+| GitHub (git + gh)   | nothing — set `GH_TOKEN` and run an ssh-agent on the **host**     | forwarded host identity |
 | Cloudflare Wrangler | `pnpm run login` (`pnpm run login:device` under `podman exec`)    | OAuth, callback on 8976 |
 | Cloudflare Access   | `cloudflared access login <url>` (`scripts/check-tunnel` prompts) | Access browser login    |
 | Claude Code         | `claude`, then `/login`                                           | OAuth                   |
@@ -42,9 +48,10 @@ session has no host loopback to share — authenticate Wrangler with the Device
 Authorization Grant instead. See
 [Wrangler authentication](wrangler-authentication.md).
 
-Git remotes must be HTTPS. `~/.ssh` is not mounted and no SSH key exists in the container,
-so `git@github.com:` remotes cannot authenticate — `gh auth setup-git` wires the HTTPS
-credential helper instead.
+Git remotes must be SSH. Authentication goes through the host ssh-agent forwarded at
+`/ssh-agent`; no SSH key exists in the container and none may be mounted, so an
+`https://github.com/` remote would instead reach for a credential helper that is not
+configured. `scripts/github-readonly-check` reports a remote left on HTTPS.
 
 ## Workspace credential inputs stay out
 

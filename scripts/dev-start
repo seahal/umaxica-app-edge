@@ -39,8 +39,36 @@ if ((${#unmasked_env_files[@]} > 0)); then
   exit 1
 fi
 
-compose=(podman compose -f compose.yaml)
+# The overlay is not optional. It carries the SELinux `label=disable` without
+# which `/home/edge/workspace` is unreadable inside the container on an
+# Enforcing host, and the host GitHub identity (ssh-agent socket, known_hosts,
+# GH_TOKEN). `.devcontainer/devcontainer.json` has always loaded both files;
+# loading only one here meant a bare `scripts/dev-start` produced a container
+# that differed from the one the editor starts.
+compose=(podman compose -f compose.yaml -f compose.custom.yaml)
 services=(core)
+
+# Podman invents a missing bind source as a DIRECTORY. For known_hosts that
+# would silently create `~/.ssh/known_hosts/` on the HOST and leave every later
+# `ssh` reading an empty file it cannot explain, so refuse before starting.
+if [[ ! -f ${HOME}/.ssh/known_hosts ]]; then
+  echo "ERROR: ${HOME}/.ssh/known_hosts is not a regular file." >&2
+  echo 'The container binds it read-only; Podman would otherwise create a directory there.' >&2
+  echo '  ssh-keyscan github.com >> ~/.ssh/known_hosts' >&2
+  exit 1
+fi
+
+# Both are optional by design -- compose falls back to /dev/null and to an empty
+# token -- but silence would be the wrong answer to "why does git ask for a
+# password inside the container?".
+if [[ -z ${SSH_AUTH_SOCK:-} ]]; then
+  echo 'WARNING: SSH_AUTH_SOCK is unset; Git over SSH will not work in the container.' >&2
+  echo '  eval "$(ssh-agent -s)" && ssh-add' >&2
+fi
+if [[ -z ${GH_TOKEN:-} ]]; then
+  echo 'WARNING: GH_TOKEN is unset; the gh CLI will fall back to its in-image state.' >&2
+  echo '  export GH_TOKEN="$(gh auth token)"' >&2
+fi
 
 if [[ ${use_rails} == true ]]; then
   if [[ -z ${EDGE_RAILS_NETWORK:-} ]]; then
@@ -53,7 +81,6 @@ if [[ ${use_rails} == true ]]; then
     echo 'Inspect available networks with `podman network ls`, then set EDGE_RAILS_NETWORK.' >&2
     exit 1
   fi
-  compose+=(-f compose.custom.yaml)
 fi
 
 # Independent of --rails on purpose: inbound Edge exposure and outbound Rails
@@ -73,12 +100,13 @@ if [[ ${use_tunnel} == true ]]; then
 fi
 
 # There is no credential overlay any more. Long-lived API tokens and Podman
-# Secrets were retired in favour of short-lived, browser-issued credentials
-# obtained inside the container:
-#   gh auth login --web --git-protocol https && gh auth setup-git
+# Secrets were retired. GitHub access is the host's, borrowed rather than copied
+# -- the ssh-agent socket and GH_TOKEN forwarded by `compose.custom.yaml`, with
+# no key file and no token literal anywhere in the repository. Everything else
+# is a short-lived credential obtained inside the container:
 #   scripts/wrangler-login
 #   claude   # /login
 #   codex login
-# Nothing is persisted: recreating the container requires logging in again.
+# None of those is persisted: recreating the container requires logging in again.
 
 "${compose[@]}" up -d "${services[@]}"
