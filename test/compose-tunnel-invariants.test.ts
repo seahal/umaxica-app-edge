@@ -13,7 +13,11 @@ const repoRoot = join(import.meta.dirname, '..');
 const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
 
 const composeBase = read('compose.yaml');
-const composeCustom = read('compose.custom.yaml');
+// `compose.custom.yaml` is the developer-local overlay and is gitignored, so it
+// is absent on a fresh clone and carries arbitrary host-specific edits where it
+// exists. The tracked template is what every developer's copy starts as, so it
+// is the file these invariants can actually hold.
+const composeCustom = read('compose.custom.yaml.example');
 const devcontainer = read('.devcontainer/devcontainer.json');
 
 /**
@@ -27,7 +31,7 @@ const devcontainer = read('.devcontainer/devcontainer.json');
  */
 const composeFiles = [
   ['compose.yaml', composeBase],
-  ['compose.custom.yaml', composeCustom],
+  ['compose.custom.yaml.example', composeCustom],
 ] as const;
 
 /**
@@ -71,17 +75,23 @@ describe('Edge-owned tunnel connector', () => {
 
   it('keeps exactly two compose files, each with a distinct role', () => {
     // The assertions above are only as complete as this list: everything shared
-    // is in `compose.yaml`, and everything machine-specific in
-    // `compose.custom.yaml`. A new overlay must be added here to be covered, so
-    // make the omission fail.
+    // is in `compose.yaml`, and everything machine-specific in the overlay each
+    // developer copies from `compose.custom.yaml.example`. A new overlay must be
+    // added here to be covered, so make the omission fail.
     for (const [name] of composeFiles) {
       expect(existsSync(join(repoRoot, name)), `${name} is asserted on but missing`).toBe(true);
     }
-    expect(
-      trackedFiles()
-        .filter((path) => /(?:^|\/)compose\..*ya?ml$/u.test(path))
-        .sort(),
-    ).toEqual(['compose.custom.yaml', 'compose.yaml']);
+
+    const trackedCompose = trackedFiles()
+      .filter((path) => /(?:^|\/)compose\..*ya?ml(?:\.example)?$/u.test(path))
+      .sort();
+    expect(trackedCompose).toEqual(['compose.custom.yaml.example', 'compose.yaml']);
+
+    // The overlay itself must stay untracked. Committing it would put one
+    // developer's host in everyone's checkout, and it would also silently
+    // outrank the template these invariants read: the assertions would then be
+    // describing a file Compose no longer loads.
+    expect(trackedCompose).not.toContain('compose.custom.yaml');
   });
 
   it('defines one hardened connector without a cross-project network', () => {

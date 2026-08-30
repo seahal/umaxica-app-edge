@@ -5,8 +5,14 @@
 # (`rootlessport listen tcp 127.0.0.1:5101: bind: address already in use`).
 name: umaxica-apps-edge
 
-# The developer-local overlay, loaded unconditionally by
-# `.devcontainer/devcontainer.json` and by `scripts/dev-start`.
+# TEMPLATE. This file is tracked; `compose.custom.yaml` is not.
+#
+# `compose.custom.yaml` is the developer-local overlay, loaded unconditionally
+# by `.devcontainer/devcontainer.json` and by `scripts/dev-start`. It is
+# gitignored so that a host-specific override is never a diff anybody has to
+# carry, and `scripts/dev-start` copies this file into place when it is missing.
+# Edit your copy freely; edit this template only to change what a fresh clone
+# starts with.
 #
 # It holds the host-portable overrides -- the SELinux relabel opt-out and the
 # host GitHub identity below -- and nothing else. The Cloudflare Tunnel
@@ -15,9 +21,9 @@ name: umaxica-apps-edge
 # and falls back to CLOUDFLARED_TOKEN, neither with a `:?` guard) and the latter
 # away entirely.
 #
-# Every value here is a `${VAR}` interpolation rather than a literal path, which
-# is what keeps the file committable: it names no machine, so the same content
-# resolves correctly on every host and a local diff is never required.
+# Every value in this template is a `${VAR}` interpolation rather than a literal
+# path: it names no machine, so the default copy resolves correctly on every
+# host and nobody has to edit their copy just to start the container.
 #
 # Do not reintroduce a `cloudflare-tunnel:` block here. `security_opt` is a list,
 # and Compose appends overlay list entries to the base rather than replacing
@@ -37,9 +43,9 @@ services:
     # ホスト側リポジトリを container_file_t へ再ラベルしてしまう。ラベル強制の
     # 無効化はコンテナ1つに閉じ、ホストのラベルを書き換えないのでこちらを取る。
     #
-    # 下の ssh-agent ソケットと known_hosts の bind mount にも :z / :Z を
-    # 付けないのは同じ理由。label=disable がこのコンテナに閉じて効いており、
-    # :z を付ければホスト側の $XDG_RUNTIME_DIR や ~/.ssh を再ラベルしてしまう。
+    # 下の known_hosts の bind mount にも :z / :Z を付けないのは同じ理由。
+    # label=disable がこのコンテナに閉じて効いており、:z を付ければホスト側の
+    # ~/.ssh を再ラベルしてしまう。
     #
     # compose.yaml の `no-new-privileges:true` を再掲しないこと。security_opt は
     # リストで、Compose はオーバーレイ側の要素を base に「追記」するため、再掲は
@@ -54,11 +60,6 @@ services:
     # `environment` はマッピングなので Compose はキー単位で base とマージする。
     # compose.yaml の CLOUDFLARE_ENV / DEVCONTAINER はそのまま残る。
     environment:
-      # ホストの ssh-agent をソケット越しに借りる。秘密鍵そのものはホストの
-      # agent から出ず、このソケットを渡るのは署名要求と署名結果だけ。だから
-      # 鍵ファイルを一切マウントせずに git の clone / fetch / push が SSH で通る。
-      SSH_AUTH_SOCK: /ssh-agent
-
       # gh CLI の API 認証。トークン本体はこのファイルに書かず、ホスト側の
       # 環境変数からそのまま引き渡す。gh のトークン解決順は
       # GH_TOKEN > GITHUB_TOKEN > 設定ファイル なので、イメージ側に失効した
@@ -71,17 +72,10 @@ services:
       # 扱い hosts.yml へフォールバックするので、空のまま渡して無害。
       GH_TOKEN: ${GH_TOKEN:-}
 
-    # `volumes` はリストだが、下の 2 本はどちらも compose.yaml が持たない
-    # target なので、target でマージする Compose でも単純追記する
-    # podman-compose でも結果は同じになる。
+    # `volumes` はリストだが、下の 1 本は compose.yaml が持たない target なので、
+    # target でマージする Compose でも単純追記する podman-compose でも
+    # 結果は同じになる。
     volumes:
-      # `:-/dev/null` も GH_TOKEN と同じ理由。agent の無いホストでは source が
-      # 空文字になり、Compose がファイルを読んだ時点で落ちる。/dev/null なら
-      # bind 自体は成功し、ssh が「agent に繋がらない」と報告するだけで済む。
-      - type: bind
-        source: ${SSH_AUTH_SOCK:-/dev/null}
-        target: /ssh-agent
-
       # 公開情報だけ。read_only で、しかも known_hosts 1 ファイルのみ。
       # `.ssh` ディレクトリ全体や id_ed25519 等の秘密鍵は絶対にマウントしない
       # (test/development-container-security.test.ts がその 2 つを拒否する)。

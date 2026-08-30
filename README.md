@@ -258,14 +258,35 @@ podman compose exec core bash -l
 The split is by ownership rather than by topic, and
 `test/compose-tunnel-invariants.test.ts` fails if a third file appears:
 
-| File                  | Holds                                                                                               | Edit it?                                       |
-| --------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone      |
-| `compose.custom.yaml` | everything host-supplied — the SELinux label opt-out, and the forwarded host GitHub identity        | yes, freely; a local diff here is not a defect |
+| File                  | Holds                                                                                               | Edit it?                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone  |
+| `compose.custom.yaml` | everything host-supplied — the SELinux label opt-out, and the forwarded host GitHub identity        | yes, freely; it is yours and is gitignored |
 
-The overlay is host-_supplied_ rather than host-_specific_: every value in it is a
-`${VAR}` interpolation, so the same tracked content resolves correctly on every
-machine and no local diff is normally required.
+`compose.custom.yaml` is **not tracked**. What is tracked is
+`compose.custom.yaml.example`, and `scripts/dev-start` copies the template into
+place when the overlay is missing, so a fresh clone starts without a manual
+step. Editing your copy is therefore never a diff anybody has to carry, and the
+invariant tests read the template rather than whatever your machine holds.
+
+The template is host-_supplied_ rather than host-_specific_: every value in it is
+a `${VAR}` interpolation, so the default copy resolves correctly on every machine
+and most developers never edit it.
+
+It forwards no ssh-agent socket. The socket path exists on some machines and not
+others, and a stale one fails the bind before any container starts — so if you
+want Git over SSH inside the container, add the bind to your own copy:
+
+```yaml
+services:
+  core:
+    environment:
+      SSH_AUTH_SOCK: /ssh-agent
+    volumes:
+      - type: bind
+        source: ${SSH_AUTH_SOCK}
+        target: /ssh-agent
+```
 
 Both files are loaded everywhere — `.devcontainer/devcontainer.json` names both,
 and so do `scripts/dev-start` and `scripts/dev-stop` — so a devcontainer,
@@ -273,8 +294,8 @@ and so do `scripts/dev-start` and `scripts/dev-stop` — so a devcontainer,
 called `umaxica-apps-edge` and share one set of containers and volumes. A bare
 `podman compose` needs `-f compose.yaml -f compose.custom.yaml` spelled out.
 
-There is no credential overlay. GitHub access is the host's, borrowed through a
-forwarded ssh-agent socket and `GH_TOKEN`; every other credential is obtained
+There is no credential overlay. GitHub access is the host's, borrowed through
+`GH_TOKEN` (and an ssh-agent socket, if you add one to your overlay); every other credential is obtained
 inside the running container through a browser flow and is discarded when the
 container is recreated — see
 [Git and GitHub access](docs/development/git-and-github-access.md) and

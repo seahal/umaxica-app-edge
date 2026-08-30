@@ -7,12 +7,15 @@ const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
 /**
- * Every compose file this repository has: `compose.yaml` is what everyone
- * shares and `compose.custom.yaml` is the developer-local overlay, which now
- * carries only the SELinux relabel opt-out. A new one would have to be added
- * here to be covered.
+ * Every compose file this repository tracks: `compose.yaml` is what everyone
+ * shares and `compose.custom.yaml.example` is the template for the
+ * developer-local overlay, which carries the SELinux relabel opt-out and the
+ * forwarded GitHub identity. The overlay itself (`compose.custom.yaml`) is
+ * gitignored and holds arbitrary host-specific edits, so it is the template
+ * these assertions can hold. A new compose file would have to be added here to
+ * be covered.
  */
-const composeFiles = ['compose.yaml', 'compose.custom.yaml'] as const;
+const composeFiles = ['compose.yaml', 'compose.custom.yaml.example'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 
 /**
@@ -109,7 +112,7 @@ describe('development-container security contract', () => {
    * `.ssh` paths is asserted, so a second mount cannot be added without this
    * test failing, however it is spelled.
    */
-  it('forwards only the host ssh-agent socket and a read-only known_hosts', () => {
+  it('forwards only a read-only known_hosts, and no ssh-agent socket', () => {
     expect(devcontainer, 'devcontainer references .ssh').not.toContain('/.ssh');
 
     // Comments are stripped first: the compose files discuss credentials at
@@ -124,7 +127,7 @@ describe('development-container security contract', () => {
     // fact, so it belongs to the overlay and nowhere else.
     expect(directives('compose.yaml'), 'compose.yaml references .ssh').not.toContain('/.ssh');
 
-    const overlay = directives('compose.custom.yaml');
+    const overlay = directives('compose.custom.yaml.example');
 
     // Exactly one source and one target, in that order, and nothing else.
     expect([...overlay.matchAll(/\S*\/\.ssh\/\S*/gu)].map((match) => match[0])).toEqual([
@@ -142,23 +145,27 @@ describe('development-container security contract', () => {
       /source: \$\{HOME\}\/\.ssh\/known_hosts\n\s+target: \/home\/edge\/\.ssh\/known_hosts\n\s+read_only: true/u,
     );
 
-    // The agent arrives as an interpolation, never as a literal socket path: a
-    // literal would name one machine and one session, and this file is shared.
-    expect(overlay).toMatch(/SSH_AUTH_SOCK: \/ssh-agent/u);
-    expect(overlay).toMatch(/source: \$\{SSH_AUTH_SOCK:-\/dev\/null\}\n\s+target: \/ssh-agent/u);
+    // The template forwards no ssh-agent socket. Whether one exists, and at
+    // which path, is a per-machine fact, and Podman fails the bind -- and so the
+    // whole `up` -- before any container starts when the source is missing. So
+    // the socket belongs in a developer's own copy; the template everyone gets
+    // must not name it, or a host without an agent cannot start at all.
+    expect(overlay, 'the template forwards an ssh-agent socket').not.toMatch(
+      /SSH_AUTH_SOCK|\/ssh-agent/u,
+    );
 
-    // `:-` rather than `:?`, on both host-supplied values. Compose interpolates
+    // `:-` rather than `:?`, on every host-supplied value. Compose interpolates
     // the whole file whichever services are named, and this overlay is loaded
     // unconditionally, so a required variable would stop `up core` on every
-    // machine that has no agent or no token.
-    expect(overlay, 'a required interpolation would break agent-less hosts').not.toMatch(
+    // machine that has no token.
+    expect(overlay, 'a required interpolation would break token-less hosts').not.toMatch(
       /\$\{(?:SSH_AUTH_SOCK|GH_TOKEN|HOME):\?/u,
     );
 
     // The remote-SSH half of the old Tailscale overlay was removed deliberately:
     // no sshd, no entrypoint override, no authorized-keys bind, no TS_AUTHKEY.
     // Its pieces must not come back one file at a time.
-    expect(directives('compose.custom.yaml')).not.toMatch(/sshd|tailscale|TS_AUTHKEY/iu);
+    expect(directives('compose.custom.yaml.example')).not.toMatch(/sshd|tailscale|TS_AUTHKEY/iu);
     expect(instructions, 'the image installs an SSH server again').not.toMatch(/openssh-server/u);
     expect(instructions).not.toMatch(/TS_AUTHKEY|tskey-|--advertise-tags|tailscale serve/u);
 
@@ -219,7 +226,7 @@ describe('development-container security contract', () => {
     // anything, so prove the extraction found the service first.
     expect(service('core')).toContain('userns_mode: keep-id:uid=1000,gid=1000');
     expect(service('core')).not.toMatch(/\btmpfs\s*:/u);
-    expect(read('compose.custom.yaml')).not.toMatch(/\btmpfs\s*:/u);
+    expect(read('compose.custom.yaml.example')).not.toMatch(/\btmpfs\s*:/u);
   });
 
   it('publishes every normal and OAuth port to host loopback only', () => {

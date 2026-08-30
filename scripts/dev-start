@@ -41,10 +41,20 @@ fi
 
 # The overlay is not optional. It carries the SELinux `label=disable` without
 # which `/home/edge/workspace` is unreadable inside the container on an
-# Enforcing host, and the host GitHub identity (ssh-agent socket, known_hosts,
-# GH_TOKEN). `.devcontainer/devcontainer.json` has always loaded both files;
-# loading only one here meant a bare `scripts/dev-start` produced a container
-# that differed from the one the editor starts.
+# Enforcing host, and the host GitHub identity (known_hosts, GH_TOKEN).
+# `.devcontainer/devcontainer.json` has always loaded both files; loading only
+# one here meant a bare `scripts/dev-start` produced a container that differed
+# from the one the editor starts.
+#
+# `compose.custom.yaml` itself is gitignored, so that a host-specific override
+# is never a diff anybody has to carry. Seed it from the tracked template on a
+# fresh clone: `devcontainer up` reads the path directly and would otherwise
+# fail with a bare "no such file", which says nothing about what to do next.
+if [[ ! -e compose.custom.yaml ]]; then
+  echo 'compose.custom.yaml is missing; seeding it from compose.custom.yaml.example.' >&2
+  cp compose.custom.yaml.example compose.custom.yaml
+fi
+
 compose=(podman compose -f compose.yaml -f compose.custom.yaml)
 services=(core)
 
@@ -58,13 +68,20 @@ if [[ ! -f ${HOME}/.ssh/known_hosts ]]; then
   exit 1
 fi
 
-# Both are optional by design -- compose falls back to /dev/null and to an empty
-# token -- but silence would be the wrong answer to "why does git ask for a
+# The default overlay forwards no ssh-agent socket: binding one is a per-host
+# fact (the socket path exists on some machines and not others, and a stale
+# value fails the bind before any container starts), so it belongs in your own
+# `compose.custom.yaml` rather than in the template everyone copies. Say so
+# once, because silence would be the wrong answer to "why does git ask for a
 # password inside the container?".
-if [[ -z ${SSH_AUTH_SOCK:-} ]]; then
-  echo 'WARNING: SSH_AUTH_SOCK is unset; Git over SSH will not work in the container.' >&2
-  echo '  eval "$(ssh-agent -s)" && ssh-add' >&2
+if ! grep -q '/ssh-agent' compose.custom.yaml; then
+  echo 'NOTE: no ssh-agent socket is forwarded; Git over SSH will not work in the container.' >&2
+  echo '  Use gh/HTTPS, or add the bind to your own compose.custom.yaml:' >&2
+  echo '    - { type: bind, source: ${SSH_AUTH_SOCK}, target: /ssh-agent }' >&2
 fi
+
+# Optional by design -- compose falls back to an empty token -- but the same
+# reasoning applies.
 if [[ -z ${GH_TOKEN:-} ]]; then
   echo 'WARNING: GH_TOKEN is unset; the gh CLI will fall back to its in-image state.' >&2
   echo '  export GH_TOKEN="$(gh auth token)"' >&2
