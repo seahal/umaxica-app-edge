@@ -5,11 +5,12 @@
     "moduleResolution": "Bundler",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    // `globals: true` is the Vitest convention in every unit and at the root,
-    // so `describe` / `it` / `expect` / `vi` are ambient. Under TypeScript 7
-    // `types` defaults to `[]`, so the ambient declarations have to be asked for
-    // by name — leaving `types` implicit no longer pulls in every installed
-    // @types package.
+    // `globals: true` is the Vitest convention in every deployment unit, so
+    // `describe` / `it` / `expect` / `vi` are ambient there. The repository
+    // invariant suite imports those names from `vitest` instead. Under
+    // TypeScript 7 `types` defaults to `[]`, so the ambient declarations have
+    // to be asked for by name — leaving `types` implicit no longer pulls in
+    // every installed @types package.
     "types": ["vitest/globals", "node"],
     // The quality policy every deployment unit shares, byte-identical in all
     // twenty per-unit tsconfigs and here. It is repeated rather than `extends`-ed: a
@@ -53,6 +54,6 @@
   // in the tree that nothing typechecked. `tools/` and `scripts/` stay out: they
   // are plain `.mjs` with no type annotations, and pulling them in would report
   // their untypedness rather than a defect.
-  "include": ["test/**/*", "vitest.config.ts", "vitest.setup.ts"],
+  "include": ["test/**/*"],
   "exclude": ["node_modules", "**/node_modules"]
 }

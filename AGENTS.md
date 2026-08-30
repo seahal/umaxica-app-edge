@@ -11,7 +11,7 @@ pnpm is the ONLY package manager. Never use npm, npx, yarn, or bun. `pnpm-lock.y
 - Format: `pnpm run format` / `pnpm run format:check` (Oxfmt)
 - Lint: `pnpm run lint` / `pnpm run lint:types` (Oxlint; only `lint:fix` rewrites code)
 - Type check: `pnpm run typecheck` (tsc)
-- Unit tests: `pnpm run test` / `pnpm run test:cov` (Vitest)
+- Unit tests: `pnpm run test` (Vitest). Coverage is per-unit (`pnpm --dir <unit> run test:cov`); the root invariant suite does not measure it.
 - HTTP tests: `pnpm run test:api` (Hurl)
 - Browser tests: `pnpm run test:e2e` (Playwright; run `pnpm exec playwright install chromium` first — CI deliberately skips e2e, do not "fix" that)
 - Build: `pnpm run build` (Vite for every unit)
@@ -21,13 +21,13 @@ pnpm is the ONLY package manager. Never use npm, npx, yarn, or bun. `pnpm-lock.y
 
 Root scripts are `pnpm -r` fan-outs over identical per-unit scripts; every unit runs standalone from its own directory. Exceptions that run once from the root: `check:architecture`, `check:deps`, `check:spelling`.
 
-Root-level `vitest` runs only `test/` (repository invariants). A unit's tests live in `<unit>/test/` and run via `pnpm --dir <unit> run test`. Import test utilities from `vitest` directly, never a wrapper.
+Root-level `vitest run --dir test` runs only `test/` (repository invariants). There is no root `vitest.config.ts`. A unit's tests live in `<unit>/test/` and run via `pnpm --dir <unit> run test`. Import test utilities from `vitest` directly, never a wrapper.
 
 Before adding a suppression/ignore to any static-analysis tool, read `docs/development/static-analysis-and-hygiene.md` (normative).
 
 ## Per-unit config — do not centralize
 
-Each deployment unit owns its own `.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.json`, `vitest.config.ts`, `vitest.setup.ts`, and `knip.jsonc`. Never replace a unit's copy with a root `extends` or shared package (`test/deployment-unit-boundaries.test.ts` enforces this). Root copies apply to repo-level files only.
+Each deployment unit owns its own `.oxlintrc.json`, `.oxfmtrc.json`, `tsconfig.json`, `vitest.config.ts`, `vitest.setup.ts`, and `knip.jsonc`. Never replace a unit's copy with a root `extends` or shared package (`test/deployment-unit-boundaries.test.ts` enforces this). Root `.oxlintrc.json`, `.oxfmtrc.json`, and `tsconfig.json` apply to repo-level files only.
 
 ## Build & deploy
 

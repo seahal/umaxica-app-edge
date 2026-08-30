@@ -1,5 +1,3 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-
 /*
  * The per-request CSP nonce, and the only channel that carries it.
  *
@@ -15,8 +13,41 @@ import { AsyncLocalStorage } from 'node:async_hooks';
  * nonce in development would block the dev server's own bootstrap rather than
  * harden anything. `security-headers.ts` keeps the `'unsafe-inline'` branch for
  * that case and this module simply yields `undefined` there.
+ *
+ * This file is imported by `getRouter()`, which ships in the client bundle.
+ * `node:async_hooks` cannot live here: Vite externalises it for the browser and
+ * a top-level `new AsyncLocalStorage()` throws, which used to kill the whole
+ * client graph — the service-worker `useEffect` never ran, and
+ * `navigator.serviceWorker.ready` hung until the Playwright timeout. The Worker
+ * installs the real store from `security-nonce-als.ts` (imported only from the
+ * server handler). The default below is a nested-call stack for Vitest; it is
+ * not safe across concurrent Worker requests, which is why the handler replaces
+ * it before serving.
  */
-const nonceStorage = new AsyncLocalStorage<string>();
+export type NonceStore = {
+  run: <T>(nonce: string, fn: () => T) => T;
+  getStore: () => string | undefined;
+};
+
+let currentNonce: string | undefined;
+
+let nonceStorage: NonceStore = {
+  run: (nonce, fn) => {
+    const previous = currentNonce;
+    currentNonce = nonce;
+    try {
+      return fn();
+    } finally {
+      currentNonce = previous;
+    }
+  },
+  getStore: () => currentNonce,
+};
+
+/** Replaces the process-wide store. Called once from the server handler. */
+export function installNonceStore(store: NonceStore): void {
+  nonceStorage = store;
+}
 
 /*
  * 128 bits from the runtime CSPRNG, base64-encoded.

@@ -105,9 +105,8 @@ pnpm run lint:types      # the same, with `--type-aware` (needs a whole program)
 pnpm run lint:fix        # the only script that rewrites code
 pnpm run typecheck       # each unit's `typecheck` (cf-typegen, then tsc --noEmit)
 pnpm run test            # each unit's Vitest run, then the root invariant suite
-pnpm run test:cov        # same, with per-unit coverage thresholds
-pnpm run test:api        # each unit's Hurl suite, one unit at a time
-pnpm run test:e2e        # each unit's Playwright run, one unit at a time
+pnpm run test:api        # each unit's Hurl suite
+pnpm run test:e2e        # each unit's Playwright run
 pnpm run build           # each unit's `vite build` — all twenty, one bundler
 pnpm run check           # check:static + test
 pnpm run check:static    # format:check + lint + lint:types + check:generated
@@ -397,9 +396,10 @@ Each unit's `api/README.md` states this contract locally and names the Vitest
 file each `.hurl` file replaced. All twenty units implement the same contract,
 including `dev/apex`; none is exempt.
 
-Root-level `vitest` runs only `test/` — the repository invariants (package
-manager, deployment-unit boundaries, compose files, container security). A
-unit's tests live in `<unit>/test/` and run via `pnpm --dir <unit> run test`.
+Root-level `vitest run --dir test` runs only `test/` — the repository
+invariants (package manager, deployment-unit boundaries, compose files,
+container security). There is no root Vitest config. A unit's tests live in
+`<unit>/test/` and run via `pnpm --dir <unit> run test`.
 
 ### Running them
 

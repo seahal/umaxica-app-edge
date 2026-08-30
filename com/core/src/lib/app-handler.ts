@@ -6,6 +6,7 @@ import {
 
 import { withSecurityHeaders } from '../security-headers';
 import { createNonce, runWithNonce } from '../security-nonce';
+import '../security-nonce-als';
 
 /*
  * The application half of this Worker, behind a one-function seam.

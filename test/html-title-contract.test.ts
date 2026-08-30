@@ -2,12 +2,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { setCloudflareContext } from '@opennextjs/cloudflare';
 import { describe, expect, it, vi } from 'vitest';
 
 // @ts-expect-error React is provided by the app workspace, not the root package.
 import { createElement } from '../app/core/node_modules/react';
 import { renderToStaticMarkup } from '../app/core/node_modules/react-dom/server';
+import { setCloudflareContext } from './__mocks__/opennext-cloudflare';
 
 // Every workspace resolves `next/font/google` to the same physical package, so
 // mocking that resolved path once covers all 16 root layouts. A bare

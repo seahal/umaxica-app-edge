@@ -284,7 +284,7 @@ jobs:
           # the manifests no longer agree with instead of quietly updating it.
           install: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:cov
+      - run: pnpm run test
 
   # The browser bundle budget. This job builds, but building is the *means*,
   # not the question: "does it build?" is already answered by Cloudflare, which
