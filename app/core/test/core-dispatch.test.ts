@@ -30,7 +30,7 @@ function railsReturns(response: Response) {
 }
 
 async function dispatch(request: Request, fetch: unknown) {
-  return dispatchToRails(request, envWith(fetch));
+  return dispatchToRails(request, envWith(fetch), true);
 }
 
 describe(`${FRAME} classifyCorePath`, () => {
@@ -262,10 +262,17 @@ describe(`${FRAME} dispatchToRails upstream failure`, () => {
     expect(response.status).toBe(503);
     expect(response.headers.get('cache-control')).toBe('no-store, no-cache, must-revalidate');
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    // This 503 is Edge's own document, not Rails', so it carries Edge's headers.
+    // A body with no declared type is one the browser may sniff, and this one is
+    // served from the application's origin.
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    expect(response.headers.get('content-security-policy')).toContain("default-src 'self'");
+    expect(response.headers.get('x-frame-options')).toBe('DENY');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   };
 
   it('returns 503 when no VPC binding is present, and never calls a fetcher', async () => {
-    const response = await dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {});
+    const response = await dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {}, true);
     await expectFailClosed(response);
     await expect(response.text()).resolves.toBe('Rails transport not configured');
   });

@@ -57,7 +57,7 @@ describe('health route: both halves ok', () => {
       status: 'ok',
       timestamp: '2024-01-01T00:00:00.000Z',
       edge: { status: 'ok', version: REVISION },
-      rails: { liveness: { kind: 'ok', status: 200, latency_ms: 0 } },
+      rails: { liveness: { kind: 'ok', status: 200 } },
     });
     expect(fetch).toHaveBeenCalledOnce();
   });
@@ -99,7 +99,7 @@ describe('health route: Rails half unhealthy', () => {
       status: 'error',
       timestamp: '2024-01-01T00:00:00.000Z',
       edge: { status: 'ok', version: REVISION },
-      rails: { liveness: { kind: 'http-error', status: 503, latency_ms: 0 } },
+      rails: { liveness: { kind: 'http-error', status: 503 } },
     });
     expect(body).not.toContain('rails stack trace');
   });
@@ -111,7 +111,7 @@ describe('health route: Rails half unhealthy', () => {
     const body = await response.text();
 
     expect(response.status).toBe(503);
-    expect(JSON.parse(body).rails).toEqual({ liveness: { kind: 'unreachable', latency_ms: 0 } });
+    expect(JSON.parse(body).rails).toEqual({ liveness: { kind: 'unreachable' } });
     expect(body).not.toContain('ECONNREFUSED');
     expect(body).not.toContain('core.app.localhost');
   });
@@ -131,7 +131,7 @@ describe('health route: Rails half unhealthy', () => {
     const body = await response.text();
 
     expect(response.status).toBe(503);
-    expect(JSON.parse(body).rails).toEqual({ liveness: { kind: 'unreachable', latency_ms: 0 } });
+    expect(JSON.parse(body).rails).toEqual({ liveness: { kind: 'unreachable' } });
     expect(body).not.toContain('ProxyError');
   });
 
@@ -144,7 +144,7 @@ describe('health route: Rails half unhealthy', () => {
     await expect(response.json()).resolves.toMatchObject({
       status: 'error',
       edge: { status: 'ok' },
-      rails: { liveness: { kind: 'not-configured', latency_ms: 0 } },
+      rails: { liveness: { kind: 'not-configured' } },
     });
   });
 
@@ -158,7 +158,7 @@ describe('health route: Rails half unhealthy', () => {
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toMatchObject({
       edge: { status: 'error' },
-      rails: { liveness: { kind: 'not-configured', latency_ms: 0 } },
+      rails: { liveness: { kind: 'not-configured' } },
     });
   });
 });
@@ -178,7 +178,7 @@ describe('health route: Edge half unhealthy', () => {
       timestamp: expect.any(String),
       edge: { status: 'error' },
       // The Edge half failing must not hide a healthy Rails half.
-      rails: { liveness: { kind: 'ok', status: 200, latency_ms: 0 } },
+      rails: { liveness: { kind: 'ok', status: 200 } },
     });
   });
 

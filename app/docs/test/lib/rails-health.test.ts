@@ -38,9 +38,9 @@ describe('rails liveness probe', () => {
     expect(paths).toEqual(['/health/liveness.json']);
   });
 
-  it('reports not-configured, with zero latency, when no client is available', async () => {
+  it('reports not-configured when no client is available', async () => {
     const report = await checkRailsLiveness(null);
-    expect(report).toEqual({ liveness: { kind: 'not-configured', latency_ms: 0 } });
+    expect(report).toEqual({ liveness: { kind: 'not-configured' } });
   });
 
   it('reports ok with the upstream status for a healthy response', async () => {
@@ -49,8 +49,31 @@ describe('rails liveness probe', () => {
 
     expect(report.liveness.kind).toBe('ok');
     expect(report.liveness.status).toBe(200);
-    expect(typeof report.liveness.latency_ms).toBe('number');
-    expect(report.liveness.latency_ms).toBeGreaterThanOrEqual(0);
+  });
+
+  /*
+   * `/health` is unauthenticated by design, so every field on it is published to
+   * anyone who asks. A timing measurement of the private edge-to-Rails hop is not
+   * something a health check's callers need, and it was the last field on this
+   * document that told an anonymous caller anything about the hop's behaviour
+   * rather than its outcome. Timing lives in Workers Logs instead.
+   *
+   * Asserted on the object rather than on a type, because the type is erased and
+   * a re-added field would compile.
+   */
+  it('publishes no timing for the private hop, in any outcome', async () => {
+    const reports = [
+      await checkRailsLiveness(null),
+      await checkRailsLiveness(
+        makeClient({ kind: 'ok', status: 200, response: new Response('ok') }),
+      ),
+      await checkRailsLiveness(makeClient({ kind: 'unreachable', errorMessage: 'nope' })),
+    ];
+
+    for (const report of reports) {
+      expect(Object.keys(report.liveness)).not.toContain('latency_ms');
+      expect(JSON.stringify(report)).not.toContain('latency');
+    }
   });
 
   it('reports http-error with only the status class, never the body', async () => {

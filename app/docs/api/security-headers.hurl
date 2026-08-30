@@ -22,31 +22,38 @@ header "content-security-policy" contains "frame-ancestors 'none'"
 header "content-security-policy" contains "img-src 'self' data:"
 header "content-security-policy" contains "object-src 'none'"
 header "content-security-policy" contains "upgrade-insecure-requests"
-# `script-src` and `style-src` carry 'unsafe-inline' because hydration emits both
-# inline. That is a documented, deliberate loosening — but it must stay confined
-# to those two directives, so the negative assertions below are the part with
-# teeth.
+# THIS RUNNER STARTS A DEV SERVER, and the development policy is the loose one.
+# `script-src` and `style-src` carry 'unsafe-inline' here, and `script-src` also
+# carries 'unsafe-eval', because Vite injects inline scripts of its own and both
+# the dev bundle and React's development build call eval().
 #
-# `script-src` carries 'unsafe-eval' too whenever the server answering is a dev
-# server, which is what this runner starts: `security-headers.ts` adds it on the
-# non-production branch, and React's development build calls eval(). The regex
-# pins the whole source list, so it accepts that one expression there and
-# nothing else anywhere — a policy that lets eval() into another directive still
-# fails here. The other half, "a production build never emits it", is in
-# test/content-security-policy.test.ts, because a client talking to a dev
-# server cannot see it.
+# A PRODUCTION response carries none of the three: it names a per-request nonce
+# instead, which TanStack stamps on the one inline script it emits. No client
+# talking to a dev server can observe that, so the production half —
+# 'unsafe-inline' absent, a nonce present and unique per response — is asserted
+# in test/content-security-policy.test.ts.
+#
+# The negative assertions below are the part with teeth: the loosening must stay
+# confined to those two directives whichever server is answering.
 header "content-security-policy" matches "script-src 'self' 'unsafe-inline'( 'unsafe-eval')?;"
 header "content-security-policy" contains "style-src 'self' 'unsafe-inline'"
 header "content-security-policy" not contains "default-src 'self' 'unsafe-inline'"
 header "content-security-policy" not matches "(?:default-src|style-src|connect-src)[^;]*unsafe-eval"
+# A nonce authorises elements, never attributes, so these two are stated in both
+# builds rather than left to `script-src`.
+header "content-security-policy" contains "script-src-attr 'none'"
+header "content-security-policy" contains "style-src-attr 'none'"
 header "content-security-policy" not contains "*"
 header "strict-transport-security" contains "max-age=31536000"
 header "strict-transport-security" contains "includeSubDomains"
 header "x-content-type-options" == "nosniff"
 header "x-frame-options" == "DENY"
 header "referrer-policy" == "no-referrer"
+header "permissions-policy" contains "accelerometer=()"
 header "permissions-policy" contains "camera=()"
 header "permissions-policy" contains "geolocation=()"
+header "permissions-policy" contains "gyroscope=()"
+header "permissions-policy" contains "magnetometer=()"
 header "permissions-policy" contains "microphone=()"
 header "permissions-policy" contains "payment=()"
 header "permissions-policy" contains "usb=()"

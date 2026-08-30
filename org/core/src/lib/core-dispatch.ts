@@ -12,6 +12,8 @@
  * Consumed only by `src/worker.ts`, which is the first code the Workers
  * runtime invokes for every request — before any application code runs.
  */
+import { withSecurityHeaders } from '../security-headers';
+import { readBoundedText } from './bounded-text';
 import {
   classifyRailsRouteClass,
   logRailsDispatch,
@@ -103,10 +105,12 @@ const RAILS_DISPATCH_TIMEOUT_MS = 5000;
 
 /*
  * Long enough for `ProxyError: <code>`, short enough that a real Rails error
- * page is never pulled into memory just to be classified. Mirrors the constant
- * of the same name in `rails-client.ts`.
+ * page is never pulled into memory just to be classified — a bound
+ * `readBoundedText` now actually enforces, rather than one applied after the
+ * whole body was already read. Mirrors the constant of the same name in
+ * `rails-client.ts`.
  */
-const PROXY_ERROR_MAX_BYTES = 200;
+const PROXY_ERROR_MAX_CHARS = 200;
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   const withoutTrailingSlash = prefix.slice(0, -1);
@@ -131,6 +135,7 @@ export function blockedCoreResponse(): Response {
     status: 404,
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Content-Type': 'text/plain; charset=utf-8',
       'X-Robots-Tag': 'noindex, nofollow',
     },
   });
@@ -144,20 +149,34 @@ export function blockedCoreResponse(): Response {
  * service id ever reaches the browser. The specific cause goes to Workers Logs
  * through `logRailsDispatch()` instead, where it is not attacker-visible.
  */
-function railsUnavailableResponse(reason: 'not-configured' | 'upstream'): Response {
+function railsUnavailableResponse(
+  reason: 'not-configured' | 'upstream',
+  isProduction: boolean,
+): Response {
   // Fail closed, visibly — same principle as `getRailsClient()` returning
   // `null`. Never falls through to the application, never silently succeeds against
   // a dev resource in production.
   const body =
     reason === 'not-configured' ? 'Rails transport not configured' : 'Rails upstream unavailable';
 
-  return new Response(body, {
-    status: 503,
-    headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-      'X-Robots-Tag': 'noindex, nofollow',
-    },
-  });
+  // `Content-Type` is stated rather than left off. A body with no declared type
+  // is a body the browser is free to sniff, and this one is served on the same
+  // origin as the application — the `nosniff` that `withSecurityHeaders` adds is
+  // only meaningful next to a type to pin it to.
+  //
+  // This document is Edge's, not Rails', which is why it takes Edge's headers
+  // while a real Rails response passes through untouched.
+  return withSecurityHeaders(
+    new Response(body, {
+      status: 503,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+    }),
+    isProduction,
+  );
 }
 
 /**
@@ -203,7 +222,7 @@ async function readProxyErrorCode(response: Response): Promise<string | null> {
   }
 
   try {
-    const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
+    const body = await readBoundedText(response.clone(), PROXY_ERROR_MAX_CHARS);
     return /^ProxyError:\s*(\w+)/iu.exec(body)?.[1] ?? null;
   } catch {
     // A body that cannot be read is not evidence of anything; leave the
@@ -267,6 +286,7 @@ function buildRailsRequest(request: Request, incomingUrl: URL): Request {
 export async function dispatchToRails(
   request: Request,
   env: Pick<CloudflareEnv, 'UMAXICA_APPS_EDGE_CF_WORKERS_VPC'>,
+  isProduction: boolean,
 ): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const routeClass = classifyRailsRouteClass(incomingUrl.pathname);
@@ -281,7 +301,7 @@ export async function dispatchToRails(
       outcome: 'binding_not_configured',
       duration_ms: Date.now() - startedAt,
     });
-    return railsUnavailableResponse('not-configured');
+    return railsUnavailableResponse('not-configured', isProduction);
   }
 
   const railsRequest = buildRailsRequest(request, incomingUrl);
@@ -296,7 +316,7 @@ export async function dispatchToRails(
       outcome: isTimeoutError(error) ? 'timeout' : 'vpc_unreachable',
       duration_ms: Date.now() - startedAt,
     });
-    return railsUnavailableResponse('upstream');
+    return railsUnavailableResponse('upstream', isProduction);
   }
 
   const proxyErrorCode = await readProxyErrorCode(response);
@@ -309,7 +329,7 @@ export async function dispatchToRails(
       upstream_status: response.status,
       proxy_error_code: normalizeProxyErrorCode(proxyErrorCode),
     });
-    return railsUnavailableResponse('upstream');
+    return railsUnavailableResponse('upstream', isProduction);
   }
 
   logRailsDispatch({

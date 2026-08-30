@@ -1,4 +1,5 @@
 import '@tanstack/react-start/server-only';
+import { readBoundedText } from './bounded-text';
 import { getEdgeEnv } from './cloudflare-env';
 
 const RAILS_FETCH_TIMEOUT_MS = 5000;
@@ -100,8 +101,10 @@ function validateRelativePath(path: string): string | null {
 }
 
 // Long enough for `ProxyError: <code>`, short enough that a real Rails error
-// page is never pulled into memory just to be rejected.
-const PROXY_ERROR_MAX_BYTES = 200;
+// page is never pulled into memory just to be rejected — a bound
+// `readBoundedText` now actually enforces, rather than one applied after the
+// whole body was already read.
+const PROXY_ERROR_MAX_CHARS = 200;
 
 /**
  * The `ProxyError: <code>` that Workers VPC returns when it cannot reach the
@@ -120,7 +123,7 @@ async function readProxyError(response: Response): Promise<string | null> {
   }
 
   try {
-    const body = (await response.clone().text()).slice(0, PROXY_ERROR_MAX_BYTES).trim();
+    const body = await readBoundedText(response.clone(), PROXY_ERROR_MAX_CHARS);
     return /^ProxyError:\s*\w+/iu.test(body) ? body : null;
   } catch {
     // A body that cannot be read is not evidence of anything; leave the

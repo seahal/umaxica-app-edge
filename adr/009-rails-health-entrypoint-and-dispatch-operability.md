@@ -62,7 +62,7 @@ leaked yet; the channel existed regardless.
     "status": "ok",
     "version": { "id": "…", "tag": "…", "timestamp": "…" }
   },
-  "rails": { "liveness": { "kind": "ok", "status": 200, "latency_ms": 12 } }
+  "rails": { "liveness": { "kind": "ok", "status": 200 } }
 }
 ```
 
@@ -268,12 +268,24 @@ path may claim a Rails class.
 
 ### 8. `errorMessage` removed from the public shape
 
-`RailsProbeReport` carries `kind`, `latency_ms`, and `status` only when an HTTP
-status actually existed. `rails-client.ts` keeps `errorMessage` internally — it is
-unchanged — but nothing serializes it. Pinned by
-`test/rails-connection-invariants.test.ts` against both files that build a
-response, reading them with comments stripped so the files can explain the
-invariant by naming it.
+`RailsProbeReport` carries `kind`, and `status` only when an HTTP status actually
+existed. `rails-client.ts` keeps `errorMessage` internally — it is unchanged — but
+nothing serializes it. Pinned by `test/rails-connection-invariants.test.ts`
+against both files that build a response, reading them with comments stripped so
+the files can explain the invariant by naming it.
+
+> **Amended 2026-08-29.** As originally recorded this section read "`kind`,
+> `latency_ms`, and `status`", and the sample document above carried
+> `"latency_ms": 12`. `latency_ms` has since been removed from
+> `RailsProbeReport` as well, on the same reasoning one step further: `/health`
+> is unauthenticated by design, so a timing measurement of the private
+> edge-to-Rails hop was published continuously to anyone who asked. A health
+> check's callers need the outcome, not the hop's behaviour under load. Timing
+> is recoverable from Workers Logs. The public vocabulary is now `kind` plus an
+> optional `status`, and `test/lib/rails-health.test.ts` asserts no timing field
+> appears in any outcome. `parseRailsHealthJson` in
+> `tools/verify-edge-connectivity.mjs` only ever read `kind`, so no gate
+> changed.
 
 ## What could not be verified
 

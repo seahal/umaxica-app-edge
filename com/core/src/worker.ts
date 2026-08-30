@@ -2,6 +2,7 @@ import appHandler from './lib/app-handler';
 import { blockedCoreResponse, classifyCorePath, dispatchToRails } from './lib/core-dispatch';
 import { sanitizeHealthRequest } from './lib/health-request';
 import { checkRateLimit } from './lib/rate-limit';
+import { withSecurityHeaders } from './security-headers';
 
 /**
  * First code the Workers runtime invokes for every request to this frame's Core
@@ -27,6 +28,13 @@ import { checkRateLimit } from './lib/rate-limit';
  * `adr/010-first-touch-rate-limiting.md` requires. Answering it here rather than
  * inside the application half is what keeps a rejected request from booting the
  * application at all.
+ *
+ * Every response this file produces ITSELF — the block, the 429, the 503 — goes
+ * through `withSecurityHeaders`. `app-handler.ts` headers the documents the
+ * application renders and a Rails-owned response stays Rails' to header (that is
+ * the ADR 007 boundary), but the three answered here belong to neither and were
+ * previously served bare: no CSP, no `X-Frame-Options`, no `nosniff`. They carry
+ * no nonce because none of them carries a script.
  */
 
 /**
@@ -46,27 +54,58 @@ function isRateLimitExempt(pathname: string): boolean {
   return pathname.startsWith('/assets/') || pathname === '/favicon.ico';
 }
 
+/**
+ * The Rails-owned paths that authenticate, rather than merely read.
+ *
+ * These count against `AUTH_RATE_LIMITER`, a separate and much smaller budget
+ * than the page-view limiter. Sharing one budget meant an OIDC endpoint was as
+ * cheap to hammer as a static page — ASVS V2.2.1 asks for anti-automation on the
+ * authentication path specifically, and a limit sized for ordinary browsing is
+ * not that.
+ *
+ * Both limiters are consulted for these paths, not one instead of the other: the
+ * general budget still bounds total traffic from a client, and this one bounds
+ * the part of it that can attempt a credential.
+ */
+function isAuthPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/oidc/') ||
+    pathname === '/oidc' ||
+    pathname === '/sign/out' ||
+    pathname === '/sign/out/complete'
+  );
+}
+
 export default {
   // `_ctx` is unused: the application half is a plain `Request -> Response`
   // function. The parameter stays in the signature because the runtime supplies
   // it and a future `waitUntil` would want it.
   async fetch(request: Request, env: CloudflareEnv, _ctx: ExecutionContext) {
+    const isProduction = import.meta.env.PROD;
     const pathname = new URL(request.url).pathname;
     const ownership = classifyCorePath(pathname);
 
     // Cheapest first: a blocked path costs nothing and is not worth a limiter
     // call, since it reaches no application code either way.
     if (ownership === 'blocked') {
-      return blockedCoreResponse();
+      return withSecurityHeaders(blockedCoreResponse(), isProduction);
     }
 
     if (!isRateLimitExempt(pathname)) {
       const rateLimitedResponse = await checkRateLimit(request, env.RATE_LIMITER);
-      if (rateLimitedResponse) return rateLimitedResponse;
+      if (rateLimitedResponse) return withSecurityHeaders(rateLimitedResponse, isProduction);
+    }
+
+    if (isAuthPath(pathname)) {
+      const authLimitedResponse = await checkRateLimit(request, env.AUTH_RATE_LIMITER);
+      if (authLimitedResponse) return withSecurityHeaders(authLimitedResponse, isProduction);
     }
 
     if (ownership === 'rails') {
-      return dispatchToRails(request, env);
+      // Rails headers its own responses; the 503 substituted when the dispatch
+      // never reached Rails is Edge's own document, so `dispatchToRails` headers
+      // that one itself rather than reporting back which case it took.
+      return dispatchToRails(request, env, isProduction);
     }
 
     const sanitizedRequest = pathname === '/health' ? sanitizeHealthRequest(request) : request;
@@ -74,15 +113,14 @@ export default {
     strippedHeaders.delete('cookie');
     const strippedRequest = new Request(sanitizedRequest, { headers: strippedHeaders });
 
-    return (async () => {
-      const response = await appHandler.fetch(strippedRequest);
-      const responseHeaders = new Headers(response.headers);
-      responseHeaders.delete('set-cookie');
-      return new Response(response.body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: responseHeaders,
-      });
-    })();
+    const response = await appHandler.fetch(strippedRequest);
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('set-cookie');
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
   },
 };

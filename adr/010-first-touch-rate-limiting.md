@@ -118,3 +118,129 @@ twelve content frames are untouched.
 `pnpm run test`, `pnpm run check:workers`, `pnpm run knip` and `pnpm run build`
 all pass. Per-Core coverage stays at 100% of statements, branches, functions and
 lines against the 99% threshold.
+
+---
+
+## Amendment — 2026-08-29
+
+The decision above still holds — the limiter is consulted once, at whatever code
+is first to touch a request — but every mechanism it names has since been
+replaced. Recorded here rather than rewritten, so the original reasoning stays
+readable.
+
+**The frames left Next.js.** All fifteen build with Vite and TanStack Start
+(`adr/013`). There is no `src/middleware.ts` anywhere in the repository and no
+OpenNext middleware runtime to boot, so the asymmetry this ADR closed for the
+Cores no longer exists to close for anyone else. The twelve satellites call
+`checkRateLimit()` as the first statement of `handleRequest` in
+`src/request-handler.ts`; the three Cores still call it from `src/worker.ts`.
+
+**The exempt list changed with the bundler.** `/_next/static/` and `/_next/image`
+are gone. Cloudflare matches static assets before the Worker runs, so the hashed
+bundles never reach this code at all and the satellites need no matcher. The
+Cores keep `isRateLimitExempt()` for `/assets/*` and `/favicon.ico`.
+
+**A second budget for the authentication paths.** `AUTH_RATE_LIMITER` (60/minute,
+`X10N` namespace series) is consulted by each Core _in addition to_
+`RATE_LIMITER` on `/oidc/*` and `/sign/out`. The general budget still bounds a
+client's total traffic; this one bounds the part of it that can attempt a
+credential (ASVS V2.2.1). This is the "per-route limit" the original decision
+deferred, and it was adopted because a budget sized for page views is not
+anti-automation on a credential path. It remains the only such layer.
+
+**The apex Workers are in scope, at the same size.** All five call
+`checkRateLimit()` from Hono middleware in `create-apex-app.ts`, ahead of CSRF
+and behind `apexSecurityHeaders` — so a 429 returned there still unwinds through
+the header middleware. They declare 2000/60, the same budget as the frames, for
+the reason in the next section.
+
+**One budget per brand per tier, deliberately.** A counter is keyed on
+(`namespace_id`, key) and scoped to the Cloudflare ACCOUNT, not to the Worker:
+two bindings sharing a `namespace_id`, _even in different Workers_, share the
+counter. The scheme here — leading digit the tier, trailing digit the brand —
+therefore gives all six Workers of a brand one budget per client IP, and that is
+the intent, not an accident of numbering.
+
+The alternative, a namespace per unit, was rejected: it hands every client a
+fresh budget per subdomain, so rotating `docs.` → `help.` → `news.` multiplies
+the allowance by six. No limit value closes that; only a shared counter does.
+The usual objection to sharing — one tenant exhausting another's budget — does
+not apply here, because the key is the client IP. A merged budget bounds one
+client's own total across the brand rather than letting strangers spend each
+other's; the only clients who share a bucket are the ones already sharing an
+address, and 2000/minute leaves a NAT'd office ample room.
+
+The price is an invariant: **every binding on a namespace must declare the same
+`simple.limit` and `simple.period`.** Cloudflare does not define the behaviour
+when two disagree, and the strictest binding would fire against the _combined_
+count — so a unit that lowered its own limit would begin rejecting traffic at a
+threshold set by its siblings' load, with nothing at runtime to say so. An apex
+budget of 600 was written and reverted for exactly this reason. `AUTH_RATE_LIMITER`
+sits on its own `X10N` namespace and is held by one Worker per brand, so it is
+free to be stricter.
+
+**The brand digit is reserved account-wide, not repository-wide.** The scheme is
+`<tier><00|10><brand>`: leading digit the tier (production 1, development 2, test
+3, vpc 4, local 5), trailing digit the brand, and the middle pair `10` for the
+`AUTH_RATE_LIMITER` series. Because a namespace is an account-scoped identifier
+rather than a provisioned resource, the digits have to be allocated for every
+Worker on the account — including the ones this repository does not contain:
+
+| id              | binding                              | brand       | where it lives                               |
+| --------------- | ------------------------------------ | ----------- | -------------------------------------------- |
+| `X001` / `X101` | `RATE_LIMITER` / `AUTH_RATE_LIMITER` | app         | this repository                              |
+| `X002` / `X102` | same                                 | com         | this repository                              |
+| `X003` / `X103` | same                                 | org         | this repository                              |
+| `X004`          | `RATE_LIMITER`                       | net         | this repository                              |
+| `X005`          | `RATE_LIMITER`                       | dev         | this repository                              |
+| `999`           | `ratelimit`                          | jump        | `umaxica-apps-edge-jump`, a separate project |
+| `X006` / `X007` | —                                    | jump / busy | RESERVED, unused today                       |
+
+`umaxica-apps-edge-all-busy` needs no limiter: it answers 503 straight from its
+assets binding. `umaxica-apps-edge-jump`, a redirect Worker maintained
+elsewhere, holds `999` — outside this scheme's range, so it does not collide,
+and it is recorded here so nothing in this repository claims it later. Should
+either Worker be renumbered into the scheme, `X006` and `X007` are the slots.
+
+`tools/check-workers.mjs` cannot see any of this: its reach stops at this
+repository, and there is no way for it to learn what a Worker in another project
+declares. That is exactly why the allocation is written down rather than merely
+enforced — the guard covers the twenty units, and this table covers the account.
+
+Two figures worth keeping in view when tuning: 2000/60 is a starting point
+against real traffic rather than a measured number, and limits are enforced _per
+Cloudflare location_, so a client's effective ceiling is the value times the
+number of locations it reaches.
+
+**The no-IP fallback is per-path, not shared.** The key was
+`cf-connecting-ip || 'unknown'`, which put every request lacking that header into
+one bucket. Cloudflare sets the header on everything it forwards, so this was
+unreachable in production — but reachable under `vite dev`, `vite preview`, and
+any future path that reaches a Worker without traversing the edge. A shared
+bucket is both a bypass (clients sharing a budget are only restricted if they are
+the same client) and a denial of service against everyone in it. The key is now
+`no-ip:${pathname}`. An unattributable request is still counted; it is just not
+counted together with unrelated ones.
+
+**The 429 is one document everywhere.** Each frame answers a branded, titled,
+`no-store` HTML document from its own `rate-limit.ts`; each apex answers the same
+`statusPage()` its 404 and error boundary use, extracted to `src/status-page.ts`
+for that purpose. A 429 is a full document an attacker can elicit on demand, so
+it must not be the one page on an origin served untitled, untyped and cacheable.
+
+### Guardrails, restated
+
+- `tools/check-workers.mjs` asserts every one of the twenty deployment units
+  declares a `RATE_LIMITER` with a numeric budget at the top level _and_ in each
+  required environment; that no `namespace_id` is shared between two tiers or
+  between a tier and production; and — across every unit in the manifest — that
+  two bindings sharing a `namespace_id` declare the same budget. `ratelimits` is not inherited into `env.*`, and a
+  dropped binding is silent at runtime — `checkRateLimit` treats an unbound
+  limiter as a pass-through — so configuration is the only place it can be caught.
+  `all/busy` and `tools/vpc-probe` are outside the manifest and exempt: the first
+  answers 503 from the assets binding, the second is never deployed.
+- `test/html-title-contract.test.ts` drives the real `checkRateLimit` for all
+  three Cores and all five apex Workers and asserts the title contract on the
+  response, plus a source-level check for the twelve satellites.
+- Each unit's own `test/rate-limit.test.ts` covers the per-path fallback, the
+  empty-header case, and that the 429 carries no security headers of its own.

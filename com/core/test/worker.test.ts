@@ -165,6 +165,129 @@ describe('com/core worker.ts dispatch', () => {
     },
   );
 
+  /*
+   * The three responses `worker.ts` produces ITSELF, rather than passing through
+   * from Rails or the application.
+   *
+   * Each one used to be served bare — no CSP, no `X-Frame-Options`, no
+   * `nosniff` — because `withSecurityHeaders` was applied inside
+   * `app-handler.ts`, which none of them reach. The 429 is the one that matters
+   * most: it is a complete HTML document an attacker can elicit on demand, so it
+   * was the easiest page on this origin to frame.
+   */
+  describe('security headers on the responses the worker answers itself', () => {
+    const expectHardened = (response: Response) => {
+      expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+      expect(response.headers.get('x-frame-options')).toBe('DENY');
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+    };
+
+    it('headers the 404 for a blocked path', async () => {
+      const response = await worker.fetch(
+        new Request('https://jp.umaxica.com/health/live'),
+        makeEnv(),
+        ctx,
+      );
+
+      expect(response.status).toBe(404);
+      expectHardened(response);
+    });
+
+    it('headers the 429 the limiter produces', async () => {
+      checkRateLimit.mockResolvedValue(
+        new Response('<!DOCTYPE html><html lang="ja"></html>', {
+          status: 429,
+          headers: { 'Content-Type': 'text/html; charset=UTF-8' },
+        }),
+      );
+
+      const response = await worker.fetch(new Request('https://jp.umaxica.com/'), makeEnv(), ctx);
+
+      expect(response.status).toBe(429);
+      expect(response.headers.get('content-type')).toBe('text/html; charset=UTF-8');
+      expectHardened(response);
+    });
+
+    it('headers the 503 substituted when the Rails dispatch never reached Rails', async () => {
+      checkRateLimit.mockResolvedValue(null);
+
+      const response = await worker.fetch(
+        new Request('https://jp.umaxica.com/api/v0/thing'),
+        makeEnv(),
+        ctx,
+      );
+
+      expect(response.status).toBe(503);
+      expectHardened(response);
+    });
+
+    // The other half of the ADR 007 boundary: a response Rails actually authored
+    // keeps its own headers, and Edge does not rewrite its policy.
+    it('lets a real Rails response keep the headers Rails set', async () => {
+      checkRateLimit.mockResolvedValue(null);
+      const railsFetch = vi
+        .fn()
+        .mockResolvedValue(new Response('rails', { status: 200, headers: { 'X-Rails': '1' } }));
+
+      const response = await worker.fetch(
+        new Request('https://jp.umaxica.com/api/v0/thing'),
+        makeEnv({ fetch: railsFetch }),
+        ctx,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('x-rails')).toBe('1');
+      expect(response.headers.get('content-security-policy')).toBeNull();
+    });
+  });
+
+  /*
+   * The authentication paths are counted against a second, much smaller budget
+   * IN ADDITION to the general one — ASVS V2.2.1. Sharing one limiter made an
+   * OIDC endpoint exactly as cheap to hammer as a static page.
+   */
+  describe('authentication-path rate limiting', () => {
+    const authEnv = () => {
+      const env = makeEnv({ fetch: vi.fn().mockResolvedValue(new Response('rails')) });
+      return { ...env, AUTH_RATE_LIMITER: { limit: vi.fn() } } as unknown as CloudflareEnv;
+    };
+
+    it('consults both limiters for an /oidc/ path', async () => {
+      checkRateLimit.mockResolvedValue(null);
+
+      await worker.fetch(new Request('https://jp.umaxica.com/oidc/authorize'), authEnv(), ctx);
+
+      expect(checkRateLimit).toHaveBeenCalledTimes(2);
+    });
+
+    it('consults only the general limiter for an ordinary page', async () => {
+      checkRateLimit.mockResolvedValue(null);
+      appFetch.mockResolvedValue(new Response('ok'));
+
+      await worker.fetch(new Request('https://jp.umaxica.com/about'), authEnv(), ctx);
+
+      expect(checkRateLimit).toHaveBeenCalledTimes(1);
+    });
+
+    it('answers 429 from the auth limiter without ever dispatching to Rails', async () => {
+      const railsFetch = vi.fn().mockResolvedValue(new Response('rails'));
+      const env = {
+        ...makeEnv({ fetch: railsFetch }),
+        AUTH_RATE_LIMITER: { limit: vi.fn() },
+      } as unknown as CloudflareEnv;
+
+      checkRateLimit
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(new Response('too many', { status: 429 }));
+
+      const response = await worker.fetch(new Request('https://jp.umaxica.com/sign/out'), env, ctx);
+
+      expect(response.status).toBe(429);
+      expect(railsFetch).not.toHaveBeenCalled();
+    });
+  });
+
   it('does not consult the limiter for a blocked path', async () => {
     // A blocked path reaches no application code either way, so a limiter call
     // would be spent for nothing.

@@ -475,7 +475,7 @@ export function classifyIdentity({ surface, entry, transport }) {
 /*
  * One shape across all fifteen frames: `/health` answers
  *
- *   { status, timestamp, edge: {...}, rails: { liveness: { kind, status?, latency_ms } } }
+ *   { status, timestamp, edge: {...}, rails: { liveness: { kind, status? } } }
  *
  * with HTTP 200 iff both halves are ok. The Rails half used to live at its own
  * `/rails-health` route; the merge is ADR 009, and it is why this parser reads

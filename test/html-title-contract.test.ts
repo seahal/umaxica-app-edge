@@ -402,6 +402,42 @@ describe('rate limited 429 documents', () => {
     });
   });
 
+  /*
+   * The five apex Workers. Their 429 was a bare `Response('Too Many Requests')`
+   * — untitled, no `Content-Type`, no `Cache-Control` — while every frame beside
+   * them answered a titled document. This guard is what stops that from
+   * reappearing: it drives the real function, so a 429 that stopped going
+   * through `statusPage` would fail here even if the markup still existed
+   * somewhere in the unit.
+   */
+  const apexUnits = ['app', 'com', 'dev', 'net', 'org'] as const;
+
+  it('covers every apex worker', () => {
+    expect(
+      trackedFiles()
+        .filter((file) => file.endsWith('/apex/src/rate-limit.ts'))
+        .map((file) => file.split('/')[0] ?? '')
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual([...apexUnits].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it.each(apexUnits)('%s/apex serves a full 429 document', async (family) => {
+    const { checkRateLimit } = (await import(
+      /* @vite-ignore */ `../${family}/apex/src/rate-limit.ts`
+    )) as { checkRateLimit: (request: Request, limiter: unknown) => Promise<Response | null> };
+
+    const response = await checkRateLimit(new Request('https://example.test/'), blocked);
+    expect(response?.status).toBe(429);
+    expect(response?.headers.get('content-type')).toContain('text/html');
+    expect(response?.headers.get('cache-control')).toBe('no-store');
+
+    expectTitleContract(await (response as Response).text(), {
+      tld: FAMILY_TLD[family] ?? '',
+      requirePageSpecific: true,
+      label: `${family}/apex 429`,
+    });
+  });
+
   const satellites = trackedFiles().filter(
     (file) => file.endsWith('/src/middleware.ts') && !file.includes('/core/'),
   );

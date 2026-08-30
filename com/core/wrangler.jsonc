@@ -118,6 +118,26 @@
             "limit": 2000,
             "period": 60
           }
+        },
+        // A second, much smaller budget for the Rails-owned paths that authenticate.
+        // `src/worker.ts` consults it IN ADDITION to RATE_LIMITER for /oidc/* and
+        // /sign/out, so the general budget still bounds a client's total traffic and
+        // this one bounds the part of it that can attempt a credential. A limit sized
+        // for ordinary page views is not anti-automation on the authentication path
+        // (ASVS V2.2.1), which is what one shared limiter amounted to.
+        //
+        // 60/minute is ~33x stricter than the page budget while still leaving room for
+        // a NAT'd office sharing one address; it is a starting point to tune against
+        // real traffic, not a measured figure. Its namespace_id series is X10N so a
+        // counter is never shared with RATE_LIMITER — sharing one would merge the two
+        // budgets back into the single limiter this exists to split.
+        {
+          "name": "AUTH_RATE_LIMITER",
+          "namespace_id": "5102",
+          "simple": {
+            "limit": 60,
+            "period": 60
+          }
         }
       ]
     },
@@ -166,6 +186,26 @@
             "limit": 2000,
             "period": 60
           }
+        },
+        // A second, much smaller budget for the Rails-owned paths that authenticate.
+        // `src/worker.ts` consults it IN ADDITION to RATE_LIMITER for /oidc/* and
+        // /sign/out, so the general budget still bounds a client's total traffic and
+        // this one bounds the part of it that can attempt a credential. A limit sized
+        // for ordinary page views is not anti-automation on the authentication path
+        // (ASVS V2.2.1), which is what one shared limiter amounted to.
+        //
+        // 60/minute is ~33x stricter than the page budget while still leaving room for
+        // a NAT'd office sharing one address; it is a starting point to tune against
+        // real traffic, not a measured figure. Its namespace_id series is X10N so a
+        // counter is never shared with RATE_LIMITER — sharing one would merge the two
+        // budgets back into the single limiter this exists to split.
+        {
+          "name": "AUTH_RATE_LIMITER",
+          "namespace_id": "2102",
+          "simple": {
+            "limit": 60,
+            "period": 60
+          }
         }
       ]
     },
@@ -197,6 +237,26 @@
             "limit": 2000,
             "period": 60
           }
+        },
+        // A second, much smaller budget for the Rails-owned paths that authenticate.
+        // `src/worker.ts` consults it IN ADDITION to RATE_LIMITER for /oidc/* and
+        // /sign/out, so the general budget still bounds a client's total traffic and
+        // this one bounds the part of it that can attempt a credential. A limit sized
+        // for ordinary page views is not anti-automation on the authentication path
+        // (ASVS V2.2.1), which is what one shared limiter amounted to.
+        //
+        // 60/minute is ~33x stricter than the page budget while still leaving room for
+        // a NAT'd office sharing one address; it is a starting point to tune against
+        // real traffic, not a measured figure. Its namespace_id series is X10N so a
+        // counter is never shared with RATE_LIMITER — sharing one would merge the two
+        // budgets back into the single limiter this exists to split.
+        {
+          "name": "AUTH_RATE_LIMITER",
+          "namespace_id": "4102",
+          "simple": {
+            "limit": 60,
+            "period": 60
+          }
         }
       ]
     },
@@ -219,6 +279,26 @@
             "limit": 2000,
             "period": 60
           }
+        },
+        // A second, much smaller budget for the Rails-owned paths that authenticate.
+        // `src/worker.ts` consults it IN ADDITION to RATE_LIMITER for /oidc/* and
+        // /sign/out, so the general budget still bounds a client's total traffic and
+        // this one bounds the part of it that can attempt a credential. A limit sized
+        // for ordinary page views is not anti-automation on the authentication path
+        // (ASVS V2.2.1), which is what one shared limiter amounted to.
+        //
+        // 60/minute is ~33x stricter than the page budget while still leaving room for
+        // a NAT'd office sharing one address; it is a starting point to tune against
+        // real traffic, not a measured figure. Its namespace_id series is X10N so a
+        // counter is never shared with RATE_LIMITER — sharing one would merge the two
+        // budgets back into the single limiter this exists to split.
+        {
+          "name": "AUTH_RATE_LIMITER",
+          "namespace_id": "3102",
+          "simple": {
+            "limit": 60,
+            "period": 60
+          }
         }
       ]
     }
@@ -229,6 +309,26 @@
       "namespace_id": "1002",
       "simple": {
         "limit": 2000,
+        "period": 60
+      }
+    },
+    // A second, much smaller budget for the Rails-owned paths that authenticate.
+    // `src/worker.ts` consults it IN ADDITION to RATE_LIMITER for /oidc/* and
+    // /sign/out, so the general budget still bounds a client's total traffic and
+    // this one bounds the part of it that can attempt a credential. A limit sized
+    // for ordinary page views is not anti-automation on the authentication path
+    // (ASVS V2.2.1), which is what one shared limiter amounted to.
+    //
+    // 60/minute is ~33x stricter than the page budget while still leaving room for
+    // a NAT'd office sharing one address; it is a starting point to tune against
+    // real traffic, not a measured figure. Its namespace_id series is X10N so a
+    // counter is never shared with RATE_LIMITER — sharing one would merge the two
+    // budgets back into the single limiter this exists to split.
+    {
+      "name": "AUTH_RATE_LIMITER",
+      "namespace_id": "1102",
+      "simple": {
+        "limit": 60,
         "period": 60
       }
     }

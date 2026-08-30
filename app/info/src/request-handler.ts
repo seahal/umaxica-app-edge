@@ -1,5 +1,6 @@
 import { checkRateLimit } from './rate-limit';
 import { withSecurityHeaders } from './security-headers';
+import { createNonce, runWithNonce } from './security-nonce';
 
 /*
  * Everything this unit does around the router, in a function that takes its
@@ -15,10 +16,22 @@ import { withSecurityHeaders } from './security-headers';
  * documents the router produces for a 404 or a thrown error, where no
  * route-level hook runs.
  *
- * A 429 deliberately does NOT go through `withSecurityHeaders`. It is a complete,
- * self-contained document with its own `Cache-Control` and `Content-Type`, and
- * the contract `api/status-surfaces.hurl` and `test/rate-limit.test.ts` pin is
- * exactly those two headers.
+ * The 429 goes through `withSecurityHeaders` too, and that is a reversal of the
+ * previous rule. It used to be exempted for being "a complete, self-contained
+ * document with its own `Cache-Control` and `Content-Type`" — but those are
+ * caching headers, not security ones, and the exemption left the single easiest
+ * response for an attacker to elicit as the one HTML document on this origin
+ * served with no CSP, no `X-Frame-Options` and no `nosniff`. It keeps the two
+ * headers it always set; it now also carries the policy every other document
+ * here carries.
+ *
+ * The nonce is minted once per request and used twice: `runWithNonce` publishes
+ * it to `getRouter()` so TanStack stamps it on the inline hydration script, and
+ * `withSecurityHeaders` names the same value in `script-src`. Two mints would
+ * emit a policy that does not authorise the script the document actually
+ * carries. Development mints nothing — see `security-nonce.ts` for why a nonce
+ * there would block Vite's own bootstrap — and the 429 needs none, because it
+ * carries no script.
  */
 export async function handleRequest(
   request: Request,
@@ -28,7 +41,10 @@ export async function handleRequest(
   isProduction: boolean,
 ): Promise<Response> {
   const limited = await checkRateLimit(request);
-  if (limited) return limited;
+  if (limited) return withSecurityHeaders(limited, isProduction);
 
-  return withSecurityHeaders(await routerFetch(request), isProduction);
+  const nonce = isProduction ? createNonce() : undefined;
+  const response = await runWithNonce(nonce, () => routerFetch(request));
+
+  return withSecurityHeaders(response, isProduction, nonce);
 }

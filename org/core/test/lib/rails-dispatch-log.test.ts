@@ -178,12 +178,16 @@ describe('dispatchToRails logging', () => {
 
   it('distinguishes all five outcomes', async () => {
     const cases: [() => Promise<Response>, string][] = [
-      [() => dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {}), 'binding_not_configured'],
+      [
+        () => dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {}, true),
+        'binding_not_configured',
+      ],
       [
         () =>
           dispatchToRails(
             new Request(`${ORIGIN}/api/v0/x`),
             envWith(vi.fn().mockResolvedValue(new Response('ok', { status: 200 }))),
+            true,
           ),
         'rails_ok',
       ],
@@ -192,6 +196,7 @@ describe('dispatchToRails logging', () => {
           dispatchToRails(
             new Request(`${ORIGIN}/api/v0/x`),
             envWith(vi.fn().mockResolvedValue(new Response('nope', { status: 404 }))),
+            true,
           ),
         'rails_http_error',
       ],
@@ -200,6 +205,7 @@ describe('dispatchToRails logging', () => {
           dispatchToRails(
             new Request(`${ORIGIN}/api/v0/x`),
             envWith(vi.fn().mockRejectedValue(new Error('down'))),
+            true,
           ),
         'vpc_unreachable',
       ],
@@ -210,6 +216,7 @@ describe('dispatchToRails logging', () => {
             envWith(
               vi.fn().mockRejectedValue(Object.assign(new Error('slow'), { name: 'TimeoutError' })),
             ),
+            true,
           ),
         'timeout',
       ],
@@ -233,6 +240,7 @@ describe('dispatchToRails logging', () => {
           }),
         ),
       ),
+      true,
     );
 
     expect(onlyLine().json.data).toMatchObject({
@@ -254,6 +262,7 @@ describe('dispatchToRails logging', () => {
           }),
         ),
       ),
+      true,
     );
 
     expect(onlyLine().json.data.proxy_error_code).toBe('unknown');
@@ -269,13 +278,14 @@ describe('dispatchToRails logging', () => {
             new Response(null, { status: 302, headers: { location: `${ORIGIN}/` } }),
           ),
       ),
+      true,
     );
 
     expect(onlyLine().json.data).toMatchObject({ outcome: 'rails_ok', route_class: 'sign_out' });
   });
 
   it('records a duration on every path', async () => {
-    await dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {});
+    await dispatchToRails(new Request(`${ORIGIN}/api/v0/x`), {}, true);
     const { duration_ms } = onlyLine().json.data;
     expect(typeof duration_ms).toBe('number');
     expect(duration_ms).toBeGreaterThanOrEqual(0);
@@ -285,6 +295,7 @@ describe('dispatchToRails logging', () => {
     await dispatchToRails(
       new Request(`${ORIGIN}/api/v0/x`),
       envWith(vi.fn().mockResolvedValue(new Response('ok'))),
+      true,
     );
     expect(emitted).toHaveLength(1);
   });
@@ -358,9 +369,13 @@ describe('dispatchToRails logging: no credentials or PII', () => {
       { method: 'POST', headers: SECRETS, body: 'SECRET_REQUEST_BODY' },
     );
 
-    await dispatchToRails(request, {
-      UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch: makeFetch() } as unknown as Fetcher,
-    });
+    await dispatchToRails(
+      request,
+      {
+        UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch: makeFetch() } as unknown as Fetcher,
+      },
+      true,
+    );
 
     const allOutput = emitted.map((entry) => entry.line).join('\n');
     expect(allOutput).not.toBe('');
@@ -370,11 +385,15 @@ describe('dispatchToRails logging: no credentials or PII', () => {
   });
 
   it('emits only the eight permitted keys', async () => {
-    await dispatchToRails(new Request(`${ORIGIN}/api/v0/x`, { headers: SECRETS }), {
-      UMAXICA_APPS_EDGE_CF_WORKERS_VPC: {
-        fetch: vi.fn().mockResolvedValue(new Response('ok')),
-      } as unknown as Fetcher,
-    });
+    await dispatchToRails(
+      new Request(`${ORIGIN}/api/v0/x`, { headers: SECRETS }),
+      {
+        UMAXICA_APPS_EDGE_CF_WORKERS_VPC: {
+          fetch: vi.fn().mockResolvedValue(new Response('ok')),
+        } as unknown as Fetcher,
+      },
+      true,
+    );
 
     const { json } = onlyLine();
     expect(Object.keys(json).sort()).toEqual(['data', 'level', 'msg']);
