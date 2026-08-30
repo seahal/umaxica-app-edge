@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { RouteAnnouncer } from '@/components/route-announcer';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 import { ErrorDocument, NotFoundDocument } from '@/components/status-documents';
 import { defaultLocale } from '@/i18n/config';
@@ -52,6 +53,15 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body className="bg-gray-50 leading-body text-gray-900">
         <ServiceWorkerRegistration />
         {children}
+        {/*
+         * Last in the body and outside every landmark, because it is not
+         * content: it is the announcement channel for a client-side
+         * navigation. It has to be mounted here, in the shell, rather than on
+         * the layout that carries the chrome — the status surfaces and the
+         * failure documents are reached by navigation too, and a reader who
+         * lands on one of them is exactly the reader who most needs to be told.
+         */}
+        <RouteAnnouncer />
         <Scripts />
       </body>
     </html>

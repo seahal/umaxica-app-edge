@@ -129,7 +129,13 @@ export function createApexApp(
 
     // oxlint-disable-next-line no-console
     console.error('Unhandled apex error', {
-      error: err instanceof Error ? err.name : 'UnknownError',
+      /*
+       * `err.name` is read unguarded. Hono only routes a thrown value to
+       * `onError` when it is an `Error` and re-throws everything else
+       * (`compose.ts`), which is also why the handler is typed `err: Error`, so
+       * the `'UnknownError'` fallback this replaced could never be reached.
+       */
+      error: err.name,
       method: c.req.method,
       path: new URL(c.req.url).pathname,
     });

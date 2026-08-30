@@ -64,7 +64,10 @@ export async function renderApp(path: string) {
   const router = getRouter();
   router.update({ history: createMemoryHistory({ initialEntries: [path] }) });
   await router.load();
-  return render(<RouterProvider router={router} />);
+  // The router comes back alongside the render result: a test that has to make a
+  // navigation FAIL needs the route objects, and reaching them through the
+  // rendered tree is not possible.
+  return { ...render(<RouterProvider router={router} />), router };
 }
 
 /** The `<title>` a route declares through its `head()`, or `undefined`. */

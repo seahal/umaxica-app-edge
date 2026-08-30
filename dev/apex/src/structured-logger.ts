@@ -44,7 +44,9 @@ export const apexStructuredLogger = structuredLogger({
   onError: (logger, err, c) =>
     logger.error(
       {
-        error: err instanceof Error ? err.name : 'UnknownError',
+        // Unguarded for the reason `create-apex-app.ts` records: the hook is
+        // typed `err: Error`, and Hono only ever sets `c.error` from one.
+        error: err.name,
         method: c.req.method,
         path: c.req.path,
         status: c.res.status,

@@ -21,8 +21,9 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { getRouter } from '../src/router';
 import { securityHeaders, withSecurityHeaders } from '../src/security-headers';
-import { createNonce } from '../src/security-nonce';
+import { createNonce, getRequestNonce, runWithNonce } from '../src/security-nonce';
 
 function directiveFor(isProduction: boolean, name: string, nonce?: string): string {
   const policy = securityHeaders(isProduction, nonce)['Content-Security-Policy'];
@@ -119,5 +120,48 @@ describe('withSecurityHeaders', () => {
 
     expect(wrapped.headers.get('Cache-Control')).toBe('no-store');
     expect(wrapped.headers.get('Content-Type')).toBe('application/json');
+  });
+});
+
+/*
+ * The nonce's other end.
+ *
+ * `securityHeaders` names a nonce in the policy; this is what puts the SAME
+ * value on the one inline script TanStack emits. Naming a nonce no script
+ * carries does not weaken the policy — it blocks that script outright, so the
+ * two halves are only correct together.
+ *
+ * `getRouter()` reads the value from `AsyncLocalStorage` instead of taking it as
+ * an argument, because `createStartHandler` calls it with none. Entering and
+ * leaving that scope is the only way to reach either branch, and it is not
+ * something an HTTP client can arrange.
+ */
+describe('router nonce', () => {
+  it('carries the nonce of the request it is called inside onto the router', () => {
+    const router = runWithNonce('nonce-under-test', () => getRouter());
+
+    expect(router.options.ssr?.nonce).toBe('nonce-under-test');
+  });
+
+  /*
+   * The scope itself. A nonce that outlived its request would be reused by the
+   * next one, which is the same as having no nonce — and development mints none
+   * at all, so the callback has to run unwrapped rather than inside a scope
+   * holding `undefined`.
+   */
+  it('scopes the nonce to the call it was given, and yields none outside one', () => {
+    expect(runWithNonce('scoped-nonce', () => getRequestNonce())).toBe('scoped-nonce');
+    expect(runWithNonce(undefined, () => getRequestNonce())).toBeUndefined();
+    expect(getRequestNonce()).toBeUndefined();
+  });
+
+  it('omits `ssr` entirely outside a request, where there is no nonce to name', () => {
+    /*
+     * Every development response and the build itself land here. The key has to
+     * be ABSENT rather than present holding `undefined`: `ssr: { nonce:
+     * undefined }` is what makes TanStack emit an empty `nonce=""`, which a
+     * policy naming a real nonce then rejects.
+     */
+    expect(getRouter().options.ssr).toBeUndefined();
   });
 });
