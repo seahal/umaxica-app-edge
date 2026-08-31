@@ -60,6 +60,9 @@ export default defineConfig({
         // `src/router.tsx` is deliberately NOT excluded: the tests drive a real
         // router through it.
         'src/server.ts',
+        // Worker-only ALS install: `node:async_hooks` must not enter the client
+        // graph. The default store in `security-nonce.ts` is what Vitest drives.
+        'src/security-nonce-als.ts',
       ],
       include: ['src/**/*.{ts,tsx,js,jsx}'],
       provider: 'v8',
