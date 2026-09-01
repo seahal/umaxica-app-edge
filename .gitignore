@@ -206,3 +206,4 @@ package-lock.json
 # does not suddenly show up as an untracked file. See the migration note in
 # README.md; rename yours to `compose.override.yaml`.
 /compose.custom.yaml
+.devcontainer/devcontainer.custom.yaml
