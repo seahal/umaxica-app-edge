@@ -58,70 +58,6 @@ services:
         read_only: true
         volume:
           nocopy: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/.env
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/news/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/news/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/news/.env.development.local
-        read_only: true
     ports:
       - '127.0.0.1:5101:5101' # com/apex
       - '127.0.0.1:5103:5103' # com/info
@@ -165,13 +101,13 @@ services:
       # SELinux Enforcing (Fedora/RHEL) 対応。標準環境の成立条件なので、
       # ローカル override ではなくこちらに置く。
       #
-      # このファイルの bind mount は `.` と 16 個の empty.env で計 17 本あり、
-      # どれにも :z / :Z を付けていない。ホスト側リポジトリは user_home_t の
+      # このファイルの bind mount はワークスペースを渡す `.` の 1 本だけで、
+      # :z / :Z を付けていない。ホスト側リポジトリは user_home_t の
       # ままなので container_t のコンテナからは読めない。uid/gid は keep-id で
       # 一致していて DAC は通っており、落ちているのは MAC の側だけ
       # (`ls /home/edge/workspace` がディレクトリ一覧すら出せない)。
       #
-      # :z を 17 本全部に付ける手もあるが、それはホスト側リポジトリを
+      # :z を付ける手もあるが、それはホスト側リポジトリを
       # container_file_t へ「再ラベル」してしまう。label=disable はこの
       # コンテナ 1 つに閉じ、ホストのラベルを一切書き換えないのでこちらを取る。
       # SELinux を使っていないホスト (Ubuntu 等) では Docker / Podman とも

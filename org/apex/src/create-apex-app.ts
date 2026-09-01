@@ -11,7 +11,7 @@ import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
-import { offlinePageMarkup, statusPage } from './status-page';
+import { errorPage, notFoundPage, offlinePageMarkup } from './status-page';
 import { apexStructuredLogger, type BaseLogger } from './structured-logger';
 import { requestThemeAttribute } from './theme';
 
@@ -115,11 +115,7 @@ export function createApexApp(
       headers.set('Cache-Control', 'no-store');
       headers.set('Content-Type', 'text/html; charset=UTF-8');
       return new Response(
-        statusPage(
-          response.status,
-          'リクエストを処理できませんでした',
-          requestThemeAttribute(c.req.raw),
-        ).body,
+        errorPage(response.status, c.get('language'), requestThemeAttribute(c.req.raw)).body,
         {
           status: response.status,
           headers,
@@ -140,7 +136,7 @@ export function createApexApp(
       path: new URL(c.req.url).pathname,
     });
 
-    return statusPage(500, '現在、このページを表示できません', requestThemeAttribute(c.req.raw));
+    return errorPage(500, c.get('language'), requestThemeAttribute(c.req.raw));
   });
 
   app.get('/health', timeout(2000), (c) =>
@@ -159,7 +155,7 @@ export function createApexApp(
   });
   app.get('/offline', (c) => c.html(offlinePageMarkup(requestThemeAttribute(c.req.raw))));
   app.route('/', pageRoutes);
-  app.notFound((c) => statusPage(404, 'ページが見つかりません', requestThemeAttribute(c.req.raw)));
+  app.notFound((c) => notFoundPage(c.get('language'), requestThemeAttribute(c.req.raw)));
 
   return app;
 }

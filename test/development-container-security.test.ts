@@ -196,17 +196,22 @@ describe('development-container security contract', () => {
     ).toEqual(['devcontainer-lock.json', 'devcontainer.json']);
   });
 
-  it('masks ignored workspace credential inputs behind non-secret mounts', () => {
+  it('masks .secrets/ behind an empty read-only volume', () => {
+    /*
+     * `.secrets/` is the ONE workspace path still masked. It is the input side
+     * of Podman Secret delivery, so a container that could read it would make
+     * the whole mechanism pointless.
+     *
+     * The env files are deliberately NOT masked any more. `.env` carries the
+     * tunnel token Compose interpolates on the host, and hiding it from the
+     * container it configures cost more than it bought. Nothing may reintroduce
+     * a value-free file mounted over a workspace path.
+     */
     const base = read('compose.yaml');
     expect(base).toContain('target: /home/edge/workspace/.secrets');
     expect(base).toContain('source: workspace-secrets-mask');
     expect(base).toContain('nocopy: true');
-    expect(base).toContain('target: /home/edge/workspace/.env');
-    expect(
-      base.match(
-        /target: \/home\/edge\/workspace\/(?:app|com|org)\/.+\/\.env\.development\.local/gu,
-      ),
-    ).toHaveLength(15);
+    expect(compose).not.toContain('empty.env');
   });
 
   it('retains rootless keep-id and rejects privilege/network/storage shortcuts', () => {

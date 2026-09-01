@@ -37,9 +37,23 @@ served by its own Worker, by reading the `service` field of `/health.json`:
 | `umaxica.app` | `umaxica-apps-edge-app-apex` | `app`     |
 | `umaxica.dev` | `umaxica-apps-edge-dev-apex` | `dev`     |
 
-`umaxica.dev` is listed for completeness and does not pass yet: the `.dev` zone
-is delegated to Vercel DNS, so the Worker has no custom domain. See
-[`net-www-canonicalisation.md`](net-www-canonicalisation.md).
+## Development Tunnel acceptance — 2026-09-01
+
+All five apex Hono development servers are reachable through the Edge-owned Cloudflare Tunnel. The remotely managed Public Hostnames terminate on the Compose service name `core`, one port per unit:
+
+| Hostname      | Tunnel origin      | Authenticated `/health.json` |
+| ------------- | ------------------ | ---------------------------- |
+| `umaxica.app` | `http://core:5401` | `200`, `service=app`         |
+| `umaxica.com` | `http://core:5101` | `200`, `service=com`         |
+| `umaxica.net` | `http://core:5201` | `200`, `service=net`         |
+| `umaxica.org` | `http://core:5301` | `200`, `service=org`         |
+| `umaxica.dev` | `http://core:5501` | `200`, `service=dev`         |
+
+The result was measured end to end from an operator browser after Cloudflare Access authentication. Each local Hono structured log recorded the request and a `200` response from the matching service, which rules out both a pre-origin response and a transposed port. Root-route behaviour was also observed: `app`, `com`, and `org` returned their intended `301`; `net` and `dev` returned `200`.
+
+A separate unauthenticated pass over `/`, `/health.json`, and `/.env` returned a `302` to the Cloudflare Access team domain for all five hostnames. `umaxica.dev` was briefly reachable without Access while its policy update propagated; automated probes reached its Hono 404 handler for `.env` variants, but every probe returned `404` and no environment content was served. After propagation, `https://umaxica.dev/.env` returned the same pre-origin Access `302` as the other apexes.
+
+This acceptance proves the development ingress graph `browser → Access → Tunnel → core:<port> → Hono`. It does not prove a deployed Worker binding or the separate Workers VPC → Rails path.
 
 A reachability check is not enough here. A hostname bound to the wrong Worker
 still answers `200` on every route — it just serves another domain's content
@@ -52,9 +66,9 @@ the hostname. Under the Tunnel that is the local `*/apex` dev server, and the
 `service` field still identifies it. What changed is the subject, not the method.
 
 **Since 2026-08-11 this script does not work unauthenticated.** Cloudflare Access
-covers all four apex hostnames with no `/health*` Bypass, so `/health.json`
+covers all five apex hostnames with no `/health*` Bypass, so `/health.json`
 answers a 302 to the team domain. `curl --fail` trips, `service` is never read,
-and every host prints `<unreachable>`. The four `FAIL` lines mean "Access is in
+and every host prints `<unreachable>`. The five `FAIL` lines mean "Access is in
 front", not "the binding is wrong" — see
 `adr/008-edge-development-tunnel-exposure.md` for why the Bypass was declined.
 
@@ -81,8 +95,4 @@ binding: measured through the Tunnel on 2026-08-11, while the hostnames were
 still unauthenticated, `umaxica.net` answered `service=net` correctly, as did the
 other three.
 
-Note that the check no longer distinguishes that case. With Access in front it
-fails on **all four** hostnames with `<unreachable>`, so a genuine misbinding and
-a healthy surface produce the same output. The last machine-made reading of the
-four `service` values is the 2026-08-11 one recorded in
-[`cloudflare-tunnel-development.md`](cloudflare-tunnel-development.md).
+Note that the unauthenticated check no longer distinguishes that case. With Access in front it fails on **all five** hostnames with `<unreachable>`, so a genuine misbinding and a healthy surface produce the same output. The last unauthenticated machine-made reading of the original four `service` values is the 2026-08-11 one recorded in [`cloudflare-tunnel-development.md`](cloudflare-tunnel-development.md). The authenticated 2026-09-01 browser and structured-log reading of all five values is recorded above.

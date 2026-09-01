@@ -107,4 +107,5 @@ export default defineConfig(({ command }) => ({
     tanstackStart(),
     viteReact(),
   ],
+  server: { allowedHosts: ['info.umaxica.com'] },
 }));

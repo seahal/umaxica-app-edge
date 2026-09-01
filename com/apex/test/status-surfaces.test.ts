@@ -26,9 +26,19 @@ describe('apex 5xx surface', () => {
       },
       { service },
     );
-    const response = await app.request('/boom');
+    const response = await app.request('/boom', { headers: { 'accept-language': 'ja' } });
     expect(response.status).toBe(500);
-    await expect(response.text()).resolves.toContain('再読み込み');
+    const body = await response.text();
+    expect(body).toContain('再読み込み');
+    expect(body).toContain('href="/about">このURLについて');
+
+    const englishResponse = await app.request('/boom', {
+      headers: { 'accept-language': 'en' },
+    });
+    expect(englishResponse.status).toBe(500);
+    const englishBody = await englishResponse.text();
+    expect(englishBody).toContain('Reload');
+    expect(englishBody).toContain('href="/about">About this URL');
     expect(consoleError).toHaveBeenCalled();
   });
 });

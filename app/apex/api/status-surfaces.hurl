@@ -8,6 +8,7 @@
 # `test/status-surfaces.test.ts`.
 
 GET {{base}}/__definitely_not_found__
+Accept-Language: ja
 HTTP 404
 [Asserts]
 header "content-type" == "text/html; charset=UTF-8"
@@ -19,13 +20,25 @@ xpath "count(//link[@rel='stylesheet'])" == 1
 xpath "string(//link[@rel='stylesheet']/@href)" matches /^\/[^"]+\.css(\?[^"]*)?$/
 body contains "HTTP 404"
 # The 404 is not a 5xx, so it offers a way home but no reload affordance.
-body contains "トップへ戻る"
+xpath "string(//a[normalize-space(.)='このURLについて']/@href)" == "/about"
+body contains "このURLについて"
 body not contains "再読み込み"
 
+
+GET {{base}}/__definitely_not_found_in_english__
+Accept-Language: en
+HTTP 404
+[Asserts]
+xpath "string(//html/@lang)" == "en"
+xpath "normalize-space(//h1)" == "Page not found"
+xpath "string(//a[normalize-space(.)='About this URL']/@href)" == "/about"
+body contains "About this URL"
+body not contains "このURLについて"
 
 # A nested path must reach the same handler — `app.notFound()` is global, and a
 # route added later that shadows it would show up here first.
 GET {{base}}/about/definitely/not/here
+Accept-Language: ja
 HTTP 404
 [Asserts]
 xpath "normalize-space(//h1)" == "ページが見つかりません"

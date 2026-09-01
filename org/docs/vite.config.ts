@@ -107,4 +107,5 @@ export default defineConfig(({ command }) => ({
     tanstackStart(),
     viteReact(),
   ],
+  server: { allowedHosts: ['docs-jp.umaxica.org'] },
 }));

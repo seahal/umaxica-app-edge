@@ -36,12 +36,11 @@ describe('apex surfaces wired to their helpers', () => {
     expect(markup).toHaveBeenCalled();
   });
 
-  it('runs an unmatched path through statusPage as notFound', async () => {
-    const page = vi.spyOn(statusPage, 'statusPage');
+  it('runs an unmatched path through notFoundPage', async () => {
+    const page = vi.spyOn(statusPage, 'notFoundPage');
     const app = createApexApp(() => undefined, { service });
-    await app.request('/no-such-apex-surface');
-    // Third argument is the theme attribute; with no cookie it is `undefined`.
+    await app.request('/no-such-apex-surface', { headers: { 'accept-language': 'ja' } });
     // `expect.anything()` does not match that.
-    expect(page).toHaveBeenCalledWith(404, expect.any(String), undefined);
+    expect(page).toHaveBeenCalledWith('ja', undefined);
   });
 });
