@@ -377,3 +377,43 @@ The `umaxica.net` production misbinding (ADR 003) is still live. The Tunnel mask
 will reassert itself the moment the hostname returns to its Worker. The stale deployed content
 Workers answering 404 on `/rails-health` are likewise untouched. Core, the Workers VPC transport,
 and the Rails surfaces are untouched.
+
+---
+
+## Amendment (2026-09-01): the compose overlay is retired
+
+This ADR is a historical record and its body is left as written. The file it
+names throughout, `compose.custom.yaml`, no longer exists.
+
+The overlay was mandatory in practice — it carried the SELinux `label=disable`
+without which `/home/edge/workspace` is unreadable on an Enforcing host — while
+being gitignored and seeded by `scripts/dev-start`. `.devcontainer/devcontainer.json`
+therefore named a file that a fresh clone does not contain, and every path that
+does not run `scripts/dev-start` (Codespaces, `devcontainer up`, Remote-SSH plus
+"Reopen in Container") failed at Compose resolution with
+`open .../compose.custom.yaml: no such file or directory`.
+
+The contract is now:
+
+| File | Role |
+| --- | --- |
+| `compose.yaml` | the complete standard environment; a fresh clone starts from it alone |
+| `compose.override.yaml` | optional, gitignored, host-specific; never created automatically |
+| `compose.override.yaml.example` | tracked documentation of the above |
+
+What moved into `compose.yaml`: `security_opt: label=disable` on `core` (SELinux
+Enforcing is a supported host, so supporting it is standard configuration, and
+the option is inert on hosts without SELinux under both Docker and Podman) and
+`GH_TOKEN: ${GH_TOKEN:-}` (host-portable, no literal, `:-` so a token-less
+machine still resolves). What stayed optional: the `~/.ssh/known_hosts` bind and
+the ssh-agent socket, both of which name host paths that may not exist and whose
+absence fails the bind before any container starts.
+
+`.devcontainer/devcontainer.json` now lists `../compose.yaml` alone. The Dev
+Containers CLI passes each entry to Compose as `-f`, which also suppresses
+Compose's auto-discovery of `compose.override.yaml`, so the optional override
+applies to `scripts/dev-start` and a bare `docker compose` and not to the editor.
+
+The tunnel decisions this ADR records are unaffected: the connector, its pinned
+release and its hardening already live in `compose.yaml`, and only its token
+comes from the gitignored `.env`.

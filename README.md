@@ -229,10 +229,14 @@ rootless Podman.
   the container has no `sudo` or `visudo`, and `su` cannot authenticate as
   root.
 
-After setting `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start
-the Dev Container from the repository root:
+Start the Dev Container straight from a fresh clone — no local file has to be
+created first:
 
 ```bash
+git clone https://github.com/seahal/umaxica-apps-edge.git
+cd umaxica-apps-edge
+docker compose config    # or: podman compose config -- resolves as-is
+
 PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
 devcontainer up \
   --docker-path /usr/bin/podman \
@@ -240,41 +244,73 @@ devcontainer up \
   --workspace-folder .
 ```
 
+`EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env` is only needed if you
+actually want the Cloudflare Tunnel connector; without it the connector starts
+with an empty token and everything else is unaffected.
+
 There is no launcher script. `PODMAN_COMPOSE_PROVIDER` and `--docker-path` are
 both mandatory and have no `devcontainer.json` equivalent; run the command as
 the normal rootless user, never through `sudo`. See
 [Dev Containers CLI startup on rootless Podman](docs/development/devcontainer-cli-podman-startup.md).
 
-The direct Compose launcher remains available for optional overlays:
+The direct Compose launcher remains available, and is the path that applies a
+local override:
 
 ```bash
 scripts/dev-start [--rails] [--tunnel]
 podman compose exec core bash -l
 ```
 
-#### The two compose files
+#### The three compose files
 
-The split is by ownership rather than by topic, and
-`test/compose-tunnel-invariants.test.ts` fails if a third file appears:
+```text
+compose.yaml                   = the complete standard environment
+compose.override.yaml          = optional, gitignored, yours
+compose.override.yaml.example  = documented example, tracked
+```
 
-| File                  | Holds                                                                                               | Edit it?                                   |
-| --------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `compose.yaml`        | everything shared — the `core` workspace container and the Edge-owned `cloudflare-tunnel` connector | only as a change that applies to everyone  |
-| `compose.custom.yaml` | everything host-supplied — the SELinux label opt-out, and the forwarded host GitHub identity        | yes, freely; it is yours and is gitignored |
+| File | Holds | Edit it? |
+| --- | --- | --- |
+| `compose.yaml` | everything the standard environment needs — the `core` workspace container, the Edge-owned `cloudflare-tunnel` connector, the SELinux `label=disable`, and the `GH_TOKEN` passthrough | only as a change that applies to everyone |
+| `compose.override.yaml` | host-specific convenience only — an ssh-agent socket, a `known_hosts` bind, machine-local ports, experiments | yes, freely; it is yours and is gitignored |
+| `compose.override.yaml.example` | a documented example of the above | only to change what the example teaches |
 
-`compose.custom.yaml` is **not tracked**. What is tracked is
-`compose.custom.yaml.example`, and `scripts/dev-start` copies the template into
-place when the overlay is missing, so a fresh clone starts without a manual
-step. Editing your copy is therefore never a diff anybody has to carry, and the
-invariant tests read the template rather than whatever your machine holds.
+**A fresh clone needs no override.** `compose.yaml` on its own is a complete,
+supported development environment on Ubuntu, on RHEL/Fedora with SELinux
+Enforcing, under Docker and under rootless Podman. Nothing copies the example
+into place, and nothing fails because the override is absent — this is asserted
+by `test/compose-local-override-invariants.test.ts`.
 
-The template is host-_supplied_ rather than host-_specific_: every value in it is
-a `${VAR}` interpolation, so the default copy resolves correctly on every machine
-and most developers never edit it.
+Two consequences of that contract are worth knowing:
 
-It forwards no ssh-agent socket. The socket path exists on some machines and not
-others, and a stale one fails the bind before any container starts — so if you
-want Git over SSH inside the container, add the bind to your own copy:
+- **SELinux lives in `compose.yaml`.** `core` carries
+  `security_opt: [no-new-privileges:true, label=disable]`. The bind mounts here
+  deliberately carry no `:z`/`:Z`, which would relabel your host tree;
+  `label=disable` is scoped to this one container and is simply ignored on hosts
+  without SELinux. RHEL is a supported host, so making it work is not a chore we
+  hand to the developer.
+- **The Dev Container does not load your override.** The Dev Containers CLI
+  passes each `dockerComposeFile` entry to Compose as `-f`, and Compose only
+  auto-discovers `compose.override.yaml` when *no* `-f` is given. So
+  `.devcontainer/devcontainer.json` lists `../compose.yaml` alone, and a bare
+  `docker compose` (auto-discovery) or `scripts/dev-start` (explicit `-f` when
+  the file exists) is where an override takes effect. VS Code already forwards
+  your ssh-agent into the container for Git on its own.
+
+To create one:
+
+```bash
+cp compose.override.yaml.example compose.override.yaml   # optional
+```
+
+Keep the `name: umaxica-apps-edge` line: Compose takes the project name from the
+last file that sets one, so a divergent value forks the project into a second
+set of containers and volumes.
+
+The example forwards no ssh-agent socket by default. The socket path exists on
+some machines and not others, and a stale one fails the bind before any
+container starts — so if you want Git over SSH inside the container, uncomment
+the bind in your own copy:
 
 ```yaml
 services:
@@ -287,16 +323,33 @@ services:
         target: /ssh-agent
 ```
 
-Both files are loaded everywhere — `.devcontainer/devcontainer.json` names both,
-and so do `scripts/dev-start` and `scripts/dev-stop` — so a devcontainer,
-`scripts/dev-start`, and a bare `podman compose` all resolve to one project
-called `umaxica-apps-edge` and share one set of containers and volumes. A bare
-`podman compose` needs `-f compose.yaml -f compose.custom.yaml` spelled out.
+Only the socket, never a private key: the key never leaves your host agent.
+
+##### Migrating from `compose.custom.yaml`
+
+`compose.custom.yaml` is retired. It was gitignored, so nothing deletes yours —
+but it is no longer loaded by anything.
+
+```bash
+mv compose.custom.yaml compose.override.yaml
+```
+
+Then **delete `label=disable` and `GH_TOKEN` from your copy**: both are now in
+`compose.yaml`. `security_opt` entries are *appended* rather than replaced, so a
+restated `label=disable` makes Compose v2.24+ reject the merge with
+`services.core.security_opt items at 0 and 1 are equal`. `scripts/dev-start`
+prints a reminder if it finds the old file.
+
+If you have nothing host-specific in it, just delete it:
+
+```bash
+rm compose.custom.yaml
+```
 
 There is no credential overlay. GitHub access is the host's, borrowed through
-`GH_TOKEN` (and an ssh-agent socket, if you add one to your overlay); every other credential is obtained
-inside the running container through a browser flow and is discarded when the
-container is recreated — see
+`GH_TOKEN` (and an ssh-agent socket, if you add one to your override); every
+other credential is obtained inside the running container through a browser flow
+and is discarded when the container is recreated — see
 [Git and GitHub access](docs/development/git-and-github-access.md) and
 [Credential and secret management](docs/development/credential-and-secret-management.md).
 

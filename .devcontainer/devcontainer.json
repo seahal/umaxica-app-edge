@@ -1,26 +1,24 @@
 {
   "name": "umaxica-apps-edge",
-  // One compose file, the same one `scripts/dev-start` and a bare `podman compose`
-  // use, so all three share one project name, one set of containers and one set of
-  // volumes. It defines both `core` and the Edge-owned Cloudflare Tunnel connector.
+  // `compose.yaml` alone is the complete standard development environment: it
+  // must be enough for a fresh `git clone` on every supported host, including
+  // RHEL/Fedora with SELinux Enforcing (`core` carries `label=disable` there)
+  // and rootless Podman. Nothing here may reference a file that a clone does
+  // not contain -- the Dev Containers CLI passes every `dockerComposeFile`
+  // entry to Compose as `-f`, so a missing entry fails at configuration
+  // resolution with a bare `no such file or directory` (this is exactly how
+  // Codespaces used to fail on the retired developer-local overlay).
   //
-  // `../compose.custom.yaml` is loaded too. It used to be excluded because it
-  // declared an external, machine-specific Rails network that no other machine
-  // had; that `networks:` block is gone, and what is left is host-portable: a
-  // `label=disable` for the `core` container and a tunnel connector whose token
-  // reads `${CLOUDFLARED_TOKEN:-}`, so a machine with no tunnel still starts.
+  // A consequence of that same `-f`: Compose only auto-discovers its own
+  // override file when NO `-f` is given, so the optional local override is
+  // deliberately NOT loaded here. It is host-specific convenience (an agent
+  // socket, host key material, machine-local ports) and the editor does not
+  // need it -- VS Code Dev Containers forwards the host agent for Git on its
+  // own. Start with `scripts/dev-start` if you want your own override applied.
   //
-  // Loading it is what makes SELinux Enforcing hosts work at all. `compose.yaml`
-  // has 17 bind mounts with no `:z`/`:Z`, so the repository stays `user_home_t`
-  // and `container_t` cannot read `/home/edge/workspace` — uid/gid match under
-  // keep-id, so DAC passes and only MAC denies. `label=disable` scopes the
-  // relaxation to this one container instead of relabelling the host tree.
-  //
-  // The overlay repeats `compose.yaml`'s `name:` on purpose, so this does not
-  // fork the project or the volume set away from `scripts/dev-start`. Compose
-  // takes the name from the LAST file that sets one, and the Dev Containers CLI
-  // passes that resolved value on as `--project-name`.
-  "dockerComposeFile": ["../compose.yaml", "../compose.custom.yaml"],
+  // One file also means one project name, one set of containers and one set of
+  // volumes shared with `scripts/dev-start` and a bare `podman compose`.
+  "dockerComposeFile": ["../compose.yaml"],
   "service": "core",
   "remoteUser": "edge",
   "containerUser": "edge",

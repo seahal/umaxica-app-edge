@@ -11,21 +11,28 @@ Claude/Codex/OpenCode/Copilot state, private keys, Podman/Docker sockets, arbitr
 credential directories, privileged mode, added capabilities, and host networking.
 
 There is one exception, and it is deliberately narrow: the host's GitHub identity is
-**borrowed, never copied**. `compose.custom.yaml` — the developer-local overlay, and the
-only file permitted to carry any of this — forwards exactly three things:
+**borrowed, never copied**. Exactly three things may be forwarded, and the file each one
+lives in is itself part of the policy:
 
-| Input                                                      | Shape                          | Why it carries no secret                                                                                                                                                              |
-| ---------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `${SSH_AUTH_SOCK}` → `/ssh-agent`                          | Unix socket bind               | The private key stays in the host agent. Only signature requests and their results cross the socket; the key itself is never transmitted and never lands in the container filesystem. |
-| `${HOME}/.ssh/known_hosts` → `/home/edge/.ssh/known_hosts` | Single file, `read_only: true` | Public host keys. Read-only, so the container cannot rewrite the host's trust store.                                                                                                  |
-| `${GH_TOKEN}`                                              | Environment variable           | Interpolated from the host environment. No token literal appears in any tracked file, and `:-` rather than `:?` keeps a token-less machine bootable.                                  |
+| Input | Where | Shape | Why it carries no secret |
+| --- | --- | --- | --- |
+| `${GH_TOKEN}` | `compose.yaml` (standard) | Environment variable | Interpolated from the host environment. No token literal appears in any tracked file, and `:-` rather than `:?` keeps a token-less machine bootable — which is why it is safe to make standard. |
+| `${HOME}/.ssh/known_hosts` → `/home/edge/.ssh/known_hosts` | `compose.override.yaml` (optional) | Single file, `read_only: true` | Public host keys. Read-only, so the container cannot rewrite the host's trust store. Optional because Podman invents a missing bind source as a *directory*, so a host without the file cannot carry this mount. |
+| `${SSH_AUTH_SOCK}` → `/ssh-agent` | `compose.override.yaml` (optional, commented out in the example) | Unix socket bind | The private key stays in the host agent. Only signature requests and their results cross the socket; the key itself is never transmitted and never lands in the container filesystem. Optional because the socket path is per-machine and a stale one fails the bind before any container starts. |
 
 Everything else about `.ssh` stays forbidden. `test/development-container-security.test.ts`
-asserts the exact set of `.ssh` paths in the overlay — one source, one target — so a
+asserts the exact set of `.ssh` paths in `compose.override.yaml.example` — one source,
+one target — so a
 private key (`id_rsa`, `id_ed25519`, …), a whole-directory `~/.ssh` bind, or a second
 mount of any kind fails the test however it is spelled. `compose.yaml`, the file every
-developer shares, must contain neither `SSH_AUTH_SOCK` nor any `.ssh` path, and
-`.devcontainer/devcontainer.json` must contain neither either.
+developer shares and the only one the Dev Container loads, must contain neither
+`SSH_AUTH_SOCK` nor any `.ssh` path, and `.devcontainer/devcontainer.json` must contain
+neither either.
+
+The optional override is never required: `compose.yaml` alone is a complete standard
+environment, so a fresh clone starts with *none* of the SSH inputs above. Adding them is
+an explicit, per-developer act — see
+[the compose file contract](../../README.md#the-three-compose-files).
 
 The trade-off this accepts, stated plainly: for the lifetime of the forwarded agent,
 anything running in `core` can ask the host key to sign. Bound it on the host — a
