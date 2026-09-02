@@ -442,7 +442,7 @@ function checkPublicAssets(ws) {
   const tracked = trackedFiles();
   for (const entry of readdirSync(publicDir, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue;
-    const path = `${join(entry.parentPath, entry.name).slice(root.length).replace(/^\//u, '')}`;
+    const path = join(entry.parentPath, entry.name).slice(root.length).replace(/^\//u, '');
     if (tracked.has(path)) continue;
 
     const relative = path.slice(`${ws}/`.length);
