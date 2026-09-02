@@ -20,6 +20,8 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { parseJsonc } from '../tools/lib/wrangler-config.mjs';
+
 const repoRoot = join(import.meta.dirname, '..');
 const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
 
@@ -41,14 +43,15 @@ function trackedFiles(): string[] {
 
 /**
  * `devcontainer.json` is JSON with comments, and the comments here carry the
- * reasoning. Strip them the same way the Dev Containers CLI does before
- * parsing, so the assertions describe the configuration and not the prose.
+ * reasoning. It is also JSONC in full: the Dev Containers CLI parses it with
+ * `jsonc-parser`, so a trailing comma before a `}` is as legal as a comment.
+ * `parseJsonc` is the repository's string-aware reader -- the same one
+ * `wrangler.jsonc` goes through -- so the assertions describe the
+ * configuration rather than the prose, and a legal edit to the file cannot
+ * fail this suite for a syntax the CLI accepts.
  */
 function parseDevcontainer(): { dockerComposeFile: string[] } {
-  const withoutComments = devcontainerSource
-    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
-    .replaceAll(/^\s*\/\/.*$/gmu, '');
-  return JSON.parse(withoutComments) as { dockerComposeFile: string[] };
+  return parseJsonc(devcontainerSource) as { dockerComposeFile: string[] };
 }
 
 /** Compose text with its comment lines removed, so prose cannot satisfy a check. */

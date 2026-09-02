@@ -395,11 +395,11 @@ does not run `scripts/dev-start` (Codespaces, `devcontainer up`, Remote-SSH plus
 
 The contract is now:
 
-| File | Role |
-| --- | --- |
-| `compose.yaml` | the complete standard environment; a fresh clone starts from it alone |
-| `compose.override.yaml` | optional, gitignored, host-specific; never created automatically |
-| `compose.override.yaml.example` | tracked documentation of the above |
+| File                            | Role                                                                  |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `compose.yaml`                  | the complete standard environment; a fresh clone starts from it alone |
+| `compose.override.yaml`         | optional, gitignored, host-specific; never created automatically      |
+| `compose.override.yaml.example` | tracked documentation of the above                                    |
 
 What moved into `compose.yaml`: `security_opt: label=disable` on `core` (SELinux
 Enforcing is a supported host, so supporting it is standard configuration, and

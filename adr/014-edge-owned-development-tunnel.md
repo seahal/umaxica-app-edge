@@ -31,7 +31,7 @@ per-machine value in the gitignored root `.env`. This development environment's 
 `jp`; another developer's machine may set it to `us` (or anything else), and their Edge Tunnel
 Public Hostnames, Access applications, and `EDGE_TUNNEL_HOSTS` checker override are named to match.
 
-So `docs-jp.umaxica.*` / `jp.umaxica.*` is what *this* machine publishes; it is not a
+So `docs-jp.umaxica.*` / `jp.umaxica.*` is what _this_ machine publishes; it is not a
 repository-wide constant. Anything that hard-codes `jp` (checker rules, docs examples, ingress
 lists) is describing one machine's configuration, not the contract.
 

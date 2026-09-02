@@ -6,11 +6,11 @@ The container reuses the **host's** GitHub identity, borrowed rather than copied
 is registered inside `core`, and no key file or token literal exists in this repository or
 in the image:
 
-| Operation                  | Credential         | How it arrives                                                                        |
-| -------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| Operation                  | Credential         | How it arrives                                                                                                                           |
+| -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `git` clone / fetch / push | Host ssh-agent     | `${SSH_AUTH_SOCK}` bound to `/ssh-agent` — **opt-in**, via your own `compose.override.yaml`; the private key never leaves the host agent |
-| Host key verification      | Host `known_hosts` | `${HOME}/.ssh/known_hosts` bound **read-only** — **opt-in**, same file                 |
-| `gh` API calls             | `GH_TOKEN`         | Interpolated from the host environment by `compose.yaml` — standard, always present    |
+| Host key verification      | Host `known_hosts` | `${HOME}/.ssh/known_hosts` bound **read-only** — **opt-in**, same file                                                                   |
+| `gh` API calls             | `GH_TOKEN`         | Interpolated from the host environment by `compose.yaml` — standard, always present                                                      |
 
 The two opt-in rows are host-specific: the agent socket path differs per machine and
 `known_hosts` may not exist at all, and either missing source fails the bind before any

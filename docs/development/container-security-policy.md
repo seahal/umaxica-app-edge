@@ -14,11 +14,11 @@ There is one exception, and it is deliberately narrow: the host's GitHub identit
 **borrowed, never copied**. Exactly three things may be forwarded, and the file each one
 lives in is itself part of the policy:
 
-| Input | Where | Shape | Why it carries no secret |
-| --- | --- | --- | --- |
-| `${GH_TOKEN}` | `compose.yaml` (standard) | Environment variable | Interpolated from the host environment. No token literal appears in any tracked file, and `:-` rather than `:?` keeps a token-less machine bootable — which is why it is safe to make standard. |
-| `${HOME}/.ssh/known_hosts` → `/home/edge/.ssh/known_hosts` | `compose.override.yaml` (optional) | Single file, `read_only: true` | Public host keys. Read-only, so the container cannot rewrite the host's trust store. Optional because Podman invents a missing bind source as a *directory*, so a host without the file cannot carry this mount. |
-| `${SSH_AUTH_SOCK}` → `/ssh-agent` | `compose.override.yaml` (optional, commented out in the example) | Unix socket bind | The private key stays in the host agent. Only signature requests and their results cross the socket; the key itself is never transmitted and never lands in the container filesystem. Optional because the socket path is per-machine and a stale one fails the bind before any container starts. |
+| Input                                                      | Where                                                            | Shape                          | Why it carries no secret                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `${GH_TOKEN}`                                              | `compose.yaml` (standard)                                        | Environment variable           | Interpolated from the host environment. No token literal appears in any tracked file, and `:-` rather than `:?` keeps a token-less machine bootable — which is why it is safe to make standard.                                                                                                   |
+| `${HOME}/.ssh/known_hosts` → `/home/edge/.ssh/known_hosts` | `compose.override.yaml` (optional)                               | Single file, `read_only: true` | Public host keys. Read-only, so the container cannot rewrite the host's trust store. Optional because Podman invents a missing bind source as a _directory_, so a host without the file cannot carry this mount.                                                                                  |
+| `${SSH_AUTH_SOCK}` → `/ssh-agent`                          | `compose.override.yaml` (optional, commented out in the example) | Unix socket bind               | The private key stays in the host agent. Only signature requests and their results cross the socket; the key itself is never transmitted and never lands in the container filesystem. Optional because the socket path is per-machine and a stale one fails the bind before any container starts. |
 
 Everything else about `.ssh` stays forbidden. `test/development-container-security.test.ts`
 asserts the exact set of `.ssh` paths in `compose.override.yaml.example` — one source,
@@ -30,7 +30,7 @@ developer shares and the only one the Dev Container loads, must contain neither
 neither either.
 
 The optional override is never required: `compose.yaml` alone is a complete standard
-environment, so a fresh clone starts with *none* of the SSH inputs above. Adding them is
+environment, so a fresh clone starts with _none_ of the SSH inputs above. Adding them is
 an explicit, per-developer act — see
 [the compose file contract](../../README.md#the-three-compose-files).
 

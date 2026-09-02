@@ -220,9 +220,13 @@ rootless Podman.
   stay on `pnpm`. npm, yarn and Bun are intentionally absent from the
   workflow.
 - **DevContainer**: configured in `.devcontainer/devcontainer.json`
-  - Extensions: Claude Code, Oxc, Playwright
+  - Extensions: Claude Code, ChatGPT, Oxc and Oxfmt, Tailwind CSS, and the
+    GitHub and container tooling
   - Disabled: ESLint, Prettier, GitLens, GitHub Copilot
-  - Security: Trivy, Gitleaks (via pre-commit hooks)
+  - No security scanner runs in the image: secret scanning is a CI job
+    (gitleaks), and the pre-commit and pre-push gates are Lefthook's, declared
+    in `lefthook.yml`. `docs/development/static-analysis-and-hygiene.md` has
+    the full gate table; `SECURITY.md` describes the posture as a whole.
 - Runs as the non-root `edge` user (uid/gid 1000) via
   `userns_mode: keep-id:uid=1000,gid=1000`, which maps the host user onto 1000
   whatever its host id is, so no host-side hook has to discover it;
@@ -269,11 +273,11 @@ compose.override.yaml          = optional, gitignored, yours
 compose.override.yaml.example  = documented example, tracked
 ```
 
-| File | Holds | Edit it? |
-| --- | --- | --- |
-| `compose.yaml` | everything the standard environment needs — the `core` workspace container, the Edge-owned `cloudflare-tunnel` connector, the SELinux `label=disable`, and the `GH_TOKEN` passthrough | only as a change that applies to everyone |
-| `compose.override.yaml` | host-specific convenience only — an ssh-agent socket, a `known_hosts` bind, machine-local ports, experiments | yes, freely; it is yours and is gitignored |
-| `compose.override.yaml.example` | a documented example of the above | only to change what the example teaches |
+| File                            | Holds                                                                                                                                                                                 | Edit it?                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `compose.yaml`                  | everything the standard environment needs — the `core` workspace container, the Edge-owned `cloudflare-tunnel` connector, the SELinux `label=disable`, and the `GH_TOKEN` passthrough | only as a change that applies to everyone  |
+| `compose.override.yaml`         | host-specific convenience only — an ssh-agent socket, a `known_hosts` bind, machine-local ports, experiments                                                                          | yes, freely; it is yours and is gitignored |
+| `compose.override.yaml.example` | a documented example of the above                                                                                                                                                     | only to change what the example teaches    |
 
 **A fresh clone needs no override.** `compose.yaml` on its own is a complete,
 supported development environment on Ubuntu, on RHEL/Fedora with SELinux
@@ -291,7 +295,7 @@ Two consequences of that contract are worth knowing:
   hand to the developer.
 - **The Dev Container does not load your override.** The Dev Containers CLI
   passes each `dockerComposeFile` entry to Compose as `-f`, and Compose only
-  auto-discovers `compose.override.yaml` when *no* `-f` is given. So
+  auto-discovers `compose.override.yaml` when _no_ `-f` is given. So
   `.devcontainer/devcontainer.json` lists `../compose.yaml` alone, and a bare
   `docker compose` (auto-discovery) or `scripts/dev-start` (explicit `-f` when
   the file exists) is where an override takes effect. VS Code already forwards
@@ -335,7 +339,7 @@ mv compose.custom.yaml compose.override.yaml
 ```
 
 Then **delete `label=disable` and `GH_TOKEN` from your copy**: both are now in
-`compose.yaml`. `security_opt` entries are *appended* rather than replaced, so a
+`compose.yaml`. `security_opt` entries are _appended_ rather than replaced, so a
 restated `label=disable` makes Compose v2.24+ reject the merge with
 `services.core.security_opt items at 0 and 1 are equal`. `scripts/dev-start`
 prints a reminder if it finds the old file.

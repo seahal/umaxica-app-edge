@@ -1,10 +1,34 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
+
+/**
+ * Every path git tracks. The root `test` script injects `EDGE_TRACKED_FILES`
+ * so the suite runs one `git ls-files` instead of one per file that asks;
+ * running this file on its own falls back to invoking git directly.
+ */
+function trackedFiles(): string[] {
+  const injected = process.env['EDGE_TRACKED_FILES'];
+  if (injected !== undefined) {
+    return injected.split('\n').filter(Boolean);
+  }
+  return execFileSync('git', ['ls-files'], { cwd: repoRoot, encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean);
+}
+
+/** The tracked entries directly inside `prefix`, as bare names, sorted. */
+function trackedUnder(prefix: string): string[] {
+  return trackedFiles()
+    .filter((path) => path.startsWith(prefix) && !path.slice(prefix.length).includes('/'))
+    .map((path) => path.slice(prefix.length))
+    .sort();
+}
 
 /**
  * Every compose file this repository tracks: `compose.yaml` is the complete
@@ -190,10 +214,17 @@ describe('development-container security contract', () => {
     // `.devcontainer/` holds its two JSON files and nothing else. Every script
     // that used to live beside them is gone, and the wrapper the image needs is
     // a heredoc in the Containerfile rather than a seventh file here.
-    expect(
-      readdirSync(join(repoRoot, '.devcontainer')).sort(),
-      '.devcontainer/ gained a file',
-    ).toEqual(['devcontainer-lock.json', 'devcontainer.json']);
+    //
+    // This reads what git tracks, not what `readdirSync` finds. A fresh clone
+    // is the thing under test, and only tracked files reach one; a developer's
+    // gitignored leftover -- `.devcontainer/devcontainer.custom.yaml` is
+    // ignored by name at `.gitignore` precisely so an existing local copy
+    // stays invisible -- is not a change to the image's attack surface and
+    // must not fail this contract.
+    expect(trackedUnder('.devcontainer/'), '.devcontainer/ gained a tracked file').toEqual([
+      'devcontainer-lock.json',
+      'devcontainer.json',
+    ]);
   });
 
   it('masks .secrets/ behind an empty read-only volume', () => {
