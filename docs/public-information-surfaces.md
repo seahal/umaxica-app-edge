@@ -5,11 +5,15 @@ The split is **authority-level, not framework-level**: Rails remains the source
 of truth for policy, mutation, and content JSON authority, and the Edge surfaces
 differ in what they are allowed to do rather than in what they are built with.
 
-> **Framework note.** This document used to describe a split in which the
-> content frames would move to Astro. That move was **rejected** in
-> `adr/004-public-information-surfaces-astro.md` (2026-08-12) and nothing was
-> ever built against it — `astro` appears in no `package.json`. All fifteen
-> frames run one stack, recorded in `adr/013-frames-tanstack-start.md`.
+> **Framework note.** `adr/004-public-information-surfaces-astro.md` (2026-08-12)
+> rejected an Astro move for the content frames and stays `Rejected` as history.
+> `adr/015-public-content-surfaces-astro.md` (2026-09-02) is the new record that
+> `adr/013` invited: the **twelve** public content surfaces
+> (`{app,com,org}/{docs,help,info,news}`) move to Astro, partially superseding
+> `adr/013` for those units. The three `*/core` units stay on TanStack Start and
+> the five `*/apex` Workers stay on Hono (`adr/011`). Migration is in progress
+> (Phase 1 + 2 done, juxtaposed, not deployed); the Rails-managed-document SSR
+> layer is designed in `adr/015` but pending the Rails public read contract.
 
 ## Surface Matrix
 

@@ -13,9 +13,26 @@
   // TanStack Start route tree: every file under `src/routes/` is discovered by
   // the router plugin at build time and generated into `src/routeTree.gen.ts`,
   // which nothing in the repository imports by hand.
-  "entry": ["src/routes/**/*.{ts,tsx}", "test/**/*.test.{ts,tsx}", "e2e/**/*.spec.ts"],
+  //
+  // `src-astro/**` and `astro.config.mjs` are the Astro pilot (plan Phase 1),
+  // juxtaposed with the TanStack Start build. Astro discovers `src-astro/pages/**`
+  // by convention and `astro.config.mjs` is its config entry; `test-astro/` holds
+  // the JS-disabled SEO verification script (`astro:verify`).
+  "entry": [
+    "src/routes/**/*.{ts,tsx}",
+    "test/**/*.test.{ts,tsx}",
+    "e2e/**/*.spec.ts",
+    "src-astro/pages/**/*.{ts,astro}",
+    "src-astro/**/*.astro",
+    "test-astro/**/*.mjs"
+  ],
 
-  "project": ["**/*.{ts,tsx,css}"],
+  "project": ["**/*.{ts,tsx,css,astro,mjs}"],
+
+  "astro": {
+    "config": ["astro.config.mjs"],
+    "entry": ["src-astro/pages/**/*.{astro,ts}", "src-astro/content.config.ts"]
+  },
 
   // `catalog:` version specifiers resolve from the repository-root
   // pnpm-workspace.yaml, which does not exist inside this unit. That is a real

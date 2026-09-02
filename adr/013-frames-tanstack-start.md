@@ -13,6 +13,14 @@ The five Hono apex Workers were **never in scope** and are untouched;
 by this record. What changed is that all twenty deployment units now share one
 bundler.
 
+> **Partially superseded 2026-09-02 by `adr/015-public-content-surfaces-astro.md`.**
+> The twelve public content surfaces (`{app,com,org}/{docs,help,info,news}`) move
+> to Astro. For those units the framework, the bundler-owned build,
+> `defaultRenderHandler`, the committed `routeTree.gen.ts` and the "No `prerender`"
+> sub-decision below no longer apply. Everything this record says about the three
+> `*/core` units and the shared Rails / Workers VPC contract still holds, and the
+> four constraints below still bind the Cores.
+
 This record supersedes nothing and rewrites nothing.
 `adr/004-public-information-surfaces-astro.md` rejected an earlier framework move
 for the twelve content frames and invited the question to be reopened "as a new

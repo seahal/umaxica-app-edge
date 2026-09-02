@@ -28,9 +28,14 @@
     "lint:fix": "oxlint --type-aware --fix .",
     "check:generated": "pnpm run cf-typegen && CLOUDFLARE_ENV= wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts --check",
     "check:static": "pnpm run format:check && pnpm run lint && pnpm run lint:types && pnpm run check:generated && pnpm run typecheck && pnpm run knip",
-    "check:size": "size-limit"
+    "check:size": "size-limit",
+    "astro:dev": "astro dev --port 5413",
+    "astro:build": "CLOUDFLARE_ENV= PUBLIC_REGION=jp astro build",
+    "astro:preview": "pnpm run astro:build && CLOUDFLARE_ENV= wrangler dev --config dist/astro/server/wrangler.json --port 5413",
+    "astro:verify": "pnpm run astro:build && node test-astro/verify-seo.mjs"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "catalog:",
     "@fontsource-variable/inter": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
@@ -52,6 +57,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "astro": "catalog:",
     "happy-dom": "catalog:",
     "knip": "catalog:",
     "oxfmt": "catalog:",
