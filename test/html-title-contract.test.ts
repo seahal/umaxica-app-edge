@@ -7,7 +7,6 @@ import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error React is provided by the app workspace, not the root package.
 import { createElement } from '../app/core/node_modules/react';
 import { renderToStaticMarkup } from '../app/core/node_modules/react-dom/server';
-import { setCloudflareContext } from './__mocks__/opennext-cloudflare';
 
 // Every workspace resolves `next/font/google` to the same physical package, so
 // mocking that resolved path once covers all 16 root layouts. A bare
@@ -449,31 +448,53 @@ describe('rate limited 429 documents', () => {
     });
   });
 
-  const satellites = trackedFiles().filter(
-    (file) => file.endsWith('/src/middleware.ts') && !file.includes('/core/'),
-  );
+  /*
+   * The twelve Astro content surfaces (adr/015). Like the Cores they answer a
+   * hand-written 429, and like the Cores the check runs at whatever their own
+   * first touch is — here `src/middleware.ts`, because an Astro unit has no
+   * `worker.ts`. That is the asymmetry adr/010 recorded, carried across the move
+   * off TanStack Start.
+   *
+   * The guard drives `src/lib/rate-limit.ts` with an injected limiter — the same
+   * shape as the two guards above — rather than driving the middleware, which
+   * would need an Astro `APIContext` and the `cloudflare:workers` module, neither
+   * of which exists in this root suite. Keeping the limiter a parameter of
+   * `checkRateLimit` is what makes that possible.
+   *
+   * This replaces a guard that filtered `/src/middleware.ts` while excluding
+   * `/core/` and asserted the count against `nextApps()`. Next.js has since left
+   * the repository entirely, so that assertion became `12 === 0`; worse, the
+   * filter silently re-aimed itself at the Astro middleware, whose export is
+   * `onRequest`, not `middleware`. Matching on a filename could not see that the
+   * rate limiting these twelve units owe had been dropped in the conversion.
+   * Matching on `src/lib/rate-limit.ts` — the file that has to exist for the unit
+   * to limit anything at all — can.
+   */
+  const contentSurfaces = astroApps().map((app) => app.workspace);
 
-  it('covers every Next.js satellite middleware', () => {
-    // The satellites are the non-core frames. A frame that has left Next.js has
-    // no `src/middleware.ts` at all — its rate limiter moved into the server
-    // entry, the same move the Cores made (adr/010) — so it is counted out here
-    // and checked by the TanStack guard at the end of this file instead.
-    expect(satellites.length).toBe(nextApps().filter((app) => app.role !== 'core').length);
+  it('covers every astro content surface', () => {
+    expect(
+      trackedFiles()
+        .filter((file) => file.endsWith('/src/lib/rate-limit.ts') && !file.includes('/core/'))
+        .map((file) => file.split('/').slice(0, 2).join('/'))
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual(contentSurfaces);
   });
 
-  it.each(satellites)('%s serves a full 429 document', async (file) => {
-    setCloudflareContext({ env: { RATE_LIMITER: blocked } });
-    const { middleware } = (await import(/* @vite-ignore */ `../${file}`)) as {
-      middleware: (request: Request) => Promise<Response>;
-    };
+  it.each(contentSurfaces)('%s serves a full 429 document', async (workspace) => {
+    const { checkRateLimit } = (await import(
+      /* @vite-ignore */ `../${workspace}/src/lib/rate-limit.ts`
+    )) as { checkRateLimit: (request: Request, limiter: unknown) => Promise<Response | null> };
 
-    const response = await middleware(new Request('https://example.test/'));
-    expect(response.status).toBe(429);
+    const response = await checkRateLimit(new Request('https://example.test/'), blocked);
+    expect(response?.status).toBe(429);
+    expect(response?.headers.get('content-type')).toContain('text/html');
+    expect(response?.headers.get('cache-control')).toBe('no-store');
 
-    expectTitleContract(await response.text(), {
-      tld: FAMILY_TLD[file.split('/')[0] ?? ''] ?? '',
+    expectTitleContract(await (response as Response).text(), {
+      tld: FAMILY_TLD[workspace.split('/')[0] ?? ''] ?? '',
       requirePageSpecific: true,
-      label: file,
+      label: `${workspace} 429`,
     });
   });
 });
