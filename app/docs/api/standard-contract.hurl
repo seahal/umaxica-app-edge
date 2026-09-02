@@ -57,6 +57,16 @@ HTTP 200
 header "content-type" matches /^text\/html/
 
 GET {{base}}/
+HTTP 302
+[Asserts]
+header "location" matches "/(ja|en)/"
+
+GET {{base}}/ja/
+HTTP 200
+[Asserts]
+header "content-type" matches /^text\/html/
+
+GET {{base}}/en/
 HTTP 200
 [Asserts]
 header "content-type" matches /^text\/html/

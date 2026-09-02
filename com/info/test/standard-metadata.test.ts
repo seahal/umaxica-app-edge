@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { CANONICAL_ORIGIN } from '../src/lib/canonical';
-import { handlers } from './utils/routes';
+import { handlers } from './utils/handlers';
 
 const host = 'info-jp.umaxica.com';
 const unitRoot = resolve(import.meta.dirname, '..');
@@ -30,7 +30,7 @@ describe('standard metadata', () => {
     const sitemap = await handlers.sitemap();
     expect(sitemap.headers.get('content-type')).toContain('xml');
     const sitemapBody = await sitemap.text();
-    expect(sitemapBody).toContain(`<loc>https://${host}/</loc>`);
+    expect(sitemapBody).toContain(`<loc>https://${host}/ja/</loc>`);
     expect(sitemapBody).toContain('<changefreq>weekly</changefreq>');
     expect(sitemapBody).toContain('<priority>0.5</priority>');
   });
@@ -39,8 +39,8 @@ describe('standard metadata', () => {
     const manifest = await handlers.manifest();
     expect(manifest.headers.get('content-type')).toContain('application/manifest+json');
     await expect(manifest.json()).resolves.toMatchObject({
-      name: 'UMAXICA Info (app)',
-      start_url: '/',
+      name: 'UMAXICA Info (com)',
+      start_url: '/ja/',
       display: 'standalone',
       icons: [expect.objectContaining({ src: '/favicon.ico' })],
     });
@@ -62,6 +62,6 @@ describe('standard metadata', () => {
     const worker = readFileSync(resolve(unitRoot, 'public/service-worker.js'), 'utf8');
     expect(worker).toContain("event.request.mode !== 'navigate'");
     expect(worker).toContain('fetch(event.request).catch');
-    expect(worker).toContain('cache.add(OFFLINE_URL)');
+    expect(worker).toContain('cache.add(url)');
   });
 });

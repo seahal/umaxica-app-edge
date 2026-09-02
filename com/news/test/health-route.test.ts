@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetEnv, setEnv, setEnvShouldThrow } from './__mocks__/cloudflare-workers';
-import { handlers } from './utils/routes';
+import { handlers } from './utils/handlers';
 
 const GET = handlers.health;
 

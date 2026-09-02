@@ -51,15 +51,22 @@ function isNextFrame(workspace: string): boolean {
   return existsSync(join(repoRoot, workspace, 'next.config.ts'));
 }
 
+function isAstroFrame(workspace: string): boolean {
+  return existsSync(join(repoRoot, workspace, 'astro.config.mjs'));
+}
+
 /** Where this frame answers `/health`, per bundler. */
 function healthRouteOf(workspace: string): string {
-  return isNextFrame(workspace)
-    ? `${workspace}/src/app/health/route.ts`
-    : `${workspace}/src/routes/health.ts`;
+  if (isNextFrame(workspace)) return `${workspace}/src/app/health/route.ts`;
+  if (isAstroFrame(workspace)) return `${workspace}/src/pages/health.ts`;
+  return `${workspace}/src/routes/health.ts`;
 }
 
 const NEXT_FRAMES = RAILS_FRAMES.filter(({ workspace }) => isNextFrame(workspace));
-const VITE_FRAMES = RAILS_FRAMES.filter(({ workspace }) => !isNextFrame(workspace));
+const ASTRO_FRAMES = RAILS_FRAMES.filter(({ workspace }) => isAstroFrame(workspace));
+const VITE_FRAMES = RAILS_FRAMES.filter(
+  ({ workspace }) => !isNextFrame(workspace) && !isAstroFrame(workspace),
+);
 
 /**
  * Source with comments removed.
@@ -135,10 +142,14 @@ describe('rails client layout', () => {
    * two groups. Writing the imports relatively in every frame is what keeps this
    * one assertion meaningful instead of two weaker ones.
    */
-  it('keeps all fifteen /health routes byte-identical', () => {
+  it('keeps /health routes byte-identical within each bundler family', () => {
     expect(RAILS_FRAMES.length).toBe(15);
-    const digests = new Set(RAILS_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace))));
-    expect(digests.size, 'the health route handlers have diverged').toBe(1);
+    expect(new Set(VITE_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace)))).size).toBe(
+      1,
+    );
+    expect(new Set(ASTRO_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace)))).size).toBe(
+      1,
+    );
   });
 
   /*
@@ -147,9 +158,9 @@ describe('rails client layout', () => {
    * silently drop out of every assertion in this file.
    */
   it('places every frame in exactly one bundler family', () => {
-    expect([...NEXT_FRAMES, ...VITE_FRAMES].map(({ workspace }) => workspace).sort()).toEqual(
-      RAILS_FRAMES.map(({ workspace }) => workspace).sort(),
-    );
+    expect(
+      [...NEXT_FRAMES, ...VITE_FRAMES, ...ASTRO_FRAMES].map(({ workspace }) => workspace).sort(),
+    ).toEqual(RAILS_FRAMES.map(({ workspace }) => workspace).sort());
   });
 
   it('keeps all fifteen Rails health probes byte-identical', () => {
@@ -278,7 +289,7 @@ describe('rails client layout', () => {
        * variable is exported and the branch is still never taken.
        */
       expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 /u);
-      if (!isNextFrame(workspace)) {
+      if (!isNextFrame(workspace) && !isAstroFrame(workspace)) {
         const viteConfig = read(`${workspace}/vite.config.ts`);
 
         expect(

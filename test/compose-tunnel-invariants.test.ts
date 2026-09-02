@@ -241,9 +241,18 @@ describe('secret hygiene', () => {
        * the equivalent for a Vite frame, denied in the client environment by the
        * Start plugin. Either satisfies the invariant; neither is optional.
        */
-      expect(source, `${client} must be server-only`).toMatch(
-        /import '(?:server-only|@tanstack\/react-start\/server-only)'/u,
+      const isAstro = existsSync(
+        join(repoRoot, client.replace(/src\/lib\/rails-client\.ts$/u, 'astro.config.mjs')),
       );
+      if (isAstro) {
+        expect(source, `${client} must not import a Start/Next server-only marker`).not.toMatch(
+          /import '(?:server-only|@tanstack\/react-start\/server-only)'/u,
+        );
+      } else {
+        expect(source, `${client} must be server-only`).toMatch(
+          /import '(?:server-only|@tanstack\/react-start\/server-only)'/u,
+        );
+      }
 
       for (const header of [
         'cookie',

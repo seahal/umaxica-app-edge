@@ -57,6 +57,16 @@ HTTP 200
 header "content-type" matches /^text\/html/
 
 GET {{base}}/
+HTTP 302
+[Asserts]
+header "location" matches "/(ja|en)/"
+
+GET {{base}}/ja/
+HTTP 200
+[Asserts]
+header "content-type" matches /^text\/html/
+
+GET {{base}}/en/
 HTTP 200
 [Asserts]
 header "content-type" matches /^text\/html/
@@ -108,20 +118,3 @@ jsonpath "$.rails.liveness.kind" exists
 # No internal detail may reach a public health document.
 body not contains "Authorization"
 body not contains "Cookie"
-
-
-# `/health.json` exists only on the three `info` frames. It is the surface
-# identity route: `service` and `frame` are build-time literals, deliberately
-# not read from the `Host` header, so an ingress that routed a sibling brand's
-# hostname to this port answers with the WRONG identity instead of answering
-# identically. `test/tunnel-surface-identity.test.ts` pins that the three copies
-# never drift into agreeing; this asserts the value actually reaches the wire.
-GET {{base}}/health.json
-HTTP 200
-[Asserts]
-header "content-type" matches /^application\/json/
-header "x-robots-tag" contains "noindex"
-jsonpath "$.status" == "OK"
-jsonpath "$.service" == "org"
-jsonpath "$.frame" == "info"
-jsonpath "$.time" matches /^\d{4}-\d{2}-\d{2}T/

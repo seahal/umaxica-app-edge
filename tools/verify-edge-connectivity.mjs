@@ -84,9 +84,11 @@ const PREVIEW_PORT = 8787;
  * counting every Rails-backed frame rather than silently skipping a class.
  */
 export function railsBackedWorkspaces(manifest = loadManifest()) {
-  return [...manifest.railsBacked, ...(manifest.railsBackedVite ?? [])].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  return [
+    ...manifest.railsBacked,
+    ...(manifest.railsBackedVite ?? []),
+    ...(manifest.railsBackedAstro ?? []),
+  ].sort((a, b) => a.localeCompare(b));
 }
 
 /*
@@ -96,7 +98,11 @@ export function railsBackedWorkspaces(manifest = loadManifest()) {
  * that loses the route is a FAIL here rather than a silent skip: a Rails-backed
  * frame with no `/health` cannot report the connection at all.
  */
-const HEALTH_ROUTE_PATHS = ['src/app/health/route.ts', 'src/routes/health.ts'];
+const HEALTH_ROUTE_PATHS = [
+  'src/app/health/route.ts',
+  'src/routes/health.ts',
+  'src/pages/health.ts',
+];
 
 export function loadSurfaces(manifest = loadManifest()) {
   return railsBackedWorkspaces(manifest).map((ws) => {
@@ -1808,8 +1814,9 @@ async function checkTunnelApex(report, surface, base, landing, authHeaders) {
 }
 
 /**
- * `{"service":"app","frame":"info",...}` from a content frame's `/health.json`,
- * or null if the route is absent or answered with something else.
+ * Apex-shaped `{service, frame}` JSON, or null. Content frames do not serve
+ * `/health.json`; a leftover copy would still parse here and FAIL if the brand
+ * did not match.
  */
 function parseSurfaceIdentityJson(body) {
   try {
@@ -1832,10 +1839,9 @@ async function checkTunnelNext(report, surface, base, landing, authHeaders) {
   // return. An ingress entry that sent `info.umaxica.com` to the `app` port
   // would satisfy the check above exactly like a correct one.
   //
-  // `/health.json` closes that with a build-time `service` literal — the same
-  // mechanism the apexes already had. A frame that does not carry the route yet
-  // reports WARN rather than PASS, because "the brand was not checked" and "the
-  // brand is correct" must not look the same in the matrix.
+  // Content frames have no `/health.json` (that path is apex-only). Brand
+  // mix-up on a content frame is therefore UNPROVEN (WARN), not PASS: the
+  // HTML cannot distinguish app/com/org, and `/health` is liveness, not identity.
   const health = await httpGet(`${base}/health.json`, 15_000, authHeaders).catch((e) => ({
     status: 0,
     body: String(e),

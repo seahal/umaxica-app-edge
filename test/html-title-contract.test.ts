@@ -152,6 +152,17 @@ function viteApps(): { workspace: string; family: string; role: string; tld: str
     .sort((a, b) => a.workspace.localeCompare(b.workspace));
 }
 
+/** Every Astro public content surface, derived from tracked Base layouts. */
+function astroApps(): { workspace: string; family: string; role: string; tld: string }[] {
+  return trackedFiles()
+    .filter((file) => file.endsWith('/src/layouts/Base.astro'))
+    .map((file) => {
+      const [family = '', role = ''] = file.split('/');
+      return { workspace: `${family}/${role}`, family, role, tld: FAMILY_TLD[family] ?? '' };
+    })
+    .sort((a, b) => a.workspace.localeCompare(b.workspace));
+}
+
 /** Every Next.js deployment unit, derived from tracked root layouts. */
 function nextApps(): { workspace: string; family: string; role: string; tld: string }[] {
   return trackedFiles()
@@ -197,7 +208,7 @@ describe('root layout metadata', () => {
   const apps = nextApps();
 
   it('covers every content frame, across both bundlers', () => {
-    expect([...apps, ...viteApps()].map((app) => app.workspace).sort()).toEqual(
+    expect([...apps, ...viteApps(), ...astroApps()].map((app) => app.workspace).sort()).toEqual(
       [...EXPECTED_FRAMES].sort(),
     );
   });
@@ -516,6 +527,48 @@ describe('rate limited 429 documents', () => {
  * the one trap this migration actually hit stays closed — a title on the root
  * route plus a title in a failure document produces TWO `<title>` elements.
  */
+describe('Astro content-surface title contract', () => {
+  const apps = astroApps();
+  const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
+
+  it.each(apps)('$workspace names the brand once, in one place', ({ workspace, tld }) => {
+    const source = read(`${workspace}/src/lib/title.ts`);
+    expect(source, `${workspace}: BRAND_TITLE must match the deployment family`).toContain(
+      `export const BRAND_TITLE = 'UMAXICA (${tld})'`,
+    );
+    expect(source).toContain('return `${pageTitle} — ${BRAND_TITLE}`;');
+  });
+
+  it.each(apps)(
+    '$workspace titles the layout from the page, not a root default',
+    ({ workspace }) => {
+      const layout = read(`${workspace}/src/layouts/Base.astro`);
+      expect(layout).toContain('<title>{title}</title>');
+      expect(layout).not.toMatch(/brandTitle\(/u);
+    },
+  );
+
+  it.each(apps)('$workspace titles both public documents and the 404', ({ workspace, tld }) => {
+    const pages = [
+      `${workspace}/src/pages/ja/index.astro`,
+      `${workspace}/src/pages/ja/about.astro`,
+      `${workspace}/src/layouts/StatusSplash.astro`,
+      `${workspace}/src/pages/404.astro`,
+    ];
+    for (const page of pages) {
+      const source = read(page);
+      expect(source, `${page}: declares no title`).toMatch(/brandTitle\(/u);
+    }
+    const notFound = read(`${workspace}/src/pages/404.astro`);
+    expect(notFound).toContain('HTTP 404');
+    expectTitleContract(`<title>ページが見つかりません — UMAXICA (${tld})</title>`, {
+      tld,
+      requirePageSpecific: true,
+      label: `${workspace} 404`,
+    });
+  });
+});
+
 describe('TanStack Start title contract', () => {
   const apps = viteApps();
   const read = (relativePath: string) => readFileSync(join(repoRoot, relativePath), 'utf8');
