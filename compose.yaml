@@ -1,7 +1,20 @@
-# The one compose project for this repository. `.devcontainer/devcontainer.json`,
-# `scripts/dev-start` and a bare `podman compose` all resolve to this same name, so
-# they share one set of containers and volumes. Developer-local additions go in
-# `compose.custom.yaml`, which is the only other compose file in the repository.
+# The COMPLETE standard development environment. A fresh `git clone` plus a
+# container engine must be enough to start it and to open the Dev Container --
+# on Ubuntu, and on RHEL/Fedora with SELinux Enforcing, under Docker and under
+# rootless Podman. Nothing here may require a file a clone does not contain, and
+# nothing here may use a required `${VAR:?}` interpolation: Compose interpolates
+# the whole file whichever service is named, so one would stop every machine
+# that has not set the variable.
+#
+# Developer-local, host-specific additions go in the OPTIONAL, gitignored
+# `compose.override.yaml`, documented by `compose.override.yaml.example`. Nobody
+# has to create it; Compose auto-discovers it when no `-f` is given, and
+# `scripts/dev-start` loads it when it exists. `.devcontainer/devcontainer.json`
+# lists this file alone, so the editor never depends on a local override.
+#
+# The one compose project for this repository: `.devcontainer/devcontainer.json`,
+# `scripts/dev-start` and a bare `podman compose` all resolve to this same name,
+# so they share one set of containers and volumes. An override must repeat it.
 name: umaxica-apps-edge
 
 services:
@@ -45,70 +58,6 @@ services:
         read_only: true
         volume:
           nocopy: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/.env
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/app/news/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/com/news/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/core/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/docs/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/help/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/info/.env.development.local
-        read_only: true
-      - type: bind
-        source: ./empty.env
-        target: /home/edge/workspace/org/news/.env.development.local
-        read_only: true
     ports:
       - '127.0.0.1:5101:5101' # com/apex
       - '127.0.0.1:5103:5103' # com/info
@@ -149,10 +98,35 @@ services:
     userns_mode: keep-id:uid=1000,gid=1000
     security_opt:
       - no-new-privileges:true
+      # SELinux Enforcing (Fedora/RHEL) 対応。標準環境の成立条件なので、
+      # ローカル override ではなくこちらに置く。
+      #
+      # このファイルの bind mount はワークスペースを渡す `.` の 1 本だけで、
+      # :z / :Z を付けていない。ホスト側リポジトリは user_home_t の
+      # ままなので container_t のコンテナからは読めない。uid/gid は keep-id で
+      # 一致していて DAC は通っており、落ちているのは MAC の側だけ
+      # (`ls /home/edge/workspace` がディレクトリ一覧すら出せない)。
+      #
+      # :z を付ける手もあるが、それはホスト側リポジトリを
+      # container_file_t へ「再ラベル」してしまう。label=disable はこの
+      # コンテナ 1 つに閉じ、ホストのラベルを一切書き換えないのでこちらを取る。
+      # SELinux を使っていないホスト (Ubuntu 等) では Docker / Podman とも
+      # 単に無視されるため、無条件に置いて安全。
+      - label=disable
     cap_drop:
       - ALL
     environment:
       CLOUDFLARE_ENV: development
+      # gh CLI の API 認証。トークン本体はこのファイルに書かず、ホスト側の
+      # 環境変数からそのまま引き渡す。gh のトークン解決順は
+      # GH_TOKEN > GITHUB_TOKEN > 設定ファイル なので、イメージ側に失効した
+      # トークンが残っていてもこちらが必ず勝つ。gh auth login は不要。
+      #
+      # `:?` ではなく `:-` なのが要点。Compose は起動するサービスに関係なく
+      # ファイル全体を補間するため、`:?` にするとトークンを持たないマシンでは
+      # `compose config` ごと止まる。gh は空文字を「未設定」として扱い
+      # hosts.yml へフォールバックするので、空のまま渡して無害。
+      GH_TOKEN: ${GH_TOKEN:-}
       # Read only by `tools/verify-edge-connectivity.mjs` as an "am I inside the
       # container" hint, alongside its `/.dockerenv` fallback. It is a property of
       # this service rather than of the editor attached to it, so it belongs here
@@ -184,7 +158,7 @@ services:
   # Global/Rails connector: the two share neither a Podman network nor a tunnel token.
   # Public hostnames on this tunnel must be protected by Cloudflare Access.
   #
-  # It lives here rather than in `compose.custom.yaml` because the connector, its
+  # It lives here rather than in a local override because the connector, its
   # pinned release and its hardening are project-wide facts; only the token is
   # per-developer, and that arrives from the gitignored `.env`. Starting it is still
   # opt-in — `scripts/dev-start` names `core` alone unless `--tunnel` is passed.

@@ -139,3 +139,4 @@ Bāshettihalli   # a real place name, used as a cf-ipcity value to be stripped
 
 # --- Security standards cited in the header and rate-limit rationales ---
 ASVS        # OWASP Application Security Verification Standard
+HSTS        # RFC 6797 HTTP Strict Transport Security, set in every _headers

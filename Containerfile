@@ -109,8 +109,8 @@ RUN npm rm --global corepack \
 # anything else makes those installs fail with "chown: invalid group".
 #
 # `.ssh` is created empty, 0700, owned by the login account. No key material is
-# ever placed there: `compose.custom.yaml` binds the host's `known_hosts` read-
-# only onto it, and the host ssh-agent socket arrives separately. Creating it
+# ever placed there: an optional `compose.override.yaml` may bind the host's
+# `known_hosts` read-only onto it, and an ssh-agent socket arrives separately. Creating it
 # here is what makes that mount well defined — Podman would otherwise invent the
 # missing parent directory itself, owned by root.
 RUN set -eux; \

@@ -60,9 +60,16 @@ pick, failing with `can only create exec sessions on running containers: contain
 improper` while naming neither container.
 
 Both causes were removed rather than papered over. `userns_mode: keep-id:uid=1000,gid=1000`
-pins the in-container id, so the host id no longer needs to be discovered, and both compose
-files now set the same `name: umaxica-apps-edge`, so no new project name can appear for this
-folder. If a leftover from before that fix is still around, `podman rm --force` it once.
+pins the in-container id, so the host id no longer needs to be discovered, and every compose
+file sets the same `name: umaxica-apps-edge`, so no new project name can appear for this
+folder.
+
+`devcontainer.json` lists `../compose.yaml` and nothing else. The Dev Containers CLI passes
+each `dockerComposeFile` entry to Compose as `-f`, so an entry a fresh clone does not contain
+fails the whole `up` at configuration resolution — which is how a gitignored overlay used to
+break Codespaces. The same `-f` also suppresses Compose's auto-discovery of
+`compose.override.yaml`, so the optional local override applies to `scripts/dev-start` and a
+bare `docker compose`, not to the editor. If a leftover from before that fix is still around, `podman rm --force` it once.
 
 `cloudflare-tunnel` declares no `depends_on: core` for a related reason. Podman turns a
 Compose dependency into a container dependency, and `--remove-existing-container` runs a bare
@@ -73,7 +80,7 @@ The Podman-specific properties are Compose concerns and need no flags:
 `userns_mode: keep-id:uid=1000,gid=1000`,
 `security_opt: [no-new-privileges:true]`, `cap_drop: [ALL]`, `init: true`, the
 `CONTAINER_UID`/`CONTAINER_GID` build arguments, loopback-only port publication on
-`127.0.0.1`, the `empty.env` masks over ignored environment paths, and the named volumes
+`127.0.0.1`, and the named volumes
 `node-volume`, `home-cache`, `pnpm-store`, and `workspace-secrets-mask`. The
 Edge's `cloudflare-tunnel` sidecar is declared in `compose.yaml` beside `core`, uses the compose default
 network, and requires `EDGE_CLOUDFLARED_TOKEN` (or, as a fallback, `CLOUDFLARED_TOKEN`) from the gitignored

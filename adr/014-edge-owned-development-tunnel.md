@@ -23,6 +23,18 @@ path exists.
 The cloudflared image is pinned to `2026.8.2`; Cloudflare supports releases for one year, so the pin
 must be kept current.
 
+## Hostname region label is a per-machine `.env` parameter
+
+The regional surfaces carry a region label in their hostname (`jp` in `docs-jp.umaxica.app`,
+`jp.umaxica.app` for Core). **That label is not fixed in the repository** — it is resolved from a
+per-machine value in the gitignored root `.env`. This development environment's `.env` sets it to
+`jp`; another developer's machine may set it to `us` (or anything else), and their Edge Tunnel
+Public Hostnames, Access applications, and `EDGE_TUNNEL_HOSTS` checker override are named to match.
+
+So `docs-jp.umaxica.*` / `jp.umaxica.*` is what _this_ machine publishes; it is not a
+repository-wide constant. Anything that hard-codes `jp` (checker rules, docs examples, ingress
+lists) is describing one machine's configuration, not the contract.
+
 ## Consequences
 
 A new machine must set the Edge-specific token in its gitignored root `.env` before Dev Container

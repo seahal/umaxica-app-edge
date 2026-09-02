@@ -1,5 +1,13 @@
 # 公開系 surface のキャッシュ方針
 
+> **2026-09-02 更新.** `adr/015-public-content-surfaces-astro.md` が公開系 12
+> surface を Astro へ移行し、キャッシュ方針の所有者を確定させた:
+> **Phase 1 はキャッシュなし(毎リクエスト Rails)**、correctness 確認後に
+> **Phase 2 で Cloudflare Workers Cache**(Astro の cache abstraction 経由、
+> short TTL + natural expiry、purge を correctness の必須条件にしない)。
+> 下記の TTL 目安(info/news 300s、help/docs 1800s)は Phase 2 の初期値として
+> 引き継ぐ。以下は移行前の記録。
+
 ## 現状(2026-08-23 更新)
 
 **この文書が記録していた ISR 方針は、実装機構ごと失効した。**

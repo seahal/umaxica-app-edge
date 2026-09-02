@@ -2,11 +2,15 @@
 set -euo pipefail
 
 # The same file set `scripts/dev-start` brings up, so `down` resolves the same
-# project. Neither flag changes it any more: the overlay is unconditional and
-# the tunnel connector lives in compose.yaml, and `down` stops every service in
-# the project regardless. Both are still accepted so that a stop can be spelled
-# the same way as the start it undoes.
-compose=(podman compose -f compose.yaml -f compose.custom.yaml)
+# project. Neither flag changes it any more: the tunnel connector lives in
+# compose.yaml and `down` stops every service in the project regardless. Both
+# are still accepted so that a stop can be spelled the same way as the start it
+# undoes. The optional local override is picked up only when it exists, exactly
+# as in `dev-start`.
+compose=(podman compose -f compose.yaml)
+if [[ -e compose.override.yaml ]]; then
+  compose+=(-f compose.override.yaml)
+fi
 for argument in "$@"; do
   case "${argument}" in
     --rails | --tunnel) ;;

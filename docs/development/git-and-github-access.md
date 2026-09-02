@@ -6,11 +6,18 @@ The container reuses the **host's** GitHub identity, borrowed rather than copied
 is registered inside `core`, and no key file or token literal exists in this repository or
 in the image:
 
-| Operation                  | Credential         | How it arrives                                                                        |
-| -------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
-| `git` clone / fetch / push | Host ssh-agent     | `${SSH_AUTH_SOCK}` bound to `/ssh-agent`; the private key never leaves the host agent |
-| Host key verification      | Host `known_hosts` | `${HOME}/.ssh/known_hosts` bound **read-only**                                        |
-| `gh` API calls             | `GH_TOKEN`         | Interpolated from the host environment                                                |
+| Operation                  | Credential         | How it arrives                                                                                                                           |
+| -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `git` clone / fetch / push | Host ssh-agent     | `${SSH_AUTH_SOCK}` bound to `/ssh-agent` — **opt-in**, via your own `compose.override.yaml`; the private key never leaves the host agent |
+| Host key verification      | Host `known_hosts` | `${HOME}/.ssh/known_hosts` bound **read-only** — **opt-in**, same file                                                                   |
+| `gh` API calls             | `GH_TOKEN`         | Interpolated from the host environment by `compose.yaml` — standard, always present                                                      |
+
+The two opt-in rows are host-specific: the agent socket path differs per machine and
+`known_hosts` may not exist at all, and either missing source fails the bind before any
+container starts. So they live in the optional
+[`compose.override.yaml`](../../README.md#the-three-compose-files) rather than in the
+standard environment, and the Dev Container does not load them at all. Use `gh` over HTTPS
+if you have not opted in.
 
 `gh auth login` is not part of this flow and must not be relied on. `gh` resolves tokens
 in the order `GH_TOKEN` → `GITHUB_TOKEN` → its configuration file, so `GH_TOKEN` wins even
@@ -34,9 +41,9 @@ export GH_TOKEN="$(gh auth token)"   # persist this in the shell profile
 
 Both variables must be exported in the shell that runs `scripts/dev-start` or
 `devcontainer up`: Compose reads that process environment, not the container's.
-`scripts/dev-start` refuses to start when `known_hosts` is missing and warns when either
-variable is unset. Neither is required — an agent-less, token-less host still boots, it
-just cannot reach GitHub.
+`scripts/dev-start` refuses to start only when your own override binds `known_hosts` and
+the host file is missing, and it warns when either variable is unset. Neither is required —
+an agent-less, token-less host still boots, it just cannot reach GitHub over SSH.
 
 New mounts apply only to a **new** container. Recreate rather than restart after changing
 either value.

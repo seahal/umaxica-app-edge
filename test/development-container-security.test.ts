@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -7,12 +8,38 @@ const repoRoot = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
 /**
- * Every compose file this repository has: `compose.yaml` is what everyone
- * shares and `compose.custom.yaml` is the developer-local overlay, which now
- * carries only the SELinux relabel opt-out. A new one would have to be added
- * here to be covered.
+ * Every path git tracks. The root `test` script injects `EDGE_TRACKED_FILES`
+ * so the suite runs one `git ls-files` instead of one per file that asks;
+ * running this file on its own falls back to invoking git directly.
  */
-const composeFiles = ['compose.yaml', 'compose.custom.yaml'] as const;
+function trackedFiles(): string[] {
+  const injected = process.env['EDGE_TRACKED_FILES'];
+  if (injected !== undefined) {
+    return injected.split('\n').filter(Boolean);
+  }
+  return execFileSync('git', ['ls-files'], { cwd: repoRoot, encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean);
+}
+
+/** The tracked entries directly inside `prefix`, as bare names, sorted. */
+function trackedUnder(prefix: string): string[] {
+  return trackedFiles()
+    .filter((path) => path.startsWith(prefix) && !path.slice(prefix.length).includes('/'))
+    .map((path) => path.slice(prefix.length))
+    .sort();
+}
+
+/**
+ * Every compose file this repository tracks: `compose.yaml` is the complete
+ * standard environment -- it carries the SELinux relabel opt-out and the
+ * forwarded `GH_TOKEN` -- and `compose.override.yaml.example` documents the
+ * OPTIONAL developer-local override. The override itself
+ * (`compose.override.yaml`) is gitignored, absent on a fresh clone, and holds
+ * arbitrary host-specific edits, so the example is what these assertions can
+ * hold. A new compose file would have to be added here to be covered.
+ */
+const composeFiles = ['compose.yaml', 'compose.override.yaml.example'] as const;
 const compose = composeFiles.map((path) => read(path)).join('\n');
 
 /**
@@ -109,7 +136,7 @@ describe('development-container security contract', () => {
    * `.ssh` paths is asserted, so a second mount cannot be added without this
    * test failing, however it is spelled.
    */
-  it('forwards only the host ssh-agent socket and a read-only known_hosts', () => {
+  it('forwards only a read-only known_hosts, and no ssh-agent socket', () => {
     expect(devcontainer, 'devcontainer references .ssh').not.toContain('/.ssh');
 
     // Comments are stripped first: the compose files discuss credentials at
@@ -120,11 +147,12 @@ describe('development-container security contract', () => {
         .filter((line) => !line.trimStart().startsWith('#'))
         .join('\n');
 
-    // The shared file stays absolutely clean. Host identity is a per-developer
-    // fact, so it belongs to the overlay and nowhere else.
+    // The standard file stays absolutely clean. Which SSH paths exist is a
+    // per-machine fact, so they belong to the optional override and nowhere
+    // else -- a bind whose source is missing fails the whole `up`.
     expect(directives('compose.yaml'), 'compose.yaml references .ssh').not.toContain('/.ssh');
 
-    const overlay = directives('compose.custom.yaml');
+    const overlay = directives('compose.override.yaml.example');
 
     // Exactly one source and one target, in that order, and nothing else.
     expect([...overlay.matchAll(/\S*\/\.ssh\/\S*/gu)].map((match) => match[0])).toEqual([
@@ -142,23 +170,26 @@ describe('development-container security contract', () => {
       /source: \$\{HOME\}\/\.ssh\/known_hosts\n\s+target: \/home\/edge\/\.ssh\/known_hosts\n\s+read_only: true/u,
     );
 
-    // The agent arrives as an interpolation, never as a literal socket path: a
-    // literal would name one machine and one session, and this file is shared.
-    expect(overlay).toMatch(/SSH_AUTH_SOCK: \/ssh-agent/u);
-    expect(overlay).toMatch(/source: \$\{SSH_AUTH_SOCK:-\/dev\/null\}\n\s+target: \/ssh-agent/u);
+    // The example forwards no ssh-agent socket outside a comment. Whether one
+    // exists, and at which path, is a per-machine fact, and Podman fails the
+    // bind -- and so the whole `up` -- before any container starts when the
+    // source is missing. So the socket stays commented out: a developer opts in
+    // by uncommenting it in their own copy.
+    expect(overlay, 'the example forwards an ssh-agent socket').not.toMatch(
+      /SSH_AUTH_SOCK|\/ssh-agent/u,
+    );
 
-    // `:-` rather than `:?`, on both host-supplied values. Compose interpolates
-    // the whole file whichever services are named, and this overlay is loaded
-    // unconditionally, so a required variable would stop `up core` on every
-    // machine that has no agent or no token.
-    expect(overlay, 'a required interpolation would break agent-less hosts').not.toMatch(
+    // `:-` rather than `:?`, on every host-supplied value. Compose interpolates
+    // the whole file whichever services are named, so a required variable would
+    // stop `up core` on every machine that has no token.
+    expect(overlay, 'a required interpolation would break token-less hosts').not.toMatch(
       /\$\{(?:SSH_AUTH_SOCK|GH_TOKEN|HOME):\?/u,
     );
 
     // The remote-SSH half of the old Tailscale overlay was removed deliberately:
     // no sshd, no entrypoint override, no authorized-keys bind, no TS_AUTHKEY.
     // Its pieces must not come back one file at a time.
-    expect(directives('compose.custom.yaml')).not.toMatch(/sshd|tailscale|TS_AUTHKEY/iu);
+    expect(directives('compose.override.yaml.example')).not.toMatch(/sshd|tailscale|TS_AUTHKEY/iu);
     expect(instructions, 'the image installs an SSH server again').not.toMatch(/openssh-server/u);
     expect(instructions).not.toMatch(/TS_AUTHKEY|tskey-|--advertise-tags|tailscale serve/u);
 
@@ -183,23 +214,35 @@ describe('development-container security contract', () => {
     // `.devcontainer/` holds its two JSON files and nothing else. Every script
     // that used to live beside them is gone, and the wrapper the image needs is
     // a heredoc in the Containerfile rather than a seventh file here.
-    expect(
-      readdirSync(join(repoRoot, '.devcontainer')).sort(),
-      '.devcontainer/ gained a file',
-    ).toEqual(['devcontainer-lock.json', 'devcontainer.json']);
+    //
+    // This reads what git tracks, not what `readdirSync` finds. A fresh clone
+    // is the thing under test, and only tracked files reach one; a developer's
+    // gitignored leftover -- `.devcontainer/devcontainer.custom.yaml` is
+    // ignored by name at `.gitignore` precisely so an existing local copy
+    // stays invisible -- is not a change to the image's attack surface and
+    // must not fail this contract.
+    expect(trackedUnder('.devcontainer/'), '.devcontainer/ gained a tracked file').toEqual([
+      'devcontainer-lock.json',
+      'devcontainer.json',
+    ]);
   });
 
-  it('masks ignored workspace credential inputs behind non-secret mounts', () => {
+  it('masks .secrets/ behind an empty read-only volume', () => {
+    /*
+     * `.secrets/` is the ONE workspace path still masked. It is the input side
+     * of Podman Secret delivery, so a container that could read it would make
+     * the whole mechanism pointless.
+     *
+     * The env files are deliberately NOT masked any more. `.env` carries the
+     * tunnel token Compose interpolates on the host, and hiding it from the
+     * container it configures cost more than it bought. Nothing may reintroduce
+     * a value-free file mounted over a workspace path.
+     */
     const base = read('compose.yaml');
     expect(base).toContain('target: /home/edge/workspace/.secrets');
     expect(base).toContain('source: workspace-secrets-mask');
     expect(base).toContain('nocopy: true');
-    expect(base).toContain('target: /home/edge/workspace/.env');
-    expect(
-      base.match(
-        /target: \/home\/edge\/workspace\/(?:app|com|org)\/.+\/\.env\.development\.local/gu,
-      ),
-    ).toHaveLength(15);
+    expect(compose).not.toContain('empty.env');
   });
 
   it('retains rootless keep-id and rejects privilege/network/storage shortcuts', () => {
@@ -219,7 +262,7 @@ describe('development-container security contract', () => {
     // anything, so prove the extraction found the service first.
     expect(service('core')).toContain('userns_mode: keep-id:uid=1000,gid=1000');
     expect(service('core')).not.toMatch(/\btmpfs\s*:/u);
-    expect(read('compose.custom.yaml')).not.toMatch(/\btmpfs\s*:/u);
+    expect(read('compose.override.yaml.example')).not.toMatch(/\btmpfs\s*:/u);
   });
 
   it('publishes every normal and OAuth port to host loopback only', () => {
@@ -251,6 +294,9 @@ describe('development-container security contract', () => {
       .filter((line) => /\$\{[^}]*(?:TOKEN|SECRET|API_KEY|PASSWORD)/u.test(line))
       .map((line) => line.trim());
     expect(interpolated).toEqual([
+      // The host's gh identity, borrowed rather than copied: no literal, and
+      // `:-` so a machine without one still resolves the configuration.
+      'GH_TOKEN: ${GH_TOKEN:-}',
       "TUNNEL_TOKEN: '${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:-}}'",
     ]);
     for (const path of composeFiles) {

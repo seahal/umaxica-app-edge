@@ -17,12 +17,10 @@ dist
 plans
 *.log
 
-# Compose bind-mounts `empty.env` onto these paths inside the
-# container. Podman creates any missing mount target, and because the workspace
-# is itself a bind mount that creation lands on the HOST — owned by a rootless
-# subuid (e.g. 524288) with mode 0700, which the unprivileged build frontend
-# then cannot read:
-#   checking context: no permission to read from '.../app/core/.env.development.local'
-# So every successful `devcontainer up` broke the next build. They are
-# gitignored and never belong in the image; excluding them breaks the cycle.
+# Gitignored local credential inputs. They are readable inside the dev
+# container through the workspace bind, which is deliberate, but an image is
+# shared and rebuilt from a clone — neither the root `.env` (Cloudflare and
+# tunnel tokens, read by Compose on the HOST) nor the per-frame Wrangler
+# overrides may be baked into one. `scripts/verify-build-context` proves it.
+/.env
 **/.env.development.local

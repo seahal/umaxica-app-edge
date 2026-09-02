@@ -55,11 +55,18 @@ configured. `scripts/github-readonly-check` reports a remote left on HTTPS.
 
 ## Workspace credential inputs stay out
 
-`scripts/dev-start` refuses to start when an unmasked `.dev.vars`, `.env.local`,
-`.env.test.local`, or `.env.production.local` exists in the workspace. The known legacy
-root `.env` and per-frame `.env.development.local` paths are masked by value-free mounts,
-and `.secrets/` is masked by an empty read-only volume, so none of them can enter the
-container even if a file is left behind on the host.
+`scripts/dev-start` refuses to start when a `.dev.vars`, `.env.local`,
+`.env.test.local`, or `.env.production.local` exists in the workspace. `.secrets/` is
+masked by an empty read-only volume, so the input side of Podman Secret delivery cannot
+be read from inside the container even if a file is left behind on the host.
+
+The root `.env` and the per-frame `.env.development.local` files are NOT masked: they
+arrive through the workspace bind and are readable in the container. `.env` holds the
+tunnel and Cloudflare tokens that Compose interpolates on the host, and keeping it
+invisible to the container it configures cost more than it bought. Wrangler still
+authenticates interactively — see [Wrangler authentication](wrangler-authentication.md) —
+so nothing depends on `CLOUDFLARE_API_TOKEN` being present. Both paths are excluded from
+the build context by `.dockerignore`/`.containerignore`, so none of it reaches an image.
 
 `scripts/verify-build-context` proves the same for image builds with a canary file, and
 `test/development-container-security.test.ts` fails the suite if a host identity mount, a

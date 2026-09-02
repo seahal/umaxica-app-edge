@@ -39,32 +39,60 @@ if ((${#unmasked_env_files[@]} > 0)); then
   exit 1
 fi
 
-# The overlay is not optional. It carries the SELinux `label=disable` without
-# which `/home/edge/workspace` is unreadable inside the container on an
-# Enforcing host, and the host GitHub identity (ssh-agent socket, known_hosts,
-# GH_TOKEN). `.devcontainer/devcontainer.json` has always loaded both files;
-# loading only one here meant a bare `scripts/dev-start` produced a container
-# that differed from the one the editor starts.
-compose=(podman compose -f compose.yaml -f compose.custom.yaml)
+# The local override is optional by contract. `compose.yaml` alone is the
+# complete standard environment -- it carries the SELinux `label=disable` and
+# the `GH_TOKEN` passthrough that used to live in the overlay -- so a fresh
+# clone starts here, and `.devcontainer/devcontainer.json` loads only
+# `compose.yaml` for the same reason.
+#
+# `compose.override.yaml` is gitignored and never created automatically. Load
+# it when it happens to exist, so this script and a bare `docker compose`
+# (which auto-discovers the same file when no `-f` is given) agree.
+#
+# `compose.custom.yaml` was the old name. If you still have one, rename it:
+#   mv compose.custom.yaml compose.override.yaml
+# and delete any `label=disable` / `GH_TOKEN` from your copy -- `security_opt`
+# entries are appended, so a restated `label=disable` now fails the merge with
+# `services.core.security_opt items at 0 and 1 are equal`.
+if [[ -e compose.custom.yaml && ! -e compose.override.yaml ]]; then
+  echo 'NOTE: compose.custom.yaml is the retired name and is no longer loaded.' >&2
+  echo '  mv compose.custom.yaml compose.override.yaml   # then drop label=disable/GH_TOKEN from it' >&2
+fi
+
+compose=(podman compose -f compose.yaml)
+if [[ -e compose.override.yaml ]]; then
+  compose+=(-f compose.override.yaml)
+fi
 services=(core)
 
 # Podman invents a missing bind source as a DIRECTORY. For known_hosts that
 # would silently create `~/.ssh/known_hosts/` on the HOST and leave every later
 # `ssh` reading an empty file it cannot explain, so refuse before starting.
-if [[ ! -f ${HOME}/.ssh/known_hosts ]]; then
-  echo "ERROR: ${HOME}/.ssh/known_hosts is not a regular file." >&2
-  echo 'The container binds it read-only; Podman would otherwise create a directory there.' >&2
+#
+# Only relevant when the local override actually mounts it: that bind is opt-in
+# precisely because a host without the file cannot support it, and the standard
+# environment must not fail for a file it never touches.
+if [[ -e compose.override.yaml ]] && grep -q 'known_hosts' compose.override.yaml &&
+  [[ ! -f ${HOME}/.ssh/known_hosts ]]; then
+  echo "ERROR: compose.override.yaml binds ${HOME}/.ssh/known_hosts, which is not a regular file." >&2
+  echo 'Podman would create a directory there. Create it, or drop the bind from your override.' >&2
   echo '  ssh-keyscan github.com >> ~/.ssh/known_hosts' >&2
   exit 1
 fi
 
-# Both are optional by design -- compose falls back to /dev/null and to an empty
-# token -- but silence would be the wrong answer to "why does git ask for a
-# password inside the container?".
-if [[ -z ${SSH_AUTH_SOCK:-} ]]; then
-  echo 'WARNING: SSH_AUTH_SOCK is unset; Git over SSH will not work in the container.' >&2
-  echo '  eval "$(ssh-agent -s)" && ssh-add' >&2
+# No ssh-agent socket is forwarded by the standard environment: binding one is
+# a per-host fact (the socket path exists on some machines and not others, and a
+# stale value fails the bind before any container starts), so it belongs in your
+# own `compose.override.yaml`. Say so once, because silence would be the wrong
+# answer to "why does git ask for a password inside the container?".
+if [[ ! -e compose.override.yaml ]] || ! grep -q '/ssh-agent' compose.override.yaml; then
+  echo 'NOTE: no ssh-agent socket is forwarded; Git over SSH will not work in the container.' >&2
+  echo '  Use gh/HTTPS, or copy the commented bind out of compose.override.yaml.example:' >&2
+  echo '    cp compose.override.yaml.example compose.override.yaml' >&2
 fi
+
+# Optional by design -- compose falls back to an empty token -- but the same
+# reasoning applies.
 if [[ -z ${GH_TOKEN:-} ]]; then
   echo 'WARNING: GH_TOKEN is unset; the gh CLI will fall back to its in-image state.' >&2
   echo '  export GH_TOKEN="$(gh auth token)"' >&2
@@ -101,8 +129,9 @@ fi
 
 # There is no credential overlay any more. Long-lived API tokens and Podman
 # Secrets were retired. GitHub access is the host's, borrowed rather than copied
-# -- the ssh-agent socket and GH_TOKEN forwarded by `compose.custom.yaml`, with
-# no key file and no token literal anywhere in the repository. Everything else
+# -- `GH_TOKEN` forwarded by `compose.yaml` as `${GH_TOKEN:-}` and, optionally,
+# an ssh-agent socket from your own `compose.override.yaml`, with no key file
+# and no token literal anywhere in the repository. Everything else
 # is a short-lived credential obtained inside the container:
 #   scripts/wrangler-login
 #   claude   # /login

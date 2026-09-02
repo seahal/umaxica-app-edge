@@ -2,12 +2,11 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 
 import { styleUrl } from './assets';
-import { brandFromEnv, getBrandName } from './brand';
 import type { ApexEnv } from './create-apex-app';
 import { defaultLocale } from './i18n/config';
+import { rendererBindings } from './renderer-bindings';
 import { SeoHead } from './seo';
 import { AppShell } from './shell';
-import { requestThemeAttribute } from './theme';
 
 /*
  * The stylesheet is Tailwind's output, compiled from `src/style.css` by Vite
@@ -27,22 +26,20 @@ import { requestThemeAttribute } from './theme';
  * absence is what leaves `prefers-color-scheme` in charge. See `theme.ts`.
  */
 export const renderer = jsxRenderer<ApexEnv>(({ children }, c) => {
-  const currentYear = new Date().getUTCFullYear();
-  const brandName = getBrandName(c.env);
-  const language = c.get('language');
+  const { year, brandName, language, theme, brand } = rendererBindings(c);
   return (
-    <html lang={defaultLocale} data-theme={requestThemeAttribute(c.req.raw)}>
+    <html lang={defaultLocale} data-theme={theme}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <SeoHead c={c} brand={brandFromEnv(c)} />
+        <SeoHead c={c} brand={brand} />
         <link rel="stylesheet" href={styleUrl} />
         <script src="/service-worker-register.js" defer></script>
       </head>
       <body class="flex min-h-screen flex-col bg-gray-50 leading-body text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-        <AppShell brandName={brandName} year={currentYear} language={language}>
+        <AppShell brandName={brandName} year={year} language={language}>
           {children}
         </AppShell>
       </body>

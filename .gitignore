@@ -195,3 +195,15 @@ package-lock.json
 **/blob-report/
 **/playwright/.cache/
 **/playwright/.auth/
+
+# Optional developer-local Compose override. `compose.yaml` alone is a complete
+# standard environment; this file only ever adds host-specific conveniences.
+# Documented by the tracked `compose.override.yaml.example`, which nobody has to
+# copy. Never create it automatically -- a fresh clone must start without it.
+/compose.override.yaml
+
+# Legacy name of the same thing, kept ignored so that an existing local copy
+# does not suddenly show up as an untracked file. See the migration note in
+# README.md; rename yours to `compose.override.yaml`.
+/compose.custom.yaml
+.devcontainer/devcontainer.custom.yaml

@@ -24,4 +24,5 @@ import { defineConfig } from 'vite';
  */
 export default defineConfig({
   plugins: [cloudflare({ inspectorPort: 9301 }), tailwindcss()],
+  server: { allowedHosts: ['umaxica.org'] },
 });

@@ -46,29 +46,11 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx,js,jsx}'],
       provider: 'v8',
       reporter: ['text', 'text-summary'],
-      /*
-       * Measured floors, ratcheted to what this unit actually reaches. Branch
-       * coverage is complete; `branches` sits at 99 rather than 100 for the
-       * reason every frame's does, so one new branch reads as a threshold to
-       * answer for rather than a tree nothing can be committed against.
-       *
-       * `functions` and `statements` stop short of the rest deliberately, and
-       * the shortfall is not a backlog. What stays uncovered is the
-       * `/health.html`, `/health.json`, `/offline` and `notFound` handlers in
-       * `create-apex-app.ts`, plus `offlinePageMarkup` in `status-page.ts` —
-       * every one of them a response, and every one already asserted in
-       * `api/*.hurl`, which is the layer that owns responses. Reaching them
-       * from here would mean asserting a status and a body in Vitest, the one
-       * thing this layer explicitly does not do
-       * (docs/development/static-analysis-and-hygiene.md §1). Raise these
-       * numbers when the covered set grows, never by moving an assertion down
-       * a layer.
-       */
       thresholds: {
         branches: 99,
-        functions: 91,
-        lines: 98,
-        statements: 97,
+        functions: 99,
+        lines: 99,
+        statements: 99,
       },
     },
     deps: {

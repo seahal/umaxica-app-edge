@@ -3,10 +3,11 @@ set -euo pipefail
 
 # GitHub access is the host's identity, borrowed rather than copied. No key file
 # and no token literal exists in this repository or this image:
-#   - Git authenticates over SSH through the host ssh-agent socket forwarded at
-#     $SSH_AUTH_SOCK. The private key never leaves the host agent.
+#   - Git over SSH authenticates through a host ssh-agent socket, forwarded at
+#     $SSH_AUTH_SOCK only if the developer opted in via `compose.override.yaml`.
+#     The private key never leaves the host agent.
 #   - The gh CLI authenticates with GH_TOKEN, passed in from the host
-#     environment by `compose.custom.yaml`.
+#     environment by `compose.yaml` as `${GH_TOKEN:-}`.
 # Read-only throughout: this pushes nothing and mutates nothing on GitHub.
 
 if [[ -z ${GH_TOKEN:-} ]]; then

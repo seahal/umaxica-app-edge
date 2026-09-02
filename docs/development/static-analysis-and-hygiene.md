@@ -242,7 +242,7 @@ Two live examples of the bar:
 | `deps`                   | `pnpm run check:deps` (repair: `pnpm run fix:deps`)       |
 | `spelling`               | `pnpm run check:spelling`                                 |
 | `knip:<platform>:<unit>` | `pnpm --dir <dir> run knip`                               |
-| `test`                   | `pnpm run test:cov`                                       |
+| `test`                   | `pnpm run test`                                           |
 | `size`                   | `pnpm -C <dir> run build && pnpm -C <dir> run check:size` |
 | `test-api`               | `pnpm -C <dir> run test:api`                              |
 

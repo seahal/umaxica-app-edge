@@ -63,14 +63,21 @@ help-jp.umaxica.{app,com,org}
 **This is intentional and current. It is not legacy, obsolete, or a migration target.** Do not
 rewrite it to `docs.jp.umaxica.*`, `news.jp.umaxica.*`, or `help.jp.umaxica.*`.
 
+**The region label (`jp` above) is a per-machine `.env` value, not a repository constant.** This
+development environment's `.env` resolves it to `jp`; another developer's machine may set `us` and
+name its own Edge Tunnel Public Hostnames, Access applications, and `EDGE_TUNNEL_HOSTS` override to
+match. See ADR 014 §"Hostname region label is a per-machine `.env` parameter". Everything below shows
+this machine's `jp` values.
+
 **Why:** nesting the region as its own label adds a certificate level. Development and staging
 deliberately avoid that cost, so the region is folded into one label instead.
 
 `info` carries no region — it is a global surface, so it is `info.umaxica.{app,com,org}`.
 
-**Core is the sole exception** and uses `jp.umaxica.{app,com,org}`, because it is the one surface
-where a frame and Rails share an FQDN. `core-jp.umaxica.*` is the Rails tunnel's own private
-endpoint and stays non-browser-facing; it is not Core's public hostname.
+**Core is the sole exception** and uses `jp.umaxica.{app,com,org}` (the region label straight on the
+apex, no `core-` prefix), because it is the one surface where a frame and Rails share an FQDN.
+`core-jp.umaxica.*` is the Rails tunnel's own private endpoint and stays non-browser-facing; it is
+not Core's public hostname.
 
 The rule is encoded once, in `tunnelHostFor()` in `tools/verify-edge-connectivity.mjs`, so the
 checker cannot drift from the policy. `EDGE_TUNNEL_HOSTS` overrides it per workspace

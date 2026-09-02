@@ -29,14 +29,58 @@ const STATUS_BODY =
   'grid min-h-screen place-content-center gap-3 bg-gray-50 p-6 text-center text-gray-900 leading-body dark:bg-gray-950 dark:text-gray-100';
 const STATUS_HEADING = 'text-2xl font-semibold leading-heading';
 
-export function statusPage(status: number, title: string, theme: ThemeAttribute) {
-  const reload = status >= 500 ? '<a href="">再読み込み</a> · ' : '';
+export function statusPage(
+  status: number,
+  title: string,
+  theme: ThemeAttribute,
+  locale = defaultLocale,
+  linkHref = '/',
+  linkLabel = 'トップへ戻る',
+) {
+  const reloadLabel = locale === 'ja' ? '再読み込み' : 'Reload';
+  const reload = status >= 500 ? '<a href="">' + reloadLabel + '</a> · ' : '';
   return new Response(
-    `<!doctype html><html lang="${defaultLocale}"${themeAttributeMarkup(theme)}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="/">トップへ戻る</a></p></main></body></html>`,
+    `<!doctype html><html lang="${locale}"${themeAttributeMarkup(theme)}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${buildBrandTitle(title, { brandName: DEFAULT_BRAND_NAME, tld: BRAND_TLD })}</title>${STATUS_STYLESHEET}</head><body class="${STATUS_BODY}"><main class="grid gap-3"><h1 class="${STATUS_HEADING}">${title}</h1><p>HTTP ${status}</p><p>${reload}<a class="text-brand" href="${linkHref}">${linkLabel}</a></p></main></body></html>`,
     {
       status,
       headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/html; charset=UTF-8' },
     },
+  );
+}
+
+export function notFoundPage(language: string | undefined, theme: ThemeAttribute): Response {
+  const locale = language === 'ja' ? 'ja' : 'en';
+  return statusPage(
+    404,
+    locale === 'ja' ? 'ページが見つかりません' : 'Page not found',
+    theme,
+    locale,
+    '/about',
+    locale === 'ja' ? 'このURLについて' : 'About this URL',
+  );
+}
+
+export function errorPage(
+  status: number,
+  language: string | undefined,
+  theme: ThemeAttribute,
+): Response {
+  const locale = language === 'ja' ? 'ja' : 'en';
+  const title =
+    status >= 500
+      ? locale === 'ja'
+        ? '現在、このページを表示できません'
+        : 'This page is currently unavailable'
+      : locale === 'ja'
+        ? 'リクエストを処理できませんでした'
+        : 'The request could not be processed';
+  return statusPage(
+    status,
+    title,
+    theme,
+    locale,
+    '/about',
+    locale === 'ja' ? 'このURLについて' : 'About this URL',
   );
 }
 
