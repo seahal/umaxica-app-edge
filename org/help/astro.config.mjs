@@ -47,7 +47,6 @@ export default defineConfig({
   // but declaring it off keeps the generated wrangler config honest.
   session: false,
 
-
   build: {
     // Force every stylesheet to an external same-origin file so the CSP can be
     // `style-src 'self'` with no `'unsafe-inline'` and no per-build hash.
