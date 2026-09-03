@@ -108,6 +108,16 @@ describe('rails liveness probe', () => {
     expect(JSON.stringify(report)).not.toContain('core.org.localhost');
   });
 
+  it('maps a timeout client result to unreachable without naming the kind', async () => {
+    const client: RailsClient = {
+      fetch: () => Promise.resolve({ kind: 'timeout' } as unknown as RailsClientResult),
+    };
+    const report = await checkRailsLiveness(client);
+
+    expect(report.liveness.kind).toBe('unreachable');
+    expect(JSON.stringify(report)).not.toContain('timeout');
+  });
+
   it('maps an invalid-path client result to unreachable without its reason', async () => {
     const client = makeClient({ kind: 'invalid-path', reason: 'path must not be empty' });
     const report = await checkRailsLiveness(client);

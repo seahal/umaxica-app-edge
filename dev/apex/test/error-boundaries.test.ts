@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApexApp } from '../src/create-apex-app';
 
-const service = 'dev';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -23,7 +22,6 @@ describe('apex error boundary', () => {
           throw new HTTPException(403, { message: 'Forbidden' });
         });
       },
-      { service },
     );
 
     const response = await app.request('/forbidden');
@@ -39,7 +37,6 @@ describe('apex error boundary', () => {
           throw new Error('secret failure details');
         });
       },
-      { service },
     );
 
     const response = await app.request('/explode');
@@ -54,9 +51,9 @@ describe('apex error boundary', () => {
   });
 
   it('stops request processing when the rate limiter rejects the caller', async () => {
-    const app = createApexApp(() => undefined, { service });
+    const app = createApexApp(() => undefined);
     const response = await app.request(
-      '/health',
+      '/about',
       { headers: { 'cf-connecting-ip': '192.0.2.10' } },
       { RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } },
     );

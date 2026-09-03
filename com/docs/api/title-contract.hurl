@@ -82,7 +82,7 @@ header "content-type" matches /^application\/json/
 jsonpath "$.title" not exists
 
 GET {{base}}/health
-HTTP *
+HTTP 200
 [Asserts]
-header "content-type" matches /^application\/json/
-jsonpath "$.title" not exists
+header "content-type" == "text/plain; charset=utf-8"
+body not contains "<title"

@@ -25,7 +25,6 @@ const app = createApexApp(
       return c.render(renderAboutContent(c.get('language')));
     });
   },
-  { service: 'net' },
 );
 
 // Sentry: to re-enable, wrap app with Sentry.withSentry() and export the handler.

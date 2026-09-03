@@ -7,7 +7,7 @@ import { negotiateLocale } from '../i18n';
  * landing page — the plan calls for "デフォルトはないけど、どっちかにいってもらう".
  *
  * On-demand (not prerendered) so it can read `Accept-Language`. This is one of
- * only two Worker-served routes on this unit (the other is `/health`); every
+ * only a few Worker-served routes on this unit (including `/health`); every
  * real page is a static file. There is no Astro `i18n` config block, so this
  * endpoint owns `/` → `/ja/` or `/en/` without a framework redirect competing.
  */

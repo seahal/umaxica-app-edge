@@ -6,8 +6,8 @@ import { defineConfig, envField } from 'astro/config';
 /*
  * Astro on Cloudflare Workers for this public content surface (adr/015).
  *
- * - `output: 'static'`. HTML routes prerender at build time. `/health` and `/`
- *   opt out with `export const prerender = false`.
+ * - `output: 'static'`. HTML routes prerender at build time. `/health`, the
+ *   `/health/*` probes, and `/` opt out with `export const prerender = false`.
  * - Security headers live in `public/_headers`.
  * - Region (jp/us) is a build-time `PUBLIC_REGION` input.
  * - Language (ja/en) is a URL path prefix; `/` negotiates.

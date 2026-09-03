@@ -45,13 +45,9 @@ describe('standard metadata', () => {
       icons: [expect.objectContaining({ src: '/favicon.ico' })],
     });
 
-    // `/health` itself — shape, both status halves and the absence of any Rails
-    // detail — is covered by `test/health-route.test.ts`. Here it is only
-    // asserted that the route exists and is the JSON, no-store surface this
-    // frame's metadata promises.
     const response = await handlers.health();
-    expect(response.headers.get('content-type')).toContain('application/json');
-    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
   it('contains the required browser assets', () => {

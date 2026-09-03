@@ -29,5 +29,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const response = await next();
-  return withSecurityHeaders(response, import.meta.env.PROD);
+  const secured = withSecurityHeaders(response, import.meta.env.PROD);
+  if (path === '/health' || path.startsWith('/health/')) {
+    const headers = new Headers(secured.headers);
+    headers.set('Cache-Control', 'no-store');
+    headers.set('Content-Type', 'text/plain; charset=utf-8');
+    return new Response(secured.body, {
+      status: secured.status,
+      statusText: secured.statusText,
+      headers,
+    });
+  }
+  return secured;
 });

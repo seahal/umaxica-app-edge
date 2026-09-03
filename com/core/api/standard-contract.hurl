@@ -83,28 +83,16 @@ jsonpath "$.timestamp" matches /^\d{4}-\d{2}-\d{2}T/
 jsonpath "$.*" count == 3
 
 
-# `/health` is deliberately NOT pinned to a status.
-#
-# It is a unified document — this frame's own state and Rails' liveness — and it
-# answers 200 only when both halves are ok. A frame running without a Rails
-# backend answers 503 with `rails.liveness.kind == "not-configured"`, which is
-# the correct answer, not a failure. Pinning 200 here would mean this suite only
-# passes where Rails happens to be reachable, and pinning 503 would mean it only
-# passes where Rails is absent.
-#
-# What is invariant regardless of Rails is the shape, and that this frame's own
-# half reports ok — the branches Rails can drive (unreachable, slow, error) are
-# unit-tested against an injected VPC binding in `test/health-route.test.ts`,
-# which is the layer that can produce them on demand.
 GET {{base}}/health
-HTTP *
+HTTP 200
 [Asserts]
-header "content-type" matches /^application\/json/
-jsonpath "$.status" exists
-jsonpath "$.timestamp" matches /^\d{4}-\d{2}-\d{2}T/
-jsonpath "$.edge.status" == "ok"
-jsonpath "$.edge.version.id" exists
-jsonpath "$.rails.liveness.kind" exists
-# No internal detail may reach a public health document.
+header "content-type" == "text/plain; charset=utf-8"
+header "cache-control" == "no-store"
+body contains "status: ok"
+body contains "startup: ok"
+body contains "liveness: ok"
+body contains "readiness: ok"
+body not contains "{"
+body not contains "<html"
 body not contains "Authorization"
 body not contains "Cookie"

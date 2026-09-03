@@ -23,6 +23,9 @@ import { Route as PageExploreRouteImport } from './routes/_page.explore'
 import { Route as PageHomeRouteImport } from './routes/_page.home'
 import { Route as PageMessagesRouteImport } from './routes/_page.messages'
 import { Route as PageNotificationsRouteImport } from './routes/_page.notifications'
+import { Route as HealthLivenessesRouteImport } from './routes/health.livenesses'
+import { Route as HealthReadinessesRouteImport } from './routes/health.readinesses'
+import { Route as HealthStartupsRouteImport } from './routes/health.startups'
 import { Route as PageConfigurationIndexRouteImport } from './routes/_page.configuration.index'
 import { Route as PageConfigurationAccountRouteImport } from './routes/_page.configuration.account'
 
@@ -95,6 +98,21 @@ const PageNotificationsRoute = PageNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => PageRoute,
 } as any)
+const HealthLivenessesRoute = HealthLivenessesRouteImport.update({
+  id: '/livenesses',
+  path: '/livenesses',
+  getParentRoute: () => HealthRoute,
+} as any)
+const HealthReadinessesRoute = HealthReadinessesRouteImport.update({
+  id: '/readinesses',
+  path: '/readinesses',
+  getParentRoute: () => HealthRoute,
+} as any)
+const HealthStartupsRoute = HealthStartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
+  getParentRoute: () => HealthRoute,
+} as any)
 const PageConfigurationIndexRoute = PageConfigurationIndexRouteImport.update({
   id: '/configuration/',
   path: '/configuration/',
@@ -109,7 +127,7 @@ const PageConfigurationAccountRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof PageIndexRoute
-  '/health': typeof HealthRoute
+  '/health': typeof HealthRouteWithChildren
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/revision': typeof RevisionRoute
@@ -121,11 +139,14 @@ export interface FileRoutesByFullPath {
   '/home': typeof PageHomeRoute
   '/messages': typeof PageMessagesRoute
   '/notifications': typeof PageNotificationsRoute
+  '/health/livenesses': typeof HealthLivenessesRoute
+  '/health/readinesses': typeof HealthReadinessesRoute
+  '/health/startups': typeof HealthStartupsRoute
   '/configuration/account': typeof PageConfigurationAccountRoute
   '/configuration/': typeof PageConfigurationIndexRoute
 }
 export interface FileRoutesByTo {
-  '/health': typeof HealthRoute
+  '/health': typeof HealthRouteWithChildren
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/revision': typeof RevisionRoute
@@ -137,6 +158,9 @@ export interface FileRoutesByTo {
   '/home': typeof PageHomeRoute
   '/messages': typeof PageMessagesRoute
   '/notifications': typeof PageNotificationsRoute
+  '/health/livenesses': typeof HealthLivenessesRoute
+  '/health/readinesses': typeof HealthReadinessesRoute
+  '/health/startups': typeof HealthStartupsRoute
   '/': typeof PageIndexRoute
   '/configuration/account': typeof PageConfigurationAccountRoute
   '/configuration': typeof PageConfigurationIndexRoute
@@ -144,7 +168,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_page': typeof PageRouteWithChildren
-  '/health': typeof HealthRoute
+  '/health': typeof HealthRouteWithChildren
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/revision': typeof RevisionRoute
@@ -156,6 +180,9 @@ export interface FileRoutesById {
   '/_page/home': typeof PageHomeRoute
   '/_page/messages': typeof PageMessagesRoute
   '/_page/notifications': typeof PageNotificationsRoute
+  '/health/livenesses': typeof HealthLivenessesRoute
+  '/health/readinesses': typeof HealthReadinessesRoute
+  '/health/startups': typeof HealthStartupsRoute
   '/_page/': typeof PageIndexRoute
   '/_page/configuration/account': typeof PageConfigurationAccountRoute
   '/_page/configuration/': typeof PageConfigurationIndexRoute
@@ -176,6 +203,9 @@ export interface FileRouteTypes {
     | '/home'
     | '/messages'
     | '/notifications'
+    | '/health/livenesses'
+    | '/health/readinesses'
+    | '/health/startups'
     | '/configuration/account'
     | '/configuration/'
   fileRoutesByTo: FileRoutesByTo
@@ -192,6 +222,9 @@ export interface FileRouteTypes {
     | '/home'
     | '/messages'
     | '/notifications'
+    | '/health/livenesses'
+    | '/health/readinesses'
+    | '/health/startups'
     | '/'
     | '/configuration/account'
     | '/configuration'
@@ -210,6 +243,9 @@ export interface FileRouteTypes {
     | '/_page/home'
     | '/_page/messages'
     | '/_page/notifications'
+    | '/health/livenesses'
+    | '/health/readinesses'
+    | '/health/startups'
     | '/_page/'
     | '/_page/configuration/account'
     | '/_page/configuration/'
@@ -217,7 +253,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   PageRoute: typeof PageRouteWithChildren
-  HealthRoute: typeof HealthRoute
+  HealthRoute: typeof HealthRouteWithChildren
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   OfflineRoute: typeof OfflineRoute
   RevisionRoute: typeof RevisionRoute
@@ -325,6 +361,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PageNotificationsRouteImport
       parentRoute: typeof PageRoute
     }
+    '/health/livenesses': {
+      id: '/health/livenesses'
+      path: '/livenesses'
+      fullPath: '/health/livenesses'
+      preLoaderRoute: typeof HealthLivenessesRouteImport
+      parentRoute: typeof HealthRoute
+    }
+    '/health/readinesses': {
+      id: '/health/readinesses'
+      path: '/readinesses'
+      fullPath: '/health/readinesses'
+      preLoaderRoute: typeof HealthReadinessesRouteImport
+      parentRoute: typeof HealthRoute
+    }
+    '/health/startups': {
+      id: '/health/startups'
+      path: '/startups'
+      fullPath: '/health/startups'
+      preLoaderRoute: typeof HealthStartupsRouteImport
+      parentRoute: typeof HealthRoute
+    }
     '/_page/configuration/': {
       id: '/_page/configuration/'
       path: '/configuration'
@@ -368,9 +425,24 @@ const PageRouteChildren: PageRouteChildren = {
 
 const PageRouteWithChildren = PageRoute._addFileChildren(PageRouteChildren)
 
+interface HealthRouteChildren {
+  HealthLivenessesRoute: typeof HealthLivenessesRoute
+  HealthReadinessesRoute: typeof HealthReadinessesRoute
+  HealthStartupsRoute: typeof HealthStartupsRoute
+}
+
+const HealthRouteChildren: HealthRouteChildren = {
+  HealthLivenessesRoute: HealthLivenessesRoute,
+  HealthReadinessesRoute: HealthReadinessesRoute,
+  HealthStartupsRoute: HealthStartupsRoute,
+}
+
+const HealthRouteWithChildren =
+  HealthRoute._addFileChildren(HealthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   PageRoute: PageRouteWithChildren,
-  HealthRoute: HealthRoute,
+  HealthRoute: HealthRouteWithChildren,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   OfflineRoute: OfflineRoute,
   RevisionRoute: RevisionRoute,

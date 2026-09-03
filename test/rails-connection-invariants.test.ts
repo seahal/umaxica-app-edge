@@ -142,6 +142,26 @@ describe('rails client layout', () => {
    * two groups. Writing the imports relatively in every frame is what keeps this
    * one assertion meaningful instead of two weaker ones.
    */
+  it('keeps Astro /health from calling Rails on every probe', () => {
+    for (const { workspace } of ASTRO_FRAMES) {
+      const source = code(healthRouteOf(workspace));
+      expect(source, `${workspace} must not import rails-health`).not.toContain('rails-health');
+      expect(source, `${workspace} must not fetch Rails from /health`).not.toContain(
+        'checkRailsLiveness',
+      );
+    }
+  });
+
+  it('keeps TanStack Core /health from calling Rails on every probe', () => {
+    for (const { workspace } of VITE_FRAMES) {
+      const source = code(healthRouteOf(workspace));
+      expect(source, `${workspace} must not import rails-health`).not.toContain('rails-health');
+      expect(source, `${workspace} must not fetch Rails from /health`).not.toContain(
+        'checkRailsLiveness',
+      );
+    }
+  });
+
   it('keeps /health routes byte-identical within each bundler family', () => {
     expect(RAILS_FRAMES.length).toBe(15);
     expect(new Set(VITE_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace)))).size).toBe(

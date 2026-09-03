@@ -16,15 +16,25 @@ shape. The operational sections above the logs are current and are kept that way
 
 ## Note: `/rails-health` was merged into `/health` (2026-08-12)
 
-`/rails-health` no longer exists on any frame. Each frame's `/health` now answers for both halves —
-Edge's own state and Rails' liveness — in one document, and returns 503 when either half is down.
-See `adr/009-rails-health-entrypoint-and-dispatch-operability.md`.
+`/rails-health` no longer exists on any frame. Public health is now four
+`text/plain` endpoints shared by Rails, Hono, Astro, and TanStack Start:
 
-To read the Rails half:
+```text
+GET /health                 human-readable aggregate (not a Kubernetes probe)
+GET /health/startups        Kubernetes startupProbe
+GET /health/livenesses      Kubernetes livenessProbe
+GET /health/readinesses     Kubernetes readinessProbe
+```
+
+JSON is not provided. Rails-internal JSON (`/health/liveness.json` and siblings)
+stays blocked on Core public FQDNs.
 
 ```bash
-curl -s 127.0.0.1:5406/health | jq '.rails.liveness'
-# { "kind": "not-configured" }   under the dev server, which has no VPC binding
+curl -s 127.0.0.1:5405/health
+# status: ok
+# startup: ok
+# liveness: ok
+# readiness: ok
 ```
 
 The contract tables and gate descriptions below are current. **The recorded observation tables

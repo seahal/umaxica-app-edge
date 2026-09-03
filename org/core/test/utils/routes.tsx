@@ -5,6 +5,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { getRouter } from '@/router';
 import { Route as rootRoute } from '@/routes/__root';
 import { Route as healthRoute } from '@/routes/health';
+import { Route as healthLivenessesRoute } from '@/routes/health.livenesses';
+import { Route as healthReadinessesRoute } from '@/routes/health.readinesses';
+import { Route as healthStartupsRoute } from '@/routes/health.startups';
 import { Route as manifestRoute } from '@/routes/manifest[.]webmanifest';
 import { Route as revisionRoute } from '@/routes/revision';
 import { Route as robotsRoute } from '@/routes/robots[.]txt';
@@ -36,6 +39,9 @@ function handlerOf(route: { options: unknown }): Handler {
 
 export const handlers = {
   health: handlerOf(healthRoute),
+  startups: handlerOf(healthStartupsRoute),
+  livenesses: handlerOf(healthLivenessesRoute),
+  readinesses: handlerOf(healthReadinessesRoute),
   revision: handlerOf(revisionRoute),
   robots: handlerOf(robotsRoute),
   sitemap: handlerOf(sitemapRoute),

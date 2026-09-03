@@ -9,9 +9,8 @@ import type { EdgeBindings } from './env';
  *    client by file location (`src/pages/*.ts` endpoints are server-only)
  *    and by `export const prerender = false`.
  * 2. `getRailsClient()` takes the Cloudflare `env` as an argument instead of
- *    reading a module-global `cloudflare:workers`. Astro exposes bindings
- *    per-request on `context.locals.runtime.env`, so the transport selection
- *    moves to the call site (`src/pages/health.ts`).
+ *    reading a module-global `cloudflare:workers`. Astro 7 exposes bindings through `cloudflare:workers`; the call site reads that
+ *    module through `src/lib/env.ts` and passes the capability into this factory.
  *
  * Everything the invariant suite pins — the credential strip, the relative-path
  * validation, `redirect: 'manual'`, `cache: 'no-store'`, the 5s timeout, the
@@ -45,6 +44,7 @@ export type RailsClientInit = Pick<RequestInit, 'method' | 'headers' | 'body'>;
 export type RailsClientResult =
   | { kind: 'ok'; status: number; response: Response }
   | { kind: 'http-error'; status: number; response: Response }
+  | { kind: 'timeout' }
   | { kind: 'unreachable'; errorMessage: string }
   | { kind: 'invalid-path'; reason: string };
 
@@ -171,6 +171,9 @@ export function createRailsClient(
 
         return { kind: 'ok', status: response.status, response };
       } catch (error) {
+        if (error instanceof DOMException && error.name === 'TimeoutError') {
+          return { kind: 'timeout' };
+        }
         return { kind: 'unreachable', errorMessage: getErrorMessage(error) };
       }
     },

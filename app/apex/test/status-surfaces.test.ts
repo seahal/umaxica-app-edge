@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApexApp } from '../src/create-apex-app';
 
-const service = 'app';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -25,7 +24,6 @@ describe('apex 5xx surface', () => {
           throw new Error('hidden');
         });
       },
-      { service },
     );
     const response = await app.request('/boom', { headers: { 'accept-language': 'ja' } });
     expect(response.status).toBe(500);
@@ -64,7 +62,6 @@ describe('apex 4xx surface', () => {
           throw new HTTPException(400);
         });
       },
-      { service },
     );
 
     const response = await app.request('/refused', { headers: { 'accept-language': 'ja' } });

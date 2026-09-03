@@ -50,8 +50,17 @@ import { withSecurityHeaders } from './security-headers';
  * images could spend its whole budget on its own thumbnails — exempt it here at
  * the same time.
  */
+function isHealthPath(pathname: string): boolean {
+  return (
+    pathname === '/health' ||
+    pathname === '/health/startups' ||
+    pathname === '/health/livenesses' ||
+    pathname === '/health/readinesses'
+  );
+}
+
 function isRateLimitExempt(pathname: string): boolean {
-  return pathname.startsWith('/assets/') || pathname === '/favicon.ico';
+  return pathname.startsWith('/assets/') || pathname === '/favicon.ico' || isHealthPath(pathname);
 }
 
 /**
@@ -108,7 +117,7 @@ export default {
       return dispatchToRails(request, env, isProduction);
     }
 
-    const sanitizedRequest = pathname === '/health' ? sanitizeHealthRequest(request) : request;
+    const sanitizedRequest = isHealthPath(pathname) ? sanitizeHealthRequest(request) : request;
     const strippedHeaders = new Headers(sanitizedRequest.headers);
     strippedHeaders.delete('cookie');
     const strippedRequest = new Request(sanitizedRequest, { headers: strippedHeaders });

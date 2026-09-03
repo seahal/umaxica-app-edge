@@ -5,10 +5,10 @@ import { languageDetector } from 'hono/language';
 import { timeout } from 'hono/timeout';
 
 import { apexCsrf } from './csrf';
-import { renderHealthJson, renderHealthPage } from './health-page';
 import { locales } from './i18n/config';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
+import { renderAggregateHealth, renderProbe } from './runtime-health';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
 import { errorPage, notFoundPage, offlinePageMarkup } from './status-page';
@@ -52,7 +52,7 @@ const bindings = (c: Context<ApexEnv>): AssetEnv | undefined => c.env;
 const NEGOTIATED_ON = 'Cookie, Accept-Language';
 
 /*
- * HTML only. `/health.json` and `/revision` are negotiated by nothing, and
+ * HTML only. `/revision` is negotiated by nothing, and
  * `/assets/*` is answered by the assets binding before this Worker runs.
  *
  * `no-store` responses — the status, 404 and error documents — are left alone:
@@ -80,14 +80,7 @@ const varyOnNegotiation: MiddlewareHandler = async (c, next) => {
 
 type ConfigurePageRoutes = (pageRoutes: Hono<ApexEnv>) => void;
 
-type CreateApexAppOptions = {
-  service: string;
-};
-
-export function createApexApp(
-  configurePageRoutes: ConfigurePageRoutes,
-  options: CreateApexAppOptions,
-) {
+export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   const app = new Hono<ApexEnv>();
   const pageRoutes = new Hono<ApexEnv>();
 
@@ -96,6 +89,10 @@ export function createApexApp(
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
+    const path = new URL(c.req.url).pathname;
+    if (path === '/health' || path.startsWith('/health/')) {
+      return next();
+    }
     const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
     if (blocked) return blocked;
     return next();
@@ -139,13 +136,10 @@ export function createApexApp(
     return errorPage(500, c.get('language'), requestThemeAttribute(c.req.raw));
   });
 
-  app.get('/health', timeout(2000), (c) =>
-    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
-  );
-  app.get('/health.html', timeout(2000), (c) =>
-    renderHealthPage(c.env, options, requestThemeAttribute(c.req.raw)),
-  );
-  app.get('/health.json', timeout(2000), (c) => renderHealthJson(c.env, options));
+  app.get('/health/startups', timeout(2000), () => renderProbe('startup'));
+  app.get('/health/livenesses', timeout(2000), () => renderProbe('liveness'));
+  app.get('/health/readinesses', timeout(2000), () => renderProbe('readiness'));
+  app.get('/health', timeout(2000), () => renderAggregateHealth());
   app.get('/revision', (c) => {
     const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
     return c.json({ id, tag, timestamp }, 200, {

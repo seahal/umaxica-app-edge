@@ -47,3 +47,15 @@ xpath "//h1" exists
 body contains "稼働状況を見る"
 body contains "https://status.umaxica.dev/"
 body not contains "再読み込み"
+
+# A real CMS route is disabled in local mode because no VPC binding is configured.
+# This proves the outward configuration-failure response without fabricating CMS data.
+GET {{base}}/ja/cms-pilot-probe
+HTTP 500
+[Asserts]
+header "content-type" matches /^text\/html/
+header "cache-control" == "no-store"
+header "x-robots-tag" contains "noindex"
+body contains "Unable to display this page"
+body not contains "UMAXICA_APPS_EDGE_CF_WORKERS_VPC"
+body not contains "docs.app.localhost"

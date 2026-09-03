@@ -505,12 +505,13 @@ describe('rate limited 429 documents', () => {
 //
 // This file used to end with two guards that drove the four Cloudflare apex
 // workers and dev/apex through `app.request()` and asserted the title contract,
-// the content types, the exact `/health.json` and `/revision` key sets and the
+// the content types, the `/revision` key set and the
 // root redirect status. The response was the subject, so under this
 // repository's three-layer split they belong to Hurl, not to Vitest:
 //
-//   /about, /health, /health.html, /offline, 404   -> <unit>/api/title-contract.hurl
-//   /health.json and /revision key sets            -> the same file, as
+//   /about, /health, /offline, 404                 -> <unit>/api/title-contract.hurl
+//   /health.html and /health.json are HTML 404     -> the same file
+//   /revision key set                              -> the same file, as
 //                                                     `jsonpath "$.*" count`
 //   the root redirect and its Location             -> <unit>/api/routes.hurl
 //   the 500 document (needs a throwing route)      -> <unit>/test/title-contract.ts

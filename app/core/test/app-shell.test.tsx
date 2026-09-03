@@ -6,13 +6,8 @@ import { ErrorDocument, NotFoundDocument } from '@/components/status-documents';
 import { defaultLocale, isLocale, locales } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
 
-import { resetEnv, setEnv, setEnvShouldThrow } from './__mocks__/cloudflare-workers';
+import { resetEnv, setEnv } from './__mocks__/cloudflare-workers';
 import { handlers, renderDocument } from './utils/routes';
-
-// The contract is the kind and the status, which is now the whole of the public
-// probe shape: `latency_ms` was removed from `RailsProbeReport` rather than left
-// unpinned here.
-const RAILS_OK = { liveness: { kind: 'ok' as const, status: 200 } };
 
 afterEach(() => {
   resetEnv();
@@ -74,7 +69,7 @@ describe('app/core locale selection', () => {
 });
 
 describe('app/core health route', () => {
-  it('reports revision identity, Rails liveness and no-store headers', async () => {
+  it('answers text/plain no-store without calling Rails', async () => {
     const fetch = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
     setEnv({
       REVISION: { id: 'revision-id', tag: 'revision-tag', timestamp: 'built-at' },
@@ -83,25 +78,11 @@ describe('app/core health route', () => {
 
     const response = await handlers.health();
     expect(response.status).toBe(200);
-    expect(response.headers.get('Cache-Control')).toContain('no-store');
-    await expect(response.json()).resolves.toMatchObject({
-      status: 'ok',
-      edge: {
-        status: 'ok',
-        version: { id: 'revision-id', tag: 'revision-tag', timestamp: 'built-at' },
-      },
-      rails: RAILS_OK,
-    });
-  });
-
-  it('returns a service-unavailable document when the environment fails', async () => {
-    setEnvShouldThrow(true);
-
-    const response = await handlers.health();
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
-      status: 'error',
-      edge: { status: 'error' },
-    });
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
+    await expect(response.text()).resolves.toBe(
+      'status: ok\nstartup: ok\nliveness: ok\nreadiness: ok\n',
+    );
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

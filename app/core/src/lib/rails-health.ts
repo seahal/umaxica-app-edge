@@ -75,5 +75,9 @@ async function probeLiveness(client: RailsClient | null): Promise<RailsProbeRepo
       // path above is a literal, but the client's result type admits it and
       // collapsing it here keeps the public vocabulary to four kinds.
       return { kind: 'unreachable' };
+    default:
+      // Copies whose client adds kinds (for example `timeout`) collapse here so
+      // this file stays identical across all fifteen frames.
+      return { kind: 'unreachable' };
   }
 }

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { createApexApp } from '../src/create-apex-app';
 
-const service = 'net';
 
 /*
  * `Vary` is appended to, never assigned.
@@ -26,7 +25,6 @@ describe('vary on negotiation', () => {
           return c.html('<!doctype html><html lang="ja"><body>ok</body></html>');
         });
       },
-      { service },
     );
 
   it('keeps a directive another layer already set', async () => {

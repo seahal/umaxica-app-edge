@@ -75,6 +75,36 @@
   ],
 
   "env": {
+    // Temporary deployed bootstrap only: proves Astro SSR -> the existing development
+    // VPC Service/Tunnel -> development Rails. It carries no production traffic or
+    // custom domain and is not evidence of production Rails connectivity.
+    "cms_bootstrap": {
+      "name": "umaxica-apps-edge-app-docs-cms-bootstrap",
+      "vars": {
+        "EDGE_ENV": "cms_bootstrap",
+        "NODE_ENV": "development",
+        "BRAND_NAME": "UMAXICA"
+      },
+      "version_metadata": {
+        "binding": "REVISION"
+      },
+      "vpc_services": [
+        {
+          "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
+          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMITER",
+          "namespace_id": "6001",
+          "simple": {
+            "limit": 2000,
+            "period": 60
+          }
+        }
+      ]
+    },
     // `local` is the everyday development loop, and the ONLY environment that
     // declares no `vpc_services`.
     //

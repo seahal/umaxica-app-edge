@@ -46,6 +46,30 @@ describe('request middleware', () => {
     expect(response).toBe(rewritten);
   });
 
+  it('forces no-store text/plain on health probes', async () => {
+    const next = vi.fn(
+      async () =>
+        new Response('ok\n', {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+        }),
+    );
+
+    const response = await onRequest(
+      {
+        url: new URL('https://example.test/health/livenesses'),
+        rewrite: vi.fn(),
+      } as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledOnce();
+    if (!(response instanceof Response)) throw new Error('middleware did not return a response');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  });
+
   it('stamps security headers on every other response', async () => {
     const next = vi.fn(async () => new Response('ok', { status: 200 }));
 
@@ -54,6 +78,8 @@ describe('request middleware', () => {
     );
 
     expect(next).toHaveBeenCalledOnce();
+    expect(response).toBeInstanceOf(Response);
+    if (!(response instanceof Response)) throw new Error('middleware did not return a response');
     expect(response.status).toBe(200);
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
     expect(response.headers.get('content-security-policy')).toContain("default-src 'self'");

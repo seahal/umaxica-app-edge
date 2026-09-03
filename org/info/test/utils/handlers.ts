@@ -1,6 +1,9 @@
 import type { APIContext, APIRoute } from 'astro';
 
 import { GET as health } from '../../src/pages/health';
+import { GET as livenesses } from '../../src/pages/health/livenesses';
+import { GET as readinesses } from '../../src/pages/health/readinesses';
+import { GET as startups } from '../../src/pages/health/startups';
 import { GET as manifest } from '../../src/pages/manifest.webmanifest';
 import { GET as revision } from '../../src/pages/revision';
 import { GET as robots } from '../../src/pages/robots.txt';
@@ -17,6 +20,9 @@ function invoke(get: APIRoute): Promise<Response> | Response {
 
 export const handlers = {
   health: () => invoke(health),
+  startups: () => invoke(startups),
+  livenesses: () => invoke(livenesses),
+  readinesses: () => invoke(readinesses),
   revision: () => invoke(revision),
   robots: () => invoke(robots),
   sitemap: () => invoke(sitemap),

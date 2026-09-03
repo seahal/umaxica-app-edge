@@ -27,7 +27,6 @@ const app = createApexApp(
       return c.render(renderAboutContent(c.get('language')));
     });
   },
-  { service: 'dev' },
 );
 
 export default app;

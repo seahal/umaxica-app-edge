@@ -4,7 +4,7 @@ import { createApexApp } from '../src/create-apex-app';
 
 describe('revision binding', () => {
   it('returns every value supplied by Workers version metadata', async () => {
-    const app = createApexApp(() => undefined, { service: 'org' });
+    const app = createApexApp(() => undefined);
 
     // A real HTTP client cannot inject a Workers binding, so app.request() is
     // used only as the driver for this binding-to-response mapping.
@@ -28,7 +28,7 @@ describe('revision binding', () => {
   });
 
   it('uses null for metadata fields the binding omits', async () => {
-    const app = createApexApp(() => undefined, { service: 'org' });
+    const app = createApexApp(() => undefined);
     const response = await app.request('/revision', {}, { CF_VERSION_METADATA: {} });
 
     await expect(response.json()).resolves.toEqual({ id: null, tag: null, timestamp: null });
@@ -40,7 +40,7 @@ describe('revision binding', () => {
    * the same three nulls rather than throwing on the missing binding.
    */
   it('answers with nulls when the binding is absent entirely', async () => {
-    const app = createApexApp(() => undefined, { service: 'org' });
+    const app = createApexApp(() => undefined);
     const response = await app.request('/revision');
 
     await expect(response.json()).resolves.toEqual({ id: null, tag: null, timestamp: null });
