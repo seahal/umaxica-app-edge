@@ -83,8 +83,9 @@ The Podman-specific properties are Compose concerns and need no flags:
 `127.0.0.1`, and the named volumes
 `node-volume`, `home-cache`, `pnpm-store`, and `workspace-secrets-mask`. The
 Edge's `cloudflare-tunnel` sidecar is declared in `compose.yaml` beside `core`, uses the compose default
-network, and requires `EDGE_CLOUDFLARED_TOKEN` (or, as a fallback, `CLOUDFLARED_TOKEN`) from the gitignored
-root `.env`.
+network, and requires `CLOUDFLARED_TOKEN` from this repository's gitignored root `.env` — one variable,
+no fallback. It must be Edge's own tunnel, never the value Global keeps under the same name in its own
+`.env`; see `adr/014-edge-owned-development-tunnel.md`.
 
 ## What is now your responsibility
 

@@ -248,7 +248,7 @@ devcontainer up \
   --workspace-folder .
 ```
 
-`EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env` is only needed if you
+`CLOUDFLARED_TOKEN` in the gitignored root `.env` is only needed if you
 actually want the Cloudflare Tunnel connector; without it the connector starts
 with an empty token and everything else is unaffected.
 
@@ -384,8 +384,8 @@ via `exec`.
 
 The standard Dev Container starts an Edge-owned Tunnel connector. Put its
 dedicated connector token in the gitignored root `.env` as
-`EDGE_CLOUDFLARED_TOKEN`; this is not a Cloudflare API token and it must not
-be reused from Global. `vpc_services` remains independent and exists only in
+`CLOUDFLARED_TOKEN`; this is not a Cloudflare API token, and it must not be
+the value Global uses for the same variable name in its own `.env`. `vpc_services` remains independent and exists only in
 the explicit `env.vpc` development environment; production remains
 fail-closed.
 

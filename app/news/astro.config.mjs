@@ -67,6 +67,12 @@ export default defineConfig({
   },
 
   vite: {
+    // Behind a Cloudflare Tunnel the dev server sees the public hostname in the
+    // Host header; Vite blocks unknown hosts by default. Whitelist the two fixed
+    // public hostnames (not `true`, which disables DNS-rebinding protection).
+    server: {
+      allowedHosts: ['news-jp.umaxica.app', 'news-us.umaxica.app'],
+    },
     plugins: [
       tailwindcss(),
       // workerd's Vite module runner invalidates deps_ssr mid-reload when the

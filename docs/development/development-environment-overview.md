@@ -15,7 +15,7 @@ local file created.
 
 ## Dev Container startup
 
-After setting the Edge-specific `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`, start the
+After setting this repository's own `CLOUDFLARED_TOKEN` in the gitignored root `.env`, start the
 Dev Container through Dev Containers CLI, from the repository root:
 
 ```bash
@@ -50,7 +50,7 @@ scripts/dev-start --tunnel
 scripts/dev-start --rails --tunnel
 ```
 
-The Tunnel modes require `EDGE_CLOUDFLARED_TOKEN` in the gitignored root `.env`. It is a scoped
+The Tunnel modes require `CLOUDFLARED_TOKEN` in the gitignored root `.env`. It is a scoped
 connector token for the Edge-specific Tunnel, not an API token, and must not match Global's token.
 `--rails` joins an
 existing rootless Podman network named by `EDGE_RAILS_NETWORK`; it never creates or

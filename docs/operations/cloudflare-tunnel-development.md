@@ -45,21 +45,43 @@ was `/rails-health`. Read a `/rails-health` column in a results table as `/healt
 ## Ownership: an Edge-specific connector and tunnel
 
 Edge runs its own `cloudflared` sidecar from `compose.yaml`. It uses an Edge-specific Tunnel
-and `EDGE_CLOUDFLARED_TOKEN`; it must never reuse Global's Tunnel ID or token. The two compose
+and `CLOUDFLARED_TOKEN` from this repository's own `.env`; it must never reuse Global's Tunnel ID or token. The two compose
 projects share no Podman network.
 
 The separation is load-bearing. Registering the Edge connector as a replica of Global's tunnel
-would let Cloudflare select a connector that cannot reach the requested origin.
+would let Cloudflare select a connector that cannot reach the requested origin. This is not
+hypothetical: it happened on 2026-09-04, and both repositories failed intermittently at once. See
+the amendment in `adr/014-edge-owned-development-tunnel.md`.
 
-`compose.yaml` pins `cloudflare/cloudflared:2026.8.2`, reads `EDGE_CLOUDFLARED_TOKEN` and
-falls back to `CLOUDFLARED_TOKEN` when it is unset, and starts with the standard Dev Container
-lifecycle. The token stays in the gitignored host `.env` and is passed only to the sidecar.
+`compose.yaml` pins `cloudflare/cloudflared:2026.8.2`, reads `CLOUDFLARED_TOKEN` **and nothing
+else**, and starts with the standard Dev Container lifecycle. The token stays in the gitignored host
+`.env` and is passed only to the sidecar.
 
-Neither variable is marked required in the compose file, because compose interpolates the whole
+There is deliberately one variable and no fallback chain. Global uses the same variable name in its
+own `.env`, for a different tunnel: a Compose project interpolates the file beside its own compose
+file, so one name holds two tunnels. The former `${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:-}}`
+chain is what silently turned a missing Edge token into a takeover of Global's tunnel. An unset
+token must leave this tunnel down.
+
+Because the name no longer distinguishes the two repositories, `scripts/dev-start --tunnel` decodes
+the tunnel UUID from the configured token and refuses to start when a cloudflared container already
+running on this host serves the same tunnel.
+
+The variable is not marked required in the compose file, because compose interpolates the whole
 file whichever services you name and the connector now shares that file with `core`: a `:?` guard
 would stop `podman compose up core` on every machine that never runs a tunnel. `scripts/dev-start
 --tunnel` enforces the token instead, checking the shell and `.env` both, and cloudflared exits
 non-zero on an empty token under `restart: on-failure:3`.
+
+To confirm two connectors are not sharing one tunnel, compare the token each container was created
+with — they must differ:
+
+```bash
+for c in $(podman ps --format '{{.Names}}' | grep cloudflare); do
+  printf '%s ' "$c"
+  podman inspect "$c" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep TUNNEL_TOKEN | md5sum
+done
+```
 
 ## Naming policy
 
@@ -208,7 +230,7 @@ Needs no credential. Nothing below stores or prints a token.
 
 ```bash
 # 1. Put the Edge-specific connector token in the gitignored root `.env`:
-#    EDGE_CLOUDFLARED_TOKEN=<Edge tunnel token>
+#    CLOUDFLARED_TOKEN=<Edge tunnel token>
 #    chmod 600 .env
 #    In the devcontainer the connector starts automatically.
 scripts/dev-start --tunnel     # only for the non-devcontainer path
@@ -249,7 +271,7 @@ someone configured in Cloudflare.
 ### Cloudflare-side configuration (done by the operator, not by this repository)
 
 1. Create a dedicated Edge Tunnel and put its connector token in `.env` as
-   `EDGE_CLOUDFLARED_TOKEN`. Never reuse Global's Tunnel ID or token. Point each Public Hostname at
+   `CLOUDFLARED_TOKEN`. Never reuse Global's Tunnel ID or token. Point each Public Hostname at
    `http://core:<port>` from the route table.
 2. Remove the Worker custom domain from the four apex hostnames. A custom domain and a Tunnel
    Public Hostname cannot both own one name.
