@@ -280,10 +280,11 @@ describe("Edge's own health does not depend on Rails being up", () => {
     }
   });
 
-  it('keeps Core /health a local runtime probe, not a Rails fetch', () => {
+  it('keeps Core /health on the Health API consumer without proxying Rails JSON', () => {
     for (const { brand } of CORES) {
       const source = read(`${brand}/core/src/routes/health.ts`);
       expect(source).toContain('renderAggregateHealth');
+      expect(source).toContain('checkRailsHealth');
       expect(source).not.toContain('checkRailsLiveness');
       expect(source).not.toContain('Response.json');
     }

@@ -69,8 +69,22 @@ describe('com/core locale selection', () => {
 });
 
 describe('com/core health route', () => {
-  it('answers text/plain no-store without calling Rails', async () => {
-    const fetch = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
+  it('answers text/plain no-store after verifying the Rails Health API', async () => {
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            status: 'pass',
+            checks: {
+              startup: { status: 'pass' },
+              liveness: { status: 'pass' },
+              readiness: { status: 'pass' },
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      ),
+    );
     setEnv({
       REVISION: { id: 'revision-id', tag: 'revision-tag', timestamp: 'built-at' },
       UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch },
@@ -83,6 +97,7 @@ describe('com/core health route', () => {
     await expect(response.text()).resolves.toBe(
       'status: ok\nstartup: ok\nliveness: ok\nreadiness: ok\n',
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalled();
+    expect(String(fetch.mock.calls.at(0)?.at(0))).toContain('/api/v0/health.json');
   });
 });

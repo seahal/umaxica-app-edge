@@ -19,13 +19,11 @@ import { expectTitleContract } from './utils/title-contract';
  */
 describe('apex 500 document', () => {
   it('serves a contract-conforming title', async () => {
-    const boom = createApexApp(
-      (pageRoutes) => {
-        pageRoutes.get('/boom', () => {
-          throw new Error('induced failure');
-        });
-      },
-    );
+    const boom = createApexApp((pageRoutes) => {
+      pageRoutes.get('/boom', () => {
+        throw new Error('induced failure');
+      });
+    });
 
     const response = await boom.request('/boom', {}, { CF_VERSION_METADATA: {} });
     expect(response.status).toBe(500);

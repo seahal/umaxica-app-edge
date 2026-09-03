@@ -142,21 +142,23 @@ describe('rails client layout', () => {
    * two groups. Writing the imports relatively in every frame is what keeps this
    * one assertion meaningful instead of two weaker ones.
    */
-  it('keeps Astro /health from calling Rails on every probe', () => {
+  it('keeps Astro /health on the Rails Health API consumer, not a JSON proxy', () => {
     for (const { workspace } of ASTRO_FRAMES) {
       const source = code(healthRouteOf(workspace));
-      expect(source, `${workspace} must not import rails-health`).not.toContain('rails-health');
-      expect(source, `${workspace} must not fetch Rails from /health`).not.toContain(
+      expect(source, `${workspace} must consume rails-health`).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not proxy Rails JSON`).not.toContain('Response.json');
+      expect(source, `${workspace} must not use the retired liveness probe`).not.toContain(
         'checkRailsLiveness',
       );
     }
   });
 
-  it('keeps TanStack Core /health from calling Rails on every probe', () => {
+  it('keeps TanStack Core /health on the Rails Health API consumer, not a JSON proxy', () => {
     for (const { workspace } of VITE_FRAMES) {
       const source = code(healthRouteOf(workspace));
-      expect(source, `${workspace} must not import rails-health`).not.toContain('rails-health');
-      expect(source, `${workspace} must not fetch Rails from /health`).not.toContain(
+      expect(source, `${workspace} must consume rails-health`).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not proxy Rails JSON`).not.toContain('Response.json');
+      expect(source, `${workspace} must not use the retired liveness probe`).not.toContain(
         'checkRailsLiveness',
       );
     }
@@ -192,25 +194,27 @@ describe('rails client layout', () => {
     expect(digests.size, 'the fifteen rails-health copies have diverged').toBe(1);
   });
 
-  it('probes exactly one Rails path, and requires liveness alone for a healthy verdict', () => {
+  it('probes exactly the Rails Health API, never the operational JSON probes', () => {
     /*
-     * Liveness is the strictest of Rails' three probes, so it is the one that
-     * decides; `/health` is polled often enough that one request per check is
-     * worth keeping. Readiness and startup exist on the Rails side and are
-     * deliberately not read — see ADR 009.
-     *
-     * Pinned because widening this is a real decision with a real cost: every
-     * added probe multiplies the tunnel traffic of the most-polled route in the
-     * repository, across fifteen frames.
+     * Rails split operational Kubernetes probes (`/health`, `/health/livenesses`,
+     * …) from the machine-facing Health API (`/api/v0/health.json`). Edge
+     * verifies Rails over Workers VPC against that API only. ADR 016.
      */
     for (const { workspace } of RAILS_FRAMES) {
       const source = code(`${workspace}/src/lib/rails-health.ts`);
-      expect(source).toContain("const RAILS_LIVENESS_PATH = '/health/liveness.json';");
-      expect(source, `${workspace} must not silently start probing readiness`).not.toContain(
-        'readiness.json',
+      expect(source).toContain("const RAILS_HEALTH_API_PATH = '/api/v0/health.json';");
+      expect(source).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/liveness.json',
       );
-      expect(source, `${workspace} must not silently start probing startup`).not.toContain(
-        'startup.json',
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/readiness.json',
+      );
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/startup.json',
+      );
+      expect(source, `${workspace} must not keep the retired helper`).not.toContain(
+        'checkRailsLiveness',
       );
     }
   });
@@ -342,8 +346,7 @@ describe('rails client layout', () => {
      *
      *   ActionController::RoutingError (No route matches [GET] "/docs/app/health/liveness.json")
      *
-     * Rails serves `/health/liveness.json` unprefixed. ADR 006 records the
-     * retraction.
+     * Rails serves health paths unprefixed. ADR 006 records the retraction.
      *
      * This is a regression guard rather than a style rule. A prefix
      * reintroduced here would not fail loudly — it would produce 404s, which
@@ -595,7 +598,7 @@ describe('vpc probe', () => {
       );
       const path = readConstant(
         read(`${workspace}/src/lib/rails-health.ts`),
-        'RAILS_LIVENESS_PATH',
+        'RAILS_HEALTH_API_PATH',
       );
       return {
         key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
@@ -622,5 +625,15 @@ describe('vpc probe', () => {
     expect(probe, 'readiness must not touch the binding').toContain(
       "new URL(request.url).pathname === '/ready'",
     );
+  });
+});
+
+describe('local Rails connectivity script', () => {
+  it('verifies the Health API, not operational JSON probes', () => {
+    const script = read('scripts/check-rails');
+    expect(script).toContain('/api/v0/health.json');
+    expect(script).not.toContain('/health/liveness.json');
+    expect(script).toContain('Rails reached, status=fail');
+    expect(script).toContain('unreachable');
   });
 });

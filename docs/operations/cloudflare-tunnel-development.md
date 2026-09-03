@@ -26,8 +26,9 @@ GET /health/livenesses      Kubernetes livenessProbe
 GET /health/readinesses     Kubernetes readinessProbe
 ```
 
-JSON is not provided. Rails-internal JSON (`/health/liveness.json` and siblings)
-stays blocked on Core public FQDNs.
+JSON is not provided. Rails-internal operational JSON (`/health/liveness.json`
+and siblings) stays blocked on Core public FQDNs. Edge verifies Rails privately
+via `GET /api/v0/health.json` (ADR 016).
 
 ```bash
 curl -s 127.0.0.1:5405/health

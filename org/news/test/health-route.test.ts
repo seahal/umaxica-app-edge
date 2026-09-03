@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { checkRailsLiveness } from '../src/lib/rails-health';
+import { checkRailsHealth } from '../src/lib/rails-health';
 import * as runtimeHealth from '../src/lib/runtime-health';
 import { resetEnv, setEnv } from './__mocks__/cloudflare-workers';
 import { handlers } from './utils/handlers';
@@ -17,8 +17,24 @@ function expectPlainHealth(response: Response) {
   expect(response.headers.get('cache-control')).toBe('no-store');
 }
 
+const PASS_DOCUMENT = {
+  status: 'pass',
+  checks: {
+    startup: { status: 'pass' },
+    liveness: { status: 'pass' },
+    readiness: { status: 'pass' },
+  },
+};
+
+function jsonResponse(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 describe('health probes', () => {
-  it('answers 200 text/plain on all four URLs', async () => {
+  it('answers 200 text/plain on all four URLs when Rails is not configured', async () => {
     for (const get of [GET, handlers.startups, handlers.livenesses, handlers.readinesses]) {
       const response = await get();
       expect(response.status).toBe(200);
@@ -38,7 +54,7 @@ describe('health probes', () => {
     );
   });
 
-  it('answers 503 when readiness fails, without failing liveness', async () => {
+  it('answers 503 when isolate readiness fails, without failing liveness', async () => {
     vi.spyOn(runtimeHealth.runtimeProbes, 'checkReadiness').mockReturnValue('error');
 
     const ready = await handlers.readinesses();
@@ -70,20 +86,78 @@ describe('health probes', () => {
     expect(body).not.toContain('core.app.localhost');
   });
 
-  it('does not call Rails from the aggregate document', async () => {
-    const fetch = vi.fn(() => Promise.resolve(new Response('{}', { status: 503 })));
+  it('maps Rails Health API pass onto Edge 200 text/plain', async () => {
+    const fetch = vi.fn(() => Promise.resolve(jsonResponse(200, PASS_DOCUMENT)));
     setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
 
     const response = await GET();
 
     expect(response.status).toBe(200);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalled();
+    const requested = String(fetch.mock.calls.at(0)?.at(0));
+    expect(new URL(requested).pathname).toBe('/api/v0/health.json');
+    const body = await response.text();
+    expect(body).toBe('status: ok\nstartup: ok\nliveness: ok\nreadiness: ok\n');
+    expect(body).not.toContain('"status":"pass"');
+  });
+
+  it('maps Rails Health API fail onto Edge 503 without forwarding the JSON', async () => {
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse(503, {
+          status: 'fail',
+          checks: {
+            startup: { status: 'pass' },
+            liveness: { status: 'pass' },
+            readiness: { status: 'fail' },
+          },
+        }),
+      ),
+    );
+    setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
+
+    const aggregate = await GET();
+    const ready = await handlers.readinesses();
+    const live = await handlers.livenesses();
+
+    expect(aggregate.status).toBe(503);
+    expect(ready.status).toBe(503);
+    expect(live.status).toBe(200);
+    const body = await aggregate.text();
+    expect(body).toBe('status: error\nstartup: ok\nliveness: ok\nreadiness: error\n');
+    expect(body).not.toContain('fail');
+    expect(body).not.toContain('{');
+  });
+
+  it('maps Rails unreachable onto Edge 503 readiness', async () => {
+    const fetch = vi.fn(() => Promise.reject(new Error('connect ECONNREFUSED core.app.localhost')));
+    setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
+
+    const response = await GET();
+    expect(response.status).toBe(503);
+    const body = await response.text();
+    expect(body).toContain('readiness: error');
+    expect(body).not.toContain('ECONNREFUSED');
+    expect(body).not.toContain('core.app.localhost');
+  });
+
+  it('maps an invalid Rails Health API contract onto Edge 503', async () => {
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        new Response('not json', { status: 200, headers: { 'content-type': 'text/plain' } }),
+      ),
+    );
+    setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
+
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('not json');
   });
 });
 
 describe('rails-health helper stays closed', () => {
   it('still reports kinds without leaking exception text', async () => {
-    const report = await checkRailsLiveness(null);
-    expect(report).toEqual({ liveness: { kind: 'not-configured' } });
+    const report = await checkRailsHealth(null);
+    expect(report).toEqual({ kind: 'not-configured' });
   });
 });

@@ -42,11 +42,11 @@ describe('com/docs rails client', () => {
     const client = getRailsClient(env as EdgeBindings);
     expect(client).not.toBeNull();
 
-    await client?.fetch('/health/liveness.json');
+    await client?.fetch('/api/v0/health.json');
 
     const [requestUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
     expect(new URL(requestUrl).origin).toBe('http://docs.com.localhost:3000');
-    expect(new URL(requestUrl).pathname).toBe('/health/liveness.json');
+    expect(new URL(requestUrl).pathname).toBe('/api/v0/health.json');
 
     const headers = new Headers(init.headers);
     expect(headers.has('cf-access-client-id')).toBe(false);

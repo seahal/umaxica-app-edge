@@ -1,9 +1,9 @@
 /*
  * Kubernetes-style probes for this Worker. Startup and liveness are the
- * process itself: if this module ran, the isolate can serve. Readiness does
- * not call Rails, VPC, KV, or any other hop — Core still serves its own
- * documents when Rails is down, and a downstream outage must not mark a
- * healthy Worker unready or restart it.
+ * process itself: if this module ran, the isolate can serve. Readiness is
+ * composed by the route: isolate first, then the Rails Health API consumer.
+ * This module still does not fetch Rails — it only renders Edge's text/plain
+ * contract from already-normalized probe statuses.
  */
 
 export type ProbeName = 'startup' | 'liveness' | 'readiness';
@@ -58,13 +58,18 @@ export function renderProbe(name: ProbeName): Response {
       : name === 'liveness'
         ? runtimeProbes.checkLiveness()
         : runtimeProbes.checkReadiness();
+  return renderProbeStatus(status);
+}
+
+export function renderProbeStatus(status: ProbeStatus): Response {
   return healthResponse(probeBody(status), status === 'ok');
 }
 
-export function renderAggregateHealth(): Response {
+export function renderAggregateHealth(
+  readiness: ProbeStatus = runtimeProbes.checkReadiness(),
+): Response {
   const startup = runtimeProbes.checkStartup();
   const liveness = runtimeProbes.checkLiveness();
-  const readiness = runtimeProbes.checkReadiness();
   const ok = startup === 'ok' && liveness === 'ok' && readiness === 'ok';
   return healthResponse(aggregateBody(startup, liveness, readiness), ok);
 }
