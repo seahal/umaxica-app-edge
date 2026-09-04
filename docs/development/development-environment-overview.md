@@ -19,14 +19,11 @@ After setting this repository's own `CLOUDFLARED_TOKEN` in the gitignored root `
 Dev Container through Dev Containers CLI, from the repository root:
 
 ```bash
-PODMAN_COMPOSE_PROVIDER=/usr/bin/podman-compose \
-devcontainer up \
-  --docker-path /usr/bin/podman \
-  --docker-compose-path /usr/bin/podman-compose \
-  --workspace-folder .
+scripts/devcontainer-up
 ```
 
-There is no launcher script; the command line is the whole integration surface, and none of it
+The launcher is the CLI integration surface. It serializes the CLI's fixed-name temporary
+Feature image across cooperating repositories; none of its Podman options
 can move into `devcontainer.json`. `--docker-path` selects the engine, and
 `PODMAN_COMPOSE_PROVIDER` selects the Compose implementation: with Podman as the engine the
 CLI invokes `podman compose`, which delegates to an external provider and prefers

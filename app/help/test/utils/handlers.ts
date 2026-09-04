@@ -1,6 +1,7 @@
 import type { APIContext, APIRoute } from 'astro';
 
 import { GET as healthApi } from '../../src/pages/api/v0/health.json';
+import { GET as revisionJson } from '../../src/pages/api/v0/revision.json';
 import { GET as health } from '../../src/pages/health';
 import { GET as livenesses } from '../../src/pages/health/livenesses';
 import { GET as readinesses } from '../../src/pages/health/readinesses';
@@ -26,6 +27,7 @@ export const handlers = {
   livenesses: () => invoke(livenesses),
   readinesses: () => invoke(readinesses),
   revision: () => invoke(revision),
+  revisionApi: () => invoke(revisionJson),
   robots: () => invoke(robots),
   sitemap: () => invoke(sitemap),
   manifest: () => invoke(manifest),

@@ -90,7 +90,13 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    if (path === '/health' || path.startsWith('/health/') || path === '/api/v0/health.json') {
+    if (
+      path === '/health' ||
+      path.startsWith('/health/') ||
+      path === '/api/v0/health.json' ||
+      path === '/revision' ||
+      path === '/api/v0/revision.json'
+    ) {
       return next();
     }
     const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
@@ -107,7 +113,13 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   });
   app.use(async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    if (path === '/health' || path.startsWith('/health/') || path === '/api/v0/health.json') {
+    if (
+      path === '/health' ||
+      path.startsWith('/health/') ||
+      path === '/api/v0/health.json' ||
+      path === '/revision' ||
+      path === '/api/v0/revision.json'
+    ) {
       return next();
     }
     return detectLanguage(c, next);
@@ -152,9 +164,19 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   app.get('/health/readinesses', timeout(2000), () => renderProbe('readiness'));
   app.get('/health', timeout(2000), () => renderAggregateHealth());
   app.get('/api/v0/health.json', timeout(2000), () => renderHealthApi());
-  app.get('/revision', (c) => {
+  const versionMetadata = (c: Context<ApexEnv>) => {
     const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
-    return c.json({ id, tag, timestamp }, 200, {
+    return { id, tag, timestamp };
+  };
+  app.get('/revision', (c) => {
+    const { id } = versionMetadata(c);
+    return c.text(`${id ?? 'unknown'}\n`, 200, {
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow',
+    });
+  });
+  app.get('/api/v0/revision.json', (c) => {
+    return c.json(versionMetadata(c), 200, {
       'Cache-Control': 'no-store',
       'X-Robots-Tag': 'noindex, nofollow',
     });

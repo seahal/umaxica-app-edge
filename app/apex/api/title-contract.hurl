@@ -72,16 +72,16 @@ xpath "count(//title)" == 1
 xpath "string(//title)" matches /^.+ — UMAXICA \(APP\)$/
 xpath "string(//title)" not matches /(?i)\b(auth|core|apex|side|edge|next|nextjs|hono|workers?|cloudflare|opennext)\b/
 
-# `/revision` remains the JSON identity surface. A `title` key appearing in
-# the payload would mean the HTML renderer had reached a response it does not
-# own. The exact key set is pinned because this payload is consumed by machines.
+# Structured identity is JSON and must not grow a `title` from the HTML renderer.
+GET {{base}}/api/v0/revision.json
+HTTP 200
+[Asserts]
+header "content-type" matches /^application\/json/
+jsonpath "$.title" not exists
+jsonpath "$.*" count == 3
 
 GET {{base}}/revision
 HTTP 200
 [Asserts]
-header "content-type" matches /^application\/json/
-jsonpath "$.id" exists
-jsonpath "$.tag" exists
-jsonpath "$.timestamp" exists
-jsonpath "$.title" not exists
-jsonpath "$.*" count == 3
+header "content-type" matches /^text\/plain/
+body not contains "<title"

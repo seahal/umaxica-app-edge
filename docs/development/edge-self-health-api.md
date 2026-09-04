@@ -26,7 +26,9 @@ GET /health/readinesses
 ```
 
 Those stay `text/plain`. Do not treat them as this API. Do not treat
-`/health.json` (origin root) as this API.
+`/health.json` (origin root) as this API. Deployment identity is
+`GET /revision` and `GET /api/v0/revision.json` — see
+[edge-revision-api.md](./edge-revision-api.md).
 
 ## Body
 

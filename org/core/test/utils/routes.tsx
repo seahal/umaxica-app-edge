@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { getRouter } from '@/router';
 import { Route as rootRoute } from '@/routes/__root';
 import { Route as healthApiRoute } from '@/routes/api.v0.health[.]json';
+import { Route as revisionApiRoute } from '@/routes/api.v0.revision[.]json';
 import { Route as healthRoute } from '@/routes/health';
 import { Route as healthLivenessesRoute } from '@/routes/health.livenesses';
 import { Route as healthReadinessesRoute } from '@/routes/health.readinesses';
@@ -45,6 +46,7 @@ export const handlers = {
   livenesses: handlerOf(healthLivenessesRoute),
   readinesses: handlerOf(healthReadinessesRoute),
   revision: handlerOf(revisionRoute),
+  revisionApi: handlerOf(revisionApiRoute),
   robots: handlerOf(robotsRoute),
   sitemap: handlerOf(sitemapRoute),
   manifest: handlerOf(manifestRoute),

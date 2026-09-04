@@ -29,6 +29,7 @@ import { Route as HealthStartupsRouteImport } from './routes/health.startups'
 import { Route as PageConfigurationIndexRouteImport } from './routes/_page.configuration.index'
 import { Route as PageConfigurationAccountRouteImport } from './routes/_page.configuration.account'
 import { Route as ApiV0HealthDotjsonRouteImport } from './routes/api.v0.health[.]json'
+import { Route as ApiV0RevisionDotjsonRouteImport } from './routes/api.v0.revision[.]json'
 
 const PageRoute = PageRouteImport.update({
   id: '/_page',
@@ -130,6 +131,11 @@ const ApiV0HealthDotjsonRoute = ApiV0HealthDotjsonRouteImport.update({
   path: '/api/v0/health.json',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV0RevisionDotjsonRoute = ApiV0RevisionDotjsonRouteImport.update({
+  id: '/api/v0/revision.json',
+  path: '/api/v0/revision.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PageIndexRoute
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/health/startups': typeof HealthStartupsRoute
   '/configuration/account': typeof PageConfigurationAccountRoute
   '/api/v0/health.json': typeof ApiV0HealthDotjsonRoute
+  '/api/v0/revision.json': typeof ApiV0RevisionDotjsonRoute
   '/configuration/': typeof PageConfigurationIndexRoute
 }
 export interface FileRoutesByTo {
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/': typeof PageIndexRoute
   '/configuration/account': typeof PageConfigurationAccountRoute
   '/api/v0/health.json': typeof ApiV0HealthDotjsonRoute
+  '/api/v0/revision.json': typeof ApiV0RevisionDotjsonRoute
   '/configuration': typeof PageConfigurationIndexRoute
 }
 export interface FileRoutesById {
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/_page/': typeof PageIndexRoute
   '/_page/configuration/account': typeof PageConfigurationAccountRoute
   '/api/v0/health.json': typeof ApiV0HealthDotjsonRoute
+  '/api/v0/revision.json': typeof ApiV0RevisionDotjsonRoute
   '/_page/configuration/': typeof PageConfigurationIndexRoute
 }
 export interface FileRouteTypes {
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/health/startups'
     | '/configuration/account'
     | '/api/v0/health.json'
+    | '/api/v0/revision.json'
     | '/configuration/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/'
     | '/configuration/account'
     | '/api/v0/health.json'
+    | '/api/v0/revision.json'
     | '/configuration'
   id:
     | '__root__'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/_page/'
     | '/_page/configuration/account'
     | '/api/v0/health.json'
+    | '/api/v0/revision.json'
     | '/_page/configuration/'
   fileRoutesById: FileRoutesById
 }
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiV0HealthDotjsonRoute: typeof ApiV0HealthDotjsonRoute
+  ApiV0RevisionDotjsonRoute: typeof ApiV0RevisionDotjsonRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV0HealthDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v0/revision.json': {
+      id: '/api/v0/revision.json'
+      path: '/api/v0/revision.json'
+      fullPath: '/api/v0/revision.json'
+      preLoaderRoute: typeof ApiV0RevisionDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -469,6 +489,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiV0HealthDotjsonRoute: ApiV0HealthDotjsonRoute,
+  ApiV0RevisionDotjsonRoute: ApiV0RevisionDotjsonRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -511,8 +511,9 @@ describe('rate limited 429 documents', () => {
 //
 //   /about, /health, /offline, 404                 -> <unit>/api/title-contract.hurl
 //   /health.html and /health.json are HTML 404     -> the same file
-//   /revision key set                              -> the same file, as
-//                                                     `jsonpath "$.*" count`
+//   /revision text identity                        -> Playwright e2e/revision.spec.ts
+//   /api/v0/revision.json key set                  -> <unit>/api/revision-api.hurl
+//                                                     and title-contract.hurl (`$.title`)
 //   the root redirect and its Location             -> <unit>/api/routes.hurl
 //   the 500 document (needs a throwing route)      -> <unit>/test/title-contract.ts
 //   dev/apex, all of the above                     -> dev/apex/test/*.ts, which is

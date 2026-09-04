@@ -94,6 +94,7 @@ describe('Edge self-health API layout', () => {
   it.each(CORES)('$0 dispatch keeps self-health on Edge, not Rails', (workspace) => {
     const source = code(`${workspace}/src/lib/core-dispatch.ts`);
     expect(source).toContain("const EDGE_SELF_HEALTH_API = '/api/v0/health.json'");
-    expect(source).toContain('pathname === EDGE_SELF_HEALTH_API');
+    expect(source).toContain("const EDGE_REVISION_API = '/api/v0/revision.json'");
+    expect(source).toContain('pathname === EDGE_SELF_HEALTH_API || pathname === EDGE_REVISION_API');
   });
 });

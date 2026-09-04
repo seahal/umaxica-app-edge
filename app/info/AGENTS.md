@@ -10,7 +10,7 @@ stay on Hono. `adr/015-public-content-surfaces-astro.md` is the decision record.
   TanStack router and no `routeTree.gen.ts`.
 - **`/` negotiates language** (`Accept-Language` → 302 to `/ja/` or `/en/`).
   Content pages are under `/[lang]/`.
-- **`output: 'static'`.** Only `/` and `/health` (and `/revision`) are
+- **`output: 'static'`.** Only `/` and `/health` (and `/revision`, `/api/v0/revision.json`) are
   on-demand (`prerender = false`). Everything else is a file on the asset layer.
 - **Security headers live in `public/_headers`.** No per-request nonce: scripts
   and styles are same-origin files (`script-src 'self'` / `style-src 'self'`).

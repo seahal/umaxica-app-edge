@@ -9,7 +9,7 @@ import { env } from 'cloudflare:workers';
  * TanStack unit used. It is not an async-local lookup, so it cannot throw for
  * being called outside a request.
  *
- * Only the two on-demand routes (`/health`, `/revision`) import this file; every
+ * On-demand routes (`/health`, `/revision`, `/api/v0/revision.json`) import this file; every
  * prerendered page is built with no bindings at all. Every field is optional:
  * `getRailsClient()` selects its transport by which binding EXISTS.
  */

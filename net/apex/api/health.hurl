@@ -75,15 +75,12 @@ header "content-type" == "text/plain; charset=utf-8"
 header "cache-control" == "no-store"
 body == "ok\n"
 
-# Deployment identity. The three fields are always present and always null
-# outside the Workers runtime with version metadata bound — the endpoint must
-# not 500 or omit keys when the binding is absent.
+# Compact deployment identity. Structured JSON lives in api/revision-api.hurl.
 GET {{base}}/revision
 HTTP 200
 [Asserts]
-header "content-type" matches /^application\/json/
+header "content-type" matches /^text\/plain/
 header "cache-control" == "no-store"
 header "x-robots-tag" == "noindex, nofollow"
-jsonpath "$.id" exists
-jsonpath "$.tag" exists
-jsonpath "$.timestamp" exists
+body not contains "{"
+body not contains "<html"

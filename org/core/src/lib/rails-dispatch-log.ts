@@ -94,6 +94,7 @@ const ROUTE_CLASS_EXACT = new Map<string, RailsRouteClass>([
   ['/.well-known/jwks.json', 'jwks'],
   ['/csp-violation-report', 'csp_report'],
   ['/api/v0/health.json', 'other'],
+  ['/api/v0/revision.json', 'other'],
 ]);
 
 const ROUTE_CLASS_PREFIXES: ReadonlyArray<readonly [string, RailsRouteClass]> = [

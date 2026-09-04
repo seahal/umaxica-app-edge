@@ -77,20 +77,14 @@ HTTP 404
 header "content-type" matches /^text\/html/
 
 
-# `/revision` is the deployment identity, read by machines. The key set is
-# pinned because an added or dropped field is a breaking change for whatever
-# reads it.
+# `/revision` is the compact operational deployment id (text/plain). Structured
+# identity is `/api/v0/revision.json` (`api/revision-api.hurl`).
 GET {{base}}/revision
 HTTP 200
 [Asserts]
-header "content-type" matches /^application\/json/
-jsonpath "$.id" exists
-jsonpath "$.tag" exists
-jsonpath "$.timestamp" exists
-jsonpath "$.timestamp" matches /^\d{4}-\d{2}-\d{2}T/
-# The exact key count, not just the presence of each key: `exists` cannot see an
-# ADDED field, and this payload is read by machines.
-jsonpath "$.*" count == 3
+header "content-type" matches /^text\/plain/
+header "content-type" not contains "application/json"
+header "content-type" not contains "text/html"
 
 
 GET {{base}}/health

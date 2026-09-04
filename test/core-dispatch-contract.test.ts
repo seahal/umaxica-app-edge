@@ -53,6 +53,11 @@ const OWNERSHIP: ReadonlyArray<{ path: string; owner: Ownership; why?: string }>
     owner: 'next',
     why: 'Edge self-health JSON; remaining /api/v0/* stay Rails',
   },
+  {
+    path: '/api/v0/revision.json',
+    owner: 'next',
+    why: 'Edge Workers version metadata; remaining /api/v0/* stay Rails',
+  },
   { path: '/web/v0/thing', owner: 'rails' },
   { path: '/web/v0', owner: 'rails' },
   { path: '/edge/v0/widgets', owner: 'rails' },

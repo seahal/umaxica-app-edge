@@ -863,7 +863,8 @@ without.
 | `/health/livenesses`                    | Kubernetes `livenessProbe`. Runtime only; downstream outages must not fail it.                                                              |
 | `/health/readinesses`                   | Kubernetes `readinessProbe`. `text/plain`; `503` only when this instance must not receive traffic.                                          |
 | `/health.html`, `/health.json`          | **Not health documents.** Apex, cores and Astro answer 404 HTML. `Accept: application/json` does not change that.                           |
-| `/revision`                             | JSON.                                                                                                                                       |
+| `/revision`                             | **text/plain** compact Worker version id. Not JSON, not HTML.                                                                               |
+| `/api/v0/revision.json`                 | **application/json** `{ id, tag, timestamp }`. Same metadata authority as `/revision`. Not health.                                          |
 | `robots.txt`, `sitemap.xml`             | Generated routes.                                                                                                                           |
 | apex `/`                                | A region redirect, not a document.                                                                                                          |
 | 429 responses                           | Hand-written HTML; title contract applies, shell does not.                                                                                  |
