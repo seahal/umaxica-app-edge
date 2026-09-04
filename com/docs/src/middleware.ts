@@ -20,7 +20,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
    * this branch keeps it out of the prerender module graph entirely; the Worker
    * pays the dynamic import once, on the first on-demand request.
    */
-  if (!context.isPrerendered) {
+  if (!context.isPrerendered && path !== '/api/v0/health.json') {
     const { getEdgeBindings } = await import('./lib/env');
     const limited = await checkRateLimit(context.request, getEdgeBindings().RATE_LIMITER);
     if (limited) {
@@ -34,6 +34,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const headers = new Headers(secured.headers);
     headers.set('Cache-Control', 'no-store');
     headers.set('Content-Type', 'text/plain; charset=utf-8');
+    return new Response(secured.body, {
+      status: secured.status,
+      statusText: secured.statusText,
+      headers,
+    });
+  }
+  if (path === '/api/v0/health.json') {
+    const headers = new Headers(secured.headers);
+    headers.set('Cache-Control', 'no-store');
+    headers.set('Content-Type', 'application/json; charset=utf-8');
+    headers.set('X-Robots-Tag', 'noindex, nofollow');
     return new Response(secured.body, {
       status: secured.status,
       statusText: secured.statusText,

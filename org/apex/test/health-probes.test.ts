@@ -76,4 +76,27 @@ describe('runtime health probes', () => {
     expect(fetch).not.toHaveBeenCalled();
     await expect(response.text()).resolves.toBe('ok\n');
   });
+
+  it('answers Edge self-health JSON without cookies, Rails, or revision', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    const response = await app.request('/api/v0/health.json', {
+      headers: { 'accept-language': 'ja' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.headers.get('location')).toBeNull();
+    await expect(response.json()).resolves.toEqual({
+      status: 'pass',
+      checks: {
+        startup: { status: 'pass' },
+        liveness: { status: 'pass' },
+        readiness: { status: 'pass' },
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });

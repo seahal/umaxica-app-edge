@@ -8,7 +8,7 @@ import { apexCsrf } from './csrf';
 import { locales } from './i18n/config';
 import { checkRateLimit } from './rate-limit';
 import { renderer } from './renderer';
-import { renderAggregateHealth, renderProbe } from './runtime-health';
+import { renderAggregateHealth, renderHealthApi, renderProbe } from './runtime-health';
 import { apexSecurityHeaders, type AssetEnv } from './security-headers';
 import type { Meta } from './seo';
 import { errorPage, notFoundPage, offlinePageMarkup } from './status-page';
@@ -90,7 +90,7 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
     const path = new URL(c.req.url).pathname;
-    if (path === '/health' || path.startsWith('/health/')) {
+    if (path === '/health' || path.startsWith('/health/') || path === '/api/v0/health.json') {
       return next();
     }
     const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
@@ -99,8 +99,19 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   });
   app.use('*', apexCsrf);
   // Reads the locale set from this unit's own config rather than repeating
-  // it, so the detector and `<html lang>` cannot disagree.
-  app.use(languageDetector({ supportedLanguages: [...locales], fallbackLanguage: 'en' }));
+  // it, so the detector and `<html lang>` cannot disagree. Machine health
+  // must not emit a language cookie as a side effect.
+  const detectLanguage = languageDetector({
+    supportedLanguages: [...locales],
+    fallbackLanguage: 'en',
+  });
+  app.use(async (c, next) => {
+    const path = new URL(c.req.url).pathname;
+    if (path === '/health' || path.startsWith('/health/') || path === '/api/v0/health.json') {
+      return next();
+    }
+    return detectLanguage(c, next);
+  });
 
   pageRoutes.use(renderer);
   configurePageRoutes(pageRoutes);
@@ -140,6 +151,7 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   app.get('/health/livenesses', timeout(2000), () => renderProbe('liveness'));
   app.get('/health/readinesses', timeout(2000), () => renderProbe('readiness'));
   app.get('/health', timeout(2000), () => renderAggregateHealth());
+  app.get('/api/v0/health.json', timeout(2000), () => renderHealthApi());
   app.get('/revision', (c) => {
     const { id = null, tag = null, timestamp = null } = bindings(c)?.CF_VERSION_METADATA ?? {};
     return c.json({ id, tag, timestamp }, 200, {

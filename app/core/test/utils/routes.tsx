@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 import { getRouter } from '@/router';
 import { Route as rootRoute } from '@/routes/__root';
+import { Route as healthApiRoute } from '@/routes/api.v0.health[.]json';
 import { Route as healthRoute } from '@/routes/health';
 import { Route as healthLivenessesRoute } from '@/routes/health.livenesses';
 import { Route as healthReadinessesRoute } from '@/routes/health.readinesses';
@@ -39,6 +40,7 @@ function handlerOf(route: { options: unknown }): Handler {
 
 export const handlers = {
   health: handlerOf(healthRoute),
+  healthApi: handlerOf(healthApiRoute),
   startups: handlerOf(healthStartupsRoute),
   livenesses: handlerOf(healthLivenessesRoute),
   readinesses: handlerOf(healthReadinessesRoute),

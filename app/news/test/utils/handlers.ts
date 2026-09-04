@@ -1,5 +1,6 @@
 import type { APIContext, APIRoute } from 'astro';
 
+import { GET as healthApi } from '../../src/pages/api/v0/health.json';
 import { GET as health } from '../../src/pages/health';
 import { GET as livenesses } from '../../src/pages/health/livenesses';
 import { GET as readinesses } from '../../src/pages/health/readinesses';
@@ -20,6 +21,7 @@ function invoke(get: APIRoute): Promise<Response> | Response {
 
 export const handlers = {
   health: () => invoke(health),
+  healthApi: () => invoke(healthApi),
   startups: () => invoke(startups),
   livenesses: () => invoke(livenesses),
   readinesses: () => invoke(readinesses),

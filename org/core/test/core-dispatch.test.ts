@@ -43,6 +43,7 @@ describe(`${FRAME} classifyCorePath`, () => {
     // Rails-owned, prefix matched.
     ['/api/v0/session', 'rails'],
     ['/api/v0', 'rails'],
+    ['/api/v0/health.json', 'next'],
     ['/web/v0/thing', 'rails'],
     ['/edge/v0/widgets', 'rails'],
     ['/oidc/callback', 'rails'],

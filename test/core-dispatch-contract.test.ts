@@ -48,6 +48,11 @@ const OWNERSHIP: ReadonlyArray<{ path: string; owner: Ownership; why?: string }>
   // --- Rails-owned, prefix matched -----------------------------------------
   { path: '/api/v0/session', owner: 'rails' },
   { path: '/api/v0', owner: 'rails' },
+  {
+    path: '/api/v0/health.json',
+    owner: 'next',
+    why: 'Edge self-health JSON; remaining /api/v0/* stay Rails',
+  },
   { path: '/web/v0/thing', owner: 'rails' },
   { path: '/web/v0', owner: 'rails' },
   { path: '/edge/v0/widgets', owner: 'rails' },

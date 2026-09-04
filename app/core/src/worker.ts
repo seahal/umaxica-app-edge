@@ -55,7 +55,8 @@ function isHealthPath(pathname: string): boolean {
     pathname === '/health' ||
     pathname === '/health/startups' ||
     pathname === '/health/livenesses' ||
-    pathname === '/health/readinesses'
+    pathname === '/health/readinesses' ||
+    pathname === '/api/v0/health.json'
   );
 }
 

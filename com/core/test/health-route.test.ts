@@ -155,6 +155,22 @@ describe('health probes', () => {
   });
 });
 
+describe('Edge self-health API', () => {
+  it('answers pass JSON without calling Rails or fetch', async () => {
+    const fetch = vi.fn(() => Promise.reject(new Error('must not hop')));
+    setEnv({ UMAXICA_APPS_EDGE_CF_WORKERS_VPC: { fetch } });
+
+    const response = await handlers.healthApi();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    expect(fetch).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual(PASS_DOCUMENT);
+  });
+});
+
 describe('rails-health helper stays closed', () => {
   it('still reports kinds without leaking exception text', async () => {
     const report = await checkRailsHealth(null);

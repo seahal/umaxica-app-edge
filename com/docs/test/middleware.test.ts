@@ -70,6 +70,30 @@ describe('request middleware', () => {
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
+  it('forces no-store JSON on the Edge self-health API', async () => {
+    const next = vi.fn(
+      async () =>
+        new Response('{"status":"pass"}', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+
+    const response = await onRequest(
+      {
+        url: new URL('https://example.test/api/v0/health.json'),
+        rewrite: vi.fn(),
+      } as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledOnce();
+    if (!(response instanceof Response)) throw new Error('middleware did not return a response');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+  });
+
   it('stamps security headers on every other response', async () => {
     const next = vi.fn(async () => new Response('ok', { status: 200 }));
 

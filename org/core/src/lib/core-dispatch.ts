@@ -61,6 +61,8 @@ export type PathOwnership = 'rails' | 'blocked' | 'next';
  *                 `/health/livenesses`, `/health/readinesses`). Rails-internal
  *                 JSON (`/health/liveness.json` and siblings) stays off the
  *                 public FQDN.
+ *   /api/v0/health.json  Rails serves a Health API here. NEXT anyway: Edge
+ *                 self-health for this Worker. Other `/api/v0/*` stay Rails.
  *   /health       Rails serves it. NEXT anyway: Edge's human-readable aggregate.
  *   /robots.txt   Rails serves it. NEXT: Edge owns the crawler contract for the
  *                 public FQDN (`src/app/robots.ts`).
@@ -122,9 +124,19 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === withoutTrailingSlash || pathname.startsWith(prefix);
 }
 
+const EDGE_SELF_HEALTH_API = '/api/v0/health.json';
+
 export function classifyCorePath(pathname: string): PathOwnership {
   if (pathname.startsWith(BLOCKED_PREFIX)) {
     return APPLICATION_HEALTH_PROBES.has(pathname) ? 'next' : 'blocked';
+  }
+  /*
+   * Edge self-health is machine JSON for THIS Worker. The rest of `/api/v0/`
+   * stays Rails-owned (ADR 007). Rails publishes the same path on its origin;
+   * that document is consumed privately by `rails-health.ts`, never here.
+   */
+  if (pathname === EDGE_SELF_HEALTH_API) {
+    return 'next';
   }
   if (RAILS_OWNED_EXACT.has(pathname)) {
     return 'rails';

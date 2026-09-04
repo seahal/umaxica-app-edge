@@ -73,3 +73,36 @@ export function renderAggregateHealth(
   const ok = startup === 'ok' && liveness === 'ok' && readiness === 'ok';
   return healthResponse(aggregateBody(startup, liveness, readiness), ok);
 }
+
+const HEALTH_API_HEADERS = {
+  'Content-Type': 'application/json; charset=utf-8',
+  'Cache-Control': HEALTH_CACHE_CONTROL,
+  'X-Robots-Tag': 'noindex, nofollow',
+} as const;
+
+export type HealthApiStatus = 'pass' | 'warn' | 'fail';
+
+export function healthApiDocument(): {
+  status: HealthApiStatus;
+  checks: {
+    startup: { status: HealthApiStatus };
+    liveness: { status: HealthApiStatus };
+    readiness: { status: HealthApiStatus };
+  };
+} {
+  return {
+    status: 'pass',
+    checks: {
+      startup: { status: 'pass' },
+      liveness: { status: 'pass' },
+      readiness: { status: 'pass' },
+    },
+  };
+}
+
+export function renderHealthApi(): Response {
+  return new Response(JSON.stringify(healthApiDocument()), {
+    status: 200,
+    headers: HEALTH_API_HEADERS,
+  });
+}

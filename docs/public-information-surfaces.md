@@ -72,7 +72,7 @@ The three cores are classified `railsBackedVite` and the twelve public surfaces
 binding.
 On the twelve public surfaces the only thing that binding is used for today is
 `/health`: `src/lib/rails-client.ts` and `src/lib/rails-health.ts` verify Rails
-through `GET /api/v0/health.json` (ADR 016) and map the result onto Edge's
+through Rails `GET /api/v0/health.json` (ADR 016) and map the result onto Edge's
 `text/plain` operational contract. **No public surface fetches content from
 Rails yet**, so the narrow contract above is a boundary that has not been tested
 against a real consumer.
