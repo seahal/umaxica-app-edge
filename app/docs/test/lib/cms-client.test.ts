@@ -2,11 +2,21 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createCmsClient } from '../../src/lib/cms/client';
 import type { RailsClient, RailsClientResult } from '../../src/lib/rails-client';
-function client(result: RailsClientResult) {
-  const fetch = vi.fn(() => Promise.resolve(result));
+
+function client(...results: RailsClientResult[]) {
+  const queue = [...results];
+  const fetch = vi.fn(() => {
+    const next = queue.shift();
+    if (next === undefined) {
+      return Promise.resolve({ kind: 'unreachable' as const, errorMessage: 'extra fetch' });
+    }
+    return Promise.resolve(next);
+  });
   return { cms: createCmsClient({ fetch } as RailsClient), fetch };
 }
+
 const payload = {
+  public_id: 'httS4Y6517f1XS9SMK0Lu',
   namespace: 'docs',
   surface: 'app',
   slug: 'guide',
@@ -17,14 +27,27 @@ const payload = {
   published_at: '2026-09-03T00:00:00Z',
   taxonomy: {},
 };
+
+const indexPage = {
+  data: [payload],
+  page: { next_cursor: null, has_more: false },
+};
+
 describe('CMS Rails client', () => {
-  it('uses only the fixed entries path and JSON accept header', async () => {
-    const { cms, fetch } = client({ kind: 'ok', status: 200, response: Response.json(payload) });
+  it('resolves the public slug via the entries index then loads the public_id show', async () => {
+    const { cms, fetch } = client(
+      { kind: 'ok', status: 200, response: Response.json(indexPage) },
+      { kind: 'ok', status: 200, response: Response.json(payload) },
+    );
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toMatchObject({ kind: 'ok' });
-    expect(fetch).toHaveBeenCalledWith('/api/v0/entries/guide?locale=ja', {
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/v0/entries?locale=ja&limit=100', {
+      headers: { Accept: 'application/json' },
+    });
+    expect(fetch).toHaveBeenNthCalledWith(2, '/api/v0/entries/httS4Y6517f1XS9SMK0Lu?locale=ja', {
       headers: { Accept: 'application/json' },
     });
   });
+
   it.each([
     [404, 'not-found'],
     [401, 'upstream-access-error'],
@@ -41,6 +64,7 @@ describe('CMS Rails client', () => {
     });
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toMatchObject({ kind });
   });
+
   it('maps an invalid Rails path to an internal error', async () => {
     const { cms } = client({ kind: 'invalid-path', reason: 'path must not be empty' });
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({ kind: 'internal-error' });
@@ -50,6 +74,7 @@ describe('CMS Rails client', () => {
     const { cms } = client({ kind: 'timeout' });
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({ kind: 'timeout' });
   });
+
   it('normalizes known and unknown transport errors', async () => {
     for (const [message, transportReason] of [
       ['workerd: dns_error', 'dns_error'],
@@ -62,6 +87,7 @@ describe('CMS Rails client', () => {
       });
     }
   });
+
   it('rejects malformed JSON and empty successful responses', async () => {
     for (const response of [new Response('{'), new Response(null, { status: 204 })]) {
       const { cms } = client({ kind: 'ok', status: response.status, response });
@@ -70,6 +96,7 @@ describe('CMS Rails client', () => {
       });
     }
   });
+
   it('rejects bodies larger than one MiB', async () => {
     const response = new Response('x', { headers: { 'Content-Length': String(1024 * 1024 + 1) } });
     const { cms } = client({ kind: 'ok', status: 200, response });
@@ -79,13 +106,17 @@ describe('CMS Rails client', () => {
       upstreamStatus: 200,
     });
   });
+
   it('rejects a representation for another locale or slug', async () => {
     for (const change of [{ locale: 'en' }, { slug: 'other' }]) {
-      const { cms } = client({
-        kind: 'ok',
-        status: 200,
-        response: Response.json({ ...payload, ...change }),
-      });
+      const { cms } = client(
+        { kind: 'ok', status: 200, response: Response.json(indexPage) },
+        {
+          kind: 'ok',
+          status: 200,
+          response: Response.json({ ...payload, ...change }),
+        },
+      );
       await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({
         kind: 'invalid-contract',
         reason: 'schema_mismatch',
@@ -93,6 +124,7 @@ describe('CMS Rails client', () => {
       });
     }
   });
+
   it('enforces the one MiB limit while streaming without Content-Length', async () => {
     const { cms } = client({
       kind: 'ok',
@@ -105,11 +137,24 @@ describe('CMS Rails client', () => {
       upstreamStatus: 200,
     });
   });
+
   it('rejects unsafe slugs without calling Rails', async () => {
     const { cms, fetch } = client({ kind: 'ok', status: 200, response: Response.json(payload) });
     await expect(cms.fetchDocument('ja', '../secret')).resolves.toMatchObject({
       kind: 'upstream-protocol-error',
     });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('maps a missing slug on the index to a generic not-found', async () => {
+    const { cms } = client({
+      kind: 'ok',
+      status: 200,
+      response: Response.json({ data: [], page: { next_cursor: null, has_more: false } }),
+    });
+    await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({
+      kind: 'not-found',
+      upstreamStatus: 404,
+    });
   });
 });

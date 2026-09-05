@@ -70,7 +70,7 @@
   "vpc_services": [
     {
       "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-      "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+      "service_id": "01a06fd0-89b7-7613-9e1d-f7d07c693273"
     }
   ],
 
@@ -91,7 +91,7 @@
       "vpc_services": [
         {
           "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7"
+          "service_id": "01a06fd0-89b7-7613-9e1d-f7d07c693273"
         }
       ],
       "ratelimits": [
@@ -176,7 +176,7 @@
       "vpc_services": [
         {
           "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+          "service_id": "01a06fd0-89b7-7613-9e1d-f7d07c693273",
           "remote": true
         }
       ],
@@ -210,7 +210,7 @@
       "vpc_services": [
         {
           "binding": "UMAXICA_APPS_EDGE_CF_WORKERS_VPC",
-          "service_id": "019f5fe0-287f-7040-9f2f-036cb5b21df7",
+          "service_id": "01a06fd0-89b7-7613-9e1d-f7d07c693273",
           "remote": true
         }
       ],

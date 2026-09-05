@@ -6,6 +6,7 @@ import {
   parseCmsDocument,
   type TransportReason,
 } from './document';
+
 const REASONS: readonly Exclude<TransportReason, 'unknown'>[] = [
   'connection_limit_reached',
   'connection_refused',
@@ -18,10 +19,14 @@ const REASONS: readonly Exclude<TransportReason, 'unknown'>[] = [
   'rate_limited',
   'tls_certificate_error',
 ];
+const MAX_INDEX_PAGES = 100;
+const INDEX_PAGE_LIMIT = 100;
+
 function reason(message: string): TransportReason {
   const lower = message.toLowerCase();
   return REASONS.find((item) => lower.includes(item)) ?? 'unknown';
 }
+
 function isByteStream(value: unknown): value is ReadableStream<Uint8Array> {
   return (
     typeof value === 'object' &&
@@ -29,6 +34,7 @@ function isByteStream(value: unknown): value is ReadableStream<Uint8Array> {
     typeof Reflect.get(value, 'getReader') === 'function'
   );
 }
+
 async function json(
   response: Response,
 ): Promise<{ kind: 'ok'; value: unknown } | { kind: 'invalid-json' } | { kind: 'too-large' }> {
@@ -61,6 +67,7 @@ async function json(
     return { kind: 'invalid-json' };
   }
 }
+
 function http(result: Extract<RailsClientResult, { kind: 'http-error' }>): CmsFetchResult {
   const status = result.status;
   if (status === 404) return { kind: 'not-found', upstreamStatus: 404 };
@@ -70,7 +77,23 @@ function http(result: Extract<RailsClientResult, { kind: 'http-error' }>): CmsFe
   if (status >= 500 && status <= 599) return { kind: 'upstream-error', upstreamStatus: status };
   return { kind: 'upstream-protocol-error', upstreamStatus: status };
 }
-async function map(result: RailsClientResult): Promise<CmsFetchResult> {
+
+function contract(
+  decoded: Awaited<ReturnType<typeof json>>,
+  status: number,
+): Extract<CmsFetchResult, { kind: 'invalid-contract' }> | { kind: 'ok'; value: unknown } {
+  if (decoded.kind === 'too-large')
+    return { kind: 'invalid-contract', reason: 'response_too_large', upstreamStatus: status };
+  if (decoded.kind === 'invalid-json')
+    return { kind: 'invalid-contract', reason: 'invalid_json', upstreamStatus: status };
+  return { kind: 'ok', value: decoded.value };
+}
+
+async function mapTransport(
+  result: RailsClientResult,
+): Promise<
+  { kind: 'payload'; status: number; value: unknown } | Exclude<CmsFetchResult, { kind: 'ok' }>
+> {
   switch (result.kind) {
     case 'invalid-path':
       return { kind: 'internal-error' };
@@ -81,45 +104,104 @@ async function map(result: RailsClientResult): Promise<CmsFetchResult> {
     case 'http-error':
       return http(result);
     case 'ok': {
-      const decoded = await json(result.response);
-      if (decoded.kind === 'too-large')
-        return {
-          kind: 'invalid-contract',
-          reason: 'response_too_large',
-          upstreamStatus: result.status,
-        };
-      if (decoded.kind === 'invalid-json')
-        return { kind: 'invalid-contract', reason: 'invalid_json', upstreamStatus: result.status };
-      const parsed = parseCmsDocument(decoded.value);
-      return parsed.kind === 'ok'
-        ? { kind: 'ok', document: parsed.document, upstreamStatus: result.status }
-        : { kind: 'invalid-contract', reason: parsed.reason, upstreamStatus: result.status };
+      const decoded = contract(await json(result.response), result.status);
+      return decoded.kind === 'ok'
+        ? { kind: 'payload', status: result.status, value: decoded.value }
+        : decoded;
     }
   }
 }
+
+function indexPath(locale: CmsLocale, cursor: string | undefined): string {
+  const query = new URLSearchParams({ locale, limit: String(INDEX_PAGE_LIMIT) });
+  if (cursor !== undefined) query.set('cursor', cursor);
+  return `/api/v0/entries?${query.toString()}`;
+}
+
+function findPublicId(
+  value: unknown,
+  locale: CmsLocale,
+  slug: string,
+):
+  | { kind: 'hit'; publicId: string; hasMore: boolean; cursor: string | null }
+  | { kind: 'miss'; hasMore: boolean; cursor: string | null }
+  | { kind: 'invalid' } {
+  if (typeof value !== 'object' || value === null) return { kind: 'invalid' };
+  const data = Reflect.get(value, 'data');
+  const page = Reflect.get(value, 'page');
+  if (!Array.isArray(data) || typeof page !== 'object' || page === null) return { kind: 'invalid' };
+  const hasMore = Reflect.get(page, 'has_more') === true;
+  const nextCursor = Reflect.get(page, 'next_cursor');
+  if (nextCursor !== undefined && nextCursor !== null && typeof nextCursor !== 'string') {
+    return { kind: 'invalid' };
+  }
+  const cursor = typeof nextCursor === 'string' ? nextCursor : null;
+  for (const item of data) {
+    if (typeof item !== 'object' || item === null) return { kind: 'invalid' };
+    if (Reflect.get(item, 'slug') !== slug || Reflect.get(item, 'locale') !== locale) continue;
+    const publicId = Reflect.get(item, 'public_id');
+    if (typeof publicId !== 'string' || publicId.length === 0) return { kind: 'invalid' };
+    return { kind: 'hit', publicId, hasMore, cursor };
+  }
+  return { kind: 'miss', hasMore, cursor };
+}
+
 export interface CmsClient {
   fetchDocument(locale: CmsLocale, slug: string): Promise<CmsFetchResult>;
 }
+
 export function createCmsClient(rails: RailsClient): CmsClient {
   return {
     async fetchDocument(locale, slug) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug))
         return { kind: 'upstream-protocol-error', upstreamStatus: 400 };
-      const result = await map(
-        await rails.fetch(`/api/v0/entries/${encodeURIComponent(slug)}?locale=${locale}`, {
+
+      let cursor: string | undefined;
+      let publicId: string | undefined;
+      for (let page = 0; page < MAX_INDEX_PAGES; page += 1) {
+        const listed = await mapTransport(
+          await rails.fetch(indexPath(locale, cursor), {
+            headers: { Accept: 'application/json' },
+          }),
+        );
+        if (listed.kind !== 'payload') return listed;
+        const found = findPublicId(listed.value, locale, slug);
+        if (found.kind === 'invalid')
+          return {
+            kind: 'invalid-contract',
+            reason: 'schema_mismatch',
+            upstreamStatus: listed.status,
+          };
+        if (found.kind === 'hit') {
+          publicId = found.publicId;
+          break;
+        }
+        if (!found.hasMore || found.cursor === null)
+          return { kind: 'not-found', upstreamStatus: 404 };
+        cursor = found.cursor;
+      }
+      if (publicId === undefined) return { kind: 'not-found', upstreamStatus: 404 };
+
+      const shown = await mapTransport(
+        await rails.fetch(`/api/v0/entries/${encodeURIComponent(publicId)}?locale=${locale}`, {
           headers: { Accept: 'application/json' },
         }),
       );
-      if (
-        result.kind === 'ok' &&
-        (result.document.locale !== locale || result.document.slug !== slug)
-      )
+      if (shown.kind !== 'payload') return shown;
+      const parsed = parseCmsDocument(shown.value);
+      if (parsed.kind !== 'ok')
+        return {
+          kind: 'invalid-contract',
+          reason: parsed.reason,
+          upstreamStatus: shown.status,
+        };
+      if (parsed.document.locale !== locale || parsed.document.slug !== slug)
         return {
           kind: 'invalid-contract',
           reason: 'schema_mismatch',
-          upstreamStatus: result.upstreamStatus,
+          upstreamStatus: shown.status,
         };
-      return result;
+      return { kind: 'ok', document: parsed.document, upstreamStatus: shown.status };
     },
   };
 }
