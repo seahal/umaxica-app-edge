@@ -11,6 +11,7 @@ function makeClient(result: RailsClientResult): RailsClient {
 
 const PASS_DOCUMENT = {
   status: 'pass',
+  timestamp: '2026-09-05T09:33:29Z',
   checks: {
     startup: { status: 'pass' },
     liveness: { status: 'pass' },
@@ -84,6 +85,7 @@ describe('rails health api consumer', () => {
   it('reports fail for HTTP 503 application/json with status=fail', async () => {
     const body = {
       status: 'fail',
+      timestamp: '2026-09-05T09:33:29Z',
       checks: {
         startup: { status: 'pass' },
         liveness: { status: 'pass' },
@@ -104,6 +106,7 @@ describe('rails health api consumer', () => {
   it('accepts charset parameters and additive unknown fields', async () => {
     const body = {
       status: 'pass',
+      timestamp: '2026-09-05T09:33:29Z',
       checks: {
         startup: { status: 'pass' },
         liveness: { status: 'pass' },
@@ -204,6 +207,26 @@ describe('rails health api consumer', () => {
       }),
     );
     expect(report.kind).toBe('invalid-contract');
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['without a timezone', '2026-09-05T09:33:29'],
+    ['with an invalid offset', '2026-09-05T09:33:29+99:00'],
+  ])('reports invalid-contract for a timestamp %s', async (_label, timestamp) => {
+    const body = { ...PASS_DOCUMENT, timestamp };
+    const report = await checkRailsHealth(
+      makeClient({ kind: 'ok', status: 200, response: jsonResponse(200, body) }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it('accepts an explicit UTC offset in the timestamp', async () => {
+    const body = { ...PASS_DOCUMENT, timestamp: '2026-09-05T18:33:29+09:00' };
+    const report = await checkRailsHealth(
+      makeClient({ kind: 'ok', status: 200, response: jsonResponse(200, body) }),
+    );
+    expect(report).toEqual({ kind: 'pass', status: 200 });
   });
 
   it('reports invalid-contract on a redirect', async () => {

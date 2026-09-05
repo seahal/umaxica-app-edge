@@ -31,6 +31,7 @@ export interface HealthCheck {
 
 export interface RailsHealthApiDocument {
   status: HealthStatus;
+  timestamp: string;
   checks: {
     startup: HealthCheck;
     liveness: HealthCheck;
@@ -156,6 +157,10 @@ function parseHealthDocument(value: unknown): RailsHealthApiDocument | null {
   if (!isHealthStatus(status)) {
     return null;
   }
+  const timestamp: unknown = Reflect.get(value, 'timestamp');
+  if (!isTimezoneAwareTimestamp(timestamp)) {
+    return null;
+  }
   const checksValue: unknown = Reflect.get(value, 'checks');
   if (typeof checksValue !== 'object' || checksValue === null || Array.isArray(checksValue)) {
     return null;
@@ -168,8 +173,20 @@ function parseHealthDocument(value: unknown): RailsHealthApiDocument | null {
   }
   return {
     status,
+    timestamp,
     checks: { startup, liveness, readiness },
   };
+}
+
+const TIMEZONE_AWARE_TIMESTAMP =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+
+function isTimezoneAwareTimestamp(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    TIMEZONE_AWARE_TIMESTAMP.test(value) &&
+    !Number.isNaN(Date.parse(value))
+  );
 }
 
 function parseCheck(value: unknown): HealthCheck | null {

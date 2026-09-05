@@ -75,6 +75,7 @@ describe('com/core health route', () => {
         new Response(
           JSON.stringify({
             status: 'pass',
+            timestamp: '2026-09-05T09:33:29Z',
             checks: {
               startup: { status: 'pass' },
               liveness: { status: 'pass' },

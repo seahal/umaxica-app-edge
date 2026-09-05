@@ -19,6 +19,16 @@ function expectPlainHealth(response: Response) {
 
 const PASS_DOCUMENT = {
   status: 'pass',
+  timestamp: '2026-09-05T09:33:29Z',
+  checks: {
+    startup: { status: 'pass' },
+    liveness: { status: 'pass' },
+    readiness: { status: 'pass' },
+  },
+};
+
+const EDGE_SELF_HEALTH_DOCUMENT = {
+  status: 'pass',
   checks: {
     startup: { status: 'pass' },
     liveness: { status: 'pass' },
@@ -106,6 +116,7 @@ describe('health probes', () => {
       Promise.resolve(
         jsonResponse(503, {
           status: 'fail',
+          timestamp: '2026-09-05T09:33:29Z',
           checks: {
             startup: { status: 'pass' },
             liveness: { status: 'pass' },
@@ -167,7 +178,7 @@ describe('Edge self-health API', () => {
     expect(response.headers.get('cache-control')).toContain('no-store');
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     expect(fetch).not.toHaveBeenCalled();
-    await expect(response.json()).resolves.toEqual(PASS_DOCUMENT);
+    await expect(response.json()).resolves.toEqual(EDGE_SELF_HEALTH_DOCUMENT);
   });
 });
 
