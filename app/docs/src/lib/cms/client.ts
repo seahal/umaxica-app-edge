@@ -68,7 +68,9 @@ async function json(
   }
 }
 
-function http(result: Extract<RailsClientResult, { kind: 'http-error' }>): CmsFetchResult {
+function http(
+  result: Extract<RailsClientResult, { kind: 'http-error' }>,
+): Exclude<CmsFetchResult, { kind: 'ok' }> {
   const status = result.status;
   if (status === 404) return { kind: 'not-found', upstreamStatus: 404 };
   if (status === 401 || status === 403)
