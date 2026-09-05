@@ -127,11 +127,11 @@ function findPublicId(
   | { kind: 'miss'; hasMore: boolean; cursor: string | null }
   | { kind: 'invalid' } {
   if (typeof value !== 'object' || value === null) return { kind: 'invalid' };
-  const data = Reflect.get(value, 'data');
-  const page = Reflect.get(value, 'page');
+  const data: unknown = Reflect.get(value, 'data');
+  const page: unknown = Reflect.get(value, 'page');
   if (!Array.isArray(data) || typeof page !== 'object' || page === null) return { kind: 'invalid' };
   const hasMore = Reflect.get(page, 'has_more') === true;
-  const nextCursor = Reflect.get(page, 'next_cursor');
+  const nextCursor: unknown = Reflect.get(page, 'next_cursor');
   if (nextCursor !== undefined && nextCursor !== null && typeof nextCursor !== 'string') {
     return { kind: 'invalid' };
   }
@@ -139,7 +139,7 @@ function findPublicId(
   for (const item of data) {
     if (typeof item !== 'object' || item === null) return { kind: 'invalid' };
     if (Reflect.get(item, 'slug') !== slug || Reflect.get(item, 'locale') !== locale) continue;
-    const publicId = Reflect.get(item, 'public_id');
+    const publicId: unknown = Reflect.get(item, 'public_id');
     if (typeof publicId !== 'string' || publicId.length === 0) return { kind: 'invalid' };
     return { kind: 'hit', publicId, hasMore, cursor };
   }
