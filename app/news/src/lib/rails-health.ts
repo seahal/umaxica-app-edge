@@ -191,6 +191,18 @@ function isJsonMediaType(contentType: string | null): boolean {
   if (contentType === null) {
     return false;
   }
-  const mediaType = contentType.split(';')[0]?.trim().toLowerCase() ?? '';
+  /*
+   * Sliced at the first `;` rather than `split(';')[0]`. Under
+   * `noUncheckedIndexedAccess` the indexed form is typed `string | undefined`
+   * and needs a `?? ''` fallback for a case `String.prototype.split` cannot
+   * produce — it always yields at least one element. That fallback was an
+   * always-false branch no test could reach, and the only thing standing
+   * between this file and full branch coverage. Both arms below are real:
+   * `application/json` takes one, `application/json; charset=utf-8` the other.
+   */
+  const separator = contentType.indexOf(';');
+  const mediaType = (separator === -1 ? contentType : contentType.slice(0, separator))
+    .trim()
+    .toLowerCase();
   return mediaType === 'application/json';
 }

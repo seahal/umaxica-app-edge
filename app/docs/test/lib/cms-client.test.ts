@@ -65,6 +65,25 @@ describe('CMS Rails client', () => {
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toMatchObject({ kind });
   });
 
+  it.each([
+    ['a body Rails did not send', { ...payload, body: undefined }, 'body_missing_or_invalid'],
+    ['a field Rails typed differently', { ...payload, title: 42 }, 'schema_mismatch'],
+  ] as const)('maps well-formed JSON with %s to invalid-contract', async (_label, body, reason) => {
+    // Index lookup succeeds so the show response is what `parseCmsDocument`
+    // rejects. The JSON parses and is within the size bound, so neither earlier
+    // guard fires; the parse reason is carried through while status stays 200.
+    const { cms } = client(
+      { kind: 'ok', status: 200, response: Response.json(indexPage) },
+      { kind: 'ok', status: 200, response: Response.json(body) },
+    );
+
+    await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({
+      kind: 'invalid-contract',
+      reason,
+      upstreamStatus: 200,
+    });
+  });
+
   it('maps an invalid Rails path to an internal error', async () => {
     const { cms } = client({ kind: 'invalid-path', reason: 'path must not be empty' });
     await expect(cms.fetchDocument('ja', 'guide')).resolves.toEqual({ kind: 'internal-error' });

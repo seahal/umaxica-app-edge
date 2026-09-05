@@ -24,7 +24,7 @@ describe('revision binding', () => {
 
     const text = await app.request('/revision', {}, env);
     await expect(text.text()).resolves.toBe('version-id\n');
-    expect(text.headers.get('content-type')).toMatch(/^text\/plain\b/);
+    expect(text.headers.get('content-type')).toMatch(/^text\/plain\b/u);
   });
 
   it('uses null JSON fields and unknown text when the binding omits values', async () => {

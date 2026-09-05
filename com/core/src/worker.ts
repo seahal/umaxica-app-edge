@@ -38,17 +38,13 @@ import { withSecurityHeaders } from './security-headers';
  */
 
 /**
- * Paths the rate limiter does not see.
+ * Every machine-facing path this frame serves.
  *
- * Cloudflare matches static assets BEFORE this Worker runs, so in production
- * none of these reach this function at all — the exemption is what keeps that
- * true in the places where they do, and it costs one string comparison.
- *
- * `/assets/` is where Vite writes this frame's hashed output, and the favicon is
- * the one unhashed file a document references. There is no image-optimisation
- * route: if one is ever added it is a real Worker route, so a page with many
- * images could spend its whole budget on its own thumbnails — exempt it here at
- * the same time.
+ * Drives `sanitizeHealthRequest` only. Deliberately WIDER than
+ * `isUnmeteredProbe` below: dropping non-ASCII client headers before the
+ * application sees them is free and has nothing to do with what the limiter
+ * counts, so the two questions are asked separately even though the older
+ * spelling answered both with one list.
  */
 function isHealthPath(pathname: string): boolean {
   return (
@@ -60,8 +56,55 @@ function isHealthPath(pathname: string): boolean {
   );
 }
 
+/**
+ * The probes the rate limiter must never see, and the reason the set is this
+ * small.
+ *
+ * Each of these three is a constant: no binding read, no Rails hop, nothing that
+ * can fail. A 429 on one of them is indistinguishable from a dead isolate, so an
+ * endpoint an orchestrator trusts to mean "alive" must not be throttleable.
+ *
+ * `/health` and `/health/readinesses` are deliberately absent. Both fetch Rails
+ * over the Workers VPC binding (`src/routes/health.ts`,
+ * `src/routes/health.readinesses.ts`), so exempting them publishes an
+ * unauthenticated, uncounted path into the Rails origin — one inbound request,
+ * one outbound Rails request, no ceiling. Readiness is the probe whose job is to
+ * answer "do not send me traffic"; being throttled is a correct answer for it,
+ * and is not a correct answer for liveness or startup.
+ *
+ * The same three paths are the exempt set in every apex `create-apex-app.ts`
+ * and every Astro surface's `src/middleware.ts`. One rule, twenty units.
+ */
+function isUnmeteredProbe(pathname: string): boolean {
+  return (
+    pathname === '/health/startups' ||
+    pathname === '/health/livenesses' ||
+    pathname === '/api/v0/health.json'
+  );
+}
+
+/**
+ * Paths the rate limiter does not see.
+ *
+ * Cloudflare matches static assets BEFORE this Worker runs, so in production
+ * none of these reach this function at all — the exemption is what keeps that
+ * true in the places where they do, and it costs one string comparison.
+ *
+ * `/assets/` is where Vite writes this frame's hashed output, and the favicon is
+ * the one unhashed file a document references. There is no image-optimisation
+ * route: if one is ever added it is a real Worker route, so a page with many
+ * images could spend its whole budget on its own thumbnails — exempt it here at
+ * the same time.
+ *
+ * `/revision` and `/api/v0/revision.json` are NOT here. They read a binding and
+ * answer immediately, but they are deployment metadata rather than probes:
+ * nothing operational breaks when one of them is throttled, so there is no
+ * reason to hand out an uncounted Worker invocation on a path anyone can call.
+ */
 function isRateLimitExempt(pathname: string): boolean {
-  return pathname.startsWith('/assets/') || pathname === '/favicon.ico' || isHealthPath(pathname);
+  return (
+    pathname.startsWith('/assets/') || pathname === '/favicon.ico' || isUnmeteredProbe(pathname)
+  );
 }
 
 /**

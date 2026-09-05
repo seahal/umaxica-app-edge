@@ -152,6 +152,38 @@ describe('Rails entries client', () => {
     });
   });
 
+  it('maps an invalid-path client result to upstream-error without its reason', async () => {
+    // `invalid-path` is the transport refusing to build a request at all. It is
+    // not a Rails answer, so there is no upstream status to report, and the
+    // reason string is internal — the client seam is the only way to produce it.
+    const { entries } = client({ kind: 'invalid-path', reason: 'path must not be empty' });
+
+    const result = await entries.fetchEntry({ publicId: 'entry-1', locale: 'ja' });
+
+    expect(result).toEqual({ kind: 'upstream-error' });
+    expect(JSON.stringify(result)).not.toContain('path must not be empty');
+  });
+
+  it('abandons pagination at the first page that is not ok, keeping that page\u2019s outcome', async () => {
+    // The first page succeeds and asks for a second, which fails. Collecting
+    // entries must stop there and answer with the failing page's own result
+    // rather than the partial list gathered so far.
+    const { entries, fetch } = client(
+      {
+        kind: 'ok',
+        status: 200,
+        response: Response.json({ data: [entry], page: { next_cursor: 'next/2', has_more: true } }),
+      },
+      { kind: 'http-error', status: 503, response: new Response('down', { status: 503 }) },
+    );
+
+    const result = await entries.fetchAllEntries({ locale: 'ja' });
+
+    expect(result).toEqual({ kind: 'upstream-error', upstreamStatus: 503 });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(result)).not.toContain('entry-1');
+  });
+
   it('rejects malformed cursor envelopes and bounds malformed infinite pagination', async () => {
     const missingCursor = client({
       kind: 'ok',

@@ -59,7 +59,7 @@ describe('status surfaces', () => {
     expect(withMeta.status).toBe(200);
     expect(withMeta.headers.get('Cache-Control')).toBe('no-store');
     expect(withMeta.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
-    expect(withMeta.headers.get('Content-Type')).toMatch(/^text\/plain\b/);
+    expect(withMeta.headers.get('Content-Type')).toMatch(/^text\/plain\b/u);
     await expect(withMeta.text()).resolves.toBe('id-1\n');
     await expect((await handlers.revisionApi()).json()).resolves.toEqual({
       id: 'id-1',

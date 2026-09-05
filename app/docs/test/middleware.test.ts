@@ -94,6 +94,26 @@ describe('request middleware', () => {
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
   });
 
+  it('forces no-store text/plain on the revision document', async () => {
+    // Deployment metadata, not a probe: it is metered like any other on-demand
+    // route, and it still gets the machine-endpoint header treatment so a cache
+    // or a crawler cannot keep a build id around.
+    const next = vi.fn(
+      async () =>
+        new Response('abc-123\n', { status: 200, headers: { 'Cache-Control': 'public' } }),
+    );
+
+    const response = asResponse(
+      await onRequest(context('https://example.test/revision') as never, next),
+    );
+
+    expect(next).toHaveBeenCalledOnce();
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  });
+
   it('stamps security headers on every other response', async () => {
     const next = vi.fn(async () => new Response('ok', { status: 200 }));
 

@@ -53,7 +53,7 @@ catalog:
   # Its peer range pins wrangler at ^4.127.0, which is what moved the wrangler
   # entry below off ^4.126.0.
   '@cloudflare/vite-plugin': ^1.54.3
-  '@cloudflare/workers-types': ^5.20260901.1
+  '@cloudflare/workers-types': ^5.20260903.1
   # Inter, self-hosted. The CSP is `font-src 'self' data:`, so a CDN is not an
   # option: this package ships the woff2 files and the `@font-face` rules, which
   # Vite fingerprints into the client build like any other asset. All fifteen
@@ -118,7 +118,7 @@ catalog:
   '@testing-library/react': ^16.3.3
   '@types/node': ^26.4.1
   '@types/react': ^19.2.18
-  '@types/react-dom': ^19.2.5
+  '@types/react-dom': ^19.2.7
   # React Fast Refresh and the JSX transform for the Vite-built units. The five
   # apex Workers do not install it — they render with hono/jsx and have no React
   # at all (docs/design/ui-shell-contract.md §3a).
@@ -134,7 +134,7 @@ catalog:
   astro: 7.3.1
   cspell: ^10.2.1
   dependency-cruiser: ^18.2.0
-  happy-dom: ^20.12.0
+  happy-dom: ^20.13.2
   hono: ^4.13.5
   knip: ^6.34.0
   # The static analysis toolchain. These were literal strings in twenty-two
@@ -220,25 +220,23 @@ minimumReleaseAgeIgnoreMissingTime: false
 # "whatever is newest". Re-check when bumping — an entry kept past its bump is
 # a standing hole.
 #
-# `wrangler@4.120.1` was dropped when the catalog floor moved to ^4.124.0 for
-# `@cloudflare/vite-plugin`'s peer range: 4.124.0 cleared the delay on its own,
-# so the exception had nothing left to except.
-minimumReleaseAgeExclude:
-  - miniflare@5.20260804.0-alpha
-  # Astro 7.3 adoption. Both published 2026-09-03 and bumped inside the 24h
-  # window. Build-time only — `astro build` emits static HTML plus the Worker
-  # bundle for the on-demand endpoints; nothing Astro or its adapter ships runs
-  # in the request path for a static page. Pinned exactly in the catalog above.
-  # Remove both entries once they age past the window (after 2026-09-04).
-  - astro@7.3.1
-  - '@astrojs/cloudflare@14.3.0'
-  # Vitest 5 adoption. Published 2026-09-03, bumped inside the 24h window.
-  # Test runner — never bundled into a Worker. Catalogued exactly at 5.0.0 for
-  # vitest / @vitest/coverage-v8; the glob covers the lockstep @vitest/*
-  # sub-packages (expect, runner, snapshot, spy, mocker, utils, pretty-format).
-  # Remove once aged past the window (after 2026-09-04).
-  - vitest@5.0.0
-  - '@vitest/*'
+# Empty today, and every removal was a version clearing the delay on its own
+# rather than the policy being relaxed:
+#
+#   wrangler@4.120.1              the catalog floor moved to ^4.124.0 for
+#                                 `@cloudflare/vite-plugin`'s peer range, and
+#                                 4.124.0 was already aged.
+#   miniflare@5.20260804.0-alpha  the lockfile resolves 5.20260831.0-alpha; the
+#                                 pinned version was not installed any more, so
+#                                 the entry excepted nothing.
+#   astro@7.3.1                   published 2026-09-03T13:29Z.
+#   @astrojs/cloudflare@14.3.0    published 2026-09-03T10:29Z.
+#   vitest@5.0.0 / @vitest/*      published 2026-09-03T12:24Z.
+#
+# The last three aged past the 1440-minute window on 2026-09-04, which is what
+# their own comments said to wait for. Verified by `pnpm install` re-checking
+# all 854 lockfile entries against the policy with this list empty.
+minimumReleaseAgeExclude: []
 
 audit:
   ignore:

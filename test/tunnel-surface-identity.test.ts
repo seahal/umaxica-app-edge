@@ -31,13 +31,26 @@ const CONTENT_FRAMES = [
 ] as const;
 
 describe('apex health contract', () => {
+  /*
+   * The forbidden shapes are the ROOT-level `/health.json` and `/health.html`
+   * that ADR 009 keeps off the public FQDN — Rails serves those on its own
+   * origin and they must not be republished here.
+   *
+   * Matched as quoted path literals, not as bare substrings. The bare form said
+   * `not.toContain('/health.json')`, which `'/api/v0/health.json'` satisfies as
+   * a substring, so this guard started failing the moment ADR 017 added the Edge
+   * self-health document — reporting a violation of a rule that document does
+   * not break. The quote is what pins the assertion to a whole path.
+   */
   it.each(APEX_UNITS)('%s does not register /health.json or /health.html', (workspace) => {
     const source = readFileSync(join(repoRoot, workspace, 'src/create-apex-app.ts'), 'utf8');
-    expect(source).not.toContain('/health.json');
-    expect(source).not.toContain('/health.html');
+    expect(source).not.toContain("'/health.json'");
+    expect(source).not.toContain("'/health.html'");
     expect(source).not.toContain('renderHealthJson');
     expect(source).not.toContain('renderHealthPage');
     expect(source).toContain("app.get('/health'");
+    // The self-health document ADR 017 does mandate, at its own path.
+    expect(source).toContain("app.get('/api/v0/health.json'");
   });
 });
 

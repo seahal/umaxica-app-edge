@@ -65,6 +65,16 @@ describe('runtime health probes', () => {
     const live = await app.request('/health/livenesses');
     expect(live.status).toBe(200);
     await expect(live.text()).resolves.toBe('ok\n');
+
+    // The aggregate is the only place the three statuses are combined, and it
+    // must not report `ok` while one of them is `error`. A mocked probe is the
+    // only way to reach that combination — every probe answers `ok` from a live
+    // isolate, so no HTTP client can produce this.
+    const aggregate = await app.request('/health');
+    expect(aggregate.status).toBe(503);
+    await expect(aggregate.text()).resolves.toBe(
+      'status: error\nstartup: ok\nliveness: ok\nreadiness: error\n',
+    );
   });
 
   it('does not treat a downstream fetch failure as a liveness failure', async () => {
