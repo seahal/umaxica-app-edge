@@ -1144,7 +1144,7 @@ async function checkHttpSurface(report, surface, baseUrl, gatePrefix) {
   // `edge.status`. Astro and Hono probe documents are text/plain:
   // `status: ok` plus `liveness: ok`.
   let edgeOk = false;
-  if (/^status: ok$/m.test(health.body) && /^liveness: ok$/m.test(health.body)) {
+  if (/^status: ok$/mu.test(health.body) && /^liveness: ok$/mu.test(health.body)) {
     edgeOk = true;
   } else {
     try {
@@ -1220,7 +1220,7 @@ async function runNextBatch(report, surfaces) {
       const { kind, status, body } = await checkHttpSurface(report, surface, baseUrl, 'Local');
 
       const localRailsEnabled = process.env.EDGE_LOCAL_RAILS_ENABLED === '1';
-      if (typeof body === 'string' && /^status:/m.test(body) && kind == null) {
+      if (typeof body === 'string' && /^status:/mu.test(body) && kind === null) {
         report.record(
           'Local /health rails',
           surface.key,
@@ -1361,7 +1361,7 @@ async function runPreviewSurface(report, surface, { script, gate, withVpc, port,
         withVpc ? 'Preview(vpc)' : 'Preview',
       );
 
-      if (typeof body === 'string' && /^status:/m.test(body) && kind == null) {
+      if (typeof body === 'string' && /^status:/mu.test(body) && kind === null) {
         report.record(
           gate,
           surface.key,

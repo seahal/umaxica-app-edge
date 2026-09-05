@@ -27,7 +27,7 @@ The original decision allowed `EDGE_CLOUDFLARED_TOKEN` to fall back to a generic
 Context, which already recorded that "using the same Tunnel token would register replicas with
 different origin reachability" — and that is exactly what happened.
 
-`CLOUDFLARED_TOKEN` is the name the Global/Rails repository uses for *its* tunnel, and both
+`CLOUDFLARED_TOKEN` is the name the Global/Rails repository uses for _its_ tunnel, and both
 repositories read a gitignored repo-root `.env`. On a machine that had the Global value and never
 set the Edge one, `${EDGE_CLOUDFLARED_TOKEN:-${CLOUDFLARED_TOKEN:-}}` resolved silently to Global's
 token, so Edge's connector joined Global's tunnel as a replica from a network with no route to

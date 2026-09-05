@@ -46,30 +46,30 @@ lines in the same window. Apex Hono structured logs are a separate surface.
 
 ## Origin mapping observed in the tunnel config
 
-| Surface    | Public hostname         | Origin              |
-| ---------- | ----------------------- | ------------------- |
-| `app/info` | `info.umaxica.app`      | `http://core:5403`  |
-| `com/info` | `info.umaxica.com`      | `http://core:5103`  |
-| `org/info` | `info.umaxica.org`      | `http://core:5303`  |
-| `app/docs` | `docs-jp.umaxica.app`   | `http://core:5406`  |
-| `com/docs` | `docs-jp.umaxica.com`   | `http://core:5106`  |
-| `org/docs` | `docs-jp.umaxica.org`   | `http://core:5306`  |
-| `app/news` | `news-jp.umaxica.app`   | `http://core:5407`  |
-| `com/news` | `news-jp.umaxica.com`   | `http://core:5107`  |
-| `org/news` | `news-jp.umaxica.org`   | `http://core:5307`  |
-| `app/help` | `help-jp.umaxica.app`   | `http://core:5408`  |
-| `com/help` | `help-jp.umaxica.com`   | `http://core:5108`  |
-| `org/help` | `help-jp.umaxica.org`   | `http://core:5308`  |
+| Surface    | Public hostname       | Origin             |
+| ---------- | --------------------- | ------------------ |
+| `app/info` | `info.umaxica.app`    | `http://core:5403` |
+| `com/info` | `info.umaxica.com`    | `http://core:5103` |
+| `org/info` | `info.umaxica.org`    | `http://core:5303` |
+| `app/docs` | `docs-jp.umaxica.app` | `http://core:5406` |
+| `com/docs` | `docs-jp.umaxica.com` | `http://core:5106` |
+| `org/docs` | `docs-jp.umaxica.org` | `http://core:5306` |
+| `app/news` | `news-jp.umaxica.app` | `http://core:5407` |
+| `com/news` | `news-jp.umaxica.com` | `http://core:5107` |
+| `org/news` | `news-jp.umaxica.org` | `http://core:5307` |
+| `app/help` | `help-jp.umaxica.app` | `http://core:5408` |
+| `com/help` | `help-jp.umaxica.com` | `http://core:5108` |
+| `org/help` | `help-jp.umaxica.org` | `http://core:5308` |
 
 ## Commands and observations
 
-| Check | Observed |
-| ----- | -------- |
-| `curl -sS http://cloudflare-tunnel:2000/ready` | `200`, four ready connections |
-| DoH `type=A` on each of the twelve FQDNs (`https://cloudflare-dns.com/dns-query`) | A records present (Cloudflare anycast) |
-| Unauthenticated `curl -H 'accept: text/html' https://<host>/` | `302` `Location` on `umaxica.cloudflareaccess.com` (query string not retained) |
-| Local `pnpm --dir <unit> run dev` then operator-authenticated browser `GET /` | Vite log: `[302] /` then `[200] /ja/` on all twelve units |
-| Same window, `{app,com,org}/core` Vite logs | no page lines |
+| Check                                                                             | Observed                                                                       |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `curl -sS http://cloudflare-tunnel:2000/ready`                                    | `200`, four ready connections                                                  |
+| DoH `type=A` on each of the twelve FQDNs (`https://cloudflare-dns.com/dns-query`) | A records present (Cloudflare anycast)                                         |
+| Unauthenticated `curl -H 'accept: text/html' https://<host>/`                     | `302` `Location` on `umaxica.cloudflareaccess.com` (query string not retained) |
+| Local `pnpm --dir <unit> run dev` then operator-authenticated browser `GET /`     | Vite log: `[302] /` then `[200] /ja/` on all twelve units                      |
+| Same window, `{app,com,org}/core` Vite logs                                       | no page lines                                                                  |
 
 Excerpt (representative; all twelve matched this shape). Times are local container clock on 2026-09-04:
 
@@ -93,5 +93,5 @@ document). That is application behaviour after the HTML landed, not a second ing
 - Rails / Workers VPC on these requests. `astro dev` in this run used `CLOUDFLARE_ENV=local`
   with `remoteBindings` off.
 - Persistence across a Dev Container recreate. Public Hostnames live in Cloudflare; `pnpm
-  run dev` does not.
+run dev` does not.
 - The authenticated Access JWT. Login URLs were not stored.

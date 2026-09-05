@@ -292,4 +292,114 @@ describe('rails health api consumer', () => {
       expect(JSON.stringify(report)).not.toContain(marker);
     }
   });
+  /*
+   * The parser's rejection paths, each reached by a body that is well-formed
+   * JSON right up to the point it stops matching the Health API contract.
+   * `parseHealthDocument` and `parseCheck` are not exported — they are reached
+   * the way Rails reaches them, through `checkRailsHealth`, so these pin the
+   * behaviour rather than the shape of a private function.
+   */
+  it.each([
+    ['a JSON number', 42],
+    ['a JSON string', 'pass'],
+    ['a JSON array', [{ status: 'pass' }]],
+    ['JSON null', null],
+  ])('reports invalid-contract for a document that is %s', async (_label, body) => {
+    const report = await checkRailsHealth(
+      makeClient({ kind: 'ok', status: 200, response: jsonResponse(200, body) }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it.each([
+    ['a string', 'all good'],
+    ['an array', []],
+    ['null', null],
+  ])('reports invalid-contract when checks is %s', async (_label, checks) => {
+    const report = await checkRailsHealth(
+      makeClient({
+        kind: 'ok',
+        status: 200,
+        response: jsonResponse(200, { status: 'pass', checks }),
+      }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it('reports invalid-contract when a check carries an unknown status', async () => {
+    // Distinct from the missing-check case above: `readiness` IS an object, so
+    // `parseCheck` gets past its own shape guard and rejects on the vocabulary.
+    const report = await checkRailsHealth(
+      makeClient({
+        kind: 'ok',
+        status: 200,
+        response: jsonResponse(200, {
+          status: 'pass',
+          checks: {
+            startup: { status: 'pass' },
+            liveness: { status: 'pass' },
+            readiness: { status: 'degraded' },
+          },
+        }),
+      }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it('reports invalid-contract when the response declares no content type', async () => {
+    // A body with no declared type is not a Health API document, however
+    // well-formed it is: the media type is the contract, not the bytes.
+    const report = await checkRailsHealth(
+      makeClient({
+        kind: 'ok',
+        status: 200,
+        // A stream body, because a string body makes the constructor default
+        // `Content-Type` to `text/plain` — which is a DIFFERENT rejection, the
+        // one two tests above already cover. This one has no type at all.
+        response: new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode(JSON.stringify(PASS_DOCUMENT)));
+              controller.close();
+            },
+          }),
+          { status: 200 },
+        ),
+      }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it('reports invalid-contract for a body past the size bound, without parsing it', async () => {
+    // The bound exists so a Rails response that is JSON but enormous cannot be
+    // turned into work here. Padded past 65536 characters while staying valid
+    // JSON and a valid document, so the size check is the only thing that can
+    // reject it.
+    const oversized = { ...PASS_DOCUMENT, note: 'x'.repeat(70000) };
+    const report = await checkRailsHealth(
+      makeClient({ kind: 'ok', status: 200, response: jsonResponse(200, oversized) }),
+    );
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+  });
+
+  it('reports invalid-contract when the body stream fails mid-read', async () => {
+    // Not producible by a Hurl request: the connection has to break after the
+    // headers are already in hand. `app.request()` is not involved — the client
+    // seam is the injection point.
+    const failing = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.error(new Error('stream broke'));
+        },
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+
+    const report = await checkRailsHealth(
+      makeClient({ kind: 'ok', status: 200, response: failing }),
+    );
+
+    expect(report).toEqual({ kind: 'invalid-contract', status: 200 });
+    expect(JSON.stringify(report)).not.toContain('stream broke');
+  });
 });

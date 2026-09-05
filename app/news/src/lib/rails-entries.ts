@@ -90,7 +90,17 @@ async function parseJson(
 function isTimeout(
   result: RailsClientResult,
 ): result is Extract<RailsClientResult, { kind: 'timeout' }> {
-  return Reflect.get(result, 'kind') === 'timeout';
+  /*
+   * `'timeout'` is not a member of `RailsClientResult['kind']` in this file's
+   * own types — it is Astro's own transport signal, layered on top of the
+   * Rails client's result union by `rails-client.ts` at the seam this guard
+   * reads. `Reflect.get` is what asks the object rather than the type: typed
+   * through `unknown` so the literal-key overload cannot narrow the return to
+   * a union the compiler already believes excludes 'timeout', which is
+   * exactly the comparison this guard exists to make.
+   */
+  const kind: unknown = Reflect.get(result, 'kind');
+  return kind === 'timeout';
 }
 
 async function map<T>(

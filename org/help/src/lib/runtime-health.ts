@@ -6,7 +6,16 @@
  * contract from already-normalized probe statuses.
  */
 
-export type ProbeName = 'startup' | 'liveness' | 'readiness';
+/*
+ * The two probes this frame answers from the isolate alone.
+ *
+ * Readiness is deliberately not one of them. The readiness route composes the
+ * isolate status with the Rails Health API and hands the result to
+ * `renderProbeStatus`, so a `renderProbe('readiness')` arm would be a second
+ * definition of readiness — one that consults nothing, that nothing calls, and
+ * that would answer `ok` while the real one answered `error`.
+ */
+export type ProbeName = 'startup' | 'liveness';
 export type ProbeStatus = 'ok' | 'error';
 
 export const HEALTH_CONTENT_TYPE = 'text/plain; charset=utf-8';
@@ -52,13 +61,9 @@ function healthResponse(body: string, ok: boolean): Response {
 }
 
 export function renderProbe(name: ProbeName): Response {
-  const status =
-    name === 'startup'
-      ? runtimeProbes.checkStartup()
-      : name === 'liveness'
-        ? runtimeProbes.checkLiveness()
-        : runtimeProbes.checkReadiness();
-  return renderProbeStatus(status);
+  return renderProbeStatus(
+    name === 'startup' ? runtimeProbes.checkStartup() : runtimeProbes.checkLiveness(),
+  );
 }
 
 export function renderProbeStatus(status: ProbeStatus): Response {

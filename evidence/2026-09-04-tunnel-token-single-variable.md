@@ -36,10 +36,10 @@ While `.env` still held Global's token and Global's connector was running,
 The operator then replaced `CLOUDFLARED_TOKEN` in `.env` with the Edge tunnel's own
 connector token. After `podman rm -f` and `podman compose up -d cloudflare-tunnel`:
 
-| container | tunnel UUID |
-| --- | --- |
+| container                                 | tunnel UUID                            |
+| ----------------------------------------- | -------------------------------------- |
 | `umaxicaappsglobaldc_cloudflare-tunnel_1` | `1d501e9a-62f7-4c0d-ba5e-a26e3f10088f` |
-| `umaxica-apps-edge_cloudflare-tunnel_1` | `dd5500e6-97fe-434e-a389-6399aa866843` |
+| `umaxica-apps-edge_cloudflare-tunnel_1`   | `dd5500e6-97fe-434e-a389-6399aa866843` |
 
 Distinct, as required. The Edge connector logged four `Registered tunnel connection`
 entries (connIndex 0-3, QUIC, nrt05/08/09/16) and stayed up; all connectivity
@@ -47,7 +47,7 @@ pre-checks passed.
 
 - `bash -n scripts/dev-start` clean.
 - `pnpm vitest run test/compose-tunnel-invariants.test.ts
-  test/development-container-security.test.ts` — 2 files, 31 tests, 0 failures.
+test/development-container-security.test.ts` — 2 files, 31 tests, 0 failures.
   These suites read `compose.override.yaml.example`, whose deletion in the working
   tree is intentional, so it was restored with `git checkout --` for the run and
   deleted again afterwards.

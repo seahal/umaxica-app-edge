@@ -73,7 +73,7 @@ describe('Edge revision representations', () => {
       expect(source).toContain('header "content-type" not contains "text/plain"');
       expect(source).toContain('header "content-type" not contains "text/html"');
       expect(source).toContain('jsonpath "$.*" count == 3');
-      expect(read(e2e)).toContain('toMatch(/^text\\/plain\\b/)');
+      expect(read(e2e)).toContain('toMatch(/^text\\/plain\\b/u)');
       expect(read(e2e)).toContain('JSON.parse(body)');
     },
   );

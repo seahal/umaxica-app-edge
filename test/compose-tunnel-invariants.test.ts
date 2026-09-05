@@ -183,7 +183,9 @@ describe('Edge-owned tunnel connector', () => {
     expect(devStart).toMatch(/already has a connector on this host/u);
     // Every cloudflared container on the host counts, not only this compose
     // project's own.
-    expect(devStart).toMatch(/podman ps --format '\{\{\.Names\}\}'[^\n]*\n?[^\n]*grep -i cloudflare/u);
+    expect(devStart).toMatch(
+      /podman ps --format '\{\{\.Names\}\}'[^\n]*\n?[^\n]*grep -i cloudflare/u,
+    );
   });
 });
 

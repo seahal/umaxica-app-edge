@@ -78,6 +78,53 @@ const varyOnNegotiation: MiddlewareHandler = async (c, next) => {
   headers.append('Vary', NEGOTIATED_ON);
 };
 
+/*
+ * The probes the rate limiter must never see, and the reason the set is this
+ * small.
+ *
+ * Each of these three is a constant — no binding read, no downstream hop,
+ * nothing that can fail. A 429 on one of them is indistinguishable from a dead
+ * isolate, so an endpoint an orchestrator trusts to mean "alive" must not be
+ * throttleable.
+ *
+ * `/health` and `/health/readinesses` are deliberately absent. They answer from
+ * this isolate on an apex Worker, but they reach Rails over the Workers VPC
+ * binding on a Core and on an Astro surface, and this exemption is written once
+ * for all twenty units rather than per family: a set that means "cheap here,
+ * an uncounted path into Rails there" is not a rule anyone can check. Readiness
+ * is the probe whose job is to answer "do not send me traffic"; being throttled
+ * is a correct answer for it, and is not one for liveness or startup.
+ *
+ * `/revision` and `/api/v0/revision.json` are absent too: deployment metadata,
+ * not probes. Nothing operational breaks when one of them is throttled, so
+ * there is no reason to hand out an uncounted Worker invocation.
+ */
+function isUnmeteredProbe(path: string): boolean {
+  return (
+    path === '/health/startups' || path === '/health/livenesses' || path === '/api/v0/health.json'
+  );
+}
+
+/*
+ * Every machine-facing endpoint, which is a WIDER set than the one above and
+ * answers a different question: which responses must not be language-negotiated.
+ *
+ * `languageDetector` writes a `language` cookie as a side effect of running.
+ * A monitor polling `/revision` is not a browser expressing a preference, and a
+ * machine document that varies by locale is a document no probe can diff. Both
+ * concerns used to share one path list, which is what let the limiter quietly
+ * inherit the revision endpoints.
+ */
+function isMachineEndpoint(path: string): boolean {
+  return (
+    path === '/health' ||
+    path.startsWith('/health/') ||
+    path === '/api/v0/health.json' ||
+    path === '/revision' ||
+    path === '/api/v0/revision.json'
+  );
+}
+
 type ConfigurePageRoutes = (pageRoutes: Hono<ApexEnv>) => void;
 
 export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
@@ -89,16 +136,7 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
   app.use(etag());
   app.use(apexStructuredLogger);
   app.use(async (c, next) => {
-    const path = new URL(c.req.url).pathname;
-    if (
-      path === '/health' ||
-      path.startsWith('/health/') ||
-      path === '/api/v0/health.json' ||
-      path === '/revision' ||
-      path === '/api/v0/revision.json'
-    ) {
-      return next();
-    }
+    if (isUnmeteredProbe(c.req.path)) return next();
     const blocked = await checkRateLimit(c.req.raw, bindings(c)?.RATE_LIMITER);
     if (blocked) return blocked;
     return next();
@@ -112,16 +150,7 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
     fallbackLanguage: 'en',
   });
   app.use(async (c, next) => {
-    const path = new URL(c.req.url).pathname;
-    if (
-      path === '/health' ||
-      path.startsWith('/health/') ||
-      path === '/api/v0/health.json' ||
-      path === '/revision' ||
-      path === '/api/v0/revision.json'
-    ) {
-      return next();
-    }
+    if (isMachineEndpoint(c.req.path)) return next();
     return detectLanguage(c, next);
   });
 
@@ -153,7 +182,7 @@ export function createApexApp(configurePageRoutes: ConfigurePageRoutes) {
        */
       error: err.name,
       method: c.req.method,
-      path: new URL(c.req.url).pathname,
+      path: c.req.path,
     });
 
     return errorPage(500, c.get('language'), requestThemeAttribute(c.req.raw));

@@ -146,10 +146,9 @@ describe('org/core worker.ts dispatch', () => {
     '/assets/index-abc123.js',
     '/assets/style-abc123.css',
     '/favicon.ico',
-    '/health',
     '/health/startups',
     '/health/livenesses',
-    '/health/readinesses',
+    '/api/v0/health.json',
   ])('exempts %s from the limiter', async (path) => {
     // `/assets/` is where Vite writes this frame's hashed output, and the
     // favicon is the one unhashed file a document references. An
@@ -384,6 +383,38 @@ describe('org/core worker.ts dispatch', () => {
 
       expect(appFetch).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
+    },
+  );
+
+  /*
+   * The exempt set is the three probes that cannot fail and cannot reach a
+   * downstream hop. These five look adjacent to it and are metered anyway,
+   * which is the half of the rule a list of exemptions cannot state:
+   *
+   *   /health, /health/readinesses     fetch Rails over the VPC binding
+   *                                    (`src/routes/health.ts`,
+   *                                    `src/routes/health.readinesses.ts`). An
+   *                                    exemption here is an unauthenticated,
+   *                                    uncounted path into the Rails origin.
+   *   /revision, /api/v0/revision.json deployment metadata, not probes.
+   *   /                                the ordinary case, pinned alongside them
+   *                                    so a regression that exempts everything
+   *                                    fails here rather than silently passing.
+   */
+  it.each(['/health', '/health/readinesses', '/revision', '/api/v0/revision.json', '/'])(
+    'meters %s',
+    async (path) => {
+      checkRateLimit.mockResolvedValue(new Response('Too Many Requests', { status: 429 }));
+
+      const response = await worker.fetch(
+        new Request(`https://jp.umaxica.org${path}`),
+        makeEnv(),
+        ctx,
+      );
+
+      expect(checkRateLimit).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(429);
+      expect(appFetch).not.toHaveBeenCalled();
     },
   );
 

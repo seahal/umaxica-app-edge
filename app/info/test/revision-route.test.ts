@@ -14,7 +14,7 @@ describe('revision text route', () => {
 
     const response = await GET({} as never);
     expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toMatch(/^text\/plain\b/);
+    expect(response.headers.get('content-type')).toMatch(/^text\/plain\b/u);
     expect(response.headers.get('cache-control')).toContain('no-store');
     await expect(response.text()).resolves.toBe('abc\n');
   });
