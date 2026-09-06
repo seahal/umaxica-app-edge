@@ -10,7 +10,8 @@ API) as standard, plus — only if the developer opts in through the optional
 `known_hosts`. No key material crosses any of them — see
 [Git and GitHub access](git-and-github-access.md).
 
-`compose.yaml` alone is a complete standard environment: a fresh clone starts with no
+`compose.yaml` plus `.devcontainer/compose.yaml` are a complete standard environment: a
+fresh clone starts with no
 local file created.
 
 ## Dev Container startup

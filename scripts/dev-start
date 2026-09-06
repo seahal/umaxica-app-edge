@@ -39,11 +39,12 @@ if ((${#unmasked_env_files[@]} > 0)); then
   exit 1
 fi
 
-# The local override is optional by contract. `compose.yaml` alone is the
-# complete standard environment -- it carries the SELinux `label=disable` and
-# the `GH_TOKEN` passthrough that used to live in the overlay -- so a fresh
-# clone starts here, and `.devcontainer/devcontainer.json` loads only
-# `compose.yaml` for the same reason.
+# The local override is optional by contract. `compose.yaml` plus
+# `.devcontainer/compose.yaml` are the complete standard environment -- between
+# them they carry the SELinux `label=disable` and the `GH_TOKEN` passthrough that
+# used to live in the overlay -- so a fresh clone starts here, and
+# `.devcontainer/devcontainer.json` loads exactly those two files for the same
+# reason.
 #
 # `compose.override.yaml` is gitignored and never created automatically. Load
 # it when it happens to exist, so this script and a bare `docker compose`
@@ -59,7 +60,12 @@ if [[ -e compose.custom.yaml && ! -e compose.override.yaml ]]; then
   echo '  mv compose.custom.yaml compose.override.yaml   # then drop label=disable/GH_TOKEN from it' >&2
 fi
 
-compose=(podman compose -f compose.yaml)
+# `core` is defined in `.devcontainer/compose.yaml`, not in `compose.yaml`: that
+# split is what lets a bare `podman compose up` bring up the shared services
+# without a workspace container nobody asked for. This script wants `core`, so it
+# names both files. Both declare the same project name, so this is still the one
+# project the Dev Container and a bare `podman compose` address.
+compose=(podman compose -f compose.yaml -f .devcontainer/compose.yaml)
 if [[ -e compose.override.yaml ]]; then
   compose+=(-f compose.override.yaml)
 fi

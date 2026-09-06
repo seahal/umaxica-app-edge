@@ -63,7 +63,8 @@ pins the in-container id, so the host id no longer needs to be discovered, and e
 file sets the same `name: umaxica-apps-edge`, so no new project name can appear for this
 folder.
 
-`devcontainer.json` lists `../compose.yaml` and nothing else. The Dev Containers CLI passes
+`devcontainer.json` lists `../compose.yaml` and `./compose.yaml` — the shared services and
+`core` — and nothing else. The Dev Containers CLI passes
 each `dockerComposeFile` entry to Compose as `-f`, so an entry a fresh clone does not contain
 fails the whole `up` at configuration resolution — which is how a gitignored overlay used to
 break Codespaces. The same `-f` also suppresses Compose's auto-discovery of
@@ -81,7 +82,7 @@ The Podman-specific properties are Compose concerns and need no flags:
 `CONTAINER_UID`/`CONTAINER_GID` build arguments, loopback-only port publication on
 `127.0.0.1`, and the named volumes
 `node-volume`, `home-cache`, `pnpm-store`, and `workspace-secrets-mask`. The
-Edge's `cloudflare-tunnel` sidecar is declared in `compose.yaml` beside `core`, uses the compose default
+Edge's `cloudflare-tunnel` sidecar is declared in `compose.yaml`, uses the compose default
 network, and requires `CLOUDFLARED_TOKEN` from this repository's gitignored root `.env` — one variable,
 no fallback. It must be Edge's own tunnel, never the value Global keeps under the same name in its own
 `.env`; see `adr/014-edge-owned-development-tunnel.md`.
