@@ -132,10 +132,10 @@ catalog:
   # different major could disagree about what the config file even means.
   # Astro (unscoped). See '@astrojs/cloudflare' above for the pilot rationale.
   astro: 7.3.1
-  cspell: ^10.2.1
+  cspell: ^10.2.2
   dependency-cruiser: ^18.2.0
   happy-dom: ^20.13.2
-  hono: ^4.13.5
+  hono: ^4.13.7
   knip: ^6.34.0
   # The static analysis toolchain. These were literal strings in twenty-two
   # manifests until they drifted (knip sat at 6.32.1 in every unit and 6.32.2 at
