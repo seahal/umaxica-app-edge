@@ -87,6 +87,15 @@ function readConstant(source: string, name: string): string | undefined {
   return new RegExp(`const ${name} = (.+);`, 'u').exec(source)?.[1];
 }
 
+/**
+ * Read the `TIMEZONE_AWARE_TIMESTAMP` regex literal, which `readConstant`
+ * cannot: it is declared over two lines, and the pattern itself contains the
+ * `;` and `=` that a single-line reader keys on.
+ */
+function readTimestampPattern(source: string): string | undefined {
+  return /const TIMEZONE_AWARE_TIMESTAMP =\s*(\/.+\/u);/u.exec(source)?.[1];
+}
+
 describe('rails client layout', () => {
   it.each(RAILS_FRAMES)('$workspace owns a complete Rails surface', ({ workspace }) => {
     // A frame with a client but no surface exposes nothing; a surface with no
@@ -636,4 +645,35 @@ describe('local Rails connectivity script', () => {
     expect(script).toContain('Rails reached, status=fail');
     expect(script).toContain('unreachable');
   });
+
+  it.each(['scripts/check-rails', 'tools/verify-edge-connectivity.mjs'])(
+    '%s requires the same Health API fields the Worker requires',
+    (sibling) => {
+      /*
+       * Three implementations of the ADR 016 contract, in three places, reached by
+       * three transports: the Worker over Workers VPC, `scripts/check-rails` over
+       * `podman exec` + `curl`, and the connectivity checker over a remote-binding
+       * probe. That is deliberate — an operator needs a second opinion when the
+       * Worker is the thing under suspicion — and it is exactly the arrangement
+       * where one side is tightened and the others are not, leaving two green
+       * checkers in front of fifteen frames answering 503.
+       *
+       * `timestamp` became required on 2026-09-06 and is the field that proved it:
+       * it landed in the fifteen copies alone. So the required set is pinned
+       * across all three, rather than each being asserted against its own idea of
+       * the contract.
+       */
+      const source = read(sibling);
+      const client = read('app/core/src/lib/rails-health.ts');
+
+      for (const field of ['status', 'timestamp', 'startup', 'liveness', 'readiness']) {
+        expect(source, `${sibling} must require ${field}`).toContain(field);
+        expect(client, `rails-health.ts must require ${field}`).toContain(field);
+      }
+
+      expect(readTimestampPattern(source), `${sibling} has no timestamp pattern`).toBe(
+        readTimestampPattern(client),
+      );
+    },
+  );
 });

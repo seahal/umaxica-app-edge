@@ -3,8 +3,10 @@
 ## Status: Implemented
 
 Amends [ADR 016](016-rails-machine-health-api.md) by adding the **Edge**
-implementation of the same Health API DTO. Does not change how Edge consumes
-Rails health over Workers VPC.
+implementation of the Health API DTO at the same path. Does not change how Edge
+consumes Rails health over Workers VPC. The two documents were identical in
+shape when this was written and are no longer — decision 3 records where they
+part.
 
 ## Context
 
@@ -60,6 +62,19 @@ framework-independent JSON document that said only: this Edge runtime is up.
    Status vocabulary is `pass` | `warn` | `fail`. The current isolate has no
    extra readiness dependency, so a request that executes the handler returns
    `pass` for all three checks.
+
+   `status` and `checks` are the whole document. There is deliberately no
+   `timestamp`, and `api/health-api.hurl` asserts its absence along with the
+   top-level member count. The response is a constant — no binding, no clock,
+   no hop — which is what lets it answer while every dependency is down; a
+   timestamp would be its only varying byte and would repeat what the `Date`
+   header already carries.
+
+   This is where the Edge document and the Rails document (ADR 016) stop being
+   the same shape: as of the 2026-09-06 amendment to ADR 016, Rails **requires**
+   a timezone-aware `timestamp`. `src/lib/rails-health.ts` is therefore not a
+   parser for this document; pointed at an Edge unit it reports
+   `invalid-contract`, correctly.
 
 4. `/health` remains the operational `text/plain` contract. This JSON API is
    not an alias of `/health` and does not proxy it. `/health.json` at the

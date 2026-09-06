@@ -62,10 +62,23 @@ const statuses = new Set(['pass', 'warn', 'fail']);
 const check = (value) =>
   typeof value === 'object' && value !== null && statuses.has(value.status);
 
+// Kept identical to `TIMEZONE_AWARE_TIMESTAMP` in the fifteen
+// `src/lib/rails-health.ts` copies, and pinned as such by
+// `test/rails-connection-invariants.test.ts`. A bare local time is rejected:
+// two sides of a tunnel do not share a clock offset, so a timestamp without a
+// zone cannot be compared with anything.
+const TIMEZONE_AWARE_TIMESTAMP =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+const isTimezoneAwareTimestamp = (value) =>
+  typeof value === 'string' &&
+  TIMEZONE_AWARE_TIMESTAMP.test(value) &&
+  !Number.isNaN(Date.parse(value));
+
 if (
   typeof parsed !== 'object' ||
   parsed === null ||
   !statuses.has(parsed.status) ||
+  !isTimezoneAwareTimestamp(parsed.timestamp) ||
   typeof parsed.checks !== 'object' ||
   parsed.checks === null ||
   !check(parsed.checks.startup) ||

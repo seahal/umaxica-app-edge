@@ -16,7 +16,7 @@ could not prove that a Host header (`<frame>.<brand>.localhost`) actually reache
 namespace rather than some other frame's, or a static/cached response. Every surface returned a
 byte-identical body:
 
-```json
+```
 {"status":"pass","checks":{"startup":{"status":"pass"},"liveness":{"status":"pass"},"readiness":{"status":"pass"}}}
 ```
 
