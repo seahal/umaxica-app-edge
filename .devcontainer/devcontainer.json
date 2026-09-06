@@ -183,9 +183,7 @@
   },
 
   "features": {
-    "ghcr.io/marcosbolanos/devcontainer-features/neovim-prebuilt:1": {},
     "ghcr.io/jsburckhardt/devcontainer-features/herdr:1": { "VERSION": "v0.8.0" },
-    "ghcr.io/joedmck/devcontainer-features/wrangler:1": {},
     "ghcr.io/srzstephen/devcontainer-features/claude-code:1": {},
     "ghcr.io/nolanjx/devcontainer-features/codex:1": {}
   },

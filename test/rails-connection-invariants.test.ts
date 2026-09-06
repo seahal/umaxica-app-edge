@@ -51,15 +51,22 @@ function isNextFrame(workspace: string): boolean {
   return existsSync(join(repoRoot, workspace, 'next.config.ts'));
 }
 
+function isAstroFrame(workspace: string): boolean {
+  return existsSync(join(repoRoot, workspace, 'astro.config.mjs'));
+}
+
 /** Where this frame answers `/health`, per bundler. */
 function healthRouteOf(workspace: string): string {
-  return isNextFrame(workspace)
-    ? `${workspace}/src/app/health/route.ts`
-    : `${workspace}/src/routes/health.ts`;
+  if (isNextFrame(workspace)) return `${workspace}/src/app/health/route.ts`;
+  if (isAstroFrame(workspace)) return `${workspace}/src/pages/health.ts`;
+  return `${workspace}/src/routes/health.ts`;
 }
 
 const NEXT_FRAMES = RAILS_FRAMES.filter(({ workspace }) => isNextFrame(workspace));
-const VITE_FRAMES = RAILS_FRAMES.filter(({ workspace }) => !isNextFrame(workspace));
+const ASTRO_FRAMES = RAILS_FRAMES.filter(({ workspace }) => isAstroFrame(workspace));
+const VITE_FRAMES = RAILS_FRAMES.filter(
+  ({ workspace }) => !isNextFrame(workspace) && !isAstroFrame(workspace),
+);
 
 /**
  * Source with comments removed.
@@ -78,6 +85,15 @@ function code(relativePath: string): string {
 /** Read a `const NAME = <value>;` declaration out of a client copy. */
 function readConstant(source: string, name: string): string | undefined {
   return new RegExp(`const ${name} = (.+);`, 'u').exec(source)?.[1];
+}
+
+/**
+ * Read the `TIMEZONE_AWARE_TIMESTAMP` regex literal, which `readConstant`
+ * cannot: it is declared over two lines, and the pattern itself contains the
+ * `;` and `=` that a single-line reader keys on.
+ */
+function readTimestampPattern(source: string): string | undefined {
+  return /const TIMEZONE_AWARE_TIMESTAMP =\s*(\/.+\/u);/u.exec(source)?.[1];
 }
 
 describe('rails client layout', () => {
@@ -135,10 +151,36 @@ describe('rails client layout', () => {
    * two groups. Writing the imports relatively in every frame is what keeps this
    * one assertion meaningful instead of two weaker ones.
    */
-  it('keeps all fifteen /health routes byte-identical', () => {
+  it('keeps Astro /health on the Rails Health API consumer, not a JSON proxy', () => {
+    for (const { workspace } of ASTRO_FRAMES) {
+      const source = code(healthRouteOf(workspace));
+      expect(source, `${workspace} must consume rails-health`).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not proxy Rails JSON`).not.toContain('Response.json');
+      expect(source, `${workspace} must not use the retired liveness probe`).not.toContain(
+        'checkRailsLiveness',
+      );
+    }
+  });
+
+  it('keeps TanStack Core /health on the Rails Health API consumer, not a JSON proxy', () => {
+    for (const { workspace } of VITE_FRAMES) {
+      const source = code(healthRouteOf(workspace));
+      expect(source, `${workspace} must consume rails-health`).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not proxy Rails JSON`).not.toContain('Response.json');
+      expect(source, `${workspace} must not use the retired liveness probe`).not.toContain(
+        'checkRailsLiveness',
+      );
+    }
+  });
+
+  it('keeps /health routes byte-identical within each bundler family', () => {
     expect(RAILS_FRAMES.length).toBe(15);
-    const digests = new Set(RAILS_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace))));
-    expect(digests.size, 'the health route handlers have diverged').toBe(1);
+    expect(new Set(VITE_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace)))).size).toBe(
+      1,
+    );
+    expect(new Set(ASTRO_FRAMES.map(({ workspace }) => read(healthRouteOf(workspace)))).size).toBe(
+      1,
+    );
   });
 
   /*
@@ -147,9 +189,9 @@ describe('rails client layout', () => {
    * silently drop out of every assertion in this file.
    */
   it('places every frame in exactly one bundler family', () => {
-    expect([...NEXT_FRAMES, ...VITE_FRAMES].map(({ workspace }) => workspace).sort()).toEqual(
-      RAILS_FRAMES.map(({ workspace }) => workspace).sort(),
-    );
+    expect(
+      [...NEXT_FRAMES, ...VITE_FRAMES, ...ASTRO_FRAMES].map(({ workspace }) => workspace).sort(),
+    ).toEqual(RAILS_FRAMES.map(({ workspace }) => workspace).sort());
   });
 
   it('keeps all fifteen Rails health probes byte-identical', () => {
@@ -161,25 +203,27 @@ describe('rails client layout', () => {
     expect(digests.size, 'the fifteen rails-health copies have diverged').toBe(1);
   });
 
-  it('probes exactly one Rails path, and requires liveness alone for a healthy verdict', () => {
+  it('probes exactly the Rails Health API, never the operational JSON probes', () => {
     /*
-     * Liveness is the strictest of Rails' three probes, so it is the one that
-     * decides; `/health` is polled often enough that one request per check is
-     * worth keeping. Readiness and startup exist on the Rails side and are
-     * deliberately not read — see ADR 009.
-     *
-     * Pinned because widening this is a real decision with a real cost: every
-     * added probe multiplies the tunnel traffic of the most-polled route in the
-     * repository, across fifteen frames.
+     * Rails split operational Kubernetes probes (`/health`, `/health/livenesses`,
+     * …) from the machine-facing Health API (`/api/v0/health.json`). Edge
+     * verifies Rails over Workers VPC against that API only. ADR 016.
      */
     for (const { workspace } of RAILS_FRAMES) {
       const source = code(`${workspace}/src/lib/rails-health.ts`);
-      expect(source).toContain("const RAILS_LIVENESS_PATH = '/health/liveness.json';");
-      expect(source, `${workspace} must not silently start probing readiness`).not.toContain(
-        'readiness.json',
+      expect(source).toContain("const RAILS_HEALTH_API_PATH = '/api/v0/health.json';");
+      expect(source).toContain('checkRailsHealth');
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/liveness.json',
       );
-      expect(source, `${workspace} must not silently start probing startup`).not.toContain(
-        'startup.json',
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/readiness.json',
+      );
+      expect(source, `${workspace} must not probe Rails operational JSON`).not.toContain(
+        '/health/startup.json',
+      );
+      expect(source, `${workspace} must not keep the retired helper`).not.toContain(
+        'checkRailsLiveness',
       );
     }
   });
@@ -278,7 +322,7 @@ describe('rails client layout', () => {
        * variable is exported and the branch is still never taken.
        */
       expect(pkg.scripts?.dev).toMatch(/^EDGE_LOCAL_NODE_RUNTIME=1 /u);
-      if (!isNextFrame(workspace)) {
+      if (!isNextFrame(workspace) && !isAstroFrame(workspace)) {
         const viteConfig = read(`${workspace}/vite.config.ts`);
 
         expect(
@@ -311,8 +355,7 @@ describe('rails client layout', () => {
      *
      *   ActionController::RoutingError (No route matches [GET] "/docs/app/health/liveness.json")
      *
-     * Rails serves `/health/liveness.json` unprefixed. ADR 006 records the
-     * retraction.
+     * Rails serves health paths unprefixed. ADR 006 records the retraction.
      *
      * This is a regression guard rather than a style rule. A prefix
      * reintroduced here would not fail loudly — it would produce 404s, which
@@ -564,7 +607,7 @@ describe('vpc probe', () => {
       );
       const path = readConstant(
         read(`${workspace}/src/lib/rails-health.ts`),
-        'RAILS_LIVENESS_PATH',
+        'RAILS_HEALTH_API_PATH',
       );
       return {
         key: `${brand.toUpperCase()}/${frame.toUpperCase()}`,
@@ -592,4 +635,45 @@ describe('vpc probe', () => {
       "new URL(request.url).pathname === '/ready'",
     );
   });
+});
+
+describe('local Rails connectivity script', () => {
+  it('verifies the Health API, not operational JSON probes', () => {
+    const script = read('scripts/check-rails');
+    expect(script).toContain('/api/v0/health.json');
+    expect(script).not.toContain('/health/liveness.json');
+    expect(script).toContain('Rails reached, status=fail');
+    expect(script).toContain('unreachable');
+  });
+
+  it.each(['scripts/check-rails', 'tools/verify-edge-connectivity.mjs'])(
+    '%s requires the same Health API fields the Worker requires',
+    (sibling) => {
+      /*
+       * Three implementations of the ADR 016 contract, in three places, reached by
+       * three transports: the Worker over Workers VPC, `scripts/check-rails` over
+       * `podman exec` + `curl`, and the connectivity checker over a remote-binding
+       * probe. That is deliberate — an operator needs a second opinion when the
+       * Worker is the thing under suspicion — and it is exactly the arrangement
+       * where one side is tightened and the others are not, leaving two green
+       * checkers in front of fifteen frames answering 503.
+       *
+       * `timestamp` became required on 2026-09-06 and is the field that proved it:
+       * it landed in the fifteen copies alone. So the required set is pinned
+       * across all three, rather than each being asserted against its own idea of
+       * the contract.
+       */
+      const source = read(sibling);
+      const client = read('app/core/src/lib/rails-health.ts');
+
+      for (const field of ['status', 'timestamp', 'startup', 'liveness', 'readiness']) {
+        expect(source, `${sibling} must require ${field}`).toContain(field);
+        expect(client, `rails-health.ts must require ${field}`).toContain(field);
+      }
+
+      expect(readTimestampPattern(source), `${sibling} has no timestamp pattern`).toBe(
+        readTimestampPattern(client),
+      );
+    },
+  );
 });
